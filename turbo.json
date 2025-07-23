@@ -101,8 +101,8 @@
     },
     "db:generate": {
       "cache": false,
-      "inputs": ["prisma/schema.prisma"],
-      "outputs": ["node_modules/.prisma/**"],
+      "inputs": ["prisma/**/*.prisma"],
+      "outputs": ["node_modules/.prisma/**", "../../node_modules/.prisma/**"],
       "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "db:push": {

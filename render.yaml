@@ -10,18 +10,44 @@ services:
     plan: starter
     autoDeploy: true
     healthCheckPath: /health
+    numInstances: 1
+    dockerCommand: |
+      bash -c "pnpm db:push && npx concurrently -n api,bot,web -c blue,green,cyan 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start' 'pnpm --filter @ticketsbot/web start'"
 
     envVars:
+      - fromGroup: ticketsbot-ai-core
       - fromGroup: ticketsbot-ai-secrets
+      - fromGroup: ticketsbot-ai-features
       - key: NODE_ENV
         value: production
       - key: TURBO_ENV
         value: prod
 
 envVarGroups:
+  - name: ticketsbot-ai-core
+    envVars:
+      - key: WEB_PORT
+        value: "3000"
+      - key: API_PORT
+        value: "3001"
+      - key: BOT_PORT
+        value: "3002"
+      - key: WEB_URL
+        value: "https://ticketsbot.dev"
+      - key: API_URL
+        value: "https://ticketsbot.dev"
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://ticketsbot.dev"
+      - key: DISCORD_REDIRECT_URI
+        value: "https://ticketsbot.dev/auth/callback/discord"
+
   - name: ticketsbot-ai-secrets
     envVars:
       - key: DATABASE_URL
+        value: ""
+      - key: DIRECT_URL
+        value: ""
+      - key: REDIS_URL
         value: ""
       - key: DISCORD_TOKEN
         value: ""
@@ -31,15 +57,14 @@ envVarGroups:
         value: ""
       - key: BETTER_AUTH_SECRET
         value: ""
-      - key: REDIS_URL
-        value: ""
-      - key: WEB_PORT
-        value: "3000"
-      - key: API_PORT
-        value: "3001"
-      - key: BOT_PORT
-        value: "3002"
-      - key: NEXT_PUBLIC_API_URL
-        value: ""
+
+  - name: ticketsbot-ai-features
+    envVars:
+      - key: NEXT_PUBLIC_FEATURE_NEW_TICKET_UI
+        value: "false"
+      - key: NEXT_PUBLIC_FEATURE_BULK_ACTIONS
+        value: "false"
+      - key: NEXT_PUBLIC_FEATURE_ADVANCED_FORMS
+        value: "false"
       - key: NEXT_PUBLIC_GUILD_ID
         value: ""

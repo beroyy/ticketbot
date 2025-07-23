@@ -1,4 +1,5 @@
-import { prisma, TicketStatus, Prisma } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
+import { TicketStatus, Prisma } from "@prisma/client";
 import { Actor } from "../../context";
 
 // Date utility functions

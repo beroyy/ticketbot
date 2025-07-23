@@ -1,4 +1,5 @@
-import { prisma, type Account as PrismaAccount } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
+import type { Account as PrismaAccount } from "@prisma/client";
 
 /**
  * Account domain for Better Auth account operations

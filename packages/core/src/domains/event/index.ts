@@ -1,10 +1,5 @@
-import {
-  prisma,
-  Prisma,
-  type Event as PrismaEvent,
-  type EventCategory,
-  type EventTargetType,
-} from "../../prisma/client";
+import { prisma } from "../../prisma/client";
+import { Prisma, type Event as PrismaEvent, type EventCategory, type EventTargetType } from "@prisma/client";
 import { Actor } from "../../context";
 
 export namespace Event {

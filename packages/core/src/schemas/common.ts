@@ -11,7 +11,7 @@
  */
 
 import { z } from "zod";
-import { TicketStatus as PrismaTicketStatus } from "../prisma/client";
+import { TicketStatus as PrismaTicketStatus } from "@prisma/client";
 
 // Discord ID validation (stored as string)
 // TODO: Add snowflake timestamp validation and length checks

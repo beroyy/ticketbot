@@ -1,4 +1,5 @@
-import { prisma, type TeamRole, type TeamRoleMember, TeamRoleStatus } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
+import { TeamRoleStatus, type TeamRole, type TeamRoleMember, type DiscordUser } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
 import { cacheService, CacheKeys, CacheTTL } from "../../prisma/services/cache";
 
@@ -37,7 +38,7 @@ export namespace Team {
   // Rich domain types
   export type RoleMemberWithDetails = TeamRoleMember & {
     teamRole: TeamRole;
-    discordUser: import("../../prisma/client").DiscordUser;
+    discordUser: DiscordUser;
   };
 
   /**

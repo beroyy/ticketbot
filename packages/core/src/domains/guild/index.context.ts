@@ -1,11 +1,12 @@
-import { prisma, TicketStatus } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../schemas/permissions-constants";
-import type {
-  Prisma,
-  Guild as _PrismaGuild,
-  TeamRole as _TeamRole,
-  Blacklist as _Blacklist,
+import {
+  TicketStatus,
+  type Prisma,
+  type Guild as _PrismaGuild,
+  type TeamRole as _TeamRole,
+  type Blacklist as _Blacklist,
 } from "@prisma/client";
 
 // Type for the formatted API response

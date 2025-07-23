@@ -1,4 +1,5 @@
-import { prisma, type TeamRole, type TeamRoleMember, TeamRoleStatus } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
+import { TeamRoleStatus, type TeamRole, type TeamRoleMember } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
 import { cacheService, CacheKeys, CacheTTL } from "../../prisma/services/cache";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";

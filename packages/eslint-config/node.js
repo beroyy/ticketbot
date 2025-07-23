@@ -3,7 +3,6 @@ import globals from "globals";
 
 /**
  * ESLint configuration for Node.js applications
- * @type {import("eslint").Linter.Config}
  */
 export const config = [
   ...baseConfig,

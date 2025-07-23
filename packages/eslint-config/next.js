@@ -3,7 +3,6 @@ import globals from "globals";
 
 /**
  * ESLint configuration for Next.js applications
- * @type {import("eslint").Linter.Config}
  */
 export const config = [
   ...baseConfig,

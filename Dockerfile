@@ -22,6 +22,9 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
+# Generate Prisma client
+RUN pnpm --filter @ticketsbot/core db:generate
+
 # Build only API and Bot applications
 RUN pnpm turbo build --filter=@ticketsbot/api --filter=@ticketsbot/bot
 

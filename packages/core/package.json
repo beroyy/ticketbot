@@ -10,11 +10,11 @@
     "lint": "eslint --config eslint.config.js src/",
     "test": "vitest --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts --watch",
-    "db:generate": "prisma generate --schema=./prisma --no-hints",
-    "db:push": "prisma db push --schema=./prisma",
-    "db:push:force": "prisma db push --schema=./prisma --force-reset",
-    "db:migrate": "prisma migrate dev --schema=./prisma",
-    "db:studio": "prisma studio --schema=./prisma"
+    "db:generate": "prisma generate --schema=./prisma/ --no-hints",
+    "db:push": "prisma db push --schema=./prisma/",
+    "db:push:force": "prisma db push --schema=./prisma/ --force-reset",
+    "db:migrate": "prisma migrate dev --schema=./prisma/",
+    "db:studio": "prisma studio --schema=./prisma/"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
@@ -71,6 +71,6 @@
     "./analytics/web": "./src/analytics/web/index.ts"
   },
   "prisma": {
-    "schema": "./prisma"
+    "schema": "./prisma/"
   }
 }

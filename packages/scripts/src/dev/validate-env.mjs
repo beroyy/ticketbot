@@ -1,59 +1,51 @@
 #!/usr/bin/env node
 
-import { loadAndValidateEnv, z, formatEnvForLogging } from "@ticketsbot/core/env";
-import { PostgresUrlSchema, RedisUrlSchema } from "@ticketsbot/core/env/schemas/database";
-
-const MonorepoEnvSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  TURBO_ENV: z.enum(["dev", "staging", "prod"]),
-
-  DATABASE_URL: PostgresUrlSchema,
-  DIRECT_URL: PostgresUrlSchema.optional(),
-  REDIS_URL: RedisUrlSchema.optional(),
-
-  WEB_PORT: z.string().transform(Number).pipe(z.number().positive()),
-  API_PORT: z.string().transform(Number).pipe(z.number().positive()),
-  BOT_PORT: z.string().transform(Number).pipe(z.number().positive()),
-  WEB_URL: z.string().url(),
-  API_URL: z.string().url(),
-  NEXT_PUBLIC_API_URL: z.string().url(),
-
-  DISCORD_CLIENT_ID: z.string(),
-  DISCORD_CLIENT_SECRET: z.string(),
-  DISCORD_TOKEN: z.string(),
-  DISCORD_REDIRECT_URI: z.string().url(),
-
-  BETTER_AUTH_SECRET: z.string().min(32),
-
-  RUNNING_IN_DOCKER: z.string().optional(),
-  LOG_LEVEL: z.string().optional(),
-  DEV_PERMISSIONS_HEX: z.string().optional(),
-  DEV_GUILD_ID: z.string().optional(),
-  NEXT_PUBLIC_GUILD_ID: z.string().optional(),
-});
+import { 
+  loadAndValidateEnv, 
+  formatEnvForLogging,
+  EnvSchema,
+  transformEnv,
+  getEnvironmentSummary
+} from "@ticketsbot/core/env";
 
 async function validateEnvironment() {
   console.log("🔍 Validating environment variables...\n");
 
   try {
-    const env = loadAndValidateEnv(MonorepoEnvSchema);
+    // Validate required environment
+    const baseEnv = loadAndValidateEnv(EnvSchema);
+    
+    // Transform to complete configuration
+    const env = transformEnv(baseEnv);
 
-    console.log("✅ Environment validation passed!\n");
+    console.log("✅ Environment validation passed!");
+    
+    // Show which values were derived
+    const derived = [];
+    if (!baseEnv.WEB_URL) derived.push("WEB_URL");
+    if (!baseEnv.API_URL) derived.push("API_URL");
+    if (!baseEnv.WEB_PORT) derived.push("WEB_PORT");
+    if (!baseEnv.API_PORT) derived.push("API_PORT");
+    if (!baseEnv.BOT_PORT) derived.push("BOT_PORT");
+    if (!baseEnv.DISCORD_REDIRECT_URI) derived.push("DISCORD_REDIRECT_URI");
+    
+    if (derived.length > 0) {
+      console.log(`\n🔧 Derived values: ${derived.join(", ")}`);
+    }
 
-    console.log("📊 Environment Summary:");
-    console.log(`   Environment: ${env.TURBO_ENV}`);
-    console.log(`   Node Environment: ${env.NODE_ENV}`);
-    console.log(`   Database: Connected`);
-    console.log(`   Redis: ${env.REDIS_URL ? "Connected" : "Not configured"}`);
-    console.log(`   Web: ${env.WEB_URL} (port ${env.WEB_PORT})`);
-    console.log(`   API: ${env.API_URL} (port ${env.API_PORT})`);
-    console.log(`   Bot: Port ${env.BOT_PORT}`);
-    console.log(`   Discord: Client configured`);
-    console.log(`   Auth: Secret configured`);
+    // Display environment summary
+    console.log(getEnvironmentSummary(env));
 
     if (process.argv.includes("--verbose")) {
       console.log("\n📋 Full Environment (secrets redacted):");
-      console.log(formatEnvForLogging(process.env));
+      console.log(formatEnvForLogging(env));
+    }
+    
+    if (process.argv.includes("--example")) {
+      console.log("\n📝 Example .env configuration:");
+      console.log("```");
+      console.log(await import("@ticketsbot/core/env").then(m => m.ENV_EXAMPLE));
+      console.log("```");
     }
 
     return true;
@@ -65,10 +57,12 @@ async function validateEnvironment() {
     }
 
     console.error("\n💡 Tips:");
+    console.error("   - Only essential environment variables are required");
     console.error("   - Check that .env file exists");
     console.error("   - Run 'pnpm env:setup dev' to generate .env file");
-    console.error("   - Check .env.example for required variables");
-    console.error("   - Ensure all URLs are properly formatted (include http:// or https://)");
+    console.error("   - Run 'pnpm env:validate --example' to see example .env configuration");
+    console.error("   - Ensure PostgreSQL URLs start with postgresql:// or postgres://");
+    console.error("   - Ensure Redis URLs start with redis:// or rediss://");
 
     process.exit(1);
   }

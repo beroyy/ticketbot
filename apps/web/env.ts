@@ -3,33 +3,36 @@
  * Provides type-safe, validated environment variables
  */
 
-import { validateEnvFromValues, z } from "@ticketsbot/core/env/client"; // Browser-safe imports only
+import { validateEnvFromValues, z } from "@ticketsbot/core/env"; // Browser-safe imports only
 
 /**
  * Server-side environment schema
- * These variables are only available server-side
+ * Uses the standard approach - most values are derived
  */
 const serverSchema = z.object({
-  // Core configuration
+  // Core configuration (from env)
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
-  // URLs
+  // Derived URLs
   WEB_URL: z.string().url(),
   API_URL: z.string().url(),
+  
+  // Derived ports
+  WEB_PORT: z.coerce.number().positive(),
 
-  // Ports (optional)
-  WEB_PORT: z.string().optional().default("3000").transform(Number).pipe(z.number().positive()),
+  // Database (from env)
+  DATABASE_URL: z.string(),
 
-  // Database (for server-side operations)
-  DATABASE_URL: z.string().url(),
-
-  // Auth secrets (server-only)
+  // Auth secrets (from env)
   DISCORD_CLIENT_SECRET: z.string(),
   BETTER_AUTH_SECRET: z.string().min(32),
   DISCORD_REDIRECT_URI: z.string().url(),
 
-  // Redis (optional)
-  REDIS_URL: z.string().url().optional(),
+  // Redis (optional from env)
+  REDIS_URL: z.string().optional(),
+  
+  // Web-specific (optional)
+  NEXT_TELEMETRY_DISABLED: z.stringbool().optional(),
 });
 
 /**
@@ -37,11 +40,16 @@ const serverSchema = z.object({
  * These variables are exposed to the browser with NEXT_PUBLIC_ prefix
  */
 const clientSchema = z.object({
-  // Public API URL - optional with default for client-side
-  NEXT_PUBLIC_API_URL: z.string().url().optional().default("http://localhost:4001"),
+  // Public API URL - should match server API_URL
+  NEXT_PUBLIC_API_URL: z.string().url(),
 
-  // Discord OAuth (optional in client, as it might not be exposed)
+  // Discord OAuth (optional in client)
   NEXT_PUBLIC_DISCORD_CLIENT_ID: z.string().optional(),
+
+  // Feature flags
+  NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: z.stringbool().default(false).optional(),
+  NEXT_PUBLIC_FEATURE_BULK_ACTIONS: z.stringbool().default(false).optional(),
+  NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: z.stringbool().default(false).optional(),
 
   // Development helpers (optional)
   NEXT_PUBLIC_GUILD_ID: z.string().optional(),
@@ -58,6 +66,9 @@ const getClientEnv = () => {
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
       NEXT_PUBLIC_DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
       NEXT_PUBLIC_GUILD_ID: process.env.NEXT_PUBLIC_GUILD_ID,
+      NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: process.env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI,
+      NEXT_PUBLIC_FEATURE_BULK_ACTIONS: process.env.NEXT_PUBLIC_FEATURE_BULK_ACTIONS,
+      NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: process.env.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS,
     };
   }
   // On server: use process.env directly

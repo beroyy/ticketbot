@@ -73,51 +73,41 @@ jobs:
         env:
           # Core environment
           NODE_ENV: ${{ vars.NODE_ENV || 'test' }}
-          TURBO_ENV: ${{ vars.TURBO_ENV || 'dev' }}
 
           # Database
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
 
-          # Service URLs and ports
-          WEB_PORT: ${{ vars.WEB_PORT || '3000' }}
-          API_PORT: ${{ vars.API_PORT || '3001' }}
-          BOT_PORT: ${{ vars.BOT_PORT || '3002' }}
-          WEB_URL: ${{ vars.WEB_URL || 'http://localhost:3000' }}
-          API_URL: ${{ vars.API_URL || 'http://localhost:3001' }}
+          # Optional configuration
+          BASE_DOMAIN: ${{ vars.BASE_DOMAIN }}
+          PORT_OFFSET: ${{ vars.PORT_OFFSET || '3000' }}
 
           # Discord configuration
           DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
           DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-          DISCORD_REDIRECT_URI: ${{ vars.DISCORD_REDIRECT_URI || 'http://localhost:3001/auth/callback/discord' }}
 
           # Auth
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 
           # Feature flags (build-time)
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
           NEXT_PUBLIC_GUILD_ID: ${{ vars.NEXT_PUBLIC_GUILD_ID }}
           NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: ${{ vars.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI || 'false' }}
           NEXT_PUBLIC_FEATURE_BULK_ACTIONS: ${{ vars.NEXT_PUBLIC_FEATURE_BULK_ACTIONS || 'false' }}
           NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: ${{ vars.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS || 'false' }}
+          
+          # Development helpers
+          DEV_PERMISSIONS_HEX: ${{ vars.DEV_PERMISSIONS_HEX }}
+          DEV_GUILD_ID: ${{ vars.DEV_GUILD_ID }}
         run: |
           # Create .env file from environment variables
-          printenv | grep -E '^(NODE_ENV|TURBO_ENV|DATABASE_URL|REDIS_URL|WEB_|API_|BOT_|DISCORD_|BETTER_AUTH_|NEXT_PUBLIC_)' > .env
+          printenv | grep -E '^(NODE_ENV|DATABASE_URL|REDIS_URL|DISCORD_|BETTER_AUTH_|BASE_DOMAIN|PORT_OFFSET|NEXT_PUBLIC_|DEV_)' > .env
 
           # Validate environment configuration
           pnpm env:validate
 
-          # Verify cross-app consistency
-          echo "🔍 Verifying cross-app environment consistency..."
-
-          # Check API_URL matches between services
-          if [ "$API_URL" != "$NEXT_PUBLIC_API_URL" ]; then
-            echo "❌ API_URL mismatch: API_URL=$API_URL, NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
-            exit 1
-          fi
-
           echo "✅ Environment validation passed"
+          echo "📊 Most configuration values were automatically derived from minimal inputs"
 
       - name: Generate Prisma Client
         run: pnpm --filter @ticketsbot/core db:generate

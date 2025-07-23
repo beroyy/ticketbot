@@ -1,29 +1,19 @@
-import { loadAndValidateEnv, z } from "@ticketsbot/core/env";
+import { loadEnv, createAppEnvLoader, z } from "@ticketsbot/core/env";
 
-const BotConfigSchema = z.object({
-  NODE_ENV: z.enum(["development", "staging", "production"]).default("development"),
-  LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).optional().default("info"),
-  RUNNING_IN_DOCKER: z
-    .string()
-    .optional()
-    .default("false")
-    .transform((v) => v === "true"),
-
-  DISCORD_TOKEN: z.string().min(1),
-  DISCORD_CLIENT_ID: z.string().min(1),
-
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string().url().optional(),
-
-  BOT_PORT: z.string().optional().default("3002").transform(Number).pipe(z.number().positive()),
-
-  SKIP_DB_INIT: z
-    .string()
-    .optional()
-    .transform((v) => v === "true"),
+// Bot-specific environment overrides (all optional)
+const BotSpecificSchema = z.object({
+  // Bot-specific flags
+  SKIP_DB_INIT: z.stringbool().optional(),
+  
+  // Discord bot settings
+  DISCORD_BOT_PREFIX: z.string().max(5).default("!").optional(),
+  DISCORD_BOT_STATUS: z.string().max(128).optional(),
 });
 
-export const env = loadAndValidateEnv(BotConfigSchema);
+// Create bot environment loader
+const loadBotEnv = createAppEnvLoader(BotSpecificSchema);
+
+export const env = loadBotEnv();
 
 if (env.RUNNING_IN_DOCKER) {
   console.log("🐳 [Bot] Running in Docker - using environment variables from container");
@@ -37,6 +27,7 @@ console.log({
   clientId: env.DISCORD_CLIENT_ID,
   redis: env.REDIS_URL ? "configured" : "not configured",
   docker: env.RUNNING_IN_DOCKER,
+  status: env.DISCORD_BOT_STATUS || "default",
 });
 
 export const botConfig = {

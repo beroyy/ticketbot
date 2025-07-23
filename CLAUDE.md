@@ -185,6 +185,49 @@ pnpm lint
 turbo build
 ```
 
+## Environment Configuration
+
+The monorepo uses a **minimal environment variable approach** where most values are automatically derived:
+
+### Required Environment Variables (only 6!)
+
+```env
+# Core
+NODE_ENV=development
+DATABASE_URL=postgresql://user:pass@localhost:5432/ticketsbot
+BETTER_AUTH_SECRET=your-32-character-secret
+
+# Discord
+DISCORD_TOKEN=your-bot-token
+DISCORD_CLIENT_ID=123456789012345678
+DISCORD_CLIENT_SECRET=your-discord-secret
+```
+
+### Optional Variables
+
+```env
+# Base configuration
+PORT_OFFSET=3000              # Base port (default: 3000)
+BASE_DOMAIN=ticketsbot.dev    # Required for production
+REDIS_URL=redis://localhost:6379
+
+# Feature flags
+NEXT_PUBLIC_FEATURE_NEW_TICKET_UI=true
+NEXT_PUBLIC_FEATURE_BULK_ACTIONS=false
+NEXT_PUBLIC_FEATURE_ADVANCED_FORMS=false
+```
+
+### Automatically Derived Values
+
+The system automatically derives these values:
+- `WEB_URL`, `API_URL` - Based on NODE_ENV and BASE_DOMAIN
+- `WEB_PORT`, `API_PORT`, `BOT_PORT` - Based on PORT_OFFSET
+- `DISCORD_REDIRECT_URI` - Based on API_URL
+- `LOG_LEVEL`, `LOG_REQUESTS` - Based on NODE_ENV
+- And many more...
+
+This reduces configuration from 23+ variables to just 6 required ones!
+
 ## Important Patterns & Considerations
 
 ### Code Quality Improvements
@@ -251,6 +294,50 @@ turbo build
 - Any unclear architectural decisions
 
 ## Development Feature Flags
+
+### Build-Time Feature Flags (UI Features)
+
+The application supports build-time feature flags for UI features using Next.js environment variables:
+
+1. **Available Feature Flags**:
+   ```env
+   # Enable new ticket UI design
+   NEXT_PUBLIC_FEATURE_NEW_TICKET_UI=true
+   
+   # Enable bulk ticket operations
+   NEXT_PUBLIC_FEATURE_BULK_ACTIONS=true
+   
+   # Enable advanced form builder
+   NEXT_PUBLIC_FEATURE_ADVANCED_FORMS=true
+   ```
+
+2. **Usage in Code**:
+   ```typescript
+   // In React components
+   if (process.env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI === 'true') {
+     return <NewTicketUI />;
+   }
+   return <LegacyTicketUI />;
+   ```
+
+3. **Important Notes**:
+   - Feature flags are **build-time only** - changing them requires rebuilding
+   - Next.js statically replaces these values during build
+   - Dead code elimination removes unused branches
+   - All flags default to `'false'` if not set
+   - Use string comparison (`=== 'true'`) for consistency
+
+4. **Setting Feature Flags**:
+   - **Development**: Add to `.env` file at project root
+   - **CI/CD**: Set as GitHub Variables (not Secrets)
+   - **Production**: Configure in Render.com environment groups
+
+5. **Best Practices**:
+   - Keep feature flag count under 10 for maintainability
+   - Use descriptive names with `NEXT_PUBLIC_FEATURE_` prefix
+   - Document what each flag controls in code comments
+   - Remove flags after features are fully rolled out
+   - Consider runtime flags only if you need gradual rollouts
 
 ### Automatic Database Seeding
 
@@ -368,6 +455,8 @@ When making code changes, always run these commands to ensure quality:
 - `pnpm lint` - Check for linting errors
 - `pnpm typecheck` - Check for TypeScript errors
 - `turbo build` - Ensure everything builds correctly
+- `pnpm env:validate` - Validate environment configuration
+- `pnpm env:validate --minimal` - Show minimal .env example
 
 ## State Management Patterns (Web App)
 

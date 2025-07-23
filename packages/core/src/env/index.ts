@@ -33,10 +33,23 @@ export {
   type ServicesEnv,
 } from "./schemas/services";
 
+export {
+  EnvSchema,
+  type Env,
+  ENV_EXAMPLE,
+} from "./schemas/env-schema";
+
 // Export loaders
 export { type DotenvOptions, loadDotenv, loadEnvFile } from "./loaders/dotenv";
 
-export { getEnv, requireEnv, getBooleanEnv, getNumberEnv } from "./loaders";
+export { 
+  getEnv, 
+  requireEnv, 
+  getBooleanEnv, 
+  getNumberEnv,
+  loadEnv,
+  createAppEnvLoader,
+} from "./loaders";
 
 // Export utilities
 export {
@@ -50,6 +63,15 @@ export {
 } from "./utils/env";
 
 export { findMonorepoRoot, clearRootCache } from "./utils/find-root";
+
+// Export transformers
+export {
+  deriveEnvironment,
+  transformEnv,
+  getEnvironmentSummary,
+  type BaseEnvConfig,
+  type CompleteEnvConfig,
+} from "./transformers";
 
 // Convenience re-exports
 export { z } from "zod";

@@ -1,0 +1,223 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      pnpm-version: ${{ steps.pnpm-version.outputs.version }}
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get pnpm version
+        id: pnpm-version
+        run: |
+          PNPM_VERSION=$(grep '"packageManager"' package.json | sed -E 's/.*"pnpm@([^"]+)".*/\1/')
+          echo "version=${PNPM_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json') }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  code-quality:
+    name: Type Check & Lint
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ needs.setup.outputs.pnpm-version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            apps/*/dist
+            apps/*/.next/cache
+            packages/*/dist
+          key: ${{ needs.setup.outputs.cache-key }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json') }}-
+            turbo-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create and validate environment
+        env:
+          # Core environment
+          NODE_ENV: ${{ vars.NODE_ENV || 'test' }}
+          TURBO_ENV: ${{ vars.TURBO_ENV || 'dev' }}
+          
+          # Database
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          
+          # Service URLs and ports
+          WEB_PORT: ${{ vars.WEB_PORT || '3000' }}
+          API_PORT: ${{ vars.API_PORT || '3001' }}
+          BOT_PORT: ${{ vars.BOT_PORT || '3002' }}
+          WEB_URL: ${{ vars.WEB_URL || 'http://localhost:3000' }}
+          API_URL: ${{ vars.API_URL || 'http://localhost:3001' }}
+          
+          # Discord configuration
+          DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_REDIRECT_URI: ${{ vars.DISCORD_REDIRECT_URI || 'http://localhost:3001/auth/callback/discord' }}
+          
+          # Auth
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          
+          # Feature flags (build-time)
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
+          NEXT_PUBLIC_GUILD_ID: ${{ vars.NEXT_PUBLIC_GUILD_ID }}
+          NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: ${{ vars.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI || 'false' }}
+          NEXT_PUBLIC_FEATURE_BULK_ACTIONS: ${{ vars.NEXT_PUBLIC_FEATURE_BULK_ACTIONS || 'false' }}
+          NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: ${{ vars.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS || 'false' }}
+        run: |
+          # Create .env file from environment variables
+          printenv | grep -E '^(NODE_ENV|TURBO_ENV|DATABASE_URL|REDIS_URL|WEB_|API_|BOT_|DISCORD_|BETTER_AUTH_|NEXT_PUBLIC_)' > .env
+          
+          # Validate environment configuration
+          pnpm env:validate
+          
+          # Verify cross-app consistency
+          echo "🔍 Verifying cross-app environment consistency..."
+          
+          # Check API_URL matches between services
+          if [ "$API_URL" != "$NEXT_PUBLIC_API_URL" ]; then
+            echo "❌ API_URL mismatch: API_URL=$API_URL, NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
+            exit 1
+          fi
+          
+          echo "✅ Environment validation passed"
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @ticketsbot/core db:generate
+
+      - name: Run type checking and linting
+        run: |
+          # Run both in parallel using Turborepo
+          pnpm turbo run typecheck lint --cache-dir=.turbo
+          
+          # Save Turborepo cache summary
+          echo "📊 Turborepo cache summary:"
+          pnpm turbo run typecheck lint --dry-run --summarize
+
+      - name: Upload Turborepo cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .turbo
+            apps/*/dist
+            apps/*/.next/cache
+            packages/*/dist
+          key: ${{ needs.setup.outputs.cache-key }}
+
+  validate-env-schemas:
+    name: Validate Environment Schemas
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ needs.setup.outputs.pnpm-version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate environment schemas
+        run: |
+          # Create a test script to validate schemas
+          cat > validate-schemas.ts << 'EOF'
+          import { CompleteEnvSchema } from "@ticketsbot/core/env";
+          import { z } from "zod";
+          
+          // Define feature flag schema
+          const FeatureFlagSchema = z.object({
+            NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: z.enum(['true', 'false']).optional(),
+            NEXT_PUBLIC_FEATURE_BULK_ACTIONS: z.enum(['true', 'false']).optional(),
+            NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: z.enum(['true', 'false']).optional(),
+          });
+          
+          // Test that schemas can parse environment
+          const testEnv = {
+            NODE_ENV: "test",
+            TURBO_ENV: "dev",
+            DATABASE_URL: "postgresql://test:test@localhost:5432/test",
+            API_PORT: 3001,
+            WEB_PORT: 3000,
+            BOT_PORT: 3002,
+            DISCORD_TOKEN: "test_token",
+            DISCORD_CLIENT_ID: "123456789012345678",
+            DISCORD_CLIENT_SECRET: "test_secret_32_chars_minimum_length",
+            BETTER_AUTH_SECRET: "test_secret_must_be_at_least_32_characters_long",
+            NEXT_PUBLIC_API_URL: "http://localhost:3001",
+            NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: "false",
+          };
+          
+          try {
+            CompleteEnvSchema.parse(testEnv);
+            FeatureFlagSchema.parse(testEnv);
+            console.log("✅ Schema validation successful");
+          } catch (error) {
+            console.error("❌ Schema validation failed:", error);
+            process.exit(1);
+          }
+          EOF
+          
+          # Run validation
+          pnpm tsx validate-schemas.ts
+          
+          # Clean up
+          rm validate-schemas.ts
+
+  quality-report:
+    name: Quality Report
+    needs: [code-quality, validate-env-schemas]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.code-quality.result }}" != "success" ] || [ "${{ needs.validate-env-schemas.result }}" != "success" ]; then
+            echo "❌ Code quality checks failed"
+            exit 1
+          fi
+          echo "✅ All quality checks passed"

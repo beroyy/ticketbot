@@ -21,6 +21,8 @@
       "env": [
         "NODE_ENV",
         "DATABASE_URL",
+        "DIRECT_URL",
+        "BETTER_AUTH_SECRET",
         "NEXT_PUBLIC_*",
         "TURBO_ENV",
         "NEON_BRANCH_NAME"

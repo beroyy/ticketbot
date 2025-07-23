@@ -58,6 +58,7 @@
     "./prisma/client": "./src/prisma/client.ts",
     "./domains": "./src/domains/index.ts",
     "./domains/*": "./src/domains/*/index.ts",
+    "./domains/*/client": "./src/domains/*/client.ts",
     "./discord": "./src/discord/index.ts",
     "./context": "./src/context/index.ts",
     "./env": "./src/env/index.ts",

@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useGuildSettings, useUpdateGuildSettings } from "@/features/settings/queries";
 import { useSelectServer } from "@/features/user/ui/select-server-provider";
 import { FormWrapper } from "@/components/forms/form-wrapper";
-import { AutoCloseSchema } from "@ticketsbot/core/domains/guild";
+import { AutoCloseSchema } from "@ticketsbot/core/domains/guild/client";
 import { z } from "zod";
 import {
   FormControl,

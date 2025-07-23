@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CreatePanelSchema } from "@ticketsbot/core/domains/panel";
+import { CreatePanelSchema } from "@ticketsbot/core/domains/panel/client";
 
 // Additional UI-specific schemas
 const questionSchema = z.object({

@@ -3,7 +3,7 @@
  * Provides type-safe, validated environment variables
  */
 
-import { validateEnvFromValues, z } from "@ticketsbot/core/env"; // Browser-safe imports only
+import { validateEnvFromValues, z } from "@ticketsbot/core/env/client"; // Browser-safe imports only
 
 /**
  * Server-side environment schema

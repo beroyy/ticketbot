@@ -45,7 +45,7 @@ export function DiscordPreview({ data }: DiscordPreviewProps) {
                 </CardHeader>
 
                 <CardContent className="space-y-3 text-sm text-gray-300">
-                  {textSections.map((section, index) => (
+                  {textSections && Array.isArray(textSections) && textSections.map((section, index) => (
                     <div key={section.id || index}>
                       <div className="font-semibold text-white">{section.name}</div>
                       <div>{section.value}</div>
@@ -82,7 +82,7 @@ export function DiscordPreview({ data }: DiscordPreviewProps) {
 
               {/* Action Row */}
               <div className="mt-3">
-                <Button className="text-white" style={{ backgroundColor: buttonColor }}>
+                <Button className="text-white" style={{ backgroundColor: buttonColor || "#5865F2" }}>
                   {emoji && <span className="mr-2">{emoji}</span>}
                   {buttonText}
                 </Button>

@@ -47,9 +47,9 @@ export default function PanelContainer({ mode, panel, onBack }: PanelContainerPr
           singlePanel: {
             title: data.title,
             buttonText: data.buttonText,
-            emoji: data.emoji,
-            categoryId: data.categoryId,
-            buttonColor: data.buttonColor,
+            emoji: data.emoji || undefined,
+            categoryId: data.categoryId || undefined,
+            buttonColor: data.buttonColor || undefined,
             questions: data.questions
               .filter((q) => q.enabled)
               .map((q) => ({
@@ -71,9 +71,9 @@ export default function PanelContainer({ mode, panel, onBack }: PanelContainerPr
               ...q,
               placeholder: q.placeholder || "",
             })),
-          emoji: data.emoji,
+          emoji: data.emoji || undefined,
           buttonText: data.buttonText,
-          color: data.buttonColor,
+          color: data.buttonColor || undefined,
           welcomeMessage: data.welcomeMessage?.content,
           introTitle: data.welcomeMessage?.title,
           guildId: selectedGuildId,
@@ -104,11 +104,21 @@ export default function PanelContainer({ mode, panel, onBack }: PanelContainerPr
   // Convert panel to initial values if editing
   const initialValues = panel
     ? {
-        channelId: panel.channelId || "",
+        // Required fields from CreatePanelSchema
+        type: panel.type,
         title: panel.title || "",
+        guildId: panel.guildId,
+        channelId: panel.channelId || "",
+        orderIndex: panel.orderIndex ?? 0,
+        enabled: panel.enabled ?? true,
+        
+        // UI-specific fields
         buttonText: panel.buttonText || "Create Ticket",
-        buttonColor: panel.color || "#5865F2",
-        emoji: panel.emoji || "",
+        buttonColor: panel.color ?? "#5865F2",
+        emoji: panel.emoji ?? "",
+        categoryId: panel.categoryId ?? "",
+        
+        // Complex fields
         questions: [
           {
             id: "1",
@@ -120,20 +130,25 @@ export default function PanelContainer({ mode, panel, onBack }: PanelContainerPr
         ],
         textSections: [],
         welcomeMessage: {
-          title: panel.introTitle || "",
-          content: panel.welcomeMessage || "",
+          title: panel.introTitle ?? "",
+          content: panel.welcomeMessage ?? "",
           fields: [],
         },
         accessControl: {
           allowEveryone: true,
           roles: [],
         },
+        
+        // Optional fields
         mentionOnOpen: "",
         hideMentions: false,
-        categoryId: panel.categoryId || "",
         namingScheme: false,
         largeImageUrl: "",
         smallImageUrl: "",
+        teamId: undefined,
+        ticketCategory: undefined,
+        exitSurveyForm: undefined,
+        awaitingResponseCategory: undefined,
       }
     : undefined;
 

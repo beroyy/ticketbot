@@ -54,7 +54,7 @@ export function ContentStep({ form }: ContentStepProps) {
     const currentSections = form.getValues("textSections") || [];
     form.setValue(
       "textSections",
-      currentSections.filter((_, i) => i !== index)
+      Array.isArray(currentSections) ? currentSections.filter((_, i) => i !== index) : []
     );
   };
 
@@ -159,7 +159,7 @@ export function ContentStep({ form }: ContentStepProps) {
         </div>
 
         <div className="space-y-4">
-          {textSections.map((section, index) => (
+          {Array.isArray(textSections) && textSections.map((section, index) => (
             <Card key={section.id}>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">

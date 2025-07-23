@@ -46,7 +46,7 @@ const defaultValues: Partial<PanelFormData> = {
       characterLimit: 500,
     },
   ],
-  textSections: [],
+  textSections: [] as Array<{ id: string; name: string; value: string }>,
   accessControl: {
     allowEveryone: true,
     roles: [],

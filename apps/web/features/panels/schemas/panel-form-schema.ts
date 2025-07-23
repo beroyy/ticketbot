@@ -64,6 +64,13 @@ export const panelAccessSchema = CreatePanelSchema.pick({
   mentionOnOpen: z.string().optional(),
 });
 
+// Text section schema for UI
+const textSectionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  value: z.string(),
+});
+
 // Complete panel form schema
 export const panelFormSchema = CreatePanelSchema.extend({
   // Additional UI-specific fields
@@ -98,6 +105,9 @@ export const panelFormSchema = CreatePanelSchema.extend({
         .optional(),
     })
     .optional(),
+    
+  // Override textSections with proper array type
+  textSections: z.array(textSectionSchema).default([]),
 });
 
 export type PanelFormData = z.infer<typeof panelFormSchema>;

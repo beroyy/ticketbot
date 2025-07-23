@@ -4,6 +4,7 @@
   "description": "Core schemas, validation, utilities, and database layer for TicketsBot",
   "type": "module",
   "scripts": {
+    "postinstall": "node -e \"if (process.env.CI !== 'true' || process.env.VERCEL) { require('child_process').execSync('prisma generate --schema=./prisma/ --no-hints', {stdio: 'inherit'}); }\"",
     "dev": "tsc --watch --noEmit",
     "prebuild": "prisma generate --schema=./prisma/ --no-hints",
     "build": "tsc --project tsconfig.json --noEmit",

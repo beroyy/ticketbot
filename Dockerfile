@@ -6,6 +6,9 @@ RUN apk add --no-cache bash git python3 make g++ && \
 
 WORKDIR /app
 
+# Set CI environment to skip postinstall during Docker build
+ENV CI=true
+
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/api/package.json ./apps/api/

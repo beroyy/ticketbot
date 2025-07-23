@@ -82,6 +82,42 @@ const getClientEnv = () => {
 const validateEnvironment = () => {
   // Server-side validation (only runs on server)
   if (typeof window === "undefined") {
+    // During build phase, Next.js may not have all env vars available
+    // Check if we're in the build phase
+    const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+    
+    if (isBuildPhase) {
+      // During build, return minimal valid config to allow page data collection
+      // The actual validation will happen at runtime
+      console.warn('Build phase detected - using minimal env validation');
+      
+      // Return minimal valid values for build phase
+      const server: z.infer<typeof serverSchema> = {
+        NODE_ENV: process.env.NODE_ENV as any || "production",
+        WEB_URL: process.env.WEB_URL || "http://localhost:9000",
+        API_URL: process.env.API_URL || "http://localhost:9001", 
+        WEB_PORT: Number(process.env.WEB_PORT) || 9000,
+        DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5432/ticketsbot",
+        DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET || "build-phase",
+        BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || "build-phase-secret-minimum-32-characters",
+        DISCORD_REDIRECT_URI: process.env.DISCORD_REDIRECT_URI || "http://localhost:9001/auth/callback/discord",
+        REDIS_URL: process.env.REDIS_URL,
+        NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED === 'true' ? true : process.env.NEXT_TELEMETRY_DISABLED === 'false' ? false : undefined,
+      };
+      
+      // For client schema, provide minimal values during build
+      const clientEnv = {
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001",
+        NEXT_PUBLIC_DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
+        NEXT_PUBLIC_GUILD_ID: process.env.NEXT_PUBLIC_GUILD_ID,
+        NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: process.env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI,
+        NEXT_PUBLIC_FEATURE_BULK_ACTIONS: process.env.NEXT_PUBLIC_FEATURE_BULK_ACTIONS,
+        NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: process.env.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS,
+      };
+      const client = validateEnvFromValues(clientSchema, clientEnv);
+      return { server, client };
+    }
+    
     // Server: Use validateEnvFromValues since .env is already loaded by Next.js
     const server = validateEnvFromValues(serverSchema);
     const client = validateEnvFromValues(clientSchema);

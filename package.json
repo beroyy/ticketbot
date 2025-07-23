@@ -14,7 +14,6 @@
     "packages/*"
   ],
   "scripts": {
-    "postinstall": "turbo run db:generate --filter=@ticketsbot/core",
     "dev": "tsx packages/scripts/src/dev/start-dev-services.ts",
     "build": "turbo run build",
     "start": "turbo run start",

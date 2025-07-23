@@ -65,34 +65,36 @@ jobs:
             turbo-${{ runner.os }}-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm add -g tsx
 
       - name: Create and validate environment
         env:
           # Core environment
           NODE_ENV: ${{ vars.NODE_ENV || 'test' }}
           TURBO_ENV: ${{ vars.TURBO_ENV || 'dev' }}
-          
+
           # Database
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
-          
+
           # Service URLs and ports
           WEB_PORT: ${{ vars.WEB_PORT || '3000' }}
           API_PORT: ${{ vars.API_PORT || '3001' }}
           BOT_PORT: ${{ vars.BOT_PORT || '3002' }}
           WEB_URL: ${{ vars.WEB_URL || 'http://localhost:3000' }}
           API_URL: ${{ vars.API_URL || 'http://localhost:3001' }}
-          
+
           # Discord configuration
           DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
           DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           DISCORD_REDIRECT_URI: ${{ vars.DISCORD_REDIRECT_URI || 'http://localhost:3001/auth/callback/discord' }}
-          
+
           # Auth
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          
+
           # Feature flags (build-time)
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
           NEXT_PUBLIC_GUILD_ID: ${{ vars.NEXT_PUBLIC_GUILD_ID }}
@@ -102,19 +104,19 @@ jobs:
         run: |
           # Create .env file from environment variables
           printenv | grep -E '^(NODE_ENV|TURBO_ENV|DATABASE_URL|REDIS_URL|WEB_|API_|BOT_|DISCORD_|BETTER_AUTH_|NEXT_PUBLIC_)' > .env
-          
+
           # Validate environment configuration
           pnpm env:validate
-          
+
           # Verify cross-app consistency
           echo "🔍 Verifying cross-app environment consistency..."
-          
+
           # Check API_URL matches between services
           if [ "$API_URL" != "$NEXT_PUBLIC_API_URL" ]; then
             echo "❌ API_URL mismatch: API_URL=$API_URL, NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
             exit 1
           fi
-          
+
           echo "✅ Environment validation passed"
 
       - name: Generate Prisma Client
@@ -124,7 +126,7 @@ jobs:
         run: |
           # Run both in parallel using Turborepo
           pnpm turbo run typecheck lint --cache-dir=.turbo
-          
+
           # Save Turborepo cache summary
           echo "📊 Turborepo cache summary:"
           pnpm turbo run typecheck lint --dry-run --summarize
@@ -168,14 +170,14 @@ jobs:
           cat > validate-schemas.ts << 'EOF'
           import { CompleteEnvSchema } from "@ticketsbot/core/env";
           import { z } from "zod";
-          
+
           // Define feature flag schema
           const FeatureFlagSchema = z.object({
             NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: z.enum(['true', 'false']).optional(),
             NEXT_PUBLIC_FEATURE_BULK_ACTIONS: z.enum(['true', 'false']).optional(),
             NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: z.enum(['true', 'false']).optional(),
           });
-          
+
           // Test that schemas can parse environment
           const testEnv = {
             NODE_ENV: "test",
@@ -191,7 +193,7 @@ jobs:
             NEXT_PUBLIC_API_URL: "http://localhost:3001",
             NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: "false",
           };
-          
+
           try {
             CompleteEnvSchema.parse(testEnv);
             FeatureFlagSchema.parse(testEnv);
@@ -201,10 +203,10 @@ jobs:
             process.exit(1);
           }
           EOF
-          
+
           # Run validation
           pnpm tsx validate-schemas.ts
-          
+
           # Clean up
           rm validate-schemas.ts
 

@@ -40,7 +40,7 @@
     "setup-env": "tsx packages/scripts/src/dev/env-setup.ts",
     "validate-env": "tsx packages/scripts/src/dev/validate-env.mjs",
     "env:setup": "tsx packages/scripts/src/dev/env-setup.ts",
-    "env:validate": "node packages/scripts/src/dev/validate-env.mjs",
+    "env:validate": "tsx packages/scripts/src/dev/validate-env.mjs",
     "start": "turbo run start",
     "docker": "docker compose up -d",
     "docker:build": "docker compose build",

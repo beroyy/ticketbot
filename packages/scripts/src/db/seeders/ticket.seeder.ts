@@ -53,6 +53,13 @@ export class TicketSeeder {
               categoryId: this.snowflake.generate(),
               subject: scenario.subject,
               status: "OPEN",
+            },
+          });
+
+          // Create transcript with form data
+          const transcript = await prisma.transcript.create({
+            data: {
+              ticketId: ticket.id,
               formData: {
                 issue_type: scenario.category,
                 priority: scenario.priority,
@@ -65,9 +72,11 @@ export class TicketSeeder {
           // Claim ticket if assignee
           if (assignee) {
             afterTransaction(async () => {
-              await prisma.ticket.update({
-                where: { id: ticket.id },
+              await prisma.ticketLifecycleEvent.create({
                 data: {
+                  ticketId: ticket.id,
+                  action: "claimed",
+                  performedById: assignee.id,
                   claimedById: assignee.id,
                 },
               });
@@ -77,19 +86,30 @@ export class TicketSeeder {
           // Close ticket if scenario says so
           if (scenario.status === "CLOSED") {
             afterTransaction(async () => {
+              // Update ticket status
               await prisma.ticket.update({
                 where: { id: ticket.id },
                 data: {
                   status: "CLOSED",
-                  closedById: assignee?.id || opener.id,
                   closedAt: new Date(),
+                },
+              });
+              
+              // Create lifecycle event for closure
+              await prisma.ticketLifecycleEvent.create({
+                data: {
+                  ticketId: ticket.id,
+                  action: "closed",
+                  performedById: assignee?.id || opener.id,
+                  closedById: assignee?.id || opener.id,
+                  closeReason: "Resolved",
                 },
               });
             });
           }
 
           // Add messages
-          await this.addTicketMessages(ticket.id, scenario, opener, assignee);
+          await this.addTicketMessages(transcript.id, scenario, opener, assignee);
 
           created++;
         }
@@ -102,7 +122,7 @@ export class TicketSeeder {
   }
 
   private async addTicketMessages(
-    ticketId: number,
+    transcriptId: number,
     scenario: ReturnType<typeof generateTicketScenario>,
     opener: UserWithRole,
     assignee?: UserWithRole
@@ -110,7 +130,7 @@ export class TicketSeeder {
     // Initial message from opener
     await prisma.ticketMessage.create({
       data: {
-        ticketId,
+        transcriptId,
         messageId: this.snowflake.generate(),
         authorId: opener.id,
         content: scenario.description,
@@ -122,7 +142,7 @@ export class TicketSeeder {
     if (assignee) {
       await prisma.ticketMessage.create({
         data: {
-          ticketId,
+          transcriptId,
           messageId: this.snowflake.generate(),
           authorId: assignee.id,
           content: `Thanks for contacting support! I'm looking into your ${scenario.category.toLowerCase()} issue.`,
@@ -135,7 +155,7 @@ export class TicketSeeder {
       if (scenario.priority === "High" || scenario.priority === "Urgent") {
         await prisma.ticketMessage.create({
           data: {
-            ticketId,
+            transcriptId,
             messageId: this.snowflake.generate(),
             authorId: assignee.id,
             content:
@@ -150,7 +170,7 @@ export class TicketSeeder {
       if (scenario.status === "CLOSED" && scenario.resolutionNotes) {
         await prisma.ticketMessage.create({
           data: {
-            ticketId,
+            transcriptId,
             messageId: this.snowflake.generate(),
             authorId: assignee.id,
             content: scenario.resolutionNotes,
@@ -171,6 +191,8 @@ export class TicketSeeder {
       await prisma.ticketHistory.deleteMany({});
       await prisma.ticketFieldResponse.deleteMany({});
       await prisma.ticketFeedback.deleteMany({});
+      await prisma.ticketLifecycleEvent.deleteMany({});
+      await prisma.transcript.deleteMany({});
       await prisma.ticket.deleteMany({});
     });
 

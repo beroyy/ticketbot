@@ -5,7 +5,7 @@ export { prisma } from "./client";
 export * from "@prisma/client";
 
 // Re-export services
-export { CacheService, cacheService, CacheKeys, CacheTTL, cacheMetrics } from "./services/cache";
+export { type CacheService, cacheService, CacheKeys, CacheTTL, cacheMetrics } from "./services/cache";
 
 export {
   type ValidationResult,

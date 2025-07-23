@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ticketsbot-ai-app
+    name: ticketsbot-api-bot
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -12,40 +12,33 @@ services:
     healthCheckPath: /health
     numInstances: 1
     dockerCommand: |
-      bash -c "pnpm db:push && npx concurrently -n api,bot,web -c blue,green,cyan 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start' 'pnpm --filter @ticketsbot/web start'"
+      bash -c "pnpm db:push && npx concurrently -n api,bot -c blue,green 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start'"
 
     envVars:
-      - fromGroup: ticketsbot-ai-core
-      - fromGroup: ticketsbot-ai-secrets
-      - fromGroup: ticketsbot-ai-features
+      - fromGroup: ticketsbot-core
+      - fromGroup: ticketsbot-secrets
       - key: NODE_ENV
         value: production
-      - key: TURBO_ENV
-        value: prod
 
 envVarGroups:
-  - name: ticketsbot-ai-core
+  - name: ticketsbot-core
     envVars:
-      - key: WEB_PORT
-        value: "3000"
       - key: API_PORT
         value: "3001"
       - key: BOT_PORT
         value: "3002"
+      - key: BASE_DOMAIN
+        value: "ticketsbot.dev"
       - key: WEB_URL
-        value: "https://ticketsbot.dev"
+        value: "https://ticketsbot.vercel.app"
       - key: API_URL
-        value: "https://ticketsbot.dev"
-      - key: NEXT_PUBLIC_API_URL
-        value: "https://ticketsbot.dev"
+        value: "https://ticketsbot-api-bot.onrender.com"
       - key: DISCORD_REDIRECT_URI
-        value: "https://ticketsbot.dev/auth/callback/discord"
+        value: "https://ticketsbot-api-bot.onrender.com/auth/callback/discord"
 
-  - name: ticketsbot-ai-secrets
+  - name: ticketsbot-secrets
     envVars:
       - key: DATABASE_URL
-        value: ""
-      - key: DIRECT_URL
         value: ""
       - key: REDIS_URL
         value: ""
@@ -56,15 +49,4 @@ envVarGroups:
       - key: DISCORD_CLIENT_SECRET
         value: ""
       - key: BETTER_AUTH_SECRET
-        value: ""
-
-  - name: ticketsbot-ai-features
-    envVars:
-      - key: NEXT_PUBLIC_FEATURE_NEW_TICKET_UI
-        value: "false"
-      - key: NEXT_PUBLIC_FEATURE_BULK_ACTIONS
-        value: "false"
-      - key: NEXT_PUBLIC_FEATURE_ADVANCED_FORMS
-        value: "false"
-      - key: NEXT_PUBLIC_GUILD_ID
         value: ""

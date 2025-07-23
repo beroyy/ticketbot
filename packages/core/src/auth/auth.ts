@@ -10,7 +10,7 @@ import { customSession } from "better-auth/plugins";
 import { prisma } from "../prisma";
 import { User as UserDomain, Account as AccountDomain } from "../domains";
 import { linkDiscordAccount } from "./services/discord-link";
-import { getRedisService } from "./services/redis";
+import { Redis } from "../redis";
 import { fetchDiscordUser, getDiscordAvatarUrl } from "./services/discord-api";
 import type { User, Session } from "./types";
 
@@ -57,7 +57,6 @@ const apiOrigin = getEnvVar("API_URL") || process.env["API_URL"] || "http://loca
 logger.debug("Auth trusted origins:", { webOrigin, apiOrigin });
 
 // Set up Redis secondary storage if available
-const redisService = getRedisService();
 let secondaryStorage:
   | {
       get: (key: string) => Promise<string | null>;
@@ -66,14 +65,14 @@ let secondaryStorage:
     }
   | undefined = undefined;
 
-if (redisService) {
+if (Redis.isAvailable()) {
   logger.debug("Configuring Better Auth with Redis secondary storage");
 
   // Secondary storage for sessions and rate limiting
   secondaryStorage = {
     get: async (key: string) => {
       try {
-        return await redisService.withRetry(async (client) => {
+        return await Redis.withRetry(async (client) => {
           const value = await client.get(key);
           return value || null;
         }, "secondaryStorage.get");
@@ -84,7 +83,7 @@ if (redisService) {
     },
     set: async (key: string, value: string, ttl?: number) => {
       try {
-        await redisService.withRetry(async (client) => {
+        await Redis.withRetry(async (client) => {
           if (ttl) {
             await client.set(key, value, { EX: ttl });
           } else {
@@ -98,7 +97,7 @@ if (redisService) {
     },
     delete: async (key: string) => {
       try {
-        await redisService.withRetry(async (client) => {
+        await Redis.withRetry(async (client) => {
           await client.del(key);
         }, "secondaryStorage.delete");
       } catch (error) {
@@ -146,7 +145,7 @@ export const auth = betterAuth({
       process.env["NODE_ENV"] === "production" || process.env["RATE_LIMIT_ENABLED"] === "true",
     window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"), // Default: 1 minute
     max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"), // Default: 100 requests
-    storage: redisService ? "secondary-storage" : "memory", // Use secondary storage if Redis available
+    storage: Redis.isAvailable() ? "secondary-storage" : "memory", // Use secondary storage if Redis available
     customRules: {
       // Strict limits for authentication endpoints
       "/auth/signin": { window: 300, max: 5 }, // 5 attempts per 5 minutes

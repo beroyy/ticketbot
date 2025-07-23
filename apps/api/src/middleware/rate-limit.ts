@@ -1,5 +1,5 @@
 import type { Context as _Context, Next as _Next, MiddlewareHandler } from "hono";
-import { getRedisService } from "@ticketsbot/core/auth";
+import { Redis } from "@ticketsbot/core";
 import { env, isProduction } from "../env";
 
 interface RateLimitConfig {
@@ -16,8 +16,7 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
       return next();
     }
 
-    const redisService = getRedisService();
-    if (!redisService) {
+    if (!Redis.isAvailable()) {
       console.warn("Rate limiting disabled - Redis not available");
       return next();
     }
@@ -27,7 +26,7 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
     const key = `ratelimit:${keyPrefix}:${ip}:${path}`;
 
     try {
-      const result = await redisService.withRetry(async (client) => {
+      const result = await Redis.withRetry(async (client: any) => {
         const current = await client.get(key);
         const count = current ? parseInt(current) : 0;
 
@@ -44,7 +43,7 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
         await multi.exec();
 
         return { allowed: true, remaining: max - count - 1, retryAfter: 0 };
-      }, "rateLimit");
+      }, "rateLimit") || { allowed: true, remaining: max, retryAfter: 0 };
 
       if (!result.allowed) {
         const retryAfter = result.retryAfter || window;

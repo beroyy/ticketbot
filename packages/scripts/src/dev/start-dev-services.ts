@@ -30,9 +30,9 @@ async function startServices() {
       stdio: "inherit",
     });
 
-    // 3. Start Node.js services with Turbo using dotenvx
+    // 3. Start Node.js services with Turbo
     console.log("\n🏗️  Starting Node.js services...");
-    const turbo = spawn("pnpm", ["exec", "dotenvx", "run", "--", "turbo", "run", "dev"], {
+    const turbo = spawn("pnpm", ["turbo", "run", "dev"], {
       cwd: rootDir,
       stdio: "inherit",
       shell: true,

@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "eslint --config eslint.config.js *.js"
+  },
   "exports": {
     ".": "./vitest.config.js"
   },

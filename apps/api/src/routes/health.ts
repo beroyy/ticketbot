@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getRedisService } from "@ticketsbot/core/auth";
+import { Redis } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/core/prisma";
 import { rateLimits } from "../middleware/rate-limit";
 import { env, isProduction } from "../env";
@@ -72,9 +72,8 @@ healthRoutes.get("/detailed", rateLimits.strict, async (c) => {
   }
 
   // Check Redis if configured
-  const redisService = getRedisService();
-  if (redisService) {
-    const redisHealth = await redisService.healthCheck();
+  if (Redis.isAvailable()) {
+    const redisHealth = await Redis.healthCheck();
 
     if (redisHealth.connected) {
       result.services.redis = {
@@ -95,7 +94,7 @@ healthRoutes.get("/detailed", rateLimits.strict, async (c) => {
   const rateLimitEnabled = isProduction() || env.RATE_LIMIT_ENABLED === true;
   result.services.rateLimit = {
     enabled: rateLimitEnabled,
-    storage: redisService && result.services.redis?.status === "healthy" ? "redis" : "memory",
+    storage: Redis.isAvailable() && result.services.redis?.status === "healthy" ? "redis" : "memory",
   };
 
   // Overall status determination
@@ -112,9 +111,7 @@ healthRoutes.get("/detailed", rateLimits.strict, async (c) => {
  * Redis-specific health check
  */
 healthRoutes.get("/redis", async (c) => {
-  const redisService = getRedisService();
-
-  if (!redisService) {
+  if (!Redis.isAvailable()) {
     return c.json(
       {
         status: "not_configured",
@@ -124,12 +121,12 @@ healthRoutes.get("/redis", async (c) => {
     );
   }
 
-  const health = await redisService.healthCheck();
+  const health = await Redis.healthCheck();
 
   return c.json({
     connected: health.connected,
     latency: health.latency,
     error: health.error,
-    purpose: "permission_caching",
+    purpose: "session_storage_and_caching",
   });
 });

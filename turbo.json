@@ -5,8 +5,7 @@
     "package.json",
     "turbo.json",
     "pnpm-workspace.yaml",
-    ".env*",
-    "scripts/env-setup.ts"
+    ".env*"
   ],
   "tasks": {
     "build": {
@@ -14,7 +13,6 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*",
-        "scripts/env-setup.js",
         "!**/*.test.{ts,tsx}",
         "!**/*.spec.{ts,tsx}",
         "!**/node_modules/**"
@@ -22,17 +20,8 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "env": [
         "NODE_ENV",
-        "TURBO_ENV",
         "DATABASE_URL",
-        "API_PORT",
-        "WEB_PORT",
-        "BOT_PORT",
-        "API_URL",
-        "WEB_URL",
-        "LOG_LEVEL",
-        "SKIP_DB_INIT",
-        "DISCORD_BOT_TOKEN",
-        "DISCORD_TOKEN"
+        "NEXT_PUBLIC_*"
       ]
     },
     "dev": {
@@ -41,28 +30,15 @@
       "persistent": true,
       "env": [
         "NODE_ENV",
-        "TURBO_ENV",
         "DATABASE_URL",
-        "API_PORT",
-        "WEB_PORT",
-        "BOT_PORT",
-        "API_URL",
-        "WEB_URL",
-        "NEXTAUTH_URL",
-        "LOG_LEVEL",
-        "DISCORD_BOT_TOKEN",
-        "DISCORD_TOKEN",
-        "DISCORD_CLIENT_ID",
-        "DISCORD_CLIENT_SECRET",
-        "BETTER_AUTH_SECRET",
-        "DISCORD_REDIRECT_URI",
-        "NEXT_PUBLIC_API_URL",
-        "NEXT_PUBLIC_DISCORD_CLIENT_ID",
-        "NEXT_PUBLIC_GUILD_ID",
         "REDIS_URL",
-        "API_SECRET",
-        "API_HOST",
-        "LOG_REQUESTS"
+        "BETTER_AUTH_SECRET",
+        "DISCORD_*",
+        "NEXT_PUBLIC_*",
+        "API_*",
+        "WEB_*",
+        "BOT_*",
+        "DEV_*"
       ]
     },
     "start": {
@@ -71,54 +47,43 @@
       "persistent": true,
       "env": [
         "NODE_ENV",
-        "TURBO_ENV",
         "DATABASE_URL",
-        "API_PORT",
-        "WEB_PORT",
-        "BOT_PORT",
-        "API_URL",
-        "NEXTAUTH_URL",
-        "LOG_LEVEL",
-        "DISCORD_BOT_TOKEN",
-        "DISCORD_TOKEN",
-        "LOG_REQUESTS"
+        "REDIS_URL",
+        "BETTER_AUTH_SECRET",
+        "DISCORD_*",
+        "NEXT_PUBLIC_*",
+        "API_*",
+        "WEB_*",
+        "BOT_*"
       ]
     },
     "lint": {
       "dependsOn": ["^lint"],
       "inputs": ["src/**", "eslint.config.*", ".eslintrc.*"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "tsconfig.tsbuildinfo"],
       "outputs": [],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tests/**", "vitest.config.*"],
+      "outputs": ["coverage/**"],
+      "cache": false,
       "env": [
-        "DEV_PERMISSIONS_HEX",
-        "PERMISSION_CACHE_TTL",
-        "DEFAULT_ROLES_CACHE_TTL",
-        "USER_ROLES_CACHE_TTL",
-        "GUILD_OWNER_CACHE_TTL",
-        "RUNNING_IN_DOCKER",
-        "NEXT_PUBLIC_API_URL",
-        "COOKIE_CACHE_MAX_AGE",
-        "RATE_LIMIT_ENABLED",
-        "RATE_LIMIT_WINDOW",
-        "RATE_LIMIT_MAX",
-        "COOKIE_DOMAIN",
-        "REDIS_URL",
-        "API_HOST",
-        "DISCORD_TOKEN",
-        "DISCORD_BOT_TOKEN",
-        "BOT_OWNER_ID",
-        "LOG_LEVEL",
-        "LOG_REQUESTS",
-        "DEV_GUILD_ID",
-        "SEED_ENVIRONMENT",
-        "SEED_CLEAR_DATA",
-        "SEED_ENABLE_LOGGING",
-        "NEON_BRANCH_NAME"
+        "NODE_ENV",
+        "DATABASE_URL"
       ]
     },
-    "type-check": {
-      "dependsOn": ["^type-check"],
-      "inputs": ["src/**", "tsconfig.json"],
-      "outputs": []
+    "test:hurl": {
+      "dependsOn": ["^build"],
+      "inputs": ["tests/**/*.hurl", "tests/run-tests.sh"],
+      "outputs": ["tests/reports/**"],
+      "env": ["TEST_USER_TOKEN", "TEST_GUILD_ID", "API_URL"],
+      "cache": false
     },
     "db:generate": {
       "cache": false,
@@ -138,46 +103,12 @@
       "cache": false,
       "env": ["DATABASE_URL", "DIRECT_URL"]
     },
-    "db:init": {
-      "cache": false,
-      "env": ["DATABASE_URL"]
-    },
     "db:studio": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["DATABASE_URL"]
     },
     "clean": {
-      "cache": false
-    },
-    "typecheck": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "tsconfig.json", "tsconfig.tsbuildinfo"],
-      "outputs": [],
-      "cache": true
-    },
-    "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "dist/**"],
-      "outputs": ["screenshots/**"],
-      "cache": false
-    },
-    "test:e2e": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "dist/**"],
-      "outputs": ["screenshots/**"],
-      "cache": false
-    },
-    "e2e-test": {
-      "dependsOn": ["^build"],
-      "inputs": ["packages/e2e/**", "apps/web/**"],
-      "outputs": ["packages/e2e/screenshots/**"],
-      "cache": false
-    },
-    "test:hurl": {
-      "dependsOn": ["^build"],
-      "inputs": ["tests/**/*.hurl", "tests/run-tests.sh"],
-      "outputs": ["tests/reports/**"],
-      "env": ["TEST_USER_TOKEN", "TEST_GUILD_ID", "API_URL"],
       "cache": false
     }
   }

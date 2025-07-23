@@ -11,6 +11,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { auth } from "@ticketsbot/core/auth";
+import { Redis } from "@ticketsbot/core";
 import { tickets } from "./routes/tickets";
 import { discord } from "./routes/discord";
 import { panels } from "./routes/panels";
@@ -77,6 +78,13 @@ app.route("/schemas", schemas);
 const port = env.API_PORT;
 const host = env.API_HOST;
 
+// Initialize Redis
+Redis.initialize().then(() => {
+  logger.info("✅ Redis initialized (if configured)");
+}).catch((error: unknown) => {
+  logger.warn("⚠️ Redis initialization failed:", error);
+});
+
 logger.info(`🚀 API server listening on ${host}:${port} (${env.NODE_ENV})`);
 
 serve({
@@ -85,14 +93,16 @@ serve({
   hostname: host,
 });
 
-process.on("SIGINT", () => {
+process.on("SIGINT", async () => {
   logger.info("Received SIGINT. Graceful shutdown...");
+  await Redis.shutdown();
   // eslint-disable-next-line no-process-exit -- Graceful shutdown requires process.exit
   process.exit(0);
 });
 
-process.on("SIGTERM", () => {
+process.on("SIGTERM", async () => {
   logger.info("Received SIGTERM. Graceful shutdown...");
+  await Redis.shutdown();
   // eslint-disable-next-line no-process-exit -- Graceful shutdown requires process.exit
   process.exit(0);
 });

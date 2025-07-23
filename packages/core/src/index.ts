@@ -227,7 +227,7 @@ export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./util
 export { prisma } from "./prisma/client";
 
 export {
-  CacheService,
+  type CacheService,
   cacheService,
   CacheKeys,
   CacheTTL,
@@ -242,6 +242,10 @@ export {
   ZodError,
   type ZodSchema,
 } from "./prisma/services/validation";
+
+// Export Redis utilities
+export { Redis, type RedisHealthCheck, type CacheOptions, type CacheStats, Cache } from "./redis";
+export { isRedisAvailable, getRedisConnection } from "./redis";
 
 // Export domain namespaces (these include their own schemas)
 export { User } from "./domains/user";

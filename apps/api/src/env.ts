@@ -60,5 +60,5 @@ export type ApiEnv = typeof env;
 
 export const isDevelopment = () => env.NODE_ENV === "development";
 export const isProduction = () => env.NODE_ENV === "production";
-export const isTest = () => env.NODE_ENV === "test";
+export const isTest = () => (env.NODE_ENV as string) === "test";
 export const isDocker = () => env.RUNNING_IN_DOCKER;

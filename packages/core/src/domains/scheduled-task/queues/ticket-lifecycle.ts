@@ -1,22 +1,15 @@
 import { Queue } from "bullmq";
-import { isRedisAvailable } from "../../../redis";
+import { Redis } from "../../../redis";
 
 // Only create queue if Redis is available
-const createQueue = () => {
-  if (!isRedisAvailable()) {
-    return null;
-  }
-
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) {
+const createQueue = async () => {
+  const client = await Redis.getClient();
+  if (!client) {
     return null;
   }
 
   return new Queue("ticket-lifecycle", {
-    connection: {
-      // Parse Redis URL to get connection options
-      ...parseRedisUrl(redisUrl),
-    },
+    connection: client as any,
     defaultJobOptions: {
       removeOnComplete: {
         age: 24 * 60 * 60,
@@ -28,16 +21,17 @@ const createQueue = () => {
       },
     },
   });
-};
-
-function parseRedisUrl(url: string) {
-  const parsed = new URL(url);
-  return {
-    host: parsed.hostname,
-    port: parseInt(parsed.port || "6379"),
-    password: parsed.password || undefined,
-    username: parsed.username || undefined,
-  };
 }
 
-export const ticketLifecycleQueue = createQueue()!;
+// Export a lazy-loaded queue instance
+let _queue: Queue | null = null;
+
+export const getTicketLifecycleQueue = async (): Promise<Queue | null> => {
+  if (!_queue) {
+    _queue = await createQueue();
+  }
+  return _queue;
+};
+
+// For backward compatibility
+export const ticketLifecycleQueue = null as Queue | null;

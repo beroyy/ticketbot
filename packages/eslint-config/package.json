@@ -5,6 +5,10 @@
   "private": true,
   "type": "module",
   "main": "base.js",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "eslint --config base.js *.js"
+  },
   "exports": {
     ".": "./base.js",
     "./base.js": "./base.js",

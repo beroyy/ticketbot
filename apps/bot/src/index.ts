@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { teamPermissionChecker } from "@bot/lib/team-permission-checker";
 import { ScheduledTask } from "@ticketsbot/core/domains";
+import { Redis } from "@ticketsbot/core";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,6 +23,13 @@ class TicketsBotClient extends BaseBotClient {
 }
 
 configurePermissionProvider(teamPermissionChecker);
+
+// Initialize Redis
+Redis.initialize().then(() => {
+  container.logger.info("✅ Redis initialized (if configured)");
+}).catch((error: unknown) => {
+  container.logger.warn("⚠️ Redis initialization failed:", error);
+});
 
 const client = new TicketsBotClient({
   intents: [
@@ -39,8 +47,10 @@ process.on("SIGINT", async () => {
   try {
     await ScheduledTask.shutdown();
     console.log("✅ Scheduled task system shut down");
+    await Redis.shutdown();
+    console.log("✅ Redis connections closed");
   } catch (error) {
-    console.error("❌ Error shutting down scheduled task system:", error);
+    console.error("❌ Error during shutdown:", error);
   }
   
   void client.destroy();
@@ -54,8 +64,10 @@ process.on("SIGTERM", async () => {
   try {
     await ScheduledTask.shutdown();
     console.log("✅ Scheduled task system shut down");
+    await Redis.shutdown();
+    console.log("✅ Redis connections closed");
   } catch (error) {
-    console.error("❌ Error shutting down scheduled task system:", error);
+    console.error("❌ Error during shutdown:", error);
   }
   
   void client.destroy();

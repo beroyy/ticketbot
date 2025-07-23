@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { getRedisService } from "@ticketsbot/core/auth";
+import { Redis } from "@ticketsbot/core";
 import { requireAuth } from "../../middleware/context";
 import { Actor } from "@ticketsbot/core/context";
 import { PreferenceKeySchema, PreferenceParamSchema } from "../../utils/validation-schemas";
@@ -41,14 +41,13 @@ preferences.get(
     return c.json({ value: null });
   }
 
-  const redisService = getRedisService();
-  if (!redisService) {
+  if (!Redis.isAvailable()) {
     // Fallback: return null if Redis is not available
     return c.json({ value: null });
   }
 
   try {
-    const value = await redisService.withRetry(async (client) => {
+    const value = await Redis.withRetry(async (client: any) => {
       const redisKey = `preferences:user:${actor.properties.discordId}:${key}`;
       const data = await client.get(redisKey);
       return data ? JSON.parse(data) : null;
@@ -79,14 +78,13 @@ preferences.post(
     return c.json({ success: true });
   }
 
-  const redisService = getRedisService();
-  if (!redisService) {
+  if (!Redis.isAvailable()) {
     // Fallback: acknowledge but don't store if Redis is not available
     return c.json({ success: true });
   }
 
   try {
-    await redisService.withRetry(async (client) => {
+    await Redis.withRetry(async (client: any) => {
       const redisKey = `preferences:user:${actor.properties.discordId}:${validated.key}`;
       await client.setEx(redisKey, PREFERENCE_TTL, JSON.stringify(validated.value));
     }, "set-preference");
@@ -116,13 +114,12 @@ preferences.delete(
     return c.json({ success: true });
   }
 
-  const redisService = getRedisService();
-  if (!redisService) {
+  if (!Redis.isAvailable()) {
     return c.json({ success: true });
   }
 
   try {
-    await redisService.withRetry(async (client) => {
+    await Redis.withRetry(async (client: any) => {
       const redisKey = `preferences:user:${actor.properties.discordId}:${key}`;
       await client.del(redisKey);
     }, "delete-preference");

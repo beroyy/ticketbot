@@ -1,5 +1,5 @@
 import { Worker, type Job } from "bullmq";
-import { isRedisAvailable } from "../../../redis";
+import { Redis } from "../../../redis";
 import { TicketLifecycle } from "../../ticket-lifecycle";
 import { Ticket } from "../../ticket";
 
@@ -44,23 +44,11 @@ async function processAutoClose(job: Job<AutoCloseJobData>) {
   }
 }
 
-const createWorker = () => {
-  if (!isRedisAvailable()) {
+const createWorker = async () => {
+  const client = await Redis.getClient();
+  if (!client) {
     return null;
   }
-
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) {
-    return null;
-  }
-
-  const parsed = new URL(redisUrl);
-  const connection = {
-    host: parsed.hostname,
-    port: parseInt(parsed.port || "6379"),
-    password: parsed.password || undefined,
-    username: parsed.username || undefined,
-  };
 
   return new Worker(
     "ticket-lifecycle",
@@ -73,11 +61,22 @@ const createWorker = () => {
       }
     },
     {
-      connection,
+      connection: client as any,
       concurrency: 5,
       autorun: true,
     }
   );
 };
 
-export const ticketLifecycleWorker = createWorker()!;
+// Export a lazy-loaded worker instance
+let _worker: Worker | null = null;
+
+export const getTicketLifecycleWorker = async (): Promise<Worker | null> => {
+  if (!_worker) {
+    _worker = await createWorker();
+  }
+  return _worker;
+};
+
+// For backward compatibility
+export const ticketLifecycleWorker = null as Worker | null;

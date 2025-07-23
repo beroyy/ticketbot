@@ -1,9 +1,9 @@
 import type { Queue, Worker } from "bullmq";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Job } from "bullmq";
-import { isRedisAvailable, getRedisConnection } from "../../redis";
-import { ticketLifecycleQueue } from "./queues/ticket-lifecycle";
-import { ticketLifecycleWorker } from "./workers/ticket-lifecycle";
+import { Redis } from "../../redis";
+import { getTicketLifecycleQueue } from "./queues/ticket-lifecycle";
+import { getTicketLifecycleWorker } from "./workers/ticket-lifecycle";
 
 export type { Job } from "bullmq";
 
@@ -13,25 +13,22 @@ class ScheduledTaskDomain {
   private initialized = false;
 
   async initialize() {
-    if (this.initialized || !isRedisAvailable()) {
-      return;
-    }
-
-    const connection = getRedisConnection();
-    if (!connection) {
-      console.warn("⚠️  Redis not available - scheduled tasks will be disabled");
+    if (this.initialized || !Redis.isAvailable()) {
       return;
     }
 
     try {
-      if (ticketLifecycleQueue) {
-        this.queues.set("ticket-lifecycle", ticketLifecycleQueue);
+      const queue = await getTicketLifecycleQueue();
+      const worker = await getTicketLifecycleWorker();
+
+      if (queue) {
+        this.queues.set("ticket-lifecycle", queue);
       }
-      if (ticketLifecycleWorker) {
-        this.workers.set("ticket-lifecycle", ticketLifecycleWorker);
+      if (worker) {
+        this.workers.set("ticket-lifecycle", worker);
       }
 
-      this.initialized = ticketLifecycleQueue !== null && ticketLifecycleWorker !== null;
+      this.initialized = queue !== null && worker !== null;
       if (this.initialized) {
         console.log("✅ Scheduled task system initialized");
       } else {

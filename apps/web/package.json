@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenvx run -f ../../.env -- next dev -p ${WEB_PORT:-3000}",
-    "build": "dotenvx run -f ../../.env -- next build",
-    "start": "dotenvx run -f ../../.env -- next start -p ${WEB_PORT:-3000}",
-    "lint": "eslint --config eslint.config.js .",
+    "dev": "next dev",
+    "start": "next start",
+    "build": "next build",
     "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "eslint --config eslint.config.js .",
+    "test": "vitest --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts --watch",
     "clean": "rm -rf .next out .tsbuildinfo"
   },
   "dependencies": {
@@ -48,7 +50,6 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.48.2",
     "@tanstack/react-query-devtools": "^5.83.0",
     "@ticketsbot/eslint-config": "workspace:*",
     "@ticketsbot/tsconfig": "workspace:*",
@@ -59,6 +60,7 @@
     "eslint": "^9.31.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }

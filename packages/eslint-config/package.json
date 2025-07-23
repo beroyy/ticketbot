@@ -1,0 +1,36 @@
+{
+  "name": "@ticketsbot/eslint-config",
+  "version": "0.0.1",
+  "description": "Shared ESLint configurations for TicketsBot monorepo",
+  "private": true,
+  "type": "module",
+  "main": "base.js",
+  "exports": {
+    ".": "./base.js",
+    "./base.js": "./base.js",
+    "./node.js": "./node.js",
+    "./next.js": "./next.js"
+  },
+  "files": [
+    "base.js",
+    "next.js",
+    "node.js"
+  ],
+  "dependencies": {
+    "@eslint/js": "^9.31.0",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-turbo": "^2.5.4",
+    "globals": "^16.3.0",
+    "typescript-eslint": "^8.37.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.31.0",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "eslint": "^8.0.0 || ^9.0.0",
+    "typescript": ">=5.0.0"
+  }
+}

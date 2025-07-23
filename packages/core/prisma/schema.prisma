@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ====================
+// SHARED ENUMS
+// ====================
+
+enum TicketStatus {
+  OPEN
+  CLAIMED
+  CLOSED
+  PENDING
+}
+
+enum PanelType {
+  SINGLE
+  MULTI
+}
+
+enum FormFieldType {
+  SHORT_TEXT
+  PARAGRAPH
+  SELECT
+  EMAIL
+  NUMBER
+  CHECKBOX
+  RADIO
+  DATE
+}
+
+enum TeamRoleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EventCategory {
+  TICKET
+  TEAM
+  PANEL
+  MEMBER
+  GUILD
+}
+
+enum EventTargetType {
+  TICKET
+  ROLE
+  USER
+  PANEL
+  GUILD
+}

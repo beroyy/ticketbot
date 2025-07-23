@@ -1,0 +1,19 @@
+// ====================
+// BLACKLIST MODEL
+// ====================
+
+model Blacklist {
+  id        Int      @id @default(autoincrement())
+  guildId   String   @map("guild_id")
+  targetId  String   @map("target_id")
+  isRole    Boolean  @default(false) @map("is_role")
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, targetId]) // Prevent duplicate blacklist entries
+  @@index([guildId, isRole]) // For querying by type
+  @@map("blacklist")
+}

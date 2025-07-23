@@ -1,0 +1,21 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["NODE_ENV"],
+      "outputs": ["dist/**"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"]
+    },
+    "dev": {
+      "env": ["NODE_ENV", "PORT", "DATABASE_URL", "DISCORD_*"],
+      "persistent": true
+    },
+    "start": {
+      "env": ["NODE_ENV", "PORT", "DATABASE_URL", "DISCORD_*"]
+    },
+    "type-check": {
+      "inputs": ["src/**", "tsconfig.json"],
+      "outputs": []
+    }
+  }
+}

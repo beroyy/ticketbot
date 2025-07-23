@@ -1,0 +1,51 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: "ticketsbot-redis-${WORKTREE_ID:-default}"
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    container_name: "ticketsbot-app-${WORKTREE_ID:-default}"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_GUILD_ID=${NEXT_PUBLIC_GUILD_ID}
+    env_file:
+      - .env
+    environment:
+      # Override specific values for Docker environment
+      - NODE_ENV=${NODE_ENV:-development}
+      - TURBO_ENV=${TURBO_ENV:-dev}
+      - API_HOST=0.0.0.0
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RUNNING_IN_DOCKER=true
+    ports:
+      - "${WEB_PORT}:${WEB_PORT}"
+      - "${API_PORT}:${API_PORT}"
+      - "${BOT_PORT}:${BOT_PORT}"
+    volumes:
+      # Development volumes - only mount in dev mode
+      - ${PWD:-.}:/app:${DOCKER_VOLUME_FLAG:-cached}
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/bot/node_modules
+      - /app/packages/core/node_modules
+      - /app/packages/scripts/node_modules
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    depends_on:
+      redis:
+        condition: service_healthy

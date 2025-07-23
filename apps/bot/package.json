@@ -1,0 +1,38 @@
+{
+  "name": "@ticketsbot/bot",
+  "version": "0.0.1",
+  "description": "Discord bot for ticket management",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "dev": "dotenvx run --quiet -f ../../.env -- tsx watch src/index.ts",
+    "start": "dotenvx run --quiet -f ../../.env -- node dist/index.js",
+    "deploy": "dotenvx run --quiet -f ../../.env -- tsx src/deploy.ts",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "eslint --config eslint.config.js src/",
+    "test": "vitest --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts --watch",
+    "clean": "rm -rf dist .tsbuildinfo"
+  },
+  "dependencies": {
+    "@sapphire/framework": "^5.3.6",
+    "@sapphire/plugin-api": "^8.3.1",
+    "@sapphire/plugin-logger": "^4.1.0",
+    "@sapphire/plugin-subcommands": "^7.0.1",
+    "@ticketsbot/core": "workspace:*",
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.0",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.48.2",
+    "@ticketsbot/eslint-config": "workspace:*",
+    "@ticketsbot/tsconfig": "workspace:*",
+    "@ticketsbot/vitest-config": "workspace:*",
+    "@types/node": "^24.0.15",
+    "eslint": "^9.31.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

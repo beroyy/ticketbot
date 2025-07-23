@@ -1,0 +1,102 @@
+// ====================
+// AUTHENTICATION MODELS
+// ====================
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Optional link to Discord (for users who log into web app)
+  discordUserId String?  @unique
+  discordUser   DiscordUser? @relation(fields: [discordUserId], references: [id])
+  
+  // Better-auth relations only
+  sessions      Session[]
+  accounts      Account[]
+  
+  @@map("user")
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  expiresAt     DateTime
+  token         String   @unique
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                     String    @id @default(cuid())
+  userId                 String
+  accountId              String
+  providerId             String
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  expiresAt              DateTime?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  password               String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+model DiscordUser {
+  id            String   @id  // Discord ID directly (no CUID)
+  username      String   @db.VarChar(32)
+  discriminator String?  @db.VarChar(5)
+  avatarUrl     String?  @map("avatar_url")
+  metadata      Json?    // Discord user metadata (account info, guild-specific data)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Optional link to web authentication
+  webUser       User?
+  
+  // Discord-specific relations
+  openedTickets           Ticket[]          @relation("TicketOpener")
+  ticketParticipants      TicketParticipant[]
+  ticketHistory           TicketHistory[]
+  ticketMessages          TicketMessage[]
+  ticketFeedback          TicketFeedback[]
+  
+  // Lifecycle event relations
+  performedLifecycleEvents    TicketLifecycleEvent[] @relation("LifecyclePerformedBy")
+  claimedLifecycleEvents      TicketLifecycleEvent[] @relation("LifecycleClaimer")
+  closedLifecycleEvents       TicketLifecycleEvent[] @relation("LifecycleCloser")
+  teamMemberships         TeamMember[]
+  teamRoleMembers         TeamRoleMember[]
+  teamMemberPermissions   TeamMemberPermission[]
+  assignedRoles           TeamRoleMember[]  @relation("RoleAssignments")
+  grantedPermissions      TeamMemberPermission[] @relation("PermissionGrants")
+  events                  Event[]
+  
+  @@map("discord_users")
+}

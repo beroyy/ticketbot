@@ -1,0 +1,63 @@
+# Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files (except templates)
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist
+.next
+build
+coverage
+
+# Development files
+.git
+.gitignore
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Test files
+test
+tests
+__tests__
+*.test.*
+*.spec.*
+
+# Documentation
+docs
+
+# Temporary files
+.tmp
+.temp
+
+# Turborepo cache
+.turbo
+
+# Package manager
+.pnpm-store

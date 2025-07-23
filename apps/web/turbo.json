@@ -1,0 +1,37 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "inputs": [
+        "src/**",
+        "pages/**",
+        "components/**",
+        "lib/**",
+        "styles/**",
+        "public/**",
+        "next.config.*",
+        "tailwind.config.*",
+        "postcss.config.*",
+        "tsconfig.json",
+        "package.json"
+      ]
+    },
+    "dev": {
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "WEB_PORT"],
+      "persistent": true
+    },
+    "start": {
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "WEB_PORT"]
+    },
+    "lint": {
+      "inputs": ["src/**", "pages/**", "components/**", "lib/**", ".eslintrc.*", "eslint.config.*"],
+      "outputs": []
+    },
+    "type-check": {
+      "inputs": ["src/**", "pages/**", "components/**", "lib/**", "tsconfig.json"],
+      "outputs": []
+    }
+  }
+}

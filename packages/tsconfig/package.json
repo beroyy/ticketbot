@@ -1,0 +1,15 @@
+{
+  "name": "@ticketsbot/tsconfig",
+  "version": "0.0.1",
+  "description": "Shared TypeScript configurations for TicketsBot monorepo",
+  "private": true,
+  "files": [
+    "base.json",
+    "node.json",
+    "nextjs.json",
+    "library.json"
+  ],
+  "devDependencies": {
+    "@types/node": "^24.0.14"
+  }
+}

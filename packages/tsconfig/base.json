@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Default",
+  "compilerOptions": {
+    // Type declarations
+    "declaration": true,
+    "declarationMap": true,
+
+    // Module settings
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": false,
+
+    // Interop settings
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+
+    // Type checking - balanced for modern development
+    "strict": true,
+    "noUnusedLocals": false, // Too restrictive during development
+    "noUnusedParameters": false, // Too restrictive during development
+    "noImplicitReturns": true, // Enforce explicit returns
+    "noImplicitAny": true, // Part of strict mode but being explicit
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "exactOptionalPropertyTypes": false, // Too restrictive for many libraries
+    "strictNullChecks": true, // Keep this for safety
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false, // Too restrictive with decorators
+    "useUnknownInCatchVariables": true,
+
+    // Output
+    "sourceMap": true,
+    "inlineSources": false,
+    "preserveWatchOutput": true,
+    "composite": false,
+    "incremental": true,
+
+    // Skip type checking of declaration files
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "dist", "build", ".turbo"]
+}

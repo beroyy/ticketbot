@@ -1,0 +1,45 @@
+// ====================
+// EVENT MODEL
+// ====================
+
+model Event {
+  id               String   @id @default(cuid())
+  guildId          String   @map("guild_id")
+  
+  // Actor
+  actorId          String   @map("actor_id")
+  
+  // Action
+  category         EventCategory // Now uses enum
+  action           String   // "ticket.created", "role.assigned", etc.
+  
+  // Target
+  targetType       EventTargetType @map("target_type") // Now uses enum
+  targetId         String   @map("target_id")
+  
+  // Denormalized fields for performance
+  ticketId         Int?     @map("ticket_id") // For ticket-related events
+  teamRoleId       Int?     @map("team_role_id") // For role-related events
+  
+  // Optional data
+  metadata         Json?    // Additional context
+  
+  createdAt        DateTime @default(now()) @map("created_at")
+  expiresAt        DateTime? @map("expires_at") // For automatic cleanup
+  
+  // Relations
+  guild            Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  actor            DiscordUser  @relation(fields: [actorId], references: [id])
+  teamRole         TeamRole?    @relation(fields: [teamRoleId], references: [id])
+  ticket           Ticket?      @relation(fields: [ticketId], references: [id])
+  
+  // Indexes for common queries
+  @@index([guildId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([ticketId, createdAt(sort: Desc)])
+  @@index([teamRoleId, createdAt(sort: Desc)])
+  @@index([targetType, targetId, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  
+  @@map("events")
+}

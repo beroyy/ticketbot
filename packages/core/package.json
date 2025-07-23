@@ -1,0 +1,77 @@
+{
+  "name": "@ticketsbot/core",
+  "version": "0.0.1",
+  "description": "Core schemas, validation, utilities, and database layer for TicketsBot",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "eslint --config eslint.config.js src/",
+    "test": "vitest --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts --watch",
+    "db:generate": "prisma generate --schema=./prisma --no-hints",
+    "db:push": "prisma db push --schema=./prisma",
+    "db:push:force": "prisma db push --schema=./prisma --force-reset",
+    "db:migrate": "prisma migrate dev --schema=./prisma",
+    "db:studio": "prisma studio --schema=./prisma",
+    "db:init": "tsx ../scripts/src/db/init-db.ts",
+    "db:seed": "tsx ../scripts/src/db/seed.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "@prisma/adapter-neon": "^6.12.0",
+    "@prisma/client": "^6.12.0",
+    "@sapphire/bitfield": "^1.2.4",
+    "better-auth": "^1.3.2",
+    "better-call": "^1.0.12",
+    "bullmq": "^5.56.5",
+    "discord.js": "^14.21.0",
+    "hono": "^4.8.5",
+    "posthog-node": "^5.5.1",
+    "redis": "^5.6.0",
+    "ws": "^8.18.3",
+    "zod": "^4.0.5"
+  },
+  "peerDependencies": {
+    "posthog-js": "^1.189.0"
+  },
+  "peerDependenciesMeta": {
+    "posthog-js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@ticketsbot/eslint-config": "workspace:*",
+    "@ticketsbot/tsconfig": "workspace:*",
+    "@ticketsbot/vitest-config": "workspace:*",
+    "@types/ws": "^8.18.1",
+    "bufferutil": "^4.0.9",
+    "dotenv": "^17.2.0",
+    "eslint": "^9.31.0",
+    "prisma": "^6.12.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./prisma": "./src/prisma/index.ts",
+    "./prisma/client": "./src/prisma/client.ts",
+    "./domains": "./src/domains/index.ts",
+    "./domains/*": "./src/domains/*/index.ts",
+    "./discord": "./src/discord/index.ts",
+    "./context": "./src/context/index.ts",
+    "./env": "./src/env/index.ts",
+    "./env/*": "./src/env/*.ts",
+    "./env/client": "./src/env/client.ts",
+    "./auth": "./src/auth/index.ts",
+    "./auth/client": "./src/auth/client.ts",
+    "./analytics": "./src/analytics/index.ts",
+    "./analytics/api": "./src/analytics/api/index.ts",
+    "./analytics/bot": "./src/analytics/bot/index.ts",
+    "./analytics/web": "./src/analytics/web/index.ts"
+  },
+  "prisma": {
+    "schema": "./prisma"
+  }
+}

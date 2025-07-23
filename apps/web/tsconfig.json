@@ -1,0 +1,24 @@
+{
+  "extends": "@ticketsbot/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@ticketsbot/core": ["../../packages/core/src/index.ts"],
+      "@ticketsbot/core/auth": ["../../packages/core/src/auth/index.ts"],
+      "@ticketsbot/core/auth/client": ["../../packages/core/src/auth/client.ts"],
+      "@ticketsbot/core/env": ["../../packages/core/src/env/index.ts"],
+      "@ticketsbot/core/env/client": ["../../packages/core/src/env/client.ts"],
+      "@ticketsbot/discord": ["../../packages/discord/src/index.ts"],
+      "@ticketsbot/discord/*": ["../../packages/discord/src/*"]
+    },
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

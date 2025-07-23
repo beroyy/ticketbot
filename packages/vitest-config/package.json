@@ -1,0 +1,17 @@
+{
+  "name": "@ticketsbot/vitest-config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./vitest.config.js"
+  },
+  "files": [
+    "vitest.config.js"
+  ],
+  "dependencies": {
+    "@vitest/ui": "^3.2.4",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4"
+  }
+}

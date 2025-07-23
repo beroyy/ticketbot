@@ -1,0 +1,22 @@
+{
+  "extends": "@ticketsbot/tsconfig/node.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "outDir": "./dist",
+    "paths": {
+      "@ticketsbot/core": ["packages/core/src/index.ts"],
+      "@ticketsbot/core/auth": ["packages/core/src/auth/index.ts"],
+      "@ticketsbot/core/auth/client": ["packages/core/src/auth/client.ts"],
+      "@ticketsbot/core/env": ["packages/core/src/env/index.ts"],
+      "@ticketsbot/core/prisma": ["packages/core/src/prisma/index.ts"],
+      "@ticketsbot/core/domains": ["packages/core/src/domains/index.ts"],
+      "@ticketsbot/core/domains/*": ["packages/core/src/domains/*/index.ts"],
+      "@ticketsbot/core/context": ["packages/core/src/context/index.ts"],
+      "@ticketsbot/core/discord": ["packages/core/src/discord/index.ts"],
+      "@ticketsbot/discord": ["packages/discord/src/index.ts"],
+      "@ticketsbot/discord/*": ["packages/discord/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

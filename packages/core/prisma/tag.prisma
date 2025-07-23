@@ -1,0 +1,17 @@
+// ====================
+// TAG MODEL
+// ====================
+
+model Tag {
+  id       Int    @id @default(autoincrement())
+  guildId  String @map("guild_id")
+  name     String @db.VarChar(32)
+  content  String
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, name]) // Unique tag names per guild
+  @@index([guildId]) // For listing guild's tags
+  @@map("tags")
+}

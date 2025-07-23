@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: ticketsbot-ai-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    repo: https://github.com/maydotinc/ticketsbot-ai.git
+    branch: main
+    region: oregon
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /health
+
+    envVars:
+      - fromGroup: ticketsbot-ai-secrets
+      - key: NODE_ENV
+        value: production
+      - key: TURBO_ENV
+        value: prod
+
+envVarGroups:
+  - name: ticketsbot-ai-secrets
+    envVars:
+      - key: DATABASE_URL
+        value: ""
+      - key: DISCORD_TOKEN
+        value: ""
+      - key: DISCORD_CLIENT_ID
+        value: ""
+      - key: DISCORD_CLIENT_SECRET
+        value: ""
+      - key: BETTER_AUTH_SECRET
+        value: ""
+      - key: REDIS_URL
+        value: ""
+      - key: WEB_PORT
+        value: "3000"
+      - key: API_PORT
+        value: "3001"
+      - key: BOT_PORT
+        value: "3002"
+      - key: NEXT_PUBLIC_API_URL
+        value: ""
+      - key: NEXT_PUBLIC_GUILD_ID
+        value: ""

@@ -21,7 +21,9 @@
       "env": [
         "NODE_ENV",
         "DATABASE_URL",
-        "NEXT_PUBLIC_*"
+        "NEXT_PUBLIC_*",
+        "TURBO_ENV",
+        "NEON_BRANCH_NAME"
       ]
     },
     "dev": {
@@ -38,7 +40,13 @@
         "API_*",
         "WEB_*",
         "BOT_*",
-        "DEV_*"
+        "DEV_*",
+        "COOKIE_*",
+        "RATE_LIMIT_*",
+        "LOG_*",
+        "*_CACHE_TTL",
+        "TURBO_ENV",
+        "NEON_BRANCH_NAME"
       ]
     },
     "start": {
@@ -54,7 +62,11 @@
         "NEXT_PUBLIC_*",
         "API_*",
         "WEB_*",
-        "BOT_*"
+        "BOT_*",
+        "COOKIE_*",
+        "RATE_LIMIT_*",
+        "LOG_*",
+        "*_CACHE_TTL"
       ]
     },
     "lint": {

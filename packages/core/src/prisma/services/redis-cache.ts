@@ -25,7 +25,7 @@ export class RedisCacheService extends EventEmitter {
 
       this.emit("miss", key);
       return null;
-    } catch (error) {
+    } catch (_error) {
       // Fallback to memory cache
       return this.getFromMemory(key);
     }
@@ -51,7 +51,7 @@ export class RedisCacheService extends EventEmitter {
       
       // Also set in memory cache for sync operations
       this.setInMemory(key, value, ttlMs);
-    } catch (error) {
+    } catch (_error) {
       // Fallback to memory cache
       this.setInMemory(key, value, ttlMs);
     }
@@ -77,7 +77,7 @@ export class RedisCacheService extends EventEmitter {
     try {
       await Redis.caches.permissions.delete(key);
       deleted = true;
-    } catch (error) {
+    } catch (_error) {
       // Continue with memory cache deletion
     }
 
@@ -112,7 +112,7 @@ export class RedisCacheService extends EventEmitter {
     try {
       await Redis.caches.permissions.deletePattern(pattern);
       // We don't know exact count from Redis, estimate from memory cache
-    } catch (error) {
+    } catch (_error) {
       // Continue with memory cache
     }
 

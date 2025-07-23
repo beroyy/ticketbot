@@ -1,6 +1,6 @@
 // Import the Redis-backed cache implementation
-import { cacheService as redisCacheService, CacheServiceWrapper } from "./redis-cache";
-import { EventEmitter } from "events";
+import { cacheService as redisCacheService } from "./redis-cache";
+import type { CacheServiceWrapper } from "./redis-cache";
 
 // Re-export the Redis-backed cache service
 export const cacheService = redisCacheService;

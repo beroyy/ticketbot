@@ -119,7 +119,7 @@ class RedisClient {
     if (!this.isConnected || !this.client) {
       try {
         await this.connect();
-      } catch (error) {
+      } catch (_error) {
         logger.warn("[Redis] Connection failed, features will be disabled");
         return null;
       }

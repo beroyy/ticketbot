@@ -193,22 +193,10 @@ const createAuthInstance = () => {
     },
   },
   socialProviders: {
-    discord: (() => {
-      const discordConfig = {
-        clientId: process.env.DISCORD_CLIENT_ID || "",
-        clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
-        redirectURI: `${apiOrigin}/auth/callback/discord`,
-        scope: ["identify", "guilds"], // Note: Better Auth may add 'email' scope automatically
-      };
-      
-      logger.info("Discord OAuth Configuration:", {
-        clientId: discordConfig.clientId,
-        redirectURI: discordConfig.redirectURI,
-        scope: discordConfig.scope,
-      });
-      
-      return discordConfig;
-    })(),
+    discord: {
+      clientId: process.env.DISCORD_CLIENT_ID || "",
+      clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
+    },
   },
   user: {
     additionalFields: {

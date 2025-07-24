@@ -25,7 +25,7 @@ interface FilterDropdownProps {
   onToggle: () => void;
 }
 
-export function FilterDropdown({ isOpen, onToggle }: FilterDropdownProps) {
+export function FilterDropdown({ isOpen }: FilterDropdownProps) {
   const filters = useTicketFilters();
   const { updateFilters, resetFilters } = useTicketActions();
 
@@ -160,7 +160,7 @@ interface SortDropdownProps {
   onToggle: () => void;
 }
 
-export function SortDropdown({ isOpen, onToggle }: SortDropdownProps) {
+export function SortDropdown({ isOpen }: SortDropdownProps) {
   const sort = useTicketSort();
   const { updateSort } = useTicketActions();
 

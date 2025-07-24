@@ -14,6 +14,7 @@ The initial design considered using PostgreSQL extensions for scheduling auto-cl
 - **Monitoring**: Difficult to track job status and failures
 
 BullMQ addresses these limitations by providing:
+
 - Redis-backed persistence (already in our stack)
 - Platform-agnostic implementation
 - Rich job management features
@@ -99,12 +100,12 @@ class ScheduledTaskDomain {
   private workers = new Map<string, Worker>();
   private initialized = false;
 
-  async initialize(): Promise<void>
-  async shutdown(): Promise<void>
-  async scheduleAutoClose(ticketId: number, delayHours: number): Promise<string | null>
-  async cancelAutoClose(jobId: string): Promise<boolean>
-  async cancelAutoCloseForTicket(ticketId: number): Promise<void>
-  async cleanupOrphanedJobs(): Promise<void>
+  async initialize(): Promise<void>;
+  async shutdown(): Promise<void>;
+  async scheduleAutoClose(ticketId: number, delayHours: number): Promise<string | null>;
+  async cancelAutoClose(jobId: string): Promise<boolean>;
+  async cancelAutoCloseForTicket(ticketId: number): Promise<void>;
+  async cleanupOrphanedJobs(): Promise<void>;
 }
 ```
 
@@ -114,15 +115,17 @@ Defines the ticket lifecycle queue with automatic job cleanup:
 
 ```typescript
 export const ticketLifecycleQueue = new Queue("ticket-lifecycle", {
-  connection: { /* Redis config */ },
+  connection: {
+    /* Redis config */
+  },
   defaultJobOptions: {
     removeOnComplete: {
-      age: 24 * 60 * 60,    // Keep completed jobs for 24 hours
-      count: 100,           // Keep max 100 completed jobs
+      age: 24 * 60 * 60, // Keep completed jobs for 24 hours
+      count: 100, // Keep max 100 completed jobs
     },
     removeOnFail: {
-      age: 7 * 24 * 60 * 60,  // Keep failed jobs for 7 days
-      count: 1000,            // Keep max 1000 failed jobs
+      age: 7 * 24 * 60 * 60, // Keep failed jobs for 7 days
+      count: 1000, // Keep max 1000 failed jobs
     },
   },
 });
@@ -144,9 +147,11 @@ export const ticketLifecycleWorker = new Worker(
     }
   },
   {
-    connection: { /* Redis config */ },
-    concurrency: 5,      // Process up to 5 jobs simultaneously
-    autorun: true,       // Start processing immediately
+    connection: {
+      /* Redis config */
+    },
+    concurrency: 5, // Process up to 5 jobs simultaneously
+    autorun: true, // Start processing immediately
   }
 );
 ```
@@ -169,6 +174,7 @@ The system handles Redis unavailability gracefully:
 **Purpose**: Automatically close tickets after a delay if no response from opener
 
 **Data Structure**:
+
 ```typescript
 interface AutoCloseJobData {
   ticketId: number;
@@ -176,6 +182,7 @@ interface AutoCloseJobData {
 ```
 
 **Job Options**:
+
 ```typescript
 {
   jobId: `auto-close-${ticketId}-${timestamp}`,
@@ -202,8 +209,9 @@ The worker implements comprehensive error handling:
 ### Retry Strategy
 
 Failed jobs are retried with exponential backoff:
+
 - 1st retry: 1 minute delay
-- 2nd retry: 2 minute delay  
+- 2nd retry: 2 minute delay
 - 3rd retry: 4 minute delay
 - After 3 attempts: Job marked as failed
 
@@ -216,20 +224,17 @@ The close request flow integrates with BullMQ:
 ```typescript
 export const requestClose = async (input) => {
   // ... validation ...
-  
+
   let autoCloseJobId: string | null = null;
-  
+
   if (input.autoCloseHours && !ticket.excludeFromAutoclose) {
     afterTransaction(async () => {
       const { ScheduledTask } = await import("../scheduled-task");
-      const jobId = await ScheduledTask.scheduleAutoClose(
-        input.ticketId, 
-        input.autoCloseHours
-      );
+      const jobId = await ScheduledTask.scheduleAutoClose(input.ticketId, input.autoCloseHours);
       autoCloseJobId = jobId;
     });
   }
-  
+
   return { closeRequestId, autoCloseJobId };
 };
 ```
@@ -243,7 +248,7 @@ Initialize the system when the bot starts:
 try {
   await ScheduledTask.initialize();
   logger.info("✅ Scheduled task system initialized");
-  
+
   // Clean up any orphaned jobs from previous runs
   await ScheduledTask.cleanupOrphanedJobs();
 } catch (error) {
@@ -282,6 +287,7 @@ await ScheduledTask.initialize();
 Schedule a ticket to auto-close after specified hours.
 
 **Parameters:**
+
 - `ticketId: number` - The ticket to auto-close
 - `delayHours: number` - Hours to wait before closing
 
@@ -296,6 +302,7 @@ const jobId = await ScheduledTask.scheduleAutoClose(123, 24); // Close after 24 
 Cancel a specific auto-close job.
 
 **Parameters:**
+
 - `jobId: string` - The job ID to cancel
 
 **Returns:** `Promise<boolean>` - True if cancelled successfully
@@ -309,6 +316,7 @@ const cancelled = await ScheduledTask.cancelAutoClose("auto-close-123-1234567890
 Cancel all auto-close jobs for a ticket.
 
 **Parameters:**
+
 - `ticketId: number` - The ticket ID
 
 ```typescript
@@ -341,12 +349,12 @@ const { closeRequestId } = await TicketLifecycle.requestClose({
   ticketId: ticket.id,
   requestedById: userId,
   reason: "Issue resolved",
-  autoCloseHours: 24,  // Auto-close in 24 hours
+  autoCloseHours: 24, // Auto-close in 24 hours
 });
 
 // Response to user
 await interaction.reply({
-  content: "Close request sent. Ticket will auto-close in 24 hours if no response."
+  content: "Close request sent. Ticket will auto-close in 24 hours if no response.",
 });
 ```
 
@@ -390,7 +398,8 @@ The system uses consistent logging:
 
 **Symptom**: "Redis not available - scheduled tasks will be disabled"
 
-**Solution**: 
+**Solution**:
+
 - Verify Redis is running
 - Check REDIS_URL environment variable
 - Ensure network connectivity
@@ -400,11 +409,13 @@ The system uses consistent logging:
 **Symptom**: Jobs queued but not executing
 
 **Possible Causes**:
+
 - Worker not initialized
 - Redis memory full
 - Worker crashed
 
 **Debugging**:
+
 ```typescript
 // Check queue status
 const queue = ScheduledTask.queues.get("ticket-lifecycle");
@@ -418,6 +429,7 @@ const failed = await queue.getFailedCount();
 **Symptom**: Jobs for closed/deleted tickets
 
 **Solution**: Run cleanup on startup
+
 ```typescript
 await ScheduledTask.cleanupOrphanedJobs();
 ```
@@ -427,9 +439,9 @@ await ScheduledTask.cleanupOrphanedJobs();
 For production monitoring, consider adding Bull Dashboard:
 
 ```typescript
-import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { ExpressAdapter } from '@bull-board/express';
+import { createBullBoard } from "@bull-board/api";
+import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import { ExpressAdapter } from "@bull-board/express";
 
 const serverAdapter = new ExpressAdapter();
 createBullBoard({
@@ -437,7 +449,7 @@ createBullBoard({
   serverAdapter,
 });
 
-app.use('/admin/queues', serverAdapter.getRouter());
+app.use("/admin/queues", serverAdapter.getRouter());
 ```
 
 ## Future Enhancements
@@ -447,18 +459,21 @@ app.use('/admin/queues', serverAdapter.getRouter());
 The system is designed to be extensible. Potential job types:
 
 1. **Reminder Notifications**
+
 ```typescript
 case "send-reminder":
   return processSendReminder(job);
 ```
 
 2. **Periodic Cleanup**
+
 ```typescript
 case "cleanup-old-tickets":
   return processCleanupOldTickets(job);
 ```
 
 3. **Analytics Aggregation**
+
 ```typescript
 case "aggregate-stats":
   return processAggregateStats(job);

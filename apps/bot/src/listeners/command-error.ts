@@ -10,7 +10,7 @@ export const CommandErrorListener = createSapphireListener(
   async (...args: unknown[]) => {
     const [error, payload] = args as [
       Error,
-      { command: Command; interaction: ChatInputCommandInteraction }
+      { command: Command; interaction: ChatInputCommandInteraction },
     ];
     const { command, interaction } = payload;
 

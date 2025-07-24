@@ -1,7 +1,7 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
-import { Team, Ticket, TicketLifecycle, Transcripts } from "@ticketsbot/core/domains";
+import { Team, TicketLifecycle, Transcripts } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { PermissionFlags } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -56,11 +56,9 @@ export class TransferCommand extends TicketCommandBase {
       return err("You cannot transfer a ticket to yourself.");
     }
 
-    const targetDiscordId = parseDiscordId(targetUser.id);
-
     // Check if ticket is currently claimed
     const currentClaim = await TicketLifecycle.getCurrentClaim(ticket.id);
-    
+
     // If currently claimed, unclaim it first
     if (currentClaim) {
       await TicketLifecycle.unclaim({
@@ -68,14 +66,14 @@ export class TransferCommand extends TicketCommandBase {
         performedById: interaction.user.id,
       });
     }
-    
+
     // Then claim it for the target user
     await TicketLifecycle.claim({
       ticketId: ticket.id,
       claimerId: targetUser.id,
       force: true, // Force claim for transfer
     });
-    
+
     // Log the transfer
     await Transcripts.addHistoryEntry(
       ticket.id,

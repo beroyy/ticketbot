@@ -35,7 +35,7 @@ const panelFormModalHandler = createModalHandler({
     }
 
     // Collect form responses using the shared helper
-    const formResponses = panel.form 
+    const formResponses = panel.form
       ? TicketOps.parseFormResponses(interaction, panel.form.formFields)
       : [];
 

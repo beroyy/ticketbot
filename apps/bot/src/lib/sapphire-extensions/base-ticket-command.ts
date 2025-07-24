@@ -27,28 +27,30 @@ export abstract class TicketCommandBase extends BaseCommand {
 
     // Get ticket from channel
     const ticketResult = await this.getTicketFromChannel(interaction);
-    
+
     await match(ticketResult, {
       ok: async (ticket) => {
         // Store ticket on interaction for preconditions compatibility
         Reflect.set(interaction, "ticket", ticket);
-        
+
         // Execute the ticket command
         const result = await this.executeTicketCommand(interaction, ticket);
-        
+
         // Handle result with standard pattern
         await this.handleResult(interaction, result);
       },
       err: async (error) => {
         await InteractionResponse.error(interaction, error);
-      }
+      },
     });
   }
 
   /**
    * Get ticket from the current channel
    */
-  protected async getTicketFromChannel(interaction: ChatInputCommandInteraction): Promise<Result<any>> {
+  protected async getTicketFromChannel(
+    interaction: ChatInputCommandInteraction
+  ): Promise<Result<any>> {
     if (!interaction.channelId) {
       return err("No channel ID available");
     }
@@ -74,13 +76,13 @@ export abstract class TicketCommandBase extends BaseCommand {
       },
       err: async (error, context) => {
         container.logger.error(`Error in ${this.name} command:`, { error, context });
-        
+
         if (!interaction.replied && !interaction.deferred) {
           await InteractionResponse.error(interaction, error);
         } else if (interaction.deferred) {
           await InteractionResponse.error(interaction, error);
         }
-      }
+      },
     });
   }
 
@@ -89,12 +91,7 @@ export abstract class TicketCommandBase extends BaseCommand {
    */
   protected async ensureUser(user: DiscordUser): Promise<string> {
     const discordId = parseDiscordId(user.id);
-    await User.ensure(
-      discordId,
-      user.username,
-      user.discriminator,
-      user.displayAvatarURL()
-    );
+    await User.ensure(discordId, user.username, user.discriminator, user.displayAvatarURL());
     return discordId;
   }
 
@@ -119,7 +116,10 @@ export abstract class TicketCommandBase extends BaseCommand {
     ticketId?: string | number
   ): Promise<void> {
     const response = interaction.deferred ? InteractionEdit : InteractionResponse;
-    await response.success(interaction, `**${title}**\n${description}${ticketId ? `\n\n*Ticket ID: ${ticketId}*` : ''}`);
+    await response.success(
+      interaction,
+      `**${title}**\n${description}${ticketId ? `\n\n*Ticket ID: ${ticketId}*` : ""}`
+    );
   }
 
   /**
@@ -132,7 +132,10 @@ export abstract class TicketCommandBase extends BaseCommand {
     ticketId?: string | number
   ): Promise<void> {
     const response = interaction.deferred ? InteractionEdit : InteractionResponse;
-    await response.info(interaction, `**${title}**\n${description}${ticketId ? `\n\n*Ticket ID: ${ticketId}*` : ''}`);
+    await response.info(
+      interaction,
+      `**${title}**\n${description}${ticketId ? `\n\n*Ticket ID: ${ticketId}*` : ""}`
+    );
   }
 
   /**
@@ -204,9 +207,7 @@ export abstract class TicketCommandBase extends BaseCommand {
    * Execute command for non-ticket channel commands
    * Used when requiresTicketChannel() returns false
    */
-  protected async executeCommand(
-    interaction: ChatInputCommandInteraction
-  ): Promise<void> {
+  protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     const result = await this.executeTicketCommand(interaction, null);
     await this.handleResult(interaction, result);
   }

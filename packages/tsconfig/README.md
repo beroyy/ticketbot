@@ -42,7 +42,7 @@ Our TypeScript configuration philosophy:
 We enable core safety features while disabling overly restrictive rules that harm developer experience:
 
 - ✅ **Null safety** (`strictNullChecks`)
-- ✅ **Type safety** (`noImplicitAny`) 
+- ✅ **Type safety** (`noImplicitAny`)
 - ✅ **Array bounds** (`noUncheckedIndexedAccess`)
 - ❌ **Unused vars** (warnings only during dev)
 - ❌ **Exact optionals** (breaks with many libraries)
@@ -50,6 +50,7 @@ We enable core safety features while disabling overly restrictive rules that har
 ### 🚀 Modern JavaScript
 
 All configs target ES2022 for access to:
+
 - Top-level await
 - Private class fields
 - Array/Object methods (`.at()`, `Object.hasOwn()`)
@@ -83,6 +84,7 @@ Foundation configuration for TypeScript projects:
 **Use for**: Utility packages, scripts, tools
 
 **Key features**:
+
 - ESNext modules with bundler resolution
 - Declaration files enabled
 - Balanced strict mode
@@ -106,6 +108,7 @@ Optimized for Node.js applications:
 **Use for**: API servers, Discord bots, CLIs
 
 **Key features**:
+
 - CommonJS modules for Node.js compatibility
 - Node module resolution
 - JavaScript files allowed
@@ -130,6 +133,7 @@ Tailored for Next.js applications:
 **Use for**: Next.js web applications
 
 **Key features**:
+
 - DOM type definitions
 - JSX support (preserved for Next.js compiler)
 - No emit (Next.js handles compilation)
@@ -154,6 +158,7 @@ For publishable packages:
 **Use for**: Shared packages, npm libraries
 
 **Key features**:
+
 - Declaration files with source maps
 - No direct emit (use build tool)
 - Strict type checking
@@ -214,30 +219,31 @@ For publishable packages:
 
 ### Strict Mode Settings
 
-| Option | Setting | Rationale |
-|--------|---------|-----------|
-| `strict` | ✅ true | Enables fundamental type safety |
-| `strictNullChecks` | ✅ true | Prevents null/undefined errors |
-| `noImplicitAny` | ✅ true | Requires explicit types for unclear values |
-| `noUncheckedIndexedAccess` | ✅ true | Safer array/object access |
-| `useUnknownInCatchVariables` | ✅ true | Catch blocks use `unknown` not `any` |
-| `exactOptionalPropertyTypes` | ❌ false | Too restrictive with libraries |
-| `strictPropertyInitialization` | ❌ false | Issues with decorators/ORMs |
-| `noUnusedLocals` | ❌ false | Annoying during development |
-| `noUnusedParameters` | ❌ false | Annoying during development |
+| Option                         | Setting  | Rationale                                  |
+| ------------------------------ | -------- | ------------------------------------------ |
+| `strict`                       | ✅ true  | Enables fundamental type safety            |
+| `strictNullChecks`             | ✅ true  | Prevents null/undefined errors             |
+| `noImplicitAny`                | ✅ true  | Requires explicit types for unclear values |
+| `noUncheckedIndexedAccess`     | ✅ true  | Safer array/object access                  |
+| `useUnknownInCatchVariables`   | ✅ true  | Catch blocks use `unknown` not `any`       |
+| `exactOptionalPropertyTypes`   | ❌ false | Too restrictive with libraries             |
+| `strictPropertyInitialization` | ❌ false | Issues with decorators/ORMs                |
+| `noUnusedLocals`               | ❌ false | Annoying during development                |
+| `noUnusedParameters`           | ❌ false | Annoying during development                |
 
 ### Module Settings
 
-| Config | Module | Resolution | Why |
-|--------|--------|------------|-----|
-| base | ESNext | bundler | Modern bundlers handle ESM |
-| node | CommonJS | node | Node.js compatibility |
-| nextjs | ESNext | bundler | Next.js handles modules |
-| library | ESNext | bundler | For modern consumers |
+| Config  | Module   | Resolution | Why                        |
+| ------- | -------- | ---------- | -------------------------- |
+| base    | ESNext   | bundler    | Modern bundlers handle ESM |
+| node    | CommonJS | node       | Node.js compatibility      |
+| nextjs  | ESNext   | bundler    | Next.js handles modules    |
+| library | ESNext   | bundler    | For modern consumers       |
 
 ### Build Performance
 
 All configs include:
+
 - `skipLibCheck: true` - Skip type checking `.d.ts` files
 - `incremental: true` - Reuse build information
 - `isolatedModules: true` - Enables faster transpilation

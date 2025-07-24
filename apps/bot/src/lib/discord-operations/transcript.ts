@@ -1,9 +1,5 @@
 import type { Message } from "discord.js";
-import {
-  User as UserDomain,
-  Ticket,
-  Transcripts,
-} from "@ticketsbot/core/domains";
+import { User as UserDomain, Ticket, Transcripts } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 
 // Helper to serialize embeds
@@ -48,7 +44,9 @@ export const TranscriptOps = {
           embeds: serializeEmbeds(message.embeds),
           attachments: serializeAttachments(message.attachments),
           messageType: "user",
-          referenceId: message.reference?.messageId ? parseDiscordId(message.reference.messageId) : null,
+          referenceId: message.reference?.messageId
+            ? parseDiscordId(message.reference.messageId)
+            : null,
         });
       } catch (error) {
         console.error("Error storing message:", error);
@@ -73,7 +71,9 @@ export const TranscriptOps = {
           embeds: serializeEmbeds(message.embeds),
           attachments: serializeAttachments(message.attachments),
           messageType: "system",
-          referenceId: message.reference?.messageId ? parseDiscordId(message.reference.messageId) : null,
+          referenceId: message.reference?.messageId
+            ? parseDiscordId(message.reference.messageId)
+            : null,
         });
       } catch (error) {
         console.error("Error storing bot message:", error);
@@ -87,7 +87,7 @@ export const TranscriptOps = {
     newEmbeds?: Array<{ toJSON(): unknown }>
   ) => {
     try {
-      const embeds =
+      const _embeds =
         newEmbeds && newEmbeds.length > 0
           ? JSON.stringify(newEmbeds.map((embed) => embed.toJSON()))
           : null;

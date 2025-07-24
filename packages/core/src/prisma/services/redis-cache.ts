@@ -17,7 +17,7 @@ export class RedisCacheService extends EventEmitter {
     try {
       // Try Redis first
       const value = await Redis.caches.permissions.get(key);
-      
+
       if (value !== null) {
         this.emit("hit", key);
         return value;
@@ -48,7 +48,7 @@ export class RedisCacheService extends EventEmitter {
     try {
       await Redis.caches.permissions.set(key, value, ttlSeconds);
       this.emit("set", key, value, ttlMs);
-      
+
       // Also set in memory cache for sync operations
       this.setInMemory(key, value, ttlMs);
     } catch (_error) {
@@ -63,7 +63,7 @@ export class RedisCacheService extends EventEmitter {
   setSync(key: string, value: unknown, ttlMs: number): void {
     // For sync operations, use memory cache and async Redis
     this.setInMemory(key, value, ttlMs);
-    
+
     // Fire and forget Redis update
     void this.set(key, value, ttlMs);
   }
@@ -99,7 +99,7 @@ export class RedisCacheService extends EventEmitter {
   deleteSync(key: string): boolean {
     // Fire and forget Redis deletion
     void this.delete(key);
-    
+
     return this.deleteFromMemory(key);
   }
 
@@ -128,7 +128,7 @@ export class RedisCacheService extends EventEmitter {
   deletePatternSync(pattern: string): number {
     // Fire and forget Redis deletion
     void this.deletePattern(pattern);
-    
+
     return this.deletePatternFromMemory(pattern);
   }
 
@@ -138,10 +138,10 @@ export class RedisCacheService extends EventEmitter {
   async clear(): Promise<void> {
     // Note: We don't clear all Redis keys (could affect other caches)
     // Instead, we rely on TTL expiration for Redis
-    
+
     // Clear memory cache
     this.clearMemory();
-    
+
     this.emit("clear", this.memoryCache.size);
   }
 
@@ -255,7 +255,7 @@ export class CacheServiceWrapper extends EventEmitter {
   constructor() {
     super();
     this.redisCache = new RedisCacheService();
-    
+
     // Forward events
     this.redisCache.on("hit", (key) => this.emit("hit", key));
     this.redisCache.on("miss", (key) => this.emit("miss", key));
@@ -266,18 +266,22 @@ export class CacheServiceWrapper extends EventEmitter {
 
   // Synchronous methods for backward compatibility
   get(key: string): unknown {
+    // eslint-disable-next-line no-sync
     return this.redisCache.getSync(key);
   }
 
   set(key: string, value: unknown, ttlMs: number): void {
+    // eslint-disable-next-line no-sync
     this.redisCache.setSync(key, value, ttlMs);
   }
 
   delete(key: string): boolean {
+    // eslint-disable-next-line no-sync
     return this.redisCache.deleteSync(key);
   }
 
   deletePattern(pattern: string): number {
+    // eslint-disable-next-line no-sync
     return this.redisCache.deletePatternSync(pattern);
   }
 

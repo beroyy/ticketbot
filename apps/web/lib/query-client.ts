@@ -91,9 +91,9 @@ export function createQueryClient() {
  */
 export function withSuccessNotification<
   TData = unknown,
-  TError = unknown,
+  _TError = unknown,
   TVariables = unknown,
-  TContext = unknown,
+  _TContext = unknown,
 >(
   mutationFn: (variables: TVariables) => Promise<TData>,
   successMessage: string | ((data: TData) => string)

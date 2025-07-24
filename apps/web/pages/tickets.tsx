@@ -130,8 +130,7 @@ function TicketsContent() {
   const searchQuery = useTicketSearch();
   const selectedTicketId = useSelectedTicket();
   const activeTab = useActiveTab();
-  const { setSearch, setActiveTab, selectTicket, updateFilters, updateSort, resetFilters } =
-    useTicketActions();
+  const { setSearch, setActiveTab, selectTicket } = useTicketActions();
 
   // Query data
   const { data: allTickets = [], isLoading, error } = useQuery(ticketQueries.all(selectedGuildId));

@@ -157,7 +157,7 @@ class ScheduledTaskDomain {
       for (const job of jobs) {
         if (job.name === "auto-close") {
           const ticket = await Ticket.getByIdUnchecked(job.data.ticketId);
-          
+
           if (!ticket || ticket.status !== "OPEN" || !ticket.closeRequestId) {
             await job.remove();
             removedCount++;

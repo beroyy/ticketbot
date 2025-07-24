@@ -1,17 +1,10 @@
-import { Hono } from "hono";
-import { validateSession } from "../middleware/permissions";
-import type { AuthSession } from "@ticketsbot/core/auth";
+import { createRoute } from "../factory";
+import { compositions } from "../middleware/factory-middleware";
 
-type Variables = {
-  user: AuthSession["user"];
-  session: AuthSession;
-};
-
-export const authRoutes: Hono<{ Variables: Variables }> = new Hono<{ Variables: Variables }>();
-
-// GET /auth/me - Get current user info with Discord ID
-authRoutes.get("/me", validateSession, (c) => {
-  try {
+// Create auth routes using method chaining
+export const authRoutes = createRoute()
+  // Get current user info with Discord ID
+  .get("/me", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
 
     // Discord ID is now directly available from session
@@ -25,8 +18,4 @@ authRoutes.get("/me", validateSession, (c) => {
         discordUserId: user.discordUserId,
       },
     });
-  } catch (error) {
-    console.error("Error fetching user data:", error);
-    return c.json({ error: "Failed to fetch user data" }, 500);
-  }
-});
+  });

@@ -3,10 +3,10 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - '@orangeopensource/hurl'
-  - '@prisma/client'
-  - '@prisma/engines'
-  - '@tailwindcss/oxide'
+  - "@orangeopensource/hurl"
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "@tailwindcss/oxide"
   - bufferutil
   - core-js
   - esbuild

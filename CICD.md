@@ -27,6 +27,7 @@ TicketsBot uses a streamlined CI/CD pipeline optimized for a small team (1-2 dev
 ### Code Quality Workflow (`code-quality.yml`)
 
 The main CI workflow runs on:
+
 - Push to `main` branch
 - Pull requests to `main` branch
 
@@ -131,12 +132,14 @@ path: |
 ```
 
 Cache keys are based on:
+
 - Operating system
 - Lock file hash
 - turbo.json configuration
 - Git commit SHA
 
 This ensures:
+
 - Cache hits for unchanged code
 - Automatic invalidation on dependency changes
 - Isolation between different commits
@@ -148,12 +151,13 @@ This ensures:
 The `render.yaml` file defines:
 
 1. **Service Configuration**
+
    ```yaml
    type: web
    runtime: docker
-   autoDeploy: true      # Deploy on push to main
+   autoDeploy: true # Deploy on push to main
    healthCheckPath: /health
-   numInstances: 1       # Single instance for starter plan
+   numInstances: 1 # Single instance for starter plan
    ```
 
 2. **Environment Variable Groups**
@@ -187,6 +191,7 @@ NEXT_PUBLIC_FEATURE_ADVANCED_FORMS=false
 ```
 
 To update feature flags:
+
 1. Update in Render dashboard under "Environment Groups"
 2. Redeploy service (automatic if changed in dashboard)
 3. Next.js rebuilds with new flag values
@@ -226,28 +231,31 @@ pnpm env:validate
 ### Debugging CI Failures
 
 1. **Type Check Failures**
+
    ```bash
    # Generate Prisma client first
    pnpm --filter @ticketsbot/core db:generate
-   
+
    # Run type check
    pnpm typecheck
    ```
 
 2. **Lint Failures**
+
    ```bash
    # Run with auto-fix
    pnpm lint:fix
-   
+
    # Check specific files
    pnpm eslint apps/web/pages/tickets.tsx
    ```
 
 3. **Environment Validation**
+
    ```bash
    # Create test .env
    cp .env.example .env
-   
+
    # Validate
    pnpm env:validate
    ```
@@ -286,6 +294,7 @@ pnpm env:validate
 ### Deployment Notifications
 
 Configure in Render dashboard:
+
 - Slack webhooks
 - Email notifications
 - Discord webhooks

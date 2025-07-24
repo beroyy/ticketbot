@@ -1,22 +1,22 @@
 import { env } from "./env";
 import { logger } from "./utils/logger";
-
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { auth } from "@ticketsbot/core/auth";
-import { Redis } from "@ticketsbot/core";
-import { tickets } from "./routes/tickets";
-import { discord } from "./routes/discord";
-import { panels } from "./routes/panels";
-import { settings } from "./routes/settings";
-import { forms } from "./routes/forms";
+import type { AppEnv } from "./factory";
+import { errorHandler } from "./utils/error-handler";
 import { authRoutes } from "./routes/auth";
 import { healthRoutes } from "./routes/health";
-import { guilds } from "./routes/guilds";
-import { schemas } from "./routes/schemas";
-import { user } from "./routes/user";
-import { errorHandler } from "./utils/error-handler";
+import { schemaRoutes } from "./routes/schemas";
+import { userRoutes } from "./routes/user";
+import { discordRoutes } from "./routes/discord";
+import { panelRoutes } from "./routes/panels";
+import { settingsRoutes } from "./routes/settings";
+import { formRoutes } from "./routes/forms";
+import { guildRoutes } from "./routes/guilds";
+import { ticketRoutes } from "./routes/tickets";
+import { Redis } from "@ticketsbot/core";
 
 logger.debug("🔍 Validated Environment Variables:", {
   WEB_URL: env.WEB_URL,
@@ -26,14 +26,10 @@ logger.debug("🔍 Validated Environment Variables:", {
   NEXT_PUBLIC_API_URL: env.NEXT_PUBLIC_API_URL ?? "not set",
 });
 
-const app = new Hono();
-
-app.onError(errorHandler);
+const app = new Hono<AppEnv>().onError(errorHandler);
 
 const webUrl = env.WEB_URL;
-
-const additionalOrigins = env.ALLOWED_ORIGINS?.split(",").map((origin) => origin.trim()) || [];
-const allowedOrigins = [webUrl, ...additionalOrigins].filter(Boolean);
+const allowedOrigins = [webUrl];
 
 logger.debug("🔒 CORS Configuration:", {
   allowedOrigins,
@@ -58,22 +54,23 @@ app.on(["POST", "GET"], "/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-app.route("/api/auth", authRoutes);
-app.route("/tickets", tickets);
-app.route("/discord", discord);
-app.route("/panels", panels);
-app.route("/settings", settings);
-app.route("/forms", forms);
-app.route("/guilds", guilds);
-app.route("/user", user);
+const _routes = app
+  .route("/api/auth", authRoutes)
+  .route("/health", healthRoutes)
+  .route("/schemas", schemaRoutes)
+  .route("/user", userRoutes)
+  .route("/discord", discordRoutes)
+  .route("/panels", panelRoutes)
+  .route("/settings", settingsRoutes)
+  .route("/forms", formRoutes)
+  .route("/guilds", guildRoutes)
+  .route("/tickets", ticketRoutes);
 
-app.route("/health", healthRoutes);
-app.route("/schemas", schemas);
+export type AppType = typeof _routes;
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : env.API_PORT;
 const host = env.API_HOST;
 
-// Initialize Redis
 Redis.initialize()
   .then(() => {
     logger.info("✅ Redis initialized (if configured)");

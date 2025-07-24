@@ -5,6 +5,7 @@
 Zod v4 is a major release focusing on performance (up to 14x faster), developer experience, and API consistency. This guide documents all breaking changes and new features for agents working with Zod v4.
 
 **Key Highlights:**
+
 - 🚀 14x faster string parsing, 7x faster arrays, 6.5x faster objects
 - 📦 57% smaller core bundle size
 - 🔧 Unified error customization with `error` property
@@ -43,7 +44,7 @@ z.string({
       return "This field is required";
     }
     return "Not a string";
-  }
+  },
 });
 ```
 
@@ -53,21 +54,22 @@ All string format methods are deprecated in favor of top-level functions:
 
 ```typescript
 // ❌ Deprecated (will be removed in v5)
-z.string().email()
-z.string().uuid()
-z.string().url()
-z.string().datetime()
-z.string().ip()
+z.string().email();
+z.string().uuid();
+z.string().url();
+z.string().datetime();
+z.string().ip();
 
 // ✅ Use top-level functions
-z.email()
-z.uuid()
-z.url()
-z.iso.datetime()
-z.ipv4() // or z.ipv6()
+z.email();
+z.uuid();
+z.url();
+z.iso.datetime();
+z.ipv4(); // or z.ipv6()
 ```
 
 **Complete list of top-level validators:**
+
 - `z.email()`, `z.uuid()`, `z.url()`, `z.emoji()`
 - `z.base64()`, `z.base64url()`, `z.jwt()`
 - `z.nanoid()`, `z.cuid()`, `z.cuid2()`, `z.ulid()`
@@ -79,10 +81,10 @@ z.ipv4() // or z.ipv6()
 
 ```typescript
 // ❌ Deprecated methods
-schema.strict()
-schema.passthrough()
-schema.strip()
-schema.deepPartial()
+schema.strict();
+schema.passthrough();
+schema.strip();
+schema.deepPartial();
 
 // ✅ Use these instead
 // strict is now the default behavior
@@ -138,10 +140,11 @@ const jsonSchema = z.toJSONSchema(schema);
 ### 2. File Validation
 
 ```typescript
-const fileSchema = z.file()
-  .min(1000)           // minimum size in bytes
-  .max(5_000_000)      // maximum size in bytes
-  .type("image/png");  // MIME type validation
+const fileSchema = z
+  .file()
+  .min(1000) // minimum size in bytes
+  .max(5_000_000) // maximum size in bytes
+  .type("image/png"); // MIME type validation
 
 // For multiple types
 z.file().type(["image/png", "image/jpeg"]);
@@ -151,14 +154,11 @@ z.file().type(["image/png", "image/jpeg"]);
 
 ```typescript
 // Simple template
-z.templateLiteral(["Hello, ", z.string()]); 
+z.templateLiteral(["Hello, ", z.string()]);
 // Type: `Hello, ${string}`
 
 // Complex templates
-z.templateLiteral([
-  z.number(), 
-  z.enum(["px", "em", "rem"])
-]); 
+z.templateLiteral([z.number(), z.enum(["px", "em", "rem"])]);
 // Type: `${number}px` | `${number}em` | `${number}rem`
 ```
 
@@ -180,7 +180,7 @@ z.globalRegistry.register("MySchema", {
   id: "user-schema",
   title: "User Schema",
   description: "Schema for user data",
-  examples: [{ name: "John", age: 30 }]
+  examples: [{ name: "John", age: 30 }],
 });
 ```
 
@@ -201,33 +201,33 @@ import { string, number, object } from "zod/mini";
 
 const schema = object({
   name: string(),
-  age: number()
+  age: number(),
 });
 ```
 
 ## Performance Improvements
 
 - **String parsing**: 14x faster
-- **Array parsing**: 7x faster  
+- **Array parsing**: 7x faster
 - **Object parsing**: 6.5x faster
 - **TypeScript instantiations**: 100x reduction
 - **Bundle size**: 57% smaller core
 
 ## Migration Quick Reference
 
-| Zod v3 | Zod v4 |
-|--------|--------|
-| `{ message: "error" }` | `{ error: "error" }` |
-| `z.string().email()` | `z.email()` |
-| `z.string().uuid()` | `z.uuid()` |
-| `z.string().url()` | `z.url()` |
-| `z.string().datetime()` | `z.iso.datetime()` |
-| `z.string().ip()` | `z.ipv4()` or `z.ipv6()` |
-| `invalid_type_error` | Use `error` function |
-| `required_error` | Use `error` function |
-| `.deepPartial()` | Use recursive types |
-| `.strip()` | Default behavior |
-| `.strict()` | Default behavior |
+| Zod v3                  | Zod v4                   |
+| ----------------------- | ------------------------ |
+| `{ message: "error" }`  | `{ error: "error" }`     |
+| `z.string().email()`    | `z.email()`              |
+| `z.string().uuid()`     | `z.uuid()`               |
+| `z.string().url()`      | `z.url()`                |
+| `z.string().datetime()` | `z.iso.datetime()`       |
+| `z.string().ip()`       | `z.ipv4()` or `z.ipv6()` |
+| `invalid_type_error`    | Use `error` function     |
+| `required_error`        | Use `error` function     |
+| `.deepPartial()`        | Use recursive types      |
+| `.strip()`              | Default behavior         |
+| `.strict()`             | Default behavior         |
 
 ## Important Notes
 
@@ -243,27 +243,33 @@ const schema = object({
 // Complete v3 → v4 migration example
 
 // ❌ Zod v3
-const userSchema = z.object({
-  email: z.string().email({ message: "Invalid email" }),
-  age: z.number({
-    required_error: "Age is required",
-    invalid_type_error: "Age must be a number"
-  }).positive(),
-  website: z.string().url().optional(),
-  id: z.string().uuid()
-}).strict();
+const userSchema = z
+  .object({
+    email: z.string().email({ message: "Invalid email" }),
+    age: z
+      .number({
+        required_error: "Age is required",
+        invalid_type_error: "Age must be a number",
+      })
+      .positive(),
+    website: z.string().url().optional(),
+    id: z.string().uuid(),
+  })
+  .strict();
 
 // ✅ Zod v4
 const userSchema = z.object({
   email: z.email({ error: "Invalid email" }),
-  age: z.number({
-    error: (issue) => {
-      if (issue.input === undefined) return "Age is required";
-      return "Age must be a number";
-    }
-  }).positive(),
+  age: z
+    .number({
+      error: (issue) => {
+        if (issue.input === undefined) return "Age is required";
+        return "Age must be a number";
+      },
+    })
+    .positive(),
   website: z.url().optional(),
-  id: z.uuid()
+  id: z.uuid(),
 }); // strict by default
 ```
 

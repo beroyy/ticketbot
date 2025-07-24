@@ -9,19 +9,21 @@ interface AutoCloseJobData {
 
 async function processAutoClose(job: Job<AutoCloseJobData>) {
   const { ticketId } = job.data;
-  
+
   console.log(`🤖 Processing auto-close for ticket ${ticketId}`);
 
   try {
     const ticket = await Ticket.getByIdUnchecked(ticketId);
-    
+
     if (!ticket) {
       console.log(`Ticket ${ticketId} not found - skipping auto-close`);
       return;
     }
 
     if (ticket.status !== "OPEN") {
-      console.log(`Ticket ${ticketId} is not open (status: ${ticket.status}) - skipping auto-close`);
+      console.log(
+        `Ticket ${ticketId} is not open (status: ${ticket.status}) - skipping auto-close`
+      );
       return;
     }
 
@@ -36,7 +38,7 @@ async function processAutoClose(job: Job<AutoCloseJobData>) {
     }
 
     await TicketLifecycle.autoClose(ticketId, ticket.closeRequestBy);
-    
+
     console.log(`✅ Successfully auto-closed ticket ${ticketId}`);
   } catch (error) {
     console.error(`❌ Failed to auto-close ticket ${ticketId}:`, error);

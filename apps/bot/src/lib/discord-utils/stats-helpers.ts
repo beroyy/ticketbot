@@ -21,10 +21,11 @@ export const StatsHelpers = {
    */
   formatDuration(minutes: number | null): string {
     if (!minutes) return "N/A";
-    
+
     if (minutes < 60) {
       return `${minutes}m`;
-    } else if (minutes < 1440) { // Less than 24 hours
+    } else if (minutes < 1440) {
+      // Less than 24 hours
       return `${Math.round(minutes / 60)}h`;
     } else {
       return `${Math.round(minutes / 1440)}d`;

@@ -113,12 +113,14 @@ export const MessageQuerySchema = z.object({
 export const TranscriptWithMessagesSchema = z.object({
   transcript: TranscriptSchema,
   messages: z.array(TicketMessageSchema),
-  feedback: z.object({
-    rating: z.number(),
-    comment: z.string().nullable(),
-    submittedById: DiscordUserIdSchema,
-    submittedAt: z.date(),
-  }).nullable(),
+  feedback: z
+    .object({
+      rating: z.number(),
+      comment: z.string().nullable(),
+      submittedById: DiscordUserIdSchema,
+      submittedAt: z.date(),
+    })
+    .nullable(),
 });
 
 /**

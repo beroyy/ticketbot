@@ -49,6 +49,7 @@ Provides ticket-specific Discord operations:
 ## Event Flow
 
 ### Ticket Creation
+
 1. User clicks panel button/selects option
 2. Bot creates Discord channel (text or thread)
 3. `TicketLifecycle.create()` records ticket in database
@@ -56,12 +57,14 @@ Provides ticket-specific Discord operations:
 5. `onTicketCreate` handler triggered
 
 ### Message Handling
+
 1. User sends message in ticket channel
 2. `messageCreate` event fires
 3. Handler checks if channel is ticket
 4. Message stored via `Transcripts.storeMessage()`
 
 ### Ticket Closure
+
 1. Staff closes ticket or channel deleted
 2. `TicketLifecycle.close()` updates database
 3. Channel optionally deleted
@@ -70,6 +73,7 @@ Provides ticket-specific Discord operations:
 ## Usage Examples
 
 ### Initialize Handlers
+
 ```typescript
 import { initializeTicketHandlers } from "@ticketsbot/core/discord";
 
@@ -78,6 +82,7 @@ initializeTicketHandlers();
 ```
 
 ### Create Ticket from Panel
+
 ```typescript
 const { ticketId, channelId } = await createTicketFromPanel({
   guildId: interaction.guildId,
@@ -90,6 +95,7 @@ const { ticketId, channelId } = await createTicketFromPanel({
 ```
 
 ### Close Ticket
+
 ```typescript
 await closeTicket({
   ticketId: 123,
@@ -100,13 +106,16 @@ await closeTicket({
 ```
 
 ### Send System Message
+
 ```typescript
 await sendTicketMessage(ticketId, {
   content: "This ticket will be closed in 5 minutes due to inactivity.",
-  embeds: [{
-    title: "Inactivity Warning",
-    color: 0xff9900,
-  }],
+  embeds: [
+    {
+      title: "Inactivity Warning",
+      color: 0xff9900,
+    },
+  ],
 });
 ```
 

@@ -117,10 +117,7 @@ export class Cache {
     const fullKey = this.buildKey(key);
 
     try {
-      await redisClient.withRetry(
-        async (client) => client.del(fullKey),
-        `cache.delete(${key})`
-      );
+      await redisClient.withRetry(async (client) => client.del(fullKey), `cache.delete(${key})`);
       this.stats.deletes++;
     } catch (error) {
       this.stats.errors++;
@@ -139,22 +136,19 @@ export class Cache {
     const fullPattern = this.buildKey(pattern);
 
     try {
-      await redisClient.withRetry(
-        async (client) => {
-          const keys = [];
-          for await (const key of client.scanIterator({
-            MATCH: fullPattern,
-            COUNT: 100,
-          })) {
-            keys.push(key);
-          }
-          if (keys.length > 0) {
-            await client.del(keys as any);
-          }
-          return keys.length;
-        },
-        `cache.deletePattern(${pattern})`
-      );
+      await redisClient.withRetry(async (client) => {
+        const keys = [];
+        for await (const key of client.scanIterator({
+          MATCH: fullPattern,
+          COUNT: 100,
+        })) {
+          keys.push(key);
+        }
+        if (keys.length > 0) {
+          await client.del(keys as any);
+        }
+        return keys.length;
+      }, `cache.deletePattern(${pattern})`);
     } catch (error) {
       this.stats.errors++;
       logger.warn(`[Cache] Redis deletePattern failed for ${pattern}`, error);

@@ -73,12 +73,14 @@ export namespace Analytics {
     const guildId = parsed.guildId || Actor.guildId();
 
     // Build date range filter
-    const dateFilter = parsed.dateRange ? {
-      createdAt: {
-        gte: parsed.dateRange.start,
-        lte: parsed.dateRange.end,
-      },
-    } : {};
+    const dateFilter = parsed.dateRange
+      ? {
+          createdAt: {
+            gte: parsed.dateRange.start,
+            lte: parsed.dateRange.end,
+          },
+        }
+      : {};
 
     // Get basic stats
     const [totalOpen, totalClosed, totalCreated] = await Promise.all([
@@ -144,12 +146,13 @@ export namespace Analytics {
     });
 
     const resolutionTimes = closedTickets
-      .filter(t => t.closedAt)
-      .map(t => differenceInHours(t.closedAt!, t.createdAt));
-    
-    const avgResolutionTime = resolutionTimes.length > 0
-      ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length
-      : null;
+      .filter((t) => t.closedAt)
+      .map((t) => differenceInHours(t.closedAt!, t.createdAt));
+
+    const avgResolutionTime =
+      resolutionTimes.length > 0
+        ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length
+        : null;
 
     return {
       totalOpen,
@@ -220,12 +223,11 @@ export namespace Analytics {
     });
 
     const waitTimes = openTickets
-      .filter(t => t.lifecycleEvents.length === 0)
-      .map(t => differenceInMinutes(new Date(), t.createdAt));
-    
-    const avgWaitTime = waitTimes.length > 0
-      ? waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length
-      : null;
+      .filter((t) => t.lifecycleEvents.length === 0)
+      .map((t) => differenceInMinutes(new Date(), t.createdAt));
+
+    const avgWaitTime =
+      waitTimes.length > 0 ? waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length : null;
 
     // Count staff with recent activity
     const staffOnline = await prisma.ticketLifecycleEvent.groupBy({
@@ -248,7 +250,7 @@ export namespace Analytics {
       todayClosed,
       avgWaitTime,
       staffOnline: staffOnline.length,
-      queueLength: openTickets.filter(t => t.lifecycleEvents.length === 0).length,
+      queueLength: openTickets.filter((t) => t.lifecycleEvents.length === 0).length,
     };
   };
 
@@ -260,12 +262,14 @@ export namespace Analytics {
     const parsed = StaffPerformanceQuerySchema.parse(query);
     const guildId = parsed.guildId || Actor.guildId();
 
-    const dateFilter = parsed.dateRange ? {
-      timestamp: {
-        gte: parsed.dateRange.start,
-        lte: parsed.dateRange.end,
-      },
-    } : {};
+    const dateFilter = parsed.dateRange
+      ? {
+          timestamp: {
+            gte: parsed.dateRange.start,
+            lte: parsed.dateRange.end,
+          },
+        }
+      : {};
 
     // Get all staff or specific staff
     const staffFilter = parsed.staffId ? { performedById: parsed.staffId } : {};
@@ -322,13 +326,17 @@ export namespace Analytics {
     // Calculate averages and get feedback ratings
     const results = [];
     for (const [staffId, metrics] of staffMetrics) {
-      const avgResponseTime = metrics.responseTimes.length > 0
-        ? metrics.responseTimes.reduce((a: number, b: number) => a + b, 0) / metrics.responseTimes.length
-        : null;
+      const avgResponseTime =
+        metrics.responseTimes.length > 0
+          ? metrics.responseTimes.reduce((a: number, b: number) => a + b, 0) /
+            metrics.responseTimes.length
+          : null;
 
-      const avgResolutionTime = metrics.resolutionTimes.length > 0
-        ? metrics.resolutionTimes.reduce((a: number, b: number) => a + b, 0) / metrics.resolutionTimes.length
-        : null;
+      const avgResolutionTime =
+        metrics.resolutionTimes.length > 0
+          ? metrics.resolutionTimes.reduce((a: number, b: number) => a + b, 0) /
+            metrics.resolutionTimes.length
+          : null;
 
       // Get satisfaction ratings for tickets closed by this staff
       const feedbackData = await prisma.ticketFeedback.aggregate({
@@ -397,10 +405,10 @@ export namespace Analytics {
 
     // Group by day
     const dailyData = new Map<string, any>();
-    
+
     for (const ticket of tickets) {
       const dateKey = startOfDay(ticket.createdAt).toISOString();
-      
+
       if (!dailyData.has(dateKey)) {
         dailyData.set(dateKey, {
           date: new Date(dateKey),
@@ -418,7 +426,7 @@ export namespace Analytics {
         if (dailyData.has(closedDateKey)) {
           dailyData.get(closedDateKey)!.closed++;
         }
-        
+
         const resolutionTime = differenceInHours(ticket.closedAt, ticket.createdAt);
         dayData.resolutionTimes.push(resolutionTime);
       }
@@ -426,13 +434,15 @@ export namespace Analytics {
 
     // Convert to array and calculate averages
     const data = Array.from(dailyData.values())
-      .map(day => ({
+      .map((day) => ({
         date: day.date,
         created: day.created,
         closed: day.closed,
-        avgResolutionTime: day.resolutionTimes.length > 0
-          ? day.resolutionTimes.reduce((a: number, b: number) => a + b, 0) / day.resolutionTimes.length
-          : null,
+        avgResolutionTime:
+          day.resolutionTimes.length > 0
+            ? day.resolutionTimes.reduce((a: number, b: number) => a + b, 0) /
+              day.resolutionTimes.length
+            : null,
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -444,12 +454,16 @@ export namespace Analytics {
     // Determine trend
     const firstHalf = data.slice(0, Math.floor(data.length / 2));
     const secondHalf = data.slice(Math.floor(data.length / 2));
-    
+
     const firstHalfAvg = firstHalf.reduce((sum, day) => sum + day.created, 0) / firstHalf.length;
     const secondHalfAvg = secondHalf.reduce((sum, day) => sum + day.created, 0) / secondHalf.length;
-    
-    const trend = secondHalfAvg > firstHalfAvg * 1.1 ? "increasing" :
-                  secondHalfAvg < firstHalfAvg * 0.9 ? "decreasing" : "stable";
+
+    const trend =
+      secondHalfAvg > firstHalfAvg * 1.1
+        ? "increasing"
+        : secondHalfAvg < firstHalfAvg * 0.9
+          ? "decreasing"
+          : "stable";
 
     return {
       period: range,
@@ -550,11 +564,7 @@ export namespace Analytics {
       sections: {},
     };
 
-    const sections = parsed.includeSections || [
-      "overview",
-      "ticket_trends",
-      "staff_performance",
-    ];
+    const sections = parsed.includeSections || ["overview", "ticket_trends", "staff_performance"];
 
     // Build requested sections
     for (const section of sections) {
@@ -568,7 +578,12 @@ export namespace Analytics {
           break;
 
         case "ticket_trends":
-          report.sections.ticketTrends = await getTicketTrends(guildId, dateRange && dateRange.start && dateRange.end ? dateRange as { start: Date; end: Date } : undefined);
+          report.sections.ticketTrends = await getTicketTrends(
+            guildId,
+            dateRange && dateRange.start && dateRange.end
+              ? (dateRange as { start: Date; end: Date })
+              : undefined
+          );
           break;
 
         case "staff_performance":
@@ -623,7 +638,7 @@ async function getStatsByPanel(guildId: string, dateFilter: any): Promise<any> {
     },
   });
 
-  return stats.map(s => ({
+  return stats.map((s) => ({
     panelId: s.panelId,
     count: s._count._all,
   }));
@@ -643,12 +658,12 @@ async function getStatsByStaff(guildId: string, dateFilter: any): Promise<any> {
   });
 
   const staffMap = new Map<string, any>();
-  
+
   for (const event of events) {
     if (!staffMap.has(event.performedById)) {
       staffMap.set(event.performedById, { claimed: 0, closed: 0 });
     }
-    
+
     const stats = staffMap.get(event.performedById)!;
     if (event.action === "claimed") {
       stats.claimed = event._count;
@@ -676,7 +691,7 @@ async function getStatsByCategory(guildId: string, dateFilter: any): Promise<any
     },
   });
 
-  return stats.map(s => ({
+  return stats.map((s) => ({
     categoryId: s.categoryId,
     count: s._count._all,
   }));
@@ -687,14 +702,16 @@ async function getStatsByTime(
   groupBy: "day" | "week" | "month",
   dateFilter: any
 ): Promise<any> {
-  const result = await prisma.$queryRaw<Array<{
-    period: Date;
-    total: bigint;
-    closed: bigint;
-    open: bigint;
-    claimed: bigint;
-    avg_resolution_time: number | null;
-  }>>`
+  const result = await prisma.$queryRaw<
+    Array<{
+      period: Date;
+      total: bigint;
+      closed: bigint;
+      open: bigint;
+      claimed: bigint;
+      avg_resolution_time: number | null;
+    }>
+  >`
     SELECT 
       DATE_TRUNC(${groupBy}, created_at) as period,
       COUNT(*) as total,
@@ -716,10 +733,10 @@ async function getStatsByTime(
     GROUP BY DATE_TRUNC(${groupBy}, created_at)
     ORDER BY period ASC
   `;
-  
+
   // Format the result for consistent output
   return result.map((row) => ({
-    period: row.period.toISOString().split('T')[0],
+    period: row.period.toISOString().split("T")[0],
     total: Number(row.total),
     open: Number(row.open),
     closed: Number(row.closed),
@@ -730,9 +747,9 @@ async function getStatsByTime(
 
 function calculateAvgResponseTime(staffStats: any[]): number | null {
   const allResponseTimes = staffStats
-    .filter(s => s.avgResponseTime !== null)
-    .map(s => s.avgResponseTime);
-  
+    .filter((s) => s.avgResponseTime !== null)
+    .map((s) => s.avgResponseTime);
+
   return allResponseTimes.length > 0
     ? allResponseTimes.reduce((a, b) => a + b, 0) / allResponseTimes.length
     : null;
@@ -776,7 +793,7 @@ async function getSatisfactionScores(guildId: string, dateRange: any): Promise<a
   return {
     averageRating: feedback._avg.rating,
     totalFeedback: feedback._count,
-    distribution: distribution.map(d => ({
+    distribution: distribution.map((d) => ({
       rating: d.rating,
       count: d._count,
     })),
@@ -805,17 +822,18 @@ async function getResponseTimeAnalysis(guildId: string, dateRange: any): Promise
     },
   });
 
-  const responseTimes = claimEvents.map(event => ({
+  const responseTimes = claimEvents.map((event) => ({
     minutes: differenceInMinutes(event.timestamp, event.ticket.createdAt),
     claimedBy: event.claimedById,
   }));
 
-  const avgResponseTime = responseTimes.length > 0
-    ? responseTimes.reduce((sum, rt) => sum + rt.minutes, 0) / responseTimes.length
-    : null;
+  const avgResponseTime =
+    responseTimes.length > 0
+      ? responseTimes.reduce((sum, rt) => sum + rt.minutes, 0) / responseTimes.length
+      : null;
 
   // Calculate percentiles
-  const sorted = responseTimes.map(rt => rt.minutes).sort((a, b) => a - b);
+  const sorted = responseTimes.map((rt) => rt.minutes).sort((a, b) => a - b);
   const p50 = sorted[Math.floor(sorted.length * 0.5)] || null;
   const p95 = sorted[Math.floor(sorted.length * 0.95)] || null;
 
@@ -830,12 +848,12 @@ async function getResponseTimeAnalysis(guildId: string, dateRange: any): Promise
 function formatReportAsCsv(report: any): string {
   // Simple CSV formatting - would need enhancement for production
   let csv = "Metric,Value\n";
-  
+
   if (report.sections.overview) {
     csv += `Total Open,${report.sections.overview.totalOpen}\n`;
     csv += `Total Closed,${report.sections.overview.totalClosed}\n`;
     csv += `Total Created,${report.sections.overview.totalCreated}\n`;
-    csv += `Avg Resolution Time (hours),${report.sections.overview.avgResolutionTime || 'N/A'}\n`;
+    csv += `Avg Resolution Time (hours),${report.sections.overview.avgResolutionTime || "N/A"}\n`;
   }
 
   return csv;

@@ -14,6 +14,7 @@ Manages background job scheduling and processing using BullMQ with Redis. This d
 ## Key Components
 
 ### Main Domain (`index.ts`)
+
 - `initialize()` - Set up queues and workers
 - `shutdown()` - Graceful shutdown
 - `scheduleAutoClose()` - Schedule ticket auto-closure
@@ -21,9 +22,11 @@ Manages background job scheduling and processing using BullMQ with Redis. This d
 - `cleanupOrphanedJobs()` - Remove orphaned jobs
 
 ### Queues (`queues/`)
+
 - `ticket-lifecycle` - Handles ticket-related scheduled tasks
 
 ### Workers (`workers/`)
+
 - `ticket-lifecycle` - Processes auto-close jobs
 
 ## Usage
@@ -48,6 +51,7 @@ await ScheduledTask.shutdown();
 ## Job Types
 
 ### Auto-Close Job
+
 - **Name**: `auto-close`
 - **Data**: `{ ticketId: number }`
 - **Behavior**: Closes ticket if still open with close request
@@ -63,6 +67,7 @@ await ScheduledTask.shutdown();
 ## Future Extensions
 
 This domain can be extended with:
+
 - Scheduled reminders
 - Periodic cleanup tasks
 - Analytics aggregation

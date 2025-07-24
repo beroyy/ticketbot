@@ -20,10 +20,10 @@ const serverSchema = z.object({
   // URLs for server-side API calls (if any)
   WEB_URL: z.url(),
   API_URL: z.url(),
-  
+
   // Port for Next.js server
   WEB_PORT: z.coerce.number().positive(),
-  
+
   // Web-specific (optional)
   NEXT_TELEMETRY_DISABLED: stringbool().optional(),
 });
@@ -77,20 +77,25 @@ const validateEnvironment = () => {
   if (typeof window === "undefined") {
     // During build phase, Next.js may not have all env vars available
     // Check if we're in the build phase
-    const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
-    
+    const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
     if (isBuildPhase) {
       // During build, provide defaults for server vars that aren't critical during build
-      console.warn('Build phase detected - using defaults for missing env vars');
-      
+      console.warn("Build phase detected - using defaults for missing env vars");
+
       const server: z.infer<typeof serverSchema> = {
-        NODE_ENV: process.env.NODE_ENV as any || "production",
+        NODE_ENV: (process.env.NODE_ENV as any) || "production",
         WEB_URL: process.env.WEB_URL || "http://localhost:9000",
-        API_URL: process.env.API_URL || "http://localhost:9001", 
+        API_URL: process.env.API_URL || "http://localhost:9001",
         WEB_PORT: Number(process.env.WEB_PORT) || 9000,
-        NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED === 'true' ? true : process.env.NEXT_TELEMETRY_DISABLED === 'false' ? false : undefined,
+        NEXT_TELEMETRY_DISABLED:
+          process.env.NEXT_TELEMETRY_DISABLED === "true"
+            ? true
+            : process.env.NEXT_TELEMETRY_DISABLED === "false"
+              ? false
+              : undefined,
       };
-      
+
       // For client vars during build, provide defaults
       const clientEnv = {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001",
@@ -103,7 +108,7 @@ const validateEnvironment = () => {
       const client = clientSchema.parse(clientEnv);
       return { server, client };
     }
-    
+
     // Server: Parse environment variables since .env is already loaded by Next.js
     const server = serverSchema.parse(process.env);
     const client = clientSchema.parse(process.env);

@@ -85,7 +85,7 @@ export namespace Ticket {
     const { TicketQuerySchema } = await import("./schemas");
     const parsed = TicketQuerySchema.parse(query);
     const guildId = Actor.guildId();
-    
+
     const where: Prisma.TicketWhereInput = {
       guildId: parsed.guildId || guildId,
       ...(parsed.status && { status: parsed.status }),
@@ -97,7 +97,7 @@ export namespace Ticket {
 
     const skip = parsed.pagination ? (parsed.pagination.page - 1) * parsed.pagination.pageSize : 0;
     const take = parsed.pagination?.pageSize || 50;
-    
+
     return prisma.ticket.findMany({
       where,
       skip,
@@ -210,7 +210,7 @@ export namespace Ticket {
    */
   export const isTicketChannel = async (channelId: string): Promise<boolean> => {
     const guildId = Actor.guildId();
-    
+
     const count = await prisma.ticket.count({
       where: {
         guildId,
@@ -232,10 +232,10 @@ export namespace Ticket {
     const { Transcripts } = await import("../transcripts");
 
     const core = await getById(ticketId);
-    
+
     // Get lifecycle history
     const lifecycleHistory = await TicketLifecycle.getHistory(ticketId);
-    
+
     // Get transcript data
     const transcript = await Transcripts.getTranscript(ticketId);
     const messages = await Transcripts.getMessages(ticketId);
@@ -253,10 +253,10 @@ export namespace Ticket {
    */
   export const listForApi = async (query: TicketQuery): Promise<any[]> => {
     const tickets = await list(query);
-    
+
     // For API responses, we might want to include some basic stats
     // but not full messages to keep response size manageable
-    return tickets.map(ticket => ({
+    return tickets.map((ticket) => ({
       ...ticket,
       messageCount: 0, // This would come from Transcripts domain
       lastActivity: ticket.updatedAt,
@@ -266,9 +266,13 @@ export namespace Ticket {
   /**
    * Add a participant to a ticket
    */
-  export const addParticipant = async (ticketId: number, userId: string, role: "participant" | "observer" = "participant"): Promise<void> => {
+  export const addParticipant = async (
+    ticketId: number,
+    userId: string,
+    role: "participant" | "observer" = "participant"
+  ): Promise<void> => {
     const guildId = Actor.guildId();
-    
+
     // Verify ticket belongs to guild
     const ticket = await getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
@@ -317,7 +321,7 @@ export namespace Ticket {
    */
   export const removeParticipant = async (ticketId: number, userId: string): Promise<void> => {
     const guildId = Actor.guildId();
-    
+
     // Verify ticket belongs to guild
     const ticket = await getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
@@ -362,7 +366,7 @@ export namespace Ticket {
    */
   export const getParticipants = async (ticketId: number): Promise<any[]> => {
     const guildId = Actor.guildId();
-    
+
     // Verify ticket belongs to guild
     const ticket = await getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
@@ -383,7 +387,7 @@ export namespace Ticket {
    */
   export const isParticipant = async (ticketId: number, userId: string): Promise<boolean> => {
     const guildId = Actor.guildId();
-    
+
     // Verify ticket belongs to guild
     const ticket = await getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {

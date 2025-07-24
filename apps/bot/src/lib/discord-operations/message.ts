@@ -173,7 +173,7 @@ export const MessageOps = {
     successEmbed: (rating: number) => {
       const ratingEmojis = ["⚡", "💫", "✨", "🌟", "⭐"];
       const emoji = ratingEmojis[rating - 1] || "⭐";
-      
+
       return createEmbed({
         title: "Thank You for Your Feedback!",
         description: `You rated this support ${emoji}`,
@@ -186,7 +186,8 @@ export const MessageOps = {
     approvedEmbed: (ticketId: number) =>
       createEmbed({
         title: "Ticket Closed",
-        description: "Ticket closure approved by the opener. This channel will be deleted in a few seconds.",
+        description:
+          "Ticket closure approved by the opener. This channel will be deleted in a few seconds.",
         color: COLORS.ERROR,
         footer: `Ticket ID: ${ticketId}`,
       }),

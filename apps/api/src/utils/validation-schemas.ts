@@ -6,8 +6,6 @@ import {
   DiscordGuildIdSchema,
   DiscordChannelIdSchema,
   TicketStatusSchema,
-  PanelTypeSchema,
-  FormFieldTypeSchema,
 } from "@ticketsbot/core";
 
 /**
@@ -65,7 +63,10 @@ export const PreferenceKeySchema = z
   .string()
   .min(1)
   .max(50)
-  .regex(/^[a-zA-Z0-9_-]+$/, "Preference key must contain only alphanumeric characters, underscores, and hyphens");
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "Preference key must contain only alphanumeric characters, underscores, and hyphens"
+  );
 
 export const PreferenceParamSchema = z.object({
   key: PreferenceKeySchema,

@@ -19,6 +19,12 @@
       }
     ]
   },
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "../../.artifacts/WEB_STASH/hooks/use-panel-query.ts"
+  ],
   "exclude": ["node_modules"]
 }

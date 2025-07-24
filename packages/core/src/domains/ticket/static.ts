@@ -4,7 +4,7 @@ import { TicketStatus } from "@prisma/client";
 /**
  * Static ticket methods that don't require actor context
  * Used primarily for preconditions and system operations
- * 
+ *
  * Note: Message operations have been moved to Transcripts domain
  * Auto-close operations have been moved to TicketLifecycle domain
  */
@@ -90,10 +90,13 @@ export const getCountByStatus = async (guildId: string): Promise<Record<string, 
     _count: true,
   });
 
-  return counts.reduce((acc, curr) => {
-    acc[curr.status] = curr._count;
-    return acc;
-  }, {} as Record<string, number>);
+  return counts.reduce(
+    (acc, curr) => {
+      acc[curr.status] = curr._count;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 };
 
 /**

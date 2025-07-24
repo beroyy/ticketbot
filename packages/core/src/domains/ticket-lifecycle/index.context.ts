@@ -172,8 +172,8 @@ export namespace TicketLifecycle {
       // Get the ticket
       const ticket = await tx.ticket.findUnique({
         where: { id: parsed.ticketId },
-        select: { 
-          guildId: true, 
+        select: {
+          guildId: true,
           status: true,
           lifecycleEvents: {
             where: { action: "claimed" },
@@ -213,7 +213,7 @@ export namespace TicketLifecycle {
       // Update ticket status
       const updated = await tx.ticket.update({
         where: { id: parsed.ticketId },
-        data: { 
+        data: {
           status: TicketStatus.CLAIMED,
           updatedAt: new Date(),
         },
@@ -251,8 +251,8 @@ export namespace TicketLifecycle {
       // Get the ticket
       const ticket = await tx.ticket.findUnique({
         where: { id: parsed.ticketId },
-        select: { 
-          guildId: true, 
+        select: {
+          guildId: true,
           status: true,
           lifecycleEvents: {
             where: { action: "claimed" },
@@ -292,7 +292,7 @@ export namespace TicketLifecycle {
       // Update ticket status back to open
       const updated = await tx.ticket.update({
         where: { id: parsed.ticketId },
-        data: { 
+        data: {
           status: TicketStatus.OPEN,
           updatedAt: new Date(),
         },
@@ -329,7 +329,7 @@ export namespace TicketLifecycle {
 
       // Get the ticket
       const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
-      
+
       if (!ticket || ticket.guildId !== guildId) {
         throw new Error("Ticket not found");
       }
@@ -404,7 +404,7 @@ export namespace TicketLifecycle {
 
       // Get the ticket
       const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
-      
+
       if (!ticket || ticket.guildId !== guildId) {
         throw new Error("Ticket not found");
       }
@@ -549,7 +549,7 @@ export namespace TicketLifecycle {
 
       // Generate close request ID
       const closeRequestId = `cr_${input.ticketId}_${Date.now()}`;
-      
+
       // Create close request event
       await tx.ticketLifecycleEvent.create({
         data: {
@@ -571,9 +571,10 @@ export namespace TicketLifecycle {
           closeRequestBy: input.requestedById,
           closeRequestReason: input.reason || null,
           closeRequestCreatedAt: new Date(),
-          autoCloseAt: input.autoCloseHours && !ticket.excludeFromAutoclose
-            ? new Date(Date.now() + input.autoCloseHours * 60 * 60 * 1000)
-            : null,
+          autoCloseAt:
+            input.autoCloseHours && !ticket.excludeFromAutoclose
+              ? new Date(Date.now() + input.autoCloseHours * 60 * 60 * 1000)
+              : null,
           updatedAt: new Date(),
         },
       });
@@ -584,8 +585,11 @@ export namespace TicketLifecycle {
       if (input.autoCloseHours && !ticket.excludeFromAutoclose) {
         afterTransaction(async () => {
           const { ScheduledTask } = await import("../scheduled-task");
-          const jobId = await ScheduledTask.scheduleAutoClose(input.ticketId, input.autoCloseHours!);
-          
+          const jobId = await ScheduledTask.scheduleAutoClose(
+            input.ticketId,
+            input.autoCloseHours!
+          );
+
           if (jobId) {
             // Store job ID for return
             autoCloseJobId = jobId;
@@ -618,7 +622,10 @@ export namespace TicketLifecycle {
   /**
    * Cancel a close request
    */
-  export const cancelCloseRequest = async (ticketId: number, cancelledById: string): Promise<void> => {
+  export const cancelCloseRequest = async (
+    ticketId: number,
+    cancelledById: string
+  ): Promise<void> => {
     return withTransaction(async () => {
       const tx = useTransaction();
       const guildId = Actor.guildId();

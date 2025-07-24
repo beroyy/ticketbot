@@ -26,7 +26,7 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
     const key = `ratelimit:${keyPrefix}:${ip}:${path}`;
 
     try {
-      const result = await Redis.withRetry(async (client: any) => {
+      const result = await Redis.withRetry(async (client) => {
         const current = await client.get(key);
         const count = current ? parseInt(current) : 0;
 
@@ -43,10 +43,10 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
         await multi.exec();
 
         return { allowed: true, remaining: max - count - 1, retryAfter: 0 };
-      }, "rateLimit") || { allowed: true, remaining: max, retryAfter: 0 };
+      }, "rateLimit");
 
-      if (!result.allowed) {
-        const retryAfter = result.retryAfter || window;
+      if (result && !result.allowed) {
+        const retryAfter = result?.retryAfter || window;
         c.header("X-RateLimit-Limit", max.toString());
         c.header("X-RateLimit-Remaining", "0");
         c.header("X-RateLimit-Reset", (Date.now() + retryAfter * 1000).toString());
@@ -62,7 +62,7 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
       }
 
       c.header("X-RateLimit-Limit", max.toString());
-      c.header("X-RateLimit-Remaining", (result.remaining || 0).toString());
+      c.header("X-RateLimit-Remaining", (result?.remaining || 0).toString());
       c.header("X-RateLimit-Reset", (Date.now() + window * 1000).toString());
 
       await next();

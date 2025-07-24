@@ -202,7 +202,9 @@ export namespace Transcripts {
         ...(parsedQuery?.includeDeleted ? {} : { deletedAt: null }),
       },
       orderBy: { createdAt: "asc" },
-      skip: parsedQuery?.pagination ? (parsedQuery.pagination.page - 1) * parsedQuery.pagination.pageSize : 0,
+      skip: parsedQuery?.pagination
+        ? (parsedQuery.pagination.page - 1) * parsedQuery.pagination.pageSize
+        : 0,
       take: parsedQuery?.pagination?.pageSize || 100,
     });
   };
@@ -346,12 +348,16 @@ export namespace Transcripts {
     // Format based on requested type
     switch (parsed.format) {
       case "json":
-        return JSON.stringify({
-          ticket,
-          transcript,
-          messages,
-          history,
-        }, null, 2);
+        return JSON.stringify(
+          {
+            ticket,
+            transcript,
+            messages,
+            history,
+          },
+          null,
+          2
+        );
 
       case "txt":
         return formatAsText(ticket, messages, history);
@@ -382,7 +388,7 @@ export namespace Transcripts {
 
     const transcript = await getTranscript(ticketId);
     const messages = await getMessages(ticketId);
-    
+
     const feedback = await prisma.ticketFeedback.findUnique({
       where: { transcriptId: transcript.id },
     });
@@ -466,20 +472,28 @@ function formatAsHtml(ticket: any, messages: any[], history: any[]): string {
   <p><strong>Status:</strong> ${ticket.status}</p>
   
   <h2>Messages</h2>
-  ${messages.map(msg => `
+  ${messages
+    .map(
+      (msg) => `
     <div class="message">
       <strong>${msg.authorId}</strong> - ${msg.createdAt}<br>
       ${msg.content}
     </div>
-  `).join('')}
+  `
+    )
+    .join("")}
   
   <h2>History</h2>
-  ${history.map(event => `
+  ${history
+    .map(
+      (event) => `
     <div class="history">
       ${event.timestamp} - ${event.action} by ${event.performedById}
-      ${event.details ? `<br>Details: ${event.details}` : ''}
+      ${event.details ? `<br>Details: ${event.details}` : ""}
     </div>
-  `).join('')}
+  `
+    )
+    .join("")}
 </body>
 </html>
   `;

@@ -107,14 +107,15 @@ All routes except public endpoints require authentication:
 
 ```typescript
 // Auth cookie is automatically included
-fetch('http://localhost:9001/tickets', {
-  credentials: 'include'
-})
+fetch("http://localhost:9001/tickets", {
+  credentials: "include",
+});
 ```
 
 ### Route Categories
 
 #### Public Routes
+
 - `GET /health` - Basic health check
 - `GET /health/detailed` - Service status
 - `GET|POST /auth/*` - Authentication endpoints
@@ -123,32 +124,38 @@ fetch('http://localhost:9001/tickets', {
 #### Authenticated Routes
 
 **Tickets** (`/tickets`)
+
 - List, create, update, delete tickets
 - Claim/unclaim assignment
 - Close with reason
 - View activity and messages
 
 **Panels** (`/panels`)
+
 - CRUD operations for ticket panels
 - Deploy to Discord channels
 - Multi-panel support
 
 **Guild Management** (`/guilds/:guildId`)
+
 - Guild settings and configuration
 - Team member management
 - Role assignments
 
 **Discord Integration** (`/discord`)
+
 - List user's guilds
 - Get channels and roles
 - Member search
 
 **Forms** (`/forms`)
+
 - Create dynamic forms
 - Field validation rules
 - Form templates
 
 **User** (`/user`)
+
 - Profile information
 - Preferences management
 
@@ -160,7 +167,7 @@ The API uses AsyncLocalStorage for request context:
 
 ```typescript
 // Middleware automatically provides context
-app.use('*', contextMiddleware);
+app.use("*", contextMiddleware);
 
 // Access in routes
 const actor = Actor.use();
@@ -172,12 +179,9 @@ const permissions = actor.properties.permissions;
 Granular permission checking:
 
 ```typescript
-app.get('/admin-route', 
-  requirePermission(PermissionFlags.GUILD_SETTINGS_EDIT),
-  async (c) => {
-    // User has required permission
-  }
-);
+app.get("/admin-route", requirePermission(PermissionFlags.GUILD_SETTINGS_EDIT), async (c) => {
+  // User has required permission
+});
 ```
 
 ### Schema Validation
@@ -185,12 +189,9 @@ app.get('/admin-route',
 Type-safe request validation:
 
 ```typescript
-app.post('/tickets',
-  zValidator('json', CreateTicketSchema),
-  async (c) => {
-    const data = c.req.valid('json'); // Type-safe
-  }
-);
+app.post("/tickets", zValidator("json", CreateTicketSchema), async (c) => {
+  const data = c.req.valid("json"); // Type-safe
+});
 ```
 
 ### Health Monitoring
@@ -222,9 +223,9 @@ GET /health/detailed
 Example:
 
 ```typescript
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 
 export const myRoute = new Hono();
 
@@ -232,16 +233,12 @@ const CreateSchema = z.object({
   name: z.string().min(1),
 });
 
-myRoute.post('/',
-  requireAuth,
-  zValidator('json', CreateSchema),
-  async (c) => {
-    const data = c.req.valid('json');
-    // Use domain methods
-    const result = await MyDomain.create(data);
-    return c.json(result);
-  }
-);
+myRoute.post("/", requireAuth, zValidator("json", CreateSchema), async (c) => {
+  const data = c.req.valid("json");
+  // Use domain methods
+  const result = await MyDomain.create(data);
+  return c.json(result);
+});
 ```
 
 ### Error Handling
@@ -258,12 +255,12 @@ Centralized error handler converts domain errors:
 Write tests using Vitest:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { app } from '../src/index';
+import { describe, it, expect } from "vitest";
+import { app } from "../src/index";
 
-describe('Tickets API', () => {
-  it('should list tickets', async () => {
-    const res = await app.request('/tickets');
+describe("Tickets API", () => {
+  it("should list tickets", async () => {
+    const res = await app.request("/tickets");
     expect(res.status).toBe(200);
   });
 });
@@ -302,18 +299,22 @@ docker run -d \
 ### Common Issues
 
 **CORS Errors**
+
 - Ensure `WEB_URL` matches your frontend URL
 - Check credentials are included in requests
 
 **Permission Denied**
+
 - Verify user has required permissions in database
 - Check `DEV_PERMISSIONS_HEX` in development
 
 **Database Connection**
+
 - Verify `DATABASE_URL` is correct
 - Ensure migrations are run: `pnpm db:migrate`
 
 **Redis Connection**
+
 - Redis is optional; API works without it
 - Check `REDIS_URL` if caching needed
 

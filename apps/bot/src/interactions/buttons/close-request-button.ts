@@ -119,7 +119,7 @@ const closeRequestHandler = createButtonHandler({
       // Denied - cancel close request
       try {
         await TicketLifecycle.cancelCloseRequest(ticket.id, parseDiscordId(interaction.user.id));
-        
+
         await interaction.update({
           content: MessageOps.closeRequest.deniedMessage(),
           embeds: [],

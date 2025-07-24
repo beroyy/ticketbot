@@ -27,7 +27,11 @@ export function getSchemaMetadata(schema: z.ZodSchema<any>, fieldName: string): 
   try {
     // Try to get the shape if it's an object schema
     const schemaAsAny = schema as any;
-    if (schemaAsAny.shape && typeof schemaAsAny.shape === "object" && fieldName in schemaAsAny.shape) {
+    if (
+      schemaAsAny.shape &&
+      typeof schemaAsAny.shape === "object" &&
+      fieldName in schemaAsAny.shape
+    ) {
       const fieldSchema = schemaAsAny.shape[fieldName];
       return fieldSchema?.meta?.();
     }
@@ -127,7 +131,7 @@ export function FormWrapper<TFieldValues extends FieldValues = FieldValues>({
     (errors) => {
       // Log validation errors for debugging
       console.error("Form validation errors:", errors);
-      
+
       // Call custom error handler if provided
       if (onValidationError) {
         onValidationError(errors);

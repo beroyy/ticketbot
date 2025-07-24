@@ -193,6 +193,7 @@ Note: ESLint may flag re-exported types as "unused". We use `eslint-disable-next
 ### 13 Domain Namespaces
 
 #### Core Entities
+
 1. **User** - Discord user management
    - `ensure()`, `findById()`, `update()`
 2. **Guild** - Server configuration
@@ -205,6 +206,7 @@ Note: ESLint may flag re-exported types as "unused". We use `eslint-disable-next
    - `create()`, `update()`, `deploy()`, `getWithForm()`
 
 #### Supporting Domains
+
 5. **Team** - Roles and permissions
    - `hasPermission()`, `getUserPermissions()`, `assignRole()`
    - `ensureDefaultRoles()`, `getRoleByName()`
@@ -216,6 +218,7 @@ Note: ESLint may flag re-exported types as "unused". We use `eslint-disable-next
    - `create()`, `update()`, `reorder()`, `listForPanel()`
 
 #### System Domains
+
 9. **Account** - User account management
    - Account-related operations
 10. **Analytics** - Tracking and metrics
@@ -241,6 +244,7 @@ Each domain follows a consistent file structure:
 - **`static.ts`** - Static methods that don't require context (used in preconditions, etc.)
 
 The separation allows for:
+
 - Clear distinction between auth-required and public methods
 - Better tree-shaking for client-side code
 - Easier testing of business logic without context setup

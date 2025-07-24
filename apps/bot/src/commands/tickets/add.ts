@@ -21,10 +21,7 @@ export class AddCommand extends TicketCommandBase {
         .setName("add")
         .setDescription("Add a user to the current ticket")
         .addUserOption((option) =>
-          option
-            .setName("user")
-            .setDescription("The user to add to the ticket")
-            .setRequired(true)
+          option.setName("user").setDescription("The user to add to the ticket").setRequired(true)
         )
     );
   }

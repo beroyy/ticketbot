@@ -3,7 +3,12 @@ import { Actor, withTransaction, afterTransaction, VisibleError } from "../../co
 import { PermissionFlags } from "../../schemas/permissions-constants";
 import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
 import type { DomainResult, PanelWithForm } from "../types";
-import { Prisma, type Panel as PrismaPanel, type Form as PrismaForm, type FormField } from "@prisma/client";
+import {
+  Prisma,
+  type Panel as PrismaPanel,
+  type Form as PrismaForm,
+  type FormField,
+} from "@prisma/client";
 
 // Export schemas
 export {

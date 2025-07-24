@@ -141,7 +141,10 @@ export const validateFormFieldValue = (
       if (validation.pattern && !new RegExp(validation.pattern).test(stringValue)) {
         throw new Error(validation.errorMessage || "Invalid format");
       }
-      if (fieldType === "EMAIL" && !z.email({ error: "Invalid email address" }).safeParse(stringValue).success) {
+      if (
+        fieldType === "EMAIL" &&
+        !z.email({ error: "Invalid email address" }).safeParse(stringValue).success
+      ) {
         throw new Error(validation.errorMessage || "Invalid email address");
       }
       if (fieldType === "URL" && !z.url({ error: "Invalid URL" }).safeParse(stringValue).success) {

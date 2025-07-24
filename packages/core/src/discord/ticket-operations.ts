@@ -31,7 +31,7 @@ export const initializeTicketHandlers = () => {
     onTicketCreate: async (data) => {
       try {
         const TicketLifecycle = await getTicketLifecycle();
-        
+
         // Create the ticket in the database
         const ticket = await TicketLifecycle.create({
           guildId: data.guildId,
@@ -42,19 +42,17 @@ export const initializeTicketHandlers = () => {
         });
 
         // Send initial message to the channel
-        await Discord.sendMessage(
-          data.guildId,
-          data.channelId,
-          {
-            content: `Welcome <@${data.openerId}>! Your ticket has been created.`,
-            embeds: [{
+        await Discord.sendMessage(data.guildId, data.channelId, {
+          content: `Welcome <@${data.openerId}>! Your ticket has been created.`,
+          embeds: [
+            {
               title: `Ticket #${ticket.number}`,
               description: data.subject || "A support agent will be with you shortly.",
               color: 0x00ff00,
               timestamp: new Date().toISOString(),
-            }],
-          }
-        );
+            },
+          ],
+        });
       } catch (error) {
         console.error("Failed to handle ticket creation:", error);
       }
@@ -65,7 +63,7 @@ export const initializeTicketHandlers = () => {
       try {
         const Ticket = await getTicket();
         const Transcripts = await getTranscripts();
-        
+
         // Find the ticket by channel ID
         const ticket = await Ticket.findByChannelId(data.channelId);
         if (!ticket) return;
@@ -90,7 +88,7 @@ export const initializeTicketHandlers = () => {
     onTicketClose: async (data) => {
       try {
         const TicketLifecycle = await getTicketLifecycle();
-        
+
         // Close the ticket in the database
         await TicketLifecycle.close({
           ticketId: data.ticketId,
@@ -200,17 +198,13 @@ export const sendTicketMessage = async (
   content: string | object
 ): Promise<void> => {
   const Ticket = await getTicket();
-  
+
   // Get ticket details
   const ticket = await Ticket.getByIdUnchecked(ticketId);
   if (!ticket || !ticket.channelId) throw new Error("Ticket or channel not found");
 
   // Send the message
-  const { messageId } = await Discord.sendMessage(
-    ticket.guildId,
-    ticket.channelId,
-    content
-  );
+  const { messageId } = await Discord.sendMessage(ticket.guildId, ticket.channelId, content);
 
   // Store in transcript if it's a string message
   if (typeof content === "string") {
@@ -241,15 +235,15 @@ export const updateTicketPermissions = async (
 ): Promise<void> => {
   const Ticket = await getTicket();
   const client = await Discord.getDiscordClient();
-  
+
   // Get ticket details
   const ticket = await Ticket.getByIdUnchecked(ticketId);
   if (!ticket || !ticket.channelId) throw new Error("Ticket or channel not found");
 
   // Get the channel
   const guild = await client.guilds.fetch(ticket.guildId);
-  const channel = await guild.channels.fetch(ticket.channelId) as TextChannel;
-  
+  const channel = (await guild.channels.fetch(ticket.channelId)) as TextChannel;
+
   if (!channel) throw new Error("Channel not found");
 
   // Update permissions

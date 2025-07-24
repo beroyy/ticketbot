@@ -54,7 +54,7 @@ const hasAccess = PermissionUtils.has(userPerms, PermissionFlags.TICKET_VIEW_ALL
 const adminPerms = PermissionUtils.combine([
   PermissionFlags.PANEL_CREATE,
   PermissionFlags.PANEL_EDIT,
-  PermissionFlags.PANEL_DELETE
+  PermissionFlags.PANEL_DELETE,
 ]);
 ```
 
@@ -69,6 +69,7 @@ const adminPerms = PermissionUtils.combine([
 - **System**: `scheduled-task`, `ticket-lifecycle`, `analytics`, `transcripts`
 
 Each domain contains:
+
 - `index.ts` - Public exports
 - `index.context.ts` - Context-aware methods
 - `schemas.ts` - Zod validation schemas
@@ -127,7 +128,7 @@ export const CreateTicketSchema = z.object({
 // static.ts - Methods without context
 export const findByChannelId = async (channelId: string) => {
   return prisma.ticket.findFirst({
-    where: { channelId }
+    where: { channelId },
   });
 };
 
@@ -136,17 +137,17 @@ export namespace Ticket {
   export const create = async (input: CreateTicketInput) => {
     const actor = Actor.use();
     actor.requirePermission(PermissionFlags.TICKET_CREATE);
-    
+
     return withTransaction(async () => {
       const ticket = await prisma.ticket.create({ data: input });
-      
+
       afterTransaction(async () => {
         await Event.create({
           type: "ticket.created",
-          ticketId: ticket.id
+          ticketId: ticket.id,
         });
       });
-      
+
       return ticket;
     });
   };
@@ -161,22 +162,28 @@ Three actor types for different contexts:
 
 ```typescript
 // Discord bot command
-Actor.provide(new DiscordActor({
-  userId: interaction.user.id,
-  guildId: interaction.guildId,
-  permissions: member.permissions
-}), async () => {
-  await Ticket.create(data);
-});
+Actor.provide(
+  new DiscordActor({
+    userId: interaction.user.id,
+    guildId: interaction.guildId,
+    permissions: member.permissions,
+  }),
+  async () => {
+    await Ticket.create(data);
+  }
+);
 
 // Web API request
-Actor.provide(new WebActor({
-  userId: session.user.id,
-  email: session.user.email,
-  selectedGuildId: req.headers["x-guild-id"]
-}), async () => {
-  await Panel.update(panelId, updates);
-});
+Actor.provide(
+  new WebActor({
+    userId: session.user.id,
+    email: session.user.email,
+    selectedGuildId: req.headers["x-guild-id"],
+  }),
+  async () => {
+    await Panel.update(panelId, updates);
+  }
+);
 
 // System/background job
 Actor.provide(new SystemActor(), async () => {
@@ -193,13 +200,13 @@ const result = await withTransaction(async () => {
   // All DB operations are transactional
   const ticket = await Ticket.create(data);
   await Team.assignToTicket(ticket.id, userId);
-  
+
   // Schedule after commit
   afterTransaction(async () => {
     await sendDiscordNotification(ticket);
     await Analytics.track("ticket.created", ticket);
   });
-  
+
   return ticket;
 });
 ```
@@ -207,13 +214,16 @@ const result = await withTransaction(async () => {
 ## Common Patterns
 
 ### Ensure Methods
+
 Create if not exists:
+
 ```typescript
 const user = await User.ensure(discordId, userData);
 const guild = await Guild.ensure(guildId);
 ```
 
 ### Permission Checks
+
 ```typescript
 // In domain methods
 Actor.requirePermission(PermissionFlags.PANEL_EDIT);
@@ -225,7 +235,9 @@ if (!Actor.hasPermission(PermissionFlags.TICKET_VIEW_ALL)) {
 ```
 
 ### Unchecked Methods
+
 For internal use without permission checks:
+
 ```typescript
 // Public API - checks permissions
 const ticket = await Ticket.getById(123);
@@ -235,7 +247,9 @@ const ticket = await getByIdUnchecked(123);
 ```
 
 ### API Formatting
+
 Transform DB models for API responses:
+
 ```typescript
 const formatted = Panel.formatForApi(panel);
 // Converts BigInt to strings, formats dates, etc.
@@ -244,21 +258,25 @@ const formatted = Panel.formatForApi(panel);
 ## Development Features
 
 ### Auto-Seeding
+
 ```env
 DEV_DB_AUTO_SEED=true  # Seeds DB on startup
 ```
 
 ### Permission Override
+
 ```env
 DEV_PERMISSIONS_HEX=0xfffffff  # Grant all permissions in dev
 ```
 
 ### Logging
+
 All modules use structured logging:
+
 ```typescript
-logger.info("Creating ticket", { 
-  userId: actor.userId(), 
-  panelId: input.panelId 
+logger.info("Creating ticket", {
+  userId: actor.userId(),
+  panelId: input.panelId,
 });
 ```
 
@@ -326,7 +344,7 @@ import { Ticket, Panel } from "@ticketsbot/core/domains";
 const ticket = await Actor.provideAsync(webActor, async () => {
   // Get panel with validation
   const panel = await Panel.getById(input.panelId);
-  
+
   // Create ticket - permissions checked automatically
   return await Ticket.create({
     panelId: panel.id,

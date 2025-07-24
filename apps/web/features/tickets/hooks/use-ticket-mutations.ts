@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { notify } from "@/shared/stores/app-store";
-import { ticketQueries } from "@/features/tickets/queries";
 import type { Ticket } from "@/features/tickets/types";
 
 interface CreateTicketData {

@@ -54,10 +54,6 @@ async function initializeDatabase() {
       throw error;
     }
 
-
-
-
-
     // Verify schema was applied
     console.log("🔍 Verifying schema...");
     try {

@@ -59,6 +59,7 @@ src/
 The bot supports two command patterns:
 
 **1. Class-Based Commands (Traditional)**
+
 ```typescript
 export class OpenCommand extends BaseCommand {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -72,9 +73,7 @@ export class OpenCommand extends BaseCommand {
 
   public override registerApplicationCommands(registry: Command.Registry) {
     registry.registerChatInputCommand((builder) =>
-      builder
-        .setName(this.name)
-        .setDescription(this.description)
+      builder.setName(this.name).setDescription(this.description)
     );
   }
 
@@ -90,6 +89,7 @@ export class OpenCommand extends BaseCommand {
 ```
 
 **2. Factory Pattern (Functional)**
+
 ```typescript
 export default createCommand({
   name: "stats",
@@ -127,6 +127,7 @@ export default createCommand({
 Interaction handlers can use class-based or factory patterns:
 
 **Button Handler Example**
+
 ```typescript
 export default createButtonHandler({
   customId: "ticket_close",
@@ -134,7 +135,7 @@ export default createButtonHandler({
   async execute(interaction) {
     const ticket = await getTicketFromChannel(interaction.channelId);
     if (!ticket) return error(interaction, "Ticket not found");
-    
+
     // Show confirmation modal or close directly
     await interaction.showModal(closeReasonModal);
   },
@@ -142,15 +143,16 @@ export default createButtonHandler({
 ```
 
 **Modal Handler Example**
+
 ```typescript
 export default createModalHandler({
   customId: "close_reason_modal",
   async execute(interaction) {
     const reason = interaction.fields.getTextInputValue("reason");
     const ticketId = interaction.customId.split(":")[1];
-    
+
     const result = await Ticket.close(ticketId, { reason });
-    
+
     if (result.success) {
       await success(interaction, "Ticket closed successfully");
     } else {
@@ -169,21 +171,17 @@ The bot deeply integrates with the AsyncLocalStorage context system:
 ```typescript
 // BaseCommand automatically provides context for all commands
 export abstract class BaseCommand extends Command {
-  public override async chatInputRun(
-    interaction: Command.ChatInputCommandInteraction,
-  ) {
+  public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     // Create Discord actor from interaction
     const actor = await createActorFromInteraction(interaction);
-    
+
     // Run command with actor context
     return withActor(actor, async () => {
       await this.execute(interaction);
     });
   }
-  
-  protected abstract execute(
-    interaction: Command.ChatInputCommandInteraction,
-  ): Promise<void>;
+
+  protected abstract execute(interaction: Command.ChatInputCommandInteraction): Promise<void>;
 }
 ```
 
@@ -228,9 +226,7 @@ The `lib/discord-operations/` directory provides high-level Discord operations t
 
 ```typescript
 // Result type for predictable error handling
-type Result<T, E = Error> = 
-  | { success: true; data: T }
-  | { success: false; error: E };
+type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 // Usage in commands
 const result = await createTicketChannel(interaction.guild, ticket);
@@ -293,12 +289,14 @@ NODE_ENV=development       # Environment
 #### New Command
 
 **Option 1: Class-based (for complex commands)**
+
 1. Create file in appropriate `commands/` subfolder
 2. Extend `BaseCommand` or `BaseTicketCommand`
 3. Add preconditions as needed
 4. Implement `execute()` method (context provided automatically)
 
 **Option 2: Factory-based (for simple commands)**
+
 1. Create file in appropriate `commands/` subfolder
 2. Use `createCommand()` factory
 3. Define options schema
@@ -309,7 +307,7 @@ NODE_ENV=development       # Environment
 1. Create handler in `interactions/[type]/`
 2. Use appropriate factory:
    - `createButtonHandler()` for buttons
-   - `createModalHandler()` for modals  
+   - `createModalHandler()` for modals
    - `createSelectMenuHandler()` for select menus
 3. Define customId pattern
 4. Implement execute function
@@ -331,6 +329,7 @@ NODE_ENV=development       # Environment
 ## Testing
 
 ### Command Testing
+
 ```typescript
 // Commands are tested through their domain logic
 // Mock the interaction and test the domain methods
@@ -348,6 +347,7 @@ const result = await Ticket.create({
 ```
 
 ### Integration Testing
+
 ```bash
 # Use the test token generator
 pnpm test:token
@@ -359,12 +359,14 @@ pnpm dev
 ## Dependencies
 
 ### Core Dependencies
+
 - `@sapphire/framework` - Command framework
-- `@sapphire/plugin-logger` - Structured logging  
+- `@sapphire/plugin-logger` - Structured logging
 - `discord.js` v14 - Discord API wrapper
 - `@ticketsbot/core` - Domain logic and schemas
 
 ### Utilities
+
 - `ioredis` - Redis client for caching
 - `colorette` - Terminal colors
 - `@discordjs/builders` - Embed/component builders
@@ -372,16 +374,19 @@ pnpm dev
 ## Common Issues
 
 ### "Missing Access" Errors
+
 - Ensure bot has proper permissions in guild
 - Check that slash commands are deployed
 - Verify bot can see and send to channels
 
 ### Context Errors
+
 - All domain operations must be called within command context
 - Use `withActor()` for operations outside commands
 - Check that BaseCommand is used, not raw Command
 
 ### Interaction Timeouts
+
 - Defer replies for long operations: `await interaction.deferReply()`
 - Follow up within 15 minutes: `await interaction.followUp()`
 - Use ephemeral replies for errors: `{ ephemeral: true }`

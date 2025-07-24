@@ -76,19 +76,14 @@ export class CloseCommand extends TicketCommandBase {
         const channel = (await guild.channels
           .fetch(interaction.channelId!)
           .catch(() => null)) as TextChannel | null;
-        
+
         if (channel) {
           // Send closed embed before deleting/archiving
           const closedEmbed = MessageOps.ticket.closedEmbed(userId, ticket.id);
           await channel.send({ embeds: [closedEmbed] }).catch(console.error);
 
           // Archive or delete the channel
-          const archiveResult = await ChannelOps.ticket.archive(
-            channel,
-            guild,
-            settings,
-            userId
-          );
+          const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
           channelDeleted = archiveResult.deleted;
 
           // Track event

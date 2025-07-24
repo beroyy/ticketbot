@@ -81,8 +81,14 @@ const createDefaultCategories = async (guild: DiscordGuild, adminRole: Role, sup
   ];
 
   // Use ChannelOps.utils for category creation
-  const ticketsCategory = await ChannelOps.utils.createCategoryIfNeeded(guild, "Tickets") as CategoryChannel;
-  const supportCategory = await ChannelOps.utils.createCategoryIfNeeded(guild, "Support Team") as CategoryChannel;
+  const ticketsCategory = (await ChannelOps.utils.createCategoryIfNeeded(
+    guild,
+    "Tickets"
+  )) as CategoryChannel;
+  const supportCategory = (await ChannelOps.utils.createCategoryIfNeeded(
+    guild,
+    "Support Team"
+  )) as CategoryChannel;
 
   // Apply permissions to categories
   await ticketsCategory.permissionOverwrites.set(permissions);
@@ -312,10 +318,10 @@ Do you want to proceed?`
 
       // Assign team role
       await Team.assignRole(adminTeamRole.id, parseDiscordId(interaction.user.id));
-      
+
       // Update team role with Discord role ID
       await Team.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
-      
+
       // Assign Discord role using RoleOps
       await RoleOps.assignDiscordRole(member, adminRole.id);
     }
@@ -383,16 +389,19 @@ Do you want to proceed?`
   }
 };
 
-const handleLimitSetup = async (interaction: ChatInputCommandInteraction): Promise<Result<void>> => {
+const handleLimitSetup = async (
+  interaction: ChatInputCommandInteraction
+): Promise<Result<void>> => {
   const limit = interaction.options.getInteger("number", true);
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
     await ensureGuild(guildId, interaction.guild!.name);
 
-    const message = limit === 0
-      ? "Users can now create unlimited tickets."
-      : `Users can now create a maximum of **${limit}** open ticket${limit === 1 ? "" : "s"} at a time.`;
+    const message =
+      limit === 0
+        ? "Users can now create unlimited tickets."
+        : `Users can now create a maximum of **${limit}** open ticket${limit === 1 ? "" : "s"} at a time.`;
 
     await InteractionResponse.success(interaction, message);
     return ok(undefined);
@@ -402,7 +411,9 @@ const handleLimitSetup = async (interaction: ChatInputCommandInteraction): Promi
   }
 };
 
-const handleTranscriptsSetup = async (interaction: ChatInputCommandInteraction): Promise<Result<void>> => {
+const handleTranscriptsSetup = async (
+  interaction: ChatInputCommandInteraction
+): Promise<Result<void>> => {
   const channel = interaction.options.getChannel("channel", true) as TextChannel;
   const guildId = parseDiscordId(interaction.guild!.id);
 
@@ -443,7 +454,9 @@ const handleTranscriptsSetup = async (interaction: ChatInputCommandInteraction):
   }
 };
 
-const handlePanelsSetup = async (interaction: ChatInputCommandInteraction): Promise<Result<void>> => {
+const handlePanelsSetup = async (
+  interaction: ChatInputCommandInteraction
+): Promise<Result<void>> => {
   try {
     // Panel.listAll() uses context to get the guild ID automatically
     const panels = await Panel.listAll({ orderBy: "title", order: "asc" });
@@ -491,7 +504,8 @@ const handlePanelsSetup = async (interaction: ChatInputCommandInteraction): Prom
       },
       {
         name: "💡 Tips",
-        value: "• Select multiple panels for different support types\n• Each panel creates a different ticket category\n• You can always edit panels in the dashboard",
+        value:
+          "• Select multiple panels for different support types\n• Each panel creates a different ticket category\n• You can always edit panels in the dashboard",
         inline: false,
       }
     );
@@ -508,7 +522,9 @@ const handlePanelsSetup = async (interaction: ChatInputCommandInteraction): Prom
   }
 };
 
-const handleFeedbackSetup = async (interaction: ChatInputCommandInteraction): Promise<Result<void>> => {
+const handleFeedbackSetup = async (
+  interaction: ChatInputCommandInteraction
+): Promise<Result<void>> => {
   const enabled = interaction.options.getBoolean("enabled", true);
   const guildId = parseDiscordId(interaction.guild!.id);
 

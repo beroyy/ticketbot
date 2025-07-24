@@ -27,7 +27,7 @@ export const AddAdminCommand = createCommand({
 
       // Check if already admin
       const userRoles = await Team.getUserRoles(guildId, userId);
-      
+
       if (StaffHelpers.hasRole(userRoles, "admin")) {
         await InteractionResponse.error(
           interaction,
@@ -39,10 +39,7 @@ export const AddAdminCommand = createCommand({
       // Get admin role
       const adminRole = await Team.getRoleByName(guildId, "admin");
       if (!adminRole) {
-        await InteractionResponse.error(
-          interaction,
-          StaffHelpers.getRoleNotFoundError("admin")
-        );
+        await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("admin"));
         return err("Admin role not found");
       }
 

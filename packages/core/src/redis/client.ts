@@ -50,7 +50,9 @@ class RedisClient {
         socket: {
           reconnectStrategy: (retries) => {
             if (retries > this.maxReconnectAttempts) {
-              logger.error(`[Redis] Max reconnection attempts (${this.maxReconnectAttempts}) reached`);
+              logger.error(
+                `[Redis] Max reconnection attempts (${this.maxReconnectAttempts}) reached`
+              );
               return new Error("Max reconnection attempts reached");
             }
             const delay = Math.min(retries * 1000, 5000);
@@ -204,7 +206,9 @@ class RedisClient {
         logger.error(`[Redis] ${operationName} error (attempt ${attempt + 1}):`, error);
 
         if (attempt < maxRetries) {
-          await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt), 5000)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt), 5000))
+          );
         }
       }
     }

@@ -48,7 +48,7 @@ const COMMAND_CATEGORIES = [
 /help - This help message
 /invite - Invite DiscordTickets`,
     inline: false,
-  }
+  },
 ];
 
 export const HelpCommand = createCommand({
@@ -65,11 +65,11 @@ export const HelpCommand = createCommand({
         text: "If you need help or have any features requests, feel free to reach out!",
       });
 
-    await InteractionResponse.reply(interaction, { 
-      embeds: [embed], 
-      ephemeral: true 
+    await InteractionResponse.reply(interaction, {
+      embeds: [embed],
+      ephemeral: true,
     });
-    
+
     return ok(undefined);
   },
 });

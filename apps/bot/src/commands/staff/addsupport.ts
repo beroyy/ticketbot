@@ -27,7 +27,7 @@ export const AddSupportCommand = createCommand({
 
       // Check existing roles
       const userRoles = await Team.getUserRoles(guildId, userId);
-      
+
       if (StaffHelpers.hasRole(userRoles, "support")) {
         await InteractionResponse.error(
           interaction,
@@ -47,10 +47,7 @@ export const AddSupportCommand = createCommand({
       // Get support role
       const supportRole = await Team.getRoleByName(guildId, "support");
       if (!supportRole) {
-        await InteractionResponse.error(
-          interaction,
-          StaffHelpers.getRoleNotFoundError("support")
-        );
+        await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("support"));
         return err("Support role not found");
       }
 

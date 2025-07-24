@@ -49,13 +49,17 @@ export class BaseBotClient extends SapphireClient {
         level: (() => {
           // Map LOG_LEVEL env var to Sapphire LogLevel
           switch (process.env.LOG_LEVEL) {
-            case 'debug': return LogLevel.Debug;
-            case 'info': return LogLevel.Info;
-            case 'warn': return LogLevel.Warn;
-            case 'error': return LogLevel.Error;
-            default: 
+            case "debug":
+              return LogLevel.Debug;
+            case "info":
+              return LogLevel.Info;
+            case "warn":
+              return LogLevel.Warn;
+            case "error":
+              return LogLevel.Error;
+            default:
               // Default to Info for development, Warn for production
-              return process.env.NODE_ENV === 'development' ? LogLevel.Info : LogLevel.Warn;
+              return process.env.NODE_ENV === "development" ? LogLevel.Info : LogLevel.Warn;
           }
         })(),
       },

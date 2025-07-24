@@ -77,7 +77,7 @@ export namespace Discord {
   // Singleton client instance
   let client: Client | null = null;
   let initPromise: Promise<Client> | null = null;
-  
+
   // Event handlers
   let onTicketCreate: TicketCreateHandler | null = null;
   let onTicketClose: TicketCloseHandler | null = null;
@@ -130,7 +130,7 @@ export namespace Discord {
     // Set up event listeners for ticket operations
     newClient.on("messageCreate", async (message) => {
       if (!message.guild || message.author.bot) return;
-      
+
       // Check if this is a ticket channel
       const isTicket = await isTicketChannel(message.guild.id, message.channel.id);
       if (isTicket && onMessageCreate) {
@@ -140,7 +140,7 @@ export namespace Discord {
             messageId: message.id,
             authorId: message.author.id,
             content: message.content,
-            attachments: message.attachments.map(a => ({
+            attachments: message.attachments.map((a) => ({
               id: a.id,
               url: a.url,
               name: a.name,
@@ -158,7 +158,7 @@ export namespace Discord {
       // Skip DM channels and non-text channels
       if (channel.isDMBased() || !channel.isTextBased()) return;
       if (!("guild" in channel)) return;
-      
+
       const isTicket = await isTicketChannel(channel.guild.id, channel.id);
       if (isTicket && onTicketClose) {
         try {
@@ -571,7 +571,7 @@ export namespace Discord {
   export const deleteTicketChannel = async (guildId: string, channelId: string): Promise<void> => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
-    
+
     try {
       const channel = await guild.channels.fetch(channelId);
       if (channel) {
@@ -594,9 +594,7 @@ export namespace Discord {
     const guild = await validateGuild(client, guildId);
     const channel = await getTextChannel(guild, channelId);
 
-    const message = await channel.send(
-      typeof content === "string" ? { content } : content
-    );
+    const message = await channel.send(typeof content === "string" ? { content } : content);
 
     return { messageId: message.id };
   };
@@ -604,19 +602,16 @@ export namespace Discord {
   /**
    * Check if a channel is a ticket channel (implementation specific)
    */
-  export const isTicketChannel = async (
-    guildId: string,
-    channelId: string
-  ): Promise<boolean> => {
+  export const isTicketChannel = async (guildId: string, channelId: string): Promise<boolean> => {
     // This is a placeholder - actual implementation would check channel name pattern,
     // database records, or channel topic
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
-    
+
     try {
       const channel = await guild.channels.fetch(channelId);
       if (!channel || !channel.isTextBased()) return false;
-      
+
       // Check if channel name follows ticket pattern (e.g., ticket-123)
       return channel.name.startsWith("ticket-");
     } catch {

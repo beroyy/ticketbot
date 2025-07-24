@@ -1,21 +1,19 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
 import { Panel } from "@ticketsbot/core/domains/panel";
+import { Discord } from "@ticketsbot/core/discord";
 import {
   DiscordGuildIdSchema,
   DiscordChannelIdSchema,
   UpdatePanelSchema,
   PermissionFlags,
 } from "@ticketsbot/core";
-import { Discord } from "@ticketsbot/core/discord";
-import { requireAuth, requirePermission } from "../middleware/context";
-import type { AuthSession } from "@ticketsbot/core/auth";
-import { isErrorWithCode } from "../utils/error-guards";
+import { createRoute, ApiErrors } from "../factory";
+import { compositions, requirePermission } from "../middleware/factory-middleware";
 import { transformApiPanelToDomain } from "../utils/schema-transforms";
 import { patterns } from "../utils/validation";
 
-// Sub-schemas for better organization
+// Sub-schemas for panel configuration
 const PanelQuestionSchema = z
   .object({
     id: z.string().describe("Unique question ID"),
@@ -46,7 +44,7 @@ const SinglePanelConfigSchema = z
     largeImageUrl: z.url().optional().describe("Banner image URL"),
     smallImageUrl: z.url().optional().describe("Thumbnail image URL"),
     textSections: z.array(TextSectionSchema).max(5).optional(),
-    // Deprecated/unused fields
+    // Deprecated fields
     form: z.unknown().optional(),
     namingScheme: z.string().optional(),
     exitSurveyForm: z.unknown().optional(),
@@ -105,8 +103,8 @@ const MultiPanelConfigSchema = z
     { message: "Panel option titles must be unique" }
   );
 
-// Main create panel schema
-const ApiCreatePanelSchema = z
+// Main schemas
+const CreatePanelSchema = z
   .object({
     type: z.enum(["SINGLE", "MULTI"]).optional().default("SINGLE"),
     guildId: DiscordGuildIdSchema,
@@ -141,7 +139,7 @@ const ApiCreatePanelSchema = z
     { message: "Panel configuration must match the panel type" }
   );
 
-const ApiUpdatePanelSchema = UpdatePanelSchema.omit({ id: true }).extend({
+const UpdatePanelApiSchema = UpdatePanelSchema.omit({ id: true }).extend({
   channel: z.string().optional(),
   questions: z
     .array(
@@ -158,288 +156,256 @@ const ApiUpdatePanelSchema = UpdatePanelSchema.omit({ id: true }).extend({
   category: z.string().optional(),
 });
 
-type Variables = {
-  user: AuthSession["user"];
-  session: AuthSession;
-  guildId?: string;
+// Transform update data for domain layer
+const transformUpdateData = (input: z.infer<typeof UpdatePanelApiSchema>) => {
+  const updateData: Record<string, any> = {};
+
+  if (input.title !== undefined) updateData.title = input.title;
+  if (input.content !== undefined) updateData.content = input.content;
+  if (input.channel !== undefined) updateData.channelId = input.channel;
+  if (input.category !== undefined) updateData.categoryId = input.category;
+  if (input.emoji !== undefined) updateData.emoji = input.emoji;
+  if (input.buttonText !== undefined) updateData.buttonText = input.buttonText;
+  if (input.color !== undefined) updateData.color = input.color;
+  if (input.welcomeMessage !== undefined) updateData.welcomeMessage = input.welcomeMessage;
+  if (input.introTitle !== undefined) updateData.introTitle = input.introTitle;
+  if (input.introDescription !== undefined) updateData.introDescription = input.introDescription;
+  if (input.channelPrefix !== undefined) updateData.channelPrefix = input.channelPrefix;
+  if (input.type !== undefined) updateData.type = input.type;
+
+  return updateData;
 };
 
-export const panels: Hono<{ Variables: Variables }> = new Hono<{ Variables: Variables }>();
+// Create panel routes using method chaining
+export const panelRoutes = createRoute()
+  // List panels for a guild
+  .get("/", ...compositions.guildScoped, async (c) => {
+    const panels = await Panel.list();
+    return c.json(panels);
+  })
 
-// GET /panels - List panels for a guild
-panels.get(
-  "/",
-  requireAuth,
-  zValidator(
-    "query",
-    z.object({
-      guildId: DiscordGuildIdSchema,
-    })
-  ),
-  async (c) => {
-    try {
-      const { guildId } = c.req.valid("query");
-
-      // Set guild context for domain methods
-      c.set("guildId", guildId);
-
-      const panels = await Panel.list();
-      return c.json(panels);
-    } catch (error) {
-      console.error("Error fetching panels:", error);
-      return c.json({ error: "Failed to fetch panels" }, 500);
-    }
-  }
-);
-
-// GET /panels/:id - Get a specific panel
-panels.get(
-  "/:id",
-  requireAuth,
-  zValidator(
-    "param",
-    z.object({
-      id: z.string().transform((val) => parseInt(val, 10)),
-    })
-  ),
-  async (c) => {
-    try {
+  // Get a specific panel
+  .get(
+    "/:id",
+    ...compositions.authenticated,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      })
+    ),
+    async (c) => {
       const { id } = c.req.valid("param");
-      const panel = await Panel.getById(id);
-      return c.json(panel);
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === "not_found") {
-        return c.json({ error: "Panel not found" }, 404);
+
+      try {
+        const panel = await Panel.getById(id);
+        return c.json(panel);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Panel");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden(String((error as any).message || "Permission denied"));
+          }
+        }
+        throw error;
       }
-      if (isErrorWithCode(error) && error.code === "permission_denied") {
-        return c.json({ error: error.message }, 403);
-      }
-      console.error("Error fetching panel:", error);
-      return c.json({ error: "Failed to fetch panel" }, 500);
     }
-  }
-);
+  )
 
-// Async validation for panel creation
-const createPanelWithAsyncValidation = async (input: z.infer<typeof ApiCreatePanelSchema>) => {
-  // TODO: Add channel validation once Discord.channelExists is implemented
-  // For now, we'll skip channel validation and let the domain layer handle it
-
-  // Future implementation:
-  // - Validate that the channel exists in the guild
-  // - Validate category channels if provided
-  // - For multi panels, validate all category IDs
-
-  return input;
-};
-
-// POST /panels - Create a new panel
-panels.post(
-  "/",
-  requireAuth,
-  requirePermission(PermissionFlags.PANEL_CREATE),
-  zValidator("json", ApiCreatePanelSchema),
-  async (c) => {
-    try {
+  // Create a new panel
+  .post(
+    "/",
+    ...compositions.guildScoped,
+    requirePermission(PermissionFlags.PANEL_CREATE),
+    zValidator("json", CreatePanelSchema),
+    async (c) => {
       const input = c.req.valid("json");
 
       // Set guild context
       c.set("guildId", input.guildId);
 
-      // Perform async validation
-      await createPanelWithAsyncValidation(input);
-
       // Transform API input to domain format
       const domainInput = transformApiPanelToDomain(input);
 
-      const panel = await Panel.create(domainInput);
-
-      return c.json(panel, 201);
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === "validation_error") {
-        return c.json({ error: error.message }, 400);
+      try {
+        const panel = await Panel.create(domainInput);
+        return c.json(panel, 201);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "validation_error") {
+            throw ApiErrors.badRequest(String((error as any).message || "Validation error"));
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden(String((error as any).message || "Permission denied"));
+          }
+        }
+        throw error;
       }
-      if (isErrorWithCode(error) && error.code === "permission_denied") {
-        return c.json({ error: error.message }, 403);
-      }
-      console.error("Error creating panel:", error);
-      return c.json({ error: "Failed to create panel" }, 500);
     }
-  }
-);
+  )
 
-// PUT /panels/:id - Update a panel
-panels.put(
-  "/:id",
-  requireAuth,
-  requirePermission(PermissionFlags.PANEL_EDIT),
-  zValidator(
-    "param",
-    z.object({
-      id: z.string().transform((val) => parseInt(val, 10)),
-    })
-  ),
-  zValidator("json", ApiUpdatePanelSchema),
-  async (c) => {
-    try {
+  // Update a panel
+  .put(
+    "/:id",
+    ...compositions.authenticated,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      })
+    ),
+    zValidator("json", UpdatePanelApiSchema),
+    requirePermission(PermissionFlags.PANEL_EDIT),
+    async (c) => {
       const { id } = c.req.valid("param");
       const input = c.req.valid("json");
 
       // Check panel exists first
-      await Panel.getById(id);
-
-      // TODO: Add channel validation once Discord.channelExists is implemented
-      // For now, we'll let the domain layer handle channel validation
-
-      // Transform API update fields to domain format
-      const updateData: any = {};
-      if (input.title !== undefined) updateData.title = input.title;
-      if (input.content !== undefined) updateData.content = input.content;
-      if (input.channel !== undefined) updateData.channelId = input.channel;
-      if (input.category !== undefined) updateData.categoryId = input.category;
-      if (input.emoji !== undefined) updateData.emoji = input.emoji;
-      if (input.buttonText !== undefined) updateData.buttonText = input.buttonText;
-      if (input.color !== undefined) updateData.color = input.color;
-      if (input.welcomeMessage !== undefined) updateData.welcomeMessage = input.welcomeMessage;
-      if (input.introTitle !== undefined) updateData.introTitle = input.introTitle;
-      if (input.introDescription !== undefined)
-        updateData.introDescription = input.introDescription;
-      if (input.channelPrefix !== undefined) updateData.channelPrefix = input.channelPrefix;
-      if (input.type !== undefined) updateData.type = input.type;
-
-      const panel = await Panel.update(id, updateData);
-      return c.json(panel);
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === "not_found") {
-        return c.json({ error: "Panel not found" }, 404);
+      try {
+        await Panel.getById(id);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
+          throw ApiErrors.notFound("Panel");
+        }
+        throw error;
       }
-      if (isErrorWithCode(error) && error.code === "permission_denied") {
-        return c.json({ error: error.message }, 403);
+
+      // Transform and update
+      const updateData = transformUpdateData(input);
+
+      try {
+        const panel = await Panel.update(id, updateData);
+        return c.json(panel);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "validation_error") {
+            throw ApiErrors.badRequest(String((error as any).message || "Validation error"));
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden(String((error as any).message || "Permission denied"));
+          }
+        }
+        throw error;
       }
-      if (isErrorWithCode(error) && error.code === "validation_error") {
-        return c.json({ error: error.message }, 400);
-      }
-      console.error("Error updating panel:", error);
-      return c.json({ error: "Failed to update panel" }, 500);
     }
-  }
-);
+  )
 
-// DELETE /panels/:id - Delete a panel
-panels.delete(
-  "/:id",
-  requireAuth,
-  requirePermission(PermissionFlags.PANEL_DELETE),
-  zValidator(
-    "param",
-    z.object({
-      id: z.string().transform((val) => parseInt(val, 10)),
-    })
-  ),
-  async (c) => {
-    try {
-      const { id } = c.req.valid("param");
-      const result = await Panel.remove(id);
-      return c.json(result);
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === "not_found") {
-        return c.json({ error: "Panel not found" }, 404);
-      }
-      if (isErrorWithCode(error) && error.code === "permission_denied") {
-        return c.json({ error: error.message }, 403);
-      }
-      console.error("Error deleting panel:", error);
-      return c.json({ error: "Failed to delete panel" }, 500);
-    }
-  }
-);
-
-// POST /panels/:id/deploy - Deploy a panel to Discord
-panels.post(
-  "/:id/deploy",
-  requireAuth,
-  requirePermission(PermissionFlags.PANEL_DEPLOY),
-  zValidator(
-    "param",
-    z.object({
-      id: z.string().transform((val) => parseInt(val, 10)),
-    })
-  ),
-  async (c) => {
-    try {
+  // Delete a panel
+  .delete(
+    "/:id",
+    ...compositions.authenticated,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      })
+    ),
+    requirePermission(PermissionFlags.PANEL_DELETE),
+    async (c) => {
       const { id } = c.req.valid("param");
 
-      // Get panel data for deployment
-      const panelData = await Panel.deploy(id);
-
-      // Deploy to Discord
-      const result = await Discord.deployPanel(panelData);
-
-      // Update panel with deployment info
-      await Panel.update(id, {
-        // Store deployment info if needed
-      });
-
-      return c.json({
-        success: true,
-        messageId: result.messageId,
-        channelId: result.channelId,
-      });
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === "not_found") {
-        return c.json({ error: "Panel not found" }, 404);
+      try {
+        const result = await Panel.remove(id);
+        return c.json(result);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Panel");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden(String((error as any).message || "Permission denied"));
+          }
+        }
+        throw error;
       }
-      if (isErrorWithCode(error) && error.code === "permission_denied") {
-        return c.json({ error: error.message }, 403);
-      }
-      console.error("Error deploying panel:", error);
-      return c.json({ error: "Failed to deploy panel" }, 500);
     }
-  }
-);
+  )
 
-// PUT /panels/:id/redeploy - Redeploy a panel to Discord
-panels.put(
-  "/:id/redeploy",
-  requireAuth,
-  requirePermission(PermissionFlags.PANEL_DEPLOY),
-  zValidator(
-    "param",
-    z.object({
-      id: z.string().transform((val) => parseInt(val, 10)),
-    })
-  ),
-  zValidator(
-    "json",
-    z.object({
-      messageId: z.string(),
-    })
-  ),
-  async (c) => {
-    try {
+  // Deploy a panel to Discord
+  .post(
+    "/:id/deploy",
+    ...compositions.authenticated,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      })
+    ),
+    requirePermission(PermissionFlags.PANEL_DEPLOY),
+    async (c) => {
+      const { id } = c.req.valid("param");
+
+      try {
+        // Get panel data for deployment
+        const panelData = await Panel.deploy(id);
+
+        // Deploy to Discord
+        const result = await Discord.deployPanel(panelData);
+
+        return c.json({
+          success: true,
+          messageId: result.messageId,
+          channelId: result.channelId,
+        });
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Panel");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden(String((error as any).message || "Permission denied"));
+          }
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Redeploy a panel to Discord
+  .put(
+    "/:id/redeploy",
+    ...compositions.authenticated,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+      })
+    ),
+    zValidator(
+      "json",
+      z.object({
+        messageId: z.string(),
+      })
+    ),
+    requirePermission(PermissionFlags.PANEL_DEPLOY),
+    async (c) => {
       const { id } = c.req.valid("param");
       const { messageId } = c.req.valid("json");
 
-      // Get panel data
-      const panelData = await Panel.deploy(id);
+      try {
+        // Get panel data
+        const panelData = await Panel.deploy(id);
 
-      // Update existing message
-      const result = await Discord.updatePanel(panelData, messageId);
+        // Update existing message
+        const result = await Discord.updatePanel(panelData, messageId);
 
-      return c.json({
-        success: true,
-        messageId: result.messageId,
-        channelId: result.channelId,
-      });
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === "not_found") {
-        return c.json({ error: "Panel not found" }, 404);
+        return c.json({
+          success: true,
+          messageId: result.messageId,
+          channelId: result.channelId,
+        });
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Panel");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden(String((error as any).message || "Permission denied"));
+          }
+        }
+        throw error;
       }
-      if (isErrorWithCode(error) && error.code === "permission_denied") {
-        return c.json({ error: error.message }, 403);
-      }
-      console.error("Error redeploying panel:", error);
-      return c.json({ error: "Failed to redeploy panel" }, 500);
     }
-  }
-);
+  );

@@ -1,12 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalDependencies": [
-    "package.json",
-    "turbo.json",
-    "pnpm-workspace.yaml",
-    ".env*"
-  ],
+  "globalDependencies": ["package.json", "turbo.json", "pnpm-workspace.yaml", ".env*"],
   "tasks": {
     "build": {
       "dependsOn": ["^db:generate", "^build"],
@@ -36,6 +31,8 @@
         "PORT_OFFSET",
         "REDIS_URL",
         "NEXT_PUBLIC_*",
+        "NEXT_PHASE",
+        "NEXT_TELEMETRY_DISABLED",
         "TURBO_ENV",
         "NEON_BRANCH_NAME"
       ]
@@ -86,7 +83,8 @@
     "lint": {
       "dependsOn": ["^lint"],
       "inputs": ["src/**", "eslint.config.*", ".eslintrc.*"],
-      "outputs": []
+      "outputs": [],
+      "env": ["NEXT_PHASE", "NEXT_TELEMETRY_DISABLED"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -99,10 +97,7 @@
       "inputs": ["src/**", "tests/**", "vitest.config.*"],
       "outputs": ["coverage/**"],
       "cache": false,
-      "env": [
-        "NODE_ENV",
-        "DATABASE_URL"
-      ]
+      "env": ["NODE_ENV", "DATABASE_URL"]
     },
     "test:hurl": {
       "dependsOn": ["^build"],

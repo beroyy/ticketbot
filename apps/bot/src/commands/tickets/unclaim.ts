@@ -16,9 +16,7 @@ export class UnclaimCommand extends TicketCommandBase {
 
   public override registerApplicationCommands(registry: Command.Registry) {
     registry.registerChatInputCommand((builder) =>
-      builder
-        .setName("unclaim")
-        .setDescription("Remove your claim from the current ticket")
+      builder.setName("unclaim").setDescription("Remove your claim from the current ticket")
     );
   }
 
@@ -35,7 +33,7 @@ export class UnclaimCommand extends TicketCommandBase {
       if (currentClaim.claimedById !== interaction.user.id) {
         return err("You can only unclaim tickets that you have claimed.");
       }
-    } catch (error) {
+    } catch (_error) {
       return err("Failed to check ticket claim status.");
     }
 

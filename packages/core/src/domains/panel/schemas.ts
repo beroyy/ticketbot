@@ -23,12 +23,27 @@ export const CreatePanelSchema = z.object({
   categoryId: DiscordChannelIdSchema.nullable().optional(),
   formId: z.number().int().nullable().optional(),
   emoji: z.string().max(64, "Emoji too long").nullable().optional(),
-  buttonText: z.string().min(1, "Button text is required").max(80, "Button text cannot exceed 80 characters"),
+  buttonText: z
+    .string()
+    .min(1, "Button text is required")
+    .max(80, "Button text cannot exceed 80 characters"),
   color: HexColorSchema.nullable().optional(),
-  welcomeMessage: z.string().max(2000, "Welcome message cannot exceed 2000 characters").nullable().optional(),
+  welcomeMessage: z
+    .string()
+    .max(2000, "Welcome message cannot exceed 2000 characters")
+    .nullable()
+    .optional(),
   introTitle: z.string().max(256, "Intro title cannot exceed 256 characters").nullable().optional(),
-  introDescription: z.string().max(2000, "Intro description cannot exceed 2000 characters").nullable().optional(),
-  channelPrefix: z.string().max(20, "Channel prefix cannot exceed 20 characters").nullable().optional(),
+  introDescription: z
+    .string()
+    .max(2000, "Intro description cannot exceed 2000 characters")
+    .nullable()
+    .optional(),
+  channelPrefix: z
+    .string()
+    .max(20, "Channel prefix cannot exceed 20 characters")
+    .nullable()
+    .optional(),
   mentionRoles: JsonMetadataSchema.optional(),
   hideMentions: z.boolean().default(false),
   parentPanelId: z.number().int().nullable().optional(),

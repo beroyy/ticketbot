@@ -75,7 +75,7 @@ export const RoleOps = {
       }
 
       const roleId = teamRole.discordRoleId.toString();
-      
+
       if (action === "add") {
         return await this.assignDiscordRole(member, roleId);
       } else {

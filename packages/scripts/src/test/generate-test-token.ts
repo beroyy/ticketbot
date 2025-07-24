@@ -60,9 +60,7 @@ async function generateTestToken() {
         console.log(`TEST_USER_TOKEN=${session.token}`);
 
         console.log("\n🧪 Test with:");
-        console.log(
-          `curl -H "Authorization: Bearer ${session.token}" ${API_URL}/health`
-        );
+        console.log(`curl -H "Authorization: Bearer ${session.token}" ${API_URL}/health`);
       }
     } else {
       console.log("\n⚠️  No active session found for test user.");
@@ -89,11 +87,9 @@ async function generateTestToken() {
 
       console.log("\n📝 Add to your .env file:");
       console.log(`TEST_USER_TOKEN=${session.token}`);
-      
+
       console.log("\n🧪 Test with:");
-      console.log(
-        `curl -H "Authorization: Bearer ${session.token}" ${API_URL}/health`
-      );
+      console.log(`curl -H "Authorization: Bearer ${session.token}" ${API_URL}/health`);
     }
 
     // Show available test guild if set
@@ -103,7 +99,7 @@ async function generateTestToken() {
       console.log("\n📝 Add to your .env file:");
       console.log(`TEST_GUILD_ID=${process.env.DEV_GUILD_ID}`);
     }
-    
+
     console.log("\n📍 Using API URL:", API_URL);
   } catch (error) {
     console.error("❌ Error generating test token:", error);

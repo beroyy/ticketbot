@@ -51,7 +51,7 @@ export const BlacklistCommand = createCommand({
 
     // Validate target selection
     const targetResult = validateTarget(targetUser, targetRole);
-    
+
     return match(targetResult, {
       ok: async (target) => {
         const guildId = parseDiscordId(interaction.guild!.id);
@@ -62,7 +62,7 @@ export const BlacklistCommand = createCommand({
           const isNowBlacklisted = await GuildBlacklist.toggle(guildId, targetId, target.isRole);
 
           const targetMention = targetUser ? `<@${target.id}>` : `@${target.name}`;
-          
+
           const embed = isNowBlacklisted
             ? Embed.error(
                 "Added to Blacklist",

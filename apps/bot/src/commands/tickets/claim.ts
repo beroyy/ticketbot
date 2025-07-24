@@ -16,9 +16,7 @@ export class ClaimCommand extends TicketCommandBase {
 
   public override registerApplicationCommands(registry: Command.Registry) {
     registry.registerChatInputCommand((builder) =>
-      builder
-        .setName("claim")
-        .setDescription("Claim the current ticket as a staff member")
+      builder.setName("claim").setDescription("Claim the current ticket as a staff member")
     );
   }
 
@@ -32,7 +30,7 @@ export class ClaimCommand extends TicketCommandBase {
       if (currentClaim) {
         return err(`This ticket is already claimed by <@${currentClaim.claimedById}>.`);
       }
-    } catch (error) {
+    } catch (_error) {
       // If error checking claim, proceed anyway
     }
 

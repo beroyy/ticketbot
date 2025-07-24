@@ -89,9 +89,7 @@ export const createPrecondition = (config: PreconditionConfig): any => {
 /**
  * Create a guild-only precondition
  */
-export const createGuildPrecondition = (
-  config: GuildPreconditionConfig
-): any => {
+export const createGuildPrecondition = (config: GuildPreconditionConfig): any => {
   return class GeneratedGuildPrecondition extends Precondition {
     public static override readonly name = config.name;
 
@@ -126,9 +124,7 @@ export const createGuildPrecondition = (
 /**
  * Create a permission-based precondition
  */
-export const createPermissionPrecondition = (
-  config: PermissionPreconditionConfig
-): any => {
+export const createPermissionPrecondition = (config: PermissionPreconditionConfig): any => {
   return class GeneratedPermissionPrecondition extends Precondition {
     public static override readonly name = config.name;
 
@@ -165,7 +161,7 @@ export const createPermissionPrecondition = (
       if (config.permission !== undefined || config.getPermission) {
         const permission = config.getPermission?.(context) ?? config.permission!;
         const hasPermission = await Team.hasPermission(guildId, userId, permission);
-        
+
         if (hasPermission) {
           return this.ok();
         }
@@ -200,9 +196,7 @@ export const createPermissionPrecondition = (
 /**
  * Create a ticket-based precondition
  */
-export const createTicketPrecondition = (
-  config: TicketPreconditionConfig
-): any => {
+export const createTicketPrecondition = (config: TicketPreconditionConfig): any => {
   return class GeneratedTicketPrecondition extends Precondition {
     public static override readonly name = config.name;
 

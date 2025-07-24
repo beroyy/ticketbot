@@ -1,306 +1,301 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { cacheService, CacheKeys } from "@ticketsbot/core/prisma";
+import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
-import { requireAuth } from "../middleware/context";
 import { Discord } from "@ticketsbot/core/discord";
-import {
-  ensure as ensureGuild,
-  findById as findGuildById,
-  Account,
-} from "@ticketsbot/core/domains";
-import type { AuthSession } from "@ticketsbot/core/auth";
+import { Account, findById as findGuildById } from "@ticketsbot/core/domains";
+import { createRoute, ApiErrors } from "../factory";
+import { compositions } from "../middleware/factory-middleware";
 
-type Variables = {
-  user: AuthSession["user"];
-  session: AuthSession;
-  guildId?: string;
-};
+// Response schemas
+const GuildResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string().nullable(),
+  owner: z.boolean(),
+  permissions: z.string(),
+  features: z.array(z.string()),
+});
 
-export const discord: Hono<{ Variables: Variables }> = new Hono<{ Variables: Variables }>();
+const _GuildsListResponse = z.object({
+  guilds: z.array(GuildResponse),
+  connected: z.boolean(),
+  error: z.string().nullable(),
+  code: z.string().nullable(),
+});
 
-// GET /discord/guilds - Get user's Discord guilds
-discord.get("/guilds", requireAuth, async (c) => {
-  const user = c.get("user");
+const _GuildDetailResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string().nullable(),
+  description: z.string().optional(),
+  features: z.array(z.string()),
+  botInstalled: z.boolean(),
+  botConfigured: z.boolean(),
+});
 
-  // Get Discord account details
-  const account = await Account.getDiscordAccount(user.id);
+const _ChannelResponse = z.object({
+  id: z.string().nullable(),
+  name: z.string(),
+  type: z.number().nullable(),
+  parentId: z.string().nullable(),
+});
+
+// Discord API types
+interface DiscordGuild {
+  id: string;
+  name: string;
+  icon: string | null;
+  permissions: string;
+  owner?: boolean;
+  features?: string[];
+  description?: string;
+}
+
+// Constants
+const MANAGE_GUILD_PERMISSION = BigInt(0x20);
+const DISCORD_API_BASE = "https://discord.com/api/v10";
+const USER_AGENT = "DiscordTickets (https://github.com/yourusername/ticketsbot-ai, 1.0.0)";
+
+// Helper to check Discord account
+const getDiscordAccount = async (userId: string) => {
+  const account = await Account.getDiscordAccount(userId);
 
   if (!account?.accessToken) {
-    // Return structured error response instead of 400 status
-    return c.json(
-      {
-        error: "Discord account not connected",
-        code: "DISCORD_NOT_CONNECTED",
-        guilds: [],
-        connected: false,
-      },
-      200
-    );
+    return { error: "Discord account not connected", code: "DISCORD_NOT_CONNECTED" };
   }
 
-  // Check if token needs refresh
   if (account.accessTokenExpiresAt && account.accessTokenExpiresAt < new Date()) {
-    return c.json(
-      {
-        error: "Discord token expired, please re-authenticate",
-        code: "DISCORD_TOKEN_EXPIRED",
-        guilds: [],
-        connected: false,
-      },
-      200
-    );
+    return {
+      error: "Discord token expired, please re-authenticate",
+      code: "DISCORD_TOKEN_EXPIRED",
+    };
   }
 
-  // Fetch guilds from Discord API
-  const response = await fetch("https://discord.com/api/v10/users/@me/guilds", {
+  return { account };
+};
+
+// Helper to make Discord API requests
+const fetchDiscordAPI = async (path: string, accessToken: string) => {
+  const response = await fetch(`${DISCORD_API_BASE}${path}`, {
     headers: {
-      Authorization: `Bearer ${account.accessToken}`,
-      "User-Agent": "DiscordTickets (https://github.com/yourusername/ticketsbot-ai, 1.0.0)",
+      Authorization: `Bearer ${accessToken}`,
+      "User-Agent": USER_AGENT,
     },
   });
 
   if (!response.ok) {
     if (response.status === 401) {
-      return c.json(
-        {
-          error: "Discord token invalid, please re-authenticate",
-          code: "DISCORD_TOKEN_INVALID",
-          guilds: [],
-          connected: false,
-        },
-        200
-      );
+      return {
+        error: "Discord token invalid, please re-authenticate",
+        code: "DISCORD_TOKEN_INVALID",
+      };
+    }
+    if (response.status === 404) {
+      throw ApiErrors.notFound("Resource");
     }
     throw new Error(`Discord API error: ${response.status}`);
   }
 
-  const guilds = (await response.json()) as Array<{
-    id: string;
-    name: string;
-    icon: string | null;
-    permissions: string;
-    owner?: boolean;
-    features?: string[];
-  }>;
+  return { data: await response.json() };
+};
 
-  // Filter guilds where user has MANAGE_GUILD permission
-  const adminGuilds = guilds.filter(
-    (guild) => (BigInt(guild.permissions) & BigInt(0x20)) === BigInt(0x20)
-  );
-
-  // Format response
-  const formattedGuilds = adminGuilds.map((guild) => ({
-    id: guild.id,
-    name: guild.name,
-    icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
-    owner: guild.owner || false,
-    permissions: guild.permissions,
-    features: guild.features || [],
-  }));
-
-  // Return consistent response format
-  return c.json({
-    guilds: formattedGuilds,
-    connected: true,
-    error: null,
-    code: null,
-  });
-});
-
-// GET /discord/guild/:id - Get specific guild details with bot status
-discord.get(
-  "/guild/:id",
-  requireAuth,
-  zValidator(
-    "param",
-    z.object({
-      id: DiscordGuildIdSchema,
-    })
-  ),
-  async (c) => {
-    const { id: guildId } = c.req.valid("param");
+// Create Discord routes using method chaining
+export const discordRoutes = createRoute()
+  // Get user's Discord guilds
+  .get("/guilds", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
 
-    // Get Discord account details
-    const account = await Account.getDiscordAccount(user.id);
-
-    if (!account?.accessToken) {
-      return c.json({ error: "Discord account not connected" }, 400);
+    // Check Discord account
+    const accountResult = await getDiscordAccount(user.id);
+    if ("error" in accountResult) {
+      return c.json({
+        guilds: [],
+        connected: false,
+        error: accountResult.error ?? null,
+        code: accountResult.code ?? null,
+      } satisfies z.infer<typeof _GuildsListResponse>);
     }
 
-    // Fetch guild details from Discord API
-    const response = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
-      headers: {
-        Authorization: `Bearer ${account.accessToken}`,
-        "User-Agent": "DiscordTickets (https://github.com/yourusername/ticketsbot-ai, 1.0.0)",
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return c.json({ error: "Guild not found or no access" }, 404);
-      }
-      throw new Error(`Discord API error: ${response.status}`);
+    // Fetch guilds from Discord
+    const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
+    if ("error" in result) {
+      return c.json({
+        guilds: [],
+        connected: false,
+        error: result.error ?? null,
+        code: result.code ?? null,
+      } satisfies z.infer<typeof _GuildsListResponse>);
     }
 
-    const guild = (await response.json()) as {
-      id: string;
-      name: string;
-      icon: string | null;
-      description?: string;
-      features?: string[];
-    };
+    const guilds = result.data as DiscordGuild[];
 
-    // Check if bot is in this guild
-    const [dbGuild, botInGuild] = await Promise.all([
-      findGuildById(guildId),
-      Discord.isInGuild(guildId),
-    ]);
+    // Filter guilds where user has MANAGE_GUILD permission
+    const adminGuilds = guilds
+      .filter(
+        (guild) => (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION
+      )
+      .map((guild) => ({
+        id: guild.id,
+        name: guild.name,
+        icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+        owner: guild.owner || false,
+        permissions: guild.permissions,
+        features: guild.features || [],
+      }));
 
     return c.json({
-      id: guild.id,
-      name: guild.name,
-      icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
-      description: guild.description,
-      features: guild.features || [],
-      botInstalled: botInGuild,
-      botConfigured: !!(dbGuild && dbGuild.defaultCategoryId),
-    });
-  }
-);
+      guilds: adminGuilds,
+      connected: true,
+      error: null,
+      code: null,
+    } satisfies z.infer<typeof _GuildsListResponse>);
+  })
 
-// GET /discord/guild/:id/roles - Get guild roles
-discord.get(
-  "/guild/:id/roles",
-  requireAuth,
-  zValidator(
-    "param",
-    z.object({
-      id: DiscordGuildIdSchema,
-    })
-  ),
-  async (c) => {
-    const { id: guildId } = c.req.valid("param");
+  // Get specific guild details with bot status
+  .get(
+    "/guild/:id",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    async (c) => {
+      const { id: guildId } = c.req.valid("param");
+      const user = c.get("user");
 
-    // Check if bot is in the guild
-    const dbGuild = await findGuildById(guildId);
-
-    if (!dbGuild) {
-      return c.json({ error: "Bot is not installed in this guild" }, 404);
-    }
-
-    // Get roles using Discord service
-    const roles = await Discord.getGuildRoles(guildId);
-    return c.json(roles);
-  }
-);
-
-// GET /discord/guild/:id/channels - Get guild channels
-discord.get(
-  "/guild/:id/channels",
-  requireAuth,
-  zValidator(
-    "param",
-    z.object({
-      id: DiscordGuildIdSchema,
-    })
-  ),
-  zValidator(
-    "query",
-    z.object({
-      includeNone: z
-        .string()
-        .optional()
-        .default("true")
-        .transform((val) => val !== "false"),
-    })
-  ),
-  async (c) => {
-    const { id: guildId } = c.req.valid("param");
-    const { includeNone } = c.req.valid("query");
-
-    // Check if bot is in the guild
-    const dbGuild = await findGuildById(guildId);
-
-    if (!dbGuild) {
-      return c.json({ error: "Bot is not installed in this guild" }, 404);
-    }
-
-    // Get channels using Discord service
-    const channels = await Discord.getGuildChannels(guildId);
-
-    // Add a "None" option at the beginning if requested
-    if (includeNone) {
-      return c.json([
-        {
-          id: null,
-          name: "None",
-          type: null,
-          parentId: null,
-        },
-        ...channels,
-      ]);
-    }
-
-    return c.json(channels);
-  }
-);
-
-// GET /discord/guild/:id/categories - Get guild categories
-discord.get(
-  "/guild/:id/categories",
-  requireAuth,
-  zValidator(
-    "param",
-    z.object({
-      id: DiscordGuildIdSchema,
-    })
-  ),
-  async (c) => {
-    const { id: guildId } = c.req.valid("param");
-
-    // Check if bot is in the guild
-    const dbGuild = await findGuildById(guildId);
-
-    if (!dbGuild) {
-      return c.json({ error: "Bot is not installed in this guild" }, 404);
-    }
-
-    // Get categories using Discord service
-    const categories = await Discord.getGuildCategories(guildId);
-    return c.json(categories);
-  }
-);
-
-// GET /discord/guild/:id/permissions - Get bot permissions in guild
-discord.get(
-  "/guild/:id/permissions",
-  requireAuth,
-  zValidator(
-    "param",
-    z.object({
-      id: DiscordGuildIdSchema,
-    })
-  ),
-  async (c) => {
-    const { id: guildId } = c.req.valid("param");
-
-    try {
-      const permissions = await Discord.getBotPermissions(guildId);
-      return c.json(permissions);
-    } catch (error) {
-      if (
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        error.code === "not_found" &&
-        "message" in error
-      ) {
-        return c.json({ error: String(error.message) }, 404);
+      // Check Discord account
+      const accountResult = await getDiscordAccount(user.id);
+      if ("error" in accountResult) {
+        throw ApiErrors.badRequest(accountResult.error ?? "Discord error");
       }
-      throw error;
+
+      // Fetch guild details
+      const result = await fetchDiscordAPI(
+        `/guilds/${guildId}`,
+        accountResult.account.accessToken!
+      );
+      if ("error" in result) {
+        throw ApiErrors.badRequest(result.error ?? "Discord API error");
+      }
+
+      const guild = result.data as DiscordGuild;
+
+      // Check bot status in parallel
+      const [dbGuild, botInGuild] = await Promise.all([
+        findGuildById(guildId),
+        Discord.isInGuild(guildId),
+      ]);
+
+      return c.json({
+        id: guild.id,
+        name: guild.name,
+        icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+        description: guild.description,
+        features: guild.features || [],
+        botInstalled: botInGuild,
+        botConfigured: !!(dbGuild && dbGuild.defaultCategoryId),
+      } satisfies z.infer<typeof _GuildDetailResponse>);
     }
-  }
-);
+  )
+
+  // Get guild roles
+  .get(
+    "/guild/:id/roles",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    async (c) => {
+      const { id: guildId } = c.req.valid("param");
+
+      // Verify bot is in guild
+      const dbGuild = await findGuildById(guildId);
+      if (!dbGuild) {
+        throw ApiErrors.notFound("Bot is not installed in this guild");
+      }
+
+      // Get roles using Discord service
+      const roles = await Discord.getGuildRoles(guildId);
+      return c.json(roles);
+    }
+  )
+
+  // Get guild channels
+  .get(
+    "/guild/:id/channels",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    zValidator(
+      "query",
+      z.object({
+        includeNone: z
+          .string()
+          .optional()
+          .default("true")
+          .transform((val) => val !== "false"),
+      })
+    ),
+    async (c) => {
+      const { id: guildId } = c.req.valid("param");
+      const { includeNone } = c.req.valid("query");
+
+      // Verify bot is in guild
+      const dbGuild = await findGuildById(guildId);
+      if (!dbGuild) {
+        throw ApiErrors.notFound("Bot is not installed in this guild");
+      }
+
+      // Get channels
+      const channels = await Discord.getGuildChannels(guildId);
+
+      // Add "None" option if requested
+      if (includeNone) {
+        return c.json([
+          {
+            id: null,
+            name: "None",
+            type: null,
+            parentId: null,
+          },
+          ...channels,
+        ]);
+      }
+
+      return c.json(channels);
+    }
+  )
+
+  // Get guild categories
+  .get(
+    "/guild/:id/categories",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    async (c) => {
+      const { id: guildId } = c.req.valid("param");
+
+      // Verify bot is in guild
+      const dbGuild = await findGuildById(guildId);
+      if (!dbGuild) {
+        throw ApiErrors.notFound("Bot is not installed in this guild");
+      }
+
+      // Get categories
+      const categories = await Discord.getGuildCategories(guildId);
+      return c.json(categories);
+    }
+  )
+
+  // Get bot permissions in guild
+  .get(
+    "/guild/:id/permissions",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    async (c) => {
+      const { id: guildId } = c.req.valid("param");
+
+      try {
+        const permissions = await Discord.getBotPermissions(guildId);
+        return c.json(permissions);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
+          throw ApiErrors.notFound("Guild");
+        }
+        throw error;
+      }
+    }
+  );

@@ -1,70 +1,138 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { Ticket, TicketLifecycle, Transcripts, Analytics } from "@ticketsbot/core/domains";
-import { DiscordGuildIdSchema, TicketStatusSchema, PositiveIntSchema } from "@ticketsbot/core";
-import { requireAuth, requirePermission } from "../middleware/context";
-import { PermissionFlags } from "@ticketsbot/core";
-import { GuildIdParamSchema, TicketQuerySchema } from "../utils/validation-schemas";
-import type { AuthSession } from "@ticketsbot/core/auth";
+import { zValidator } from "@hono/zod-validator";
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+  TicketStatusSchema,
+  PermissionFlags,
+} from "@ticketsbot/core";
+import { Ticket, TicketLifecycle, Transcripts, Analytics, User } from "@ticketsbot/core/domains";
+import { createRoute, ApiErrors } from "../factory";
+import { compositions, requirePermission } from "../middleware/factory-middleware";
 
-type Variables = {
-  user: AuthSession["user"];
-  session: AuthSession;
-  guildId?: string;
-};
+// Response schemas
+const _TicketDashboardResponse = z.object({
+  id: z.string(),
+  type: z.string(),
+  status: z.enum(["open", "closed"]),
+  priority: z.enum(["low", "medium", "high"]),
+  assignee: z.string().nullable(),
+  assigneeAvatar: z.string().nullable(),
+  assigneeImage: z.string().nullable(),
+  urgency: z.string(),
+  awaitingResponse: z.enum(["Yes", "No"]),
+  lastMessage: z.string(),
+  createdAt: z.string(),
+  progress: z.number().min(0).max(100),
+  subject: z.string().nullable(),
+  opener: z.string(),
+  openerAvatar: z.string().nullable(),
+  openerImage: z.string().nullable(),
+  openerDiscordId: z.string(),
+  openerMetadata: z.record(z.string(), z.any()).nullable(),
+  sentimentScore: z.number().nullable(),
+  summary: z.string().nullable(),
+  embedding: z.unknown(),
+});
 
-export const tickets: Hono<{ Variables: Variables }> = new Hono<{ Variables: Variables }>();
+const _ActivityEntry = z.object({
+  id: z.union([z.string(), z.number()]),
+  timestamp: z.string(),
+  action: z.string(),
+  type: z.enum(["lifecycle", "transcript"]),
+  details: z.record(z.string(), z.any()).nullable(),
+  performedBy: z
+    .object({
+      id: z.string(),
+      username: z.string(),
+      global_name: z.string(),
+    })
+    .nullable(),
+});
 
-// Helper function to parse ticket ID from URL parameter
+const _TicketMessage = z.object({
+  id: z.union([z.string(), z.number()]),
+  content: z.string().nullable(),
+  timestamp: z.string(),
+  author: z
+    .object({
+      id: z.string(),
+      username: z.string(),
+      avatarUrl: z.string().nullable(),
+    })
+    .nullable(),
+  ticketId: z.number(),
+  isInternal: z.boolean(),
+});
+
+const _TicketStatistics = z.object({
+  totalTickets: z.number(),
+  openTickets: z.number(),
+  closedTickets: z.number(),
+  avgResponseTime: z.number().nullable(),
+  closureRate: z.number(),
+  groupedStats: z.any(),
+});
+
+// Validation schemas
+const CreateTicketSchema = z.object({
+  guildId: DiscordGuildIdSchema,
+  panelId: z.number().positive().optional(),
+  subject: z.string().min(1).max(100),
+  categoryId: DiscordChannelIdSchema.optional(),
+  openerId: DiscordGuildIdSchema,
+  initialMessage: z.string().optional(),
+  formResponses: z.record(z.string(), z.string()).optional(),
+});
+
+const UpdateTicketSchema = z.object({
+  subject: z.string().min(1).max(100).optional(),
+  status: TicketStatusSchema.optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
+  categoryId: DiscordChannelIdSchema.optional(),
+  sentimentScore: z.number().min(0).max(100).optional(),
+  summary: z.string().optional(),
+});
+
+const SendMessageSchema = z.object({
+  content: z.string().min(1).max(2000),
+  isInternal: z.boolean().optional().default(false),
+});
+
+// Helper functions
 const parseTicketId = (id: string): number => {
-  if (!id) {
-    throw new Error("Ticket ID is required");
-  }
+  if (!id) throw ApiErrors.badRequest("Ticket ID is required");
 
-  // Decode the URL parameter first
   const decodedId = decodeURIComponent(id);
-
-  // Remove the # prefix if it exists
   const cleanId = decodedId.startsWith("#") ? decodedId.substring(1) : decodedId;
-
   const ticketId = parseInt(cleanId, 10);
 
-  if (isNaN(ticketId)) {
-    throw new Error("Invalid ticket ID format");
-  }
+  if (isNaN(ticketId)) throw ApiErrors.badRequest("Invalid ticket ID format");
 
   return ticketId;
 };
 
-// Helper function to format tickets for dashboard display
-const formatTicketForDashboard = async (ticket: any) => {
-  // Calculate progress from sentiment_score (0 to 100) - use directly as percentage
-  // If no sentiment_score, fall back to status-based calculation
+const formatTicketForDashboard = async (
+  ticket: any
+): Promise<z.infer<typeof _TicketDashboardResponse>> => {
+  // Calculate progress from sentiment score or status
   let progress = 0;
   if (ticket.sentimentScore !== null) {
-    // sentimentScore is already 0-100, use directly as progress percentage
     progress = Math.round(ticket.sentimentScore);
   } else {
-    // Fallback to status-based calculation if no sentiment score
     if (ticket.status === "closed") {
       progress = 100;
     } else {
-      // Check if ticket is claimed from lifecycle events
       try {
         const currentClaim = await TicketLifecycle.getCurrentClaim(ticket.id);
-        if (currentClaim) {
-          progress = 75; // Claimed tickets are 75% complete
-        } else {
-          progress = 25; // Unclaimed tickets are 25% complete
-        }
+        progress = currentClaim ? 75 : 25;
       } catch {
-        progress = 25; // Default to unclaimed
+        progress = 25;
       }
     }
   }
 
-  // Determine urgency/priority - get message count from transcripts
+  // Get message count for urgency
   let messageCount = 0;
   try {
     const messages = await Transcripts.getMessages(ticket.id);
@@ -72,12 +140,12 @@ const formatTicketForDashboard = async (ticket: any) => {
   } catch {
     messageCount = 0;
   }
-  
+
   let urgency = "Low";
   if (messageCount > 20) urgency = "High";
   else if (messageCount > 10) urgency = "Medium";
 
-  // Calculate last message time (simplified for now)
+  // Calculate last message time
   const daysSinceCreated = Math.floor(
     (Date.now() - ticket.createdAt.getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -85,20 +153,18 @@ const formatTicketForDashboard = async (ticket: any) => {
   let lastMessage = "Never";
   if (daysSinceCreated === 0) lastMessage = "Today";
   else if (daysSinceCreated === 1) lastMessage = "1 day ago";
-  else if (daysSinceCreated < 30) lastMessage = `${daysSinceCreated.toString()} days ago`;
+  else if (daysSinceCreated < 30) lastMessage = `${daysSinceCreated} days ago`;
   else lastMessage = "Last month";
 
   return {
-    id: `#${ticket.id.toString()}`,
+    id: `#${ticket.id}`,
     type: ticket.panel?.title || "General Support",
     status: ticket.status,
-    priority: urgency.toLowerCase(),
-    assignee: null, // Will be populated from lifecycle events
-    assigneeAvatar: ticket.claimedBy?.username
-      ? ticket.claimedBy.username[0]?.toUpperCase() || null
-      : null,
+    priority: urgency.toLowerCase() as "low" | "medium" | "high",
+    assignee: ticket.claimedBy?.username || null,
+    assigneeAvatar: ticket.claimedBy?.username?.[0]?.toUpperCase() || null,
     assigneeImage: ticket.claimedBy?.avatarUrl || null,
-    urgency: `${Math.min(10, Math.max(1, messageCount)).toString()}/10`,
+    urgency: `${Math.min(10, Math.max(1, messageCount))}/10`,
     awaitingResponse: messageCount > 0 ? "Yes" : "No",
     lastMessage,
     createdAt: ticket.createdAt.toLocaleDateString("en-US", {
@@ -107,277 +173,469 @@ const formatTicketForDashboard = async (ticket: any) => {
       year: "2-digit",
     }),
     progress,
-    subject: ticket.subject,
+    subject: ticket.subject || "",
     opener: ticket.opener.username,
-    openerAvatar: ticket.opener.username ? ticket.opener.username[0]?.toUpperCase() || null : null,
+    openerAvatar: ticket.opener.username?.[0]?.toUpperCase() || null,
     openerImage: ticket.opener.avatarUrl || null,
     openerDiscordId: ticket.openerId.toString(),
     openerMetadata: ticket.opener.metadata || null,
-    // AI-related fields
     sentimentScore: ticket.sentimentScore,
     summary: ticket.summary,
     embedding: ticket.embedding,
   };
 };
 
-// GET /tickets - List tickets for a guild
-tickets.get(
-  "/",
-  requireAuth,
-  requirePermission(PermissionFlags.TICKET_VIEW_ALL),
-  zValidator(
-    "query",
-    z.object({
-      guildId: DiscordGuildIdSchema,
-      status: TicketStatusSchema.optional(),
-    })
-  ),
-  async (c) => {
-    try {
-      const { status, guildId } = c.req.valid("query");
+// Create ticket routes using method chaining
+export const ticketRoutes = createRoute()
+  // List tickets
+  .get(
+    "/",
+    ...compositions.authenticated,
+    zValidator(
+      "query",
+      z.object({
+        guildId: DiscordGuildIdSchema,
+        status: TicketStatusSchema.optional(),
+        page: z.coerce.number().int().positive().default(1),
+        pageSize: z.coerce.number().int().positive().max(100).default(50),
+      })
+    ),
+    requirePermission(PermissionFlags.TICKET_VIEW_ALL),
+    async (c) => {
+      const { guildId, status, page, pageSize } = c.req.valid("query");
 
-      // Use core ticket list method
+      // Set guild context
+      c.set("guildId", guildId);
+
       const tickets = await Ticket.list({
         guildId,
-        status: status,
-        pagination: { page: 1, pageSize: 500 },
+        status,
+        pagination: { page, pageSize },
       });
 
-      // Format tickets for the dashboard with async mapping
       const formattedTickets = await Promise.all(
-        tickets.map(ticket => formatTicketForDashboard(ticket))
+        tickets.map((ticket) => formatTicketForDashboard(ticket))
       );
 
       return c.json(formattedTickets);
+    }
+  )
+
+  // Get ticket details
+  .get(
+    "/:id",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const ticketId = parseTicketId(id);
+
+      try {
+        const ticket = await Ticket.getById(ticketId);
+        const formatted = await formatTicketForDashboard(ticket);
+        return c.json(formatted);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
+          throw ApiErrors.notFound("Ticket");
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Create ticket
+  .post("/", ...compositions.authenticated, zValidator("json", CreateTicketSchema), async (c) => {
+    const input = c.req.valid("json");
+
+    // Set guild context
+    c.set("guildId", input.guildId);
+
+    try {
+      // Use TicketLifecycle.create for ticket creation
+      const { TicketLifecycle } = await import("@ticketsbot/core/domains");
+      const ticket = await TicketLifecycle.create({
+        guildId: input.guildId,
+        channelId: "", // This would need to be generated by Discord bot
+        openerId: input.openerId,
+        panelId: input.panelId || null,
+        subject: input.subject || null,
+        categoryId: input.categoryId || null,
+        metadata: {
+          initialMessage: input.initialMessage,
+          formResponses: input.formResponses,
+        },
+      });
+
+      const formatted = await formatTicketForDashboard(ticket);
+      return c.json(formatted, 201);
     } catch (error) {
-      console.error("Error fetching tickets:", error);
-      return c.json({ error: "Failed to fetch tickets" }, 500);
-    }
-  }
-);
-
-// GET /tickets/:id/activity - Get activity log for a specific ticket
-tickets.get(
-  "/:id/activity",
-  requireAuth,
-  zValidator("param", z.object({ id: z.string() })),
-  async (c) => {
-    const { id } = c.req.valid("param");
-
-  try {
-    const ticketId = parseTicketId(id);
-    
-    // Get activity from both lifecycle and transcript history
-    const [lifecycleHistory, transcriptHistory] = await Promise.all([
-      TicketLifecycle.getHistory(ticketId),
-      Transcripts.getHistory(ticketId),
-    ]);
-
-    // Combine and format the activity
-    const combinedActivity = [
-      ...lifecycleHistory.map((entry: any) => ({
-        id: entry.id,
-        timestamp: entry.timestamp,
-        action: entry.action,
-        type: 'lifecycle',
-        details: entry.details,
-        performedBy: entry.performedBy,
-      })),
-      ...transcriptHistory.map((entry: any) => ({
-        id: entry.id,
-        timestamp: entry.timestamp,
-        action: entry.action,
-        type: 'transcript',
-        details: entry.details,
-        performedBy: entry.performedBy,
-      })),
-    ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-    // Format the response
-    const formattedActivity = combinedActivity.map((entry: any) => ({
-      id: entry.id,
-      timestamp: new Date(entry.timestamp).toISOString(),
-      action: entry.action,
-      type: entry.type,
-      details: entry.details,
-      performedBy: entry.performedBy ? {
-        id: entry.performedBy.id.toString(),
-        username: entry.performedBy.username || "Unknown User",
-        global_name: entry.performedBy.username || "Unknown User",
-      } : null,
-    }));
-
-    return c.json(formattedActivity);
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Ticket not found") {
-        return c.json({ message: "Ticket not found" }, 404);
+      if (error && typeof error === "object" && "code" in error) {
+        if (error.code === "validation_error") {
+          throw ApiErrors.badRequest((error as any).message || "Validation error");
+        }
+        if (error.code === "permission_denied") {
+          throw ApiErrors.forbidden((error as any).message || "Permission denied");
+        }
       }
-      if (
-        error.message === "Invalid ticket ID format" ||
-        error.message === "Ticket ID is required"
-      ) {
-        return c.json({ message: error.message }, 400);
-      }
+      throw error;
     }
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "permission_denied" &&
-      "message" in error
-    ) {
-      return c.json({ message: String(error.message) }, 403);
-    }
-    console.error("Error fetching ticket activity:", error);
-    return c.json({ message: "Internal server error" }, 500);
-  }
-});
+  })
 
-// GET /tickets/:id/messages - Get messages for a specific ticket
-tickets.get(
-  "/:id/messages",
-  requireAuth,
-  zValidator("param", z.object({ id: z.string() })),
-  async (c) => {
-    const { id } = c.req.valid("param");
+  // Update ticket
+  .put(
+    "/:id",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    zValidator("json", UpdateTicketSchema),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const input = c.req.valid("json");
+      const ticketId = parseTicketId(id);
 
-  try {
-    const ticketId = parseTicketId(id);
-    
-    // Get messages from transcripts domain
-    const messages = await Transcripts.getMessages(ticketId);
-
-    // Format messages for response
-    const formattedMessages = await Promise.all(
-      messages.map(async (message) => {
-        // Fetch author details if needed
-        let author = null;
-        if (message.authorId) {
-          try {
-            const { User } = await import("@ticketsbot/core/domains");
-            const user = await User.getDiscordUser(message.authorId);
-            if (user) {
-              author = {
-                id: user.id.toString(),
-                username: user.username || "Unknown User",
-                avatarUrl: user.avatarUrl,
-              };
-            }
-          } catch {
-            author = {
-              id: message.authorId,
-              username: "Unknown User",
-              avatarUrl: null,
-            };
+      try {
+        const ticket = await Ticket.update(ticketId, input);
+        const formatted = await formatTicketForDashboard(ticket);
+        return c.json(formatted);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Ticket");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden((error as any).message || "Permission denied");
           }
         }
+        throw error;
+      }
+    }
+  )
 
-        return {
-          id: message.id,
-          content: message.content,
-          timestamp: new Date(message.createdAt).toISOString(),
-          author,
+  // Close ticket
+  .post(
+    "/:id/close",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    zValidator(
+      "json",
+      z
+        .object({
+          reason: z.string().optional(),
+        })
+        .optional()
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const body = c.req.valid("json");
+      const ticketId = parseTicketId(id);
+      const user = c.get("user");
+
+      try {
+        await TicketLifecycle.close({
           ticketId,
-          isInternal: message.messageType === 'internal',
+          closedById: user.discordUserId || user.id,
+          reason: body?.reason,
+          deleteChannel: false,
+          notifyOpener: true,
+        });
+        const ticket = await Ticket.getById(ticketId);
+        const formatted = await formatTicketForDashboard(ticket);
+        return c.json(formatted);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Ticket");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden((error as any).message || "Permission denied");
+          }
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Claim ticket
+  .post(
+    "/:id/claim",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    requirePermission(PermissionFlags.TICKET_CLAIM),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const ticketId = parseTicketId(id);
+      const user = c.get("user");
+
+      try {
+        await TicketLifecycle.claim({
+          ticketId,
+          claimerId: user.discordUserId || user.id,
+          force: false,
+        });
+        const ticket = await Ticket.getById(ticketId);
+        const formatted = await formatTicketForDashboard(ticket);
+        return c.json(formatted);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Ticket");
+          }
+          if (error.code === "already_claimed") {
+            throw ApiErrors.conflict((error as any).message || "Ticket already claimed");
+          }
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Unclaim ticket
+  .post(
+    "/:id/unclaim",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const ticketId = parseTicketId(id);
+      const user = c.get("user");
+
+      try {
+        await TicketLifecycle.unclaim({
+          ticketId,
+          performedById: user.discordUserId || user.id,
+        });
+        const ticket = await Ticket.getById(ticketId);
+        const formatted = await formatTicketForDashboard(ticket);
+        return c.json(formatted);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Ticket");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden((error as any).message || "Permission denied");
+          }
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Get ticket activity
+  .get(
+    "/:id/activity",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const ticketId = parseTicketId(id);
+
+      try {
+        const [lifecycleHistory, transcriptHistory] = await Promise.all([
+          TicketLifecycle.getHistory(ticketId),
+          Transcripts.getHistory(ticketId),
+        ]);
+
+        const combinedActivity = [
+          ...lifecycleHistory.map((entry: any) => ({
+            id: entry.id,
+            timestamp: entry.timestamp,
+            action: entry.action,
+            type: "lifecycle" as const,
+            details: entry.details,
+            performedBy: entry.performedBy,
+          })),
+          ...transcriptHistory.map((entry: any) => ({
+            id: entry.id,
+            timestamp: entry.timestamp,
+            action: entry.action,
+            type: "transcript" as const,
+            details: entry.details,
+            performedBy: entry.performedBy,
+          })),
+        ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+        const formattedActivity = combinedActivity.map((entry: any) => ({
+          id: entry.id,
+          timestamp: new Date(entry.timestamp).toISOString(),
+          action: entry.action,
+          type: entry.type,
+          details: entry.details,
+          performedBy: entry.performedBy
+            ? {
+                id: entry.performedBy.id.toString(),
+                username: entry.performedBy.username || "Unknown User",
+                global_name: entry.performedBy.username || "Unknown User",
+              }
+            : null,
+        }));
+
+        return c.json(formattedActivity satisfies z.infer<typeof _ActivityEntry>[]);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
+          throw ApiErrors.notFound("Ticket");
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Get ticket messages
+  .get(
+    "/:id/messages",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const ticketId = parseTicketId(id);
+
+      try {
+        const messages = await Transcripts.getMessages(ticketId);
+
+        const formattedMessages = await Promise.all(
+          messages.map(async (message) => {
+            let author = null;
+            if (message.authorId) {
+              try {
+                const user = await User.getDiscordUser(message.authorId);
+                if (user) {
+                  author = {
+                    id: user.id.toString(),
+                    username: user.username || "Unknown User",
+                    avatarUrl: user.avatarUrl,
+                  };
+                }
+              } catch {
+                author = {
+                  id: message.authorId,
+                  username: "Unknown User",
+                  avatarUrl: null,
+                };
+              }
+            }
+
+            return {
+              id: message.id,
+              content: message.content || "",
+              timestamp: new Date(message.createdAt).toISOString(),
+              author,
+              ticketId,
+              isInternal: message.messageType === "internal",
+            };
+          })
+        );
+
+        return c.json(formattedMessages);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
+          throw ApiErrors.notFound("Ticket");
+        }
+        throw error;
+      }
+    }
+  )
+
+  // Send message to ticket
+  .post(
+    "/:id/messages",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ id: z.string() })),
+    zValidator("json", SendMessageSchema),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { content, isInternal } = c.req.valid("json");
+      const ticketId = parseTicketId(id);
+      const user = c.get("user");
+
+      try {
+        const message = await Transcripts.storeMessage({
+          ticketId,
+          messageId: "", // This would be generated by Discord bot
+          authorId: user.discordUserId || user.id,
+          content,
+          embeds: null,
+          attachments: null,
+          messageType: isInternal ? "internal" : "public",
+          referenceId: null,
+        });
+
+        const formatted: z.infer<typeof _TicketMessage> = {
+          id: message.id,
+          content: message.content || "",
+          timestamp: new Date(message.createdAt).toISOString(),
+          author: {
+            id: user.id,
+            username: user.name || "Unknown User",
+            avatarUrl: user.image || null,
+          },
+          ticketId,
+          isInternal: message.messageType === "internal",
         };
-      })
-    );
 
-    return c.json(formattedMessages);
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Ticket not found") {
-        return c.json({ error: "Ticket not found" }, 404);
-      }
-      if (
-        error.message === "Invalid ticket ID format" ||
-        error.message === "Ticket ID is required"
-      ) {
-        return c.json({ error: error.message }, 400);
+        return c.json(formatted, 201);
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+          if (error.code === "not_found") {
+            throw ApiErrors.notFound("Ticket");
+          }
+          if (error.code === "permission_denied") {
+            throw ApiErrors.forbidden((error as any).message || "Permission denied");
+          }
+        }
+        throw error;
       }
     }
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "permission_denied" &&
-      "message" in error
-    ) {
-      return c.json({ error: String(error.message) }, 403);
-    }
-    console.error("Error fetching ticket messages:", error);
-    return c.json({ error: "Failed to fetch messages" }, 500);
-  }
-});
+  )
 
-// GET /tickets/:guildId/statistics - Get ticket statistics for a guild
-tickets.get(
-  "/:guildId/statistics",
-  requireAuth,
-  requirePermission(PermissionFlags.ANALYTICS_VIEW),
-  zValidator("param", GuildIdParamSchema),
-  async (c) => {
-    try {
+  // Get ticket statistics
+  .get(
+    "/statistics/:guildId",
+    ...compositions.authenticated,
+    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+    requirePermission(PermissionFlags.ANALYTICS_VIEW),
+    async (c) => {
       const { guildId } = c.req.valid("param");
-      
-      // Get statistics from analytics domain
-      const stats = await Analytics.getTicketStatistics({
+
+      // Set guild context
+      c.set("guildId", guildId);
+
+      const _stats = await Analytics.getTicketStatistics({
         guildId,
         includeDeleted: false,
       });
 
       return c.json({
-        totalTickets: stats.totalCreated,
-        openTickets: stats.totalOpen,
-        closedTickets: stats.totalClosed,
-        avgResponseTime: stats.avgResolutionTime,
-        closureRate: stats.closureRate,
-        groupedStats: stats.groupedStats,
-      });
-    } catch (error) {
-      console.error("Error fetching ticket statistics:", error);
-      return c.json({ error: "Failed to fetch statistics" }, 500);
+        totalTickets: _stats.totalCreated,
+        openTickets: _stats.totalOpen,
+        closedTickets: _stats.totalClosed,
+        avgResponseTime: _stats.avgResolutionTime,
+        closureRate: _stats.closureRate,
+        groupedStats: _stats.groupedStats,
+      } satisfies z.infer<typeof _TicketStatistics>);
     }
-  }
-);
+  )
 
-// GET /tickets/recent-activity - Get recent activity across guilds
-tickets.get(
-  "/recent-activity",
-  requireAuth,
-  requirePermission(PermissionFlags.TICKET_VIEW_ALL),
-  zValidator(
-    "query",
-    z.object({
-      guildId: DiscordGuildIdSchema,
-      limit: z.coerce
-        .number()
-        .int()
-        .positive()
-        .max(50)
-        .optional()
-        .default(10),
-    })
-  ),
-  async (c) => {
-    try {
-      const { guildId, limit } = c.req.valid("query");
+  // Get recent activity
+  .get(
+    "/recent-activity",
+    ...compositions.authenticated,
+    zValidator(
+      "query",
+      z.object({
+        guildId: DiscordGuildIdSchema,
+        limit: z.coerce.number().int().positive().max(50).default(10),
+      })
+    ),
+    requirePermission(PermissionFlags.TICKET_VIEW_ALL),
+    async (c) => {
+      const { guildId } = c.req.valid("query");
 
       // Set guild context
       c.set("guildId", guildId);
 
-      // Check permissions - user needs to be able to view tickets
-      const actor = c.get("user");
-      if (!actor.discordUserId) {
-        return c.json({ error: "Discord account not linked" }, 403);
-      }
-
       // TODO: Implement event listing in Event domain or Analytics
-      // For now, return empty array
+      // For now, return empty array to match current behavior
       const recentEvents: any[] = [];
 
-      // Format activity to match frontend expectations
       const formattedEvents = recentEvents.map((event: any, index: number) => ({
         id: event.id || index,
         event: event.action,
@@ -392,9 +650,5 @@ tickets.get(
       }));
 
       return c.json(formattedEvents);
-    } catch (error) {
-      console.error("Error fetching recent activity:", error);
-      return c.json({ error: "Failed to fetch recent activity" }, 500);
     }
-  }
-);
+  );

@@ -21,11 +21,11 @@ After inviting, use \`/setup auto\` to get up-and-running in seconds ⚡`
       )
       .setColor(COLORS.SUCCESS);
 
-    await InteractionResponse.reply(interaction, { 
-      embeds: [embed], 
-      ephemeral: true 
+    await InteractionResponse.reply(interaction, {
+      embeds: [embed],
+      ephemeral: true,
     });
-    
+
     return ok(undefined);
   },
 });

@@ -1,5 +1,10 @@
 import { prisma } from "../../prisma/client";
-import { Prisma, type Event as PrismaEvent, type EventCategory, type EventTargetType } from "@prisma/client";
+import {
+  Prisma,
+  type Event as PrismaEvent,
+  type EventCategory,
+  type EventTargetType,
+} from "@prisma/client";
 import { Actor } from "../../context";
 
 export namespace Event {
@@ -143,12 +148,9 @@ export namespace Event {
   /**
    * Get events for a specific ticket
    */
-  export const listForTicket = async (
-    ticketId: number,
-    limit?: number
-  ): Promise<PrismaEvent[]> => {
+  export const listForTicket = async (ticketId: number, limit?: number): Promise<PrismaEvent[]> => {
     const guildId = Actor.guildId();
-    
+
     return prisma.event.findMany({
       where: {
         guildId,
@@ -170,7 +172,7 @@ export namespace Event {
     query: Partial<ListQuery> = {}
   ): Promise<PrismaEvent[]> => {
     const guildId = query.guildId || Actor.guildId();
-    
+
     return prisma.event.findMany({
       where: {
         guildId,
@@ -204,7 +206,7 @@ export namespace Event {
     dateRange?: { start: Date; end: Date }
   ): Promise<any> => {
     const targetGuildId = guildId || Actor.guildId();
-    
+
     const where: Prisma.EventWhereInput = {
       guildId: targetGuildId,
       ...(dateRange && {
@@ -250,15 +252,15 @@ export namespace Event {
 
     return {
       totalEvents: await prisma.event.count({ where }),
-      byCategory: byCategory.map(c => ({
+      byCategory: byCategory.map((c) => ({
         category: c.category,
         count: c._count,
       })),
-      topActions: byAction.map(a => ({
+      topActions: byAction.map((a) => ({
         action: a.action,
         count: a._count,
       })),
-      mostActiveUsers: mostActiveUsers.map(u => ({
+      mostActiveUsers: mostActiveUsers.map((u) => ({
         userId: u.actorId,
         eventCount: u._count,
       })),

@@ -29,7 +29,7 @@
       "inputs": ["src/**", "pages/**", "components/**", "lib/**", ".eslintrc.*", "eslint.config.*"],
       "outputs": []
     },
-    "type-check": {
+    "typecheck": {
       "inputs": ["src/**", "pages/**", "components/**", "lib/**", "tsconfig.json"],
       "outputs": []
     }

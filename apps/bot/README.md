@@ -245,6 +245,7 @@ The bot exposes a health endpoint at `http://localhost:3002/health`:
 ### Permission System
 
 Team members have granular permissions:
+
 - View/claim/close tickets
 - Manage team roles
 - Deploy support panels
@@ -267,15 +268,18 @@ await Ticket.update(ticketId, {
 ### Common Issues
 
 **"Missing Access" Errors**
+
 - Ensure bot has required permissions in guild
 - Check channel permissions for ticket categories
 - Verify slash commands are deployed
 
 **Context Errors**
+
 - All domain operations must be within command context
 - Use `BaseCommand` or `BaseTicketCommand` for automatic context
 
 **Interaction Timeouts**
+
 - Defer long operations: `await interaction.deferReply()`
 - Follow up within 15 minutes
 - Use ephemeral replies for errors

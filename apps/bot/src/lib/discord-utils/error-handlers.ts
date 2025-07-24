@@ -15,7 +15,9 @@ export const isChannelDeletedError = (error: unknown): boolean => {
 /**
  * Checks if an interaction can be replied to
  */
-export const canReply = (interaction: Interaction): interaction is Interaction & {
+export const canReply = (
+  interaction: Interaction
+): interaction is Interaction & {
   reply: (options: any) => Promise<any>;
   replied: boolean;
   deferred: boolean;
@@ -158,6 +160,6 @@ export const PreconditionErrors = {
   ticketChannelOnly: "❌ This command can only be used in a ticket channel.",
   notTicketChannel: "❌ This is not an active ticket channel.",
   cannotCloseTicket: "❌ You do not have permission to close this ticket.",
-  missingPermission: (permissionNames: string[]) => 
+  missingPermission: (permissionNames: string[]) =>
     `❌ You need the following permission(s) to use this command: ${permissionNames.join(", ")}`,
 } as const;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,6 @@ import {
   Copy,
 } from "lucide-react";
 import type { Ticket } from "@/features/tickets/types";
-import { useTicketActions } from "@/shared/stores/app-store";
 import { useTicketMessages } from "@/features/tickets/queries";
 import { ActivityLogModal } from "@/features/tickets/ui/activity-log-modal";
 import { EmojiProgressIcon } from "@/components/emoji-progress-icon";
@@ -191,7 +190,6 @@ function UserMetadataContent({ metadata }: { metadata: unknown }): React.JSX.Ele
 export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
   const isCollapsed = false; // Can be added to global store if needed
-  const { selectTicket } = useTicketActions();
 
   // Fetch real messages for this ticket
   const {

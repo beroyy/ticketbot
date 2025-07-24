@@ -1,6 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ButtonInteraction } from "discord.js";
-import { Ticket, User as UserDomain, Transcripts } from "@ticketsbot/core/domains";
+import { User as UserDomain, Transcripts } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
 import { MessageOps } from "@bot/lib/discord-operations";
@@ -49,7 +49,7 @@ const feedbackHandler = createButtonHandler({
     } catch (error) {
       container.logger.error("Failed to submit feedback:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to submit feedback";
-      
+
       if (errorMessage.includes("already submitted")) {
         await interaction.reply({
           content: "❌ You have already submitted feedback for this ticket.",
@@ -58,7 +58,7 @@ const feedbackHandler = createButtonHandler({
       } else {
         await interaction.reply(ErrorResponses.genericError());
       }
-      
+
       return err(errorMessage);
     }
   },

@@ -94,14 +94,10 @@ const UpdateSettingsSchema = z.object({
 });
 
 // Use in route with automatic validation
-app.put(
-  "/settings",
-  zValidator("json", UpdateSettingsSchema),
-  async (c) => {
-    const data = c.req.valid("json"); // Type-safe, validated data
-    // ...
-  }
-);
+app.put("/settings", zValidator("json", UpdateSettingsSchema), async (c) => {
+  const data = c.req.valid("json"); // Type-safe, validated data
+  // ...
+});
 ```
 
 ## Testing
@@ -146,12 +142,14 @@ pnpm test:token
 ### Authenticated Routes
 
 #### Discord Integration
+
 - `GET /discord/guilds` - List user's Discord guilds
 - `GET /discord/guilds/:guildId/channels` - List guild channels
 - `GET /discord/guilds/:guildId/roles` - List guild roles
 - `GET /discord/guilds/:guildId/members` - Search guild members
 
 #### Ticket Management
+
 - `GET /tickets` - List tickets with filtering
 - `POST /tickets` - Create new ticket
 - `GET /tickets/:id` - Get ticket details
@@ -164,6 +162,7 @@ pnpm test:token
 - `POST /tickets/:id/close` - Close ticket
 
 #### Panel Management
+
 - `GET /panels` - List panels
 - `POST /panels` - Create panel
 - `GET /panels/:id` - Get panel details
@@ -172,6 +171,7 @@ pnpm test:token
 - `POST /panels/:id/deploy` - Deploy panel to Discord
 
 #### Guild Settings
+
 - `GET /guilds/:guildId` - Get guild info
 - `GET /guilds/:guildId/settings` - Get settings
 - `PUT /guilds/:guildId/settings` - Update settings
@@ -180,6 +180,7 @@ pnpm test:token
 - `DELETE /guilds/:guildId/team/:userId` - Remove team member
 
 #### Forms
+
 - `GET /forms` - List forms
 - `POST /forms` - Create form
 - `GET /forms/:id` - Get form details
@@ -187,6 +188,7 @@ pnpm test:token
 - `DELETE /forms/:id` - Delete form
 
 #### User
+
 - `GET /user` - Get current user info
 - `GET /user/preferences` - Get user preferences
 - `PUT /user/preferences` - Update preferences
@@ -221,15 +223,15 @@ import { Actor } from "@ticketsbot/core/context";
 app.get("/example", requireAuth, async (c) => {
   // Access current actor
   const actor = Actor.use();
-  
+
   // Check permissions
   if (Actor.hasPermission(PermissionFlags.TICKET_VIEW_ALL)) {
     // User has permission
   }
-  
+
   // Domain methods automatically use context
   const tickets = await Ticket.listForGuild();
-  
+
   // Guild ID extracted from request automatically
   const guildId = actor.properties.selectedGuildId;
 });

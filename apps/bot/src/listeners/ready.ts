@@ -16,7 +16,7 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
   try {
     await ScheduledTask.initialize();
     logger.info("✅ Scheduled task system initialized");
-    
+
     // Clean up any orphaned jobs from previous runs
     await ScheduledTask.cleanupOrphanedJobs();
   } catch (error) {

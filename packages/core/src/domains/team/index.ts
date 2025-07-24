@@ -1,5 +1,10 @@
 import { prisma } from "../../prisma/client";
-import { TeamRoleStatus, type TeamRole, type TeamRoleMember, type DiscordUser } from "@prisma/client";
+import {
+  TeamRoleStatus,
+  type TeamRole,
+  type TeamRoleMember,
+  type DiscordUser,
+} from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
 import { cacheService, CacheKeys, CacheTTL } from "../../prisma/services/cache";
 

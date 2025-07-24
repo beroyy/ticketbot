@@ -61,7 +61,7 @@ export function formatZodError(error: z.ZodError<any>): string {
     const path = err.path && err.path.length > 0 ? `${err.path.join(".")}: ` : "";
     return `${path}${err.message}`;
   });
-  
+
   return messages.join("\n");
 }
 

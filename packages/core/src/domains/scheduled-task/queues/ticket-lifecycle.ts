@@ -21,7 +21,7 @@ const createQueue = async () => {
       },
     },
   });
-}
+};
 
 // Export a lazy-loaded queue instance
 let _queue: Queue | null = null;

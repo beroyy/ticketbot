@@ -50,7 +50,9 @@ export class RemoveCommand extends TicketCommandBase {
       // If they're not a participant, continue anyway to remove Discord permissions
       if (error instanceof Error && !error.message.includes("Cannot remove ticket opener")) {
         // Log non-critical errors but continue
-        this.container.logger.debug(`User ${targetDiscordId} was not a participant, continuing with permission removal`);
+        this.container.logger.debug(
+          `User ${targetDiscordId} was not a participant, continuing with permission removal`
+        );
       } else {
         // Re-throw critical errors
         throw error;

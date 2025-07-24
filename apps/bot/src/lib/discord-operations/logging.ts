@@ -8,10 +8,7 @@ import type { EmbedBuilder, TextChannel } from "discord.js";
  * @param embed - The embed to send
  * @returns Promise<boolean> - True if successfully sent, false otherwise
  */
-export const sendToLogChannel = async (
-  guildId: string,
-  embed: EmbedBuilder
-): Promise<boolean> => {
+export const sendToLogChannel = async (guildId: string, embed: EmbedBuilder): Promise<boolean> => {
   try {
     // Get guild settings to find log channel
     const settings = await getSettingsUnchecked(guildId);
@@ -38,9 +35,9 @@ export const sendToLogChannel = async (
 
     // Add guild footer if not already set
     if (!embed.data.footer) {
-      embed.setFooter({ 
-        text: guild.name, 
-        iconURL: guild.iconURL() ?? undefined 
+      embed.setFooter({
+        text: guild.name,
+        iconURL: guild.iconURL() ?? undefined,
       });
     }
 

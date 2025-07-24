@@ -1,6 +1,14 @@
 import type { ChatInputCommandInteraction, User as DiscordUser } from "discord.js";
 import { createCommand } from "@bot/lib/sapphire-extensions";
-import { InteractionResponse, InteractionEdit, Embed, err, ok, StatsHelpers, STATS_CONSTANTS } from "@bot/lib/discord-utils";
+import {
+  InteractionResponse,
+  InteractionEdit,
+  Embed,
+  err,
+  ok,
+  StatsHelpers,
+  STATS_CONSTANTS,
+} from "@bot/lib/discord-utils";
 import { Team, Ticket, User, Analytics } from "@ticketsbot/core/domains";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -91,8 +99,8 @@ const displayTeamMemberStats = async (
   discordUserId: string
 ) => {
   const [stats, userRoles] = await Promise.all([
-    Analytics.getStaffPerformance({ 
-      guildId, 
+    Analytics.getStaffPerformance({
+      guildId,
       staffId: discordUserId,
     }),
     Team.getUserRoles(guildId, discordUserId),
@@ -125,7 +133,7 @@ const displayRegularUserStats = async (
 ) => {
   // For regular users, we just need their open ticket count
   const openCount = await Ticket.getUserOpenCount(discordUserId);
-  
+
   // TODO: Get user's total ticket stats from Analytics domain
   const stats = { openedCount: 0, averageResponseTimeMinutes: 0 };
 
@@ -141,7 +149,11 @@ const displayRegularUserStats = async (
     { name: "🟢 Open Tickets", value: openCount.toString(), inline: true },
     { name: "🔒 Closed Tickets", value: closedCount.toString(), inline: true },
     { name: "⏱️ Avg Response Time", value: avgResponseTime, inline: true },
-    { name: "📈 Completion Rate", value: StatsHelpers.formatPercentage(closedCount, totalCount), inline: true }
+    {
+      name: "📈 Completion Rate",
+      value: StatsHelpers.formatPercentage(closedCount, totalCount),
+      inline: true,
+    }
   );
 
   await InteractionEdit.edit(interaction, { embeds: [embed] });
@@ -174,7 +186,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
       }),
       Team.getActiveMembers(guildId),
     ]);
-    
+
     // Map to expected format
     const serverStats = {
       totalTickets: monthStats.totalCreated,
@@ -182,11 +194,11 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
       closedTickets: monthStats.totalClosed,
       averageResolutionTimeHours: monthStats.avgResolutionTime,
     };
-    
+
     const serverStats7Days = {
       closedTickets: weekStats.totalClosed,
     };
-    
+
     // TODO: Get feedback stats from Analytics
     const feedbackStats = { averageRating: null, totalFeedback: 0 };
 
@@ -204,7 +216,11 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
         { name: "👥 Team Members", value: activeTeamMembers.length.toString(), inline: true },
         {
           name: "⏱️ Avg Resolution Time",
-          value: StatsHelpers.formatDuration(serverStats.averageResolutionTimeHours ? serverStats.averageResolutionTimeHours * 60 : null),
+          value: StatsHelpers.formatDuration(
+            serverStats.averageResolutionTimeHours
+              ? serverStats.averageResolutionTimeHours * 60
+              : null
+          ),
           inline: true,
         },
         {
@@ -260,7 +276,7 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
           }),
           Team.getUserRoles(guildId, member.discordId),
         ]);
-        
+
         // Extract first staff member stats (since we're querying by specific ID)
         const stats = Array.isArray(performanceStats) ? performanceStats[0] : performanceStats;
 

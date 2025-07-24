@@ -220,6 +220,7 @@ NEXT_PUBLIC_FEATURE_ADVANCED_FORMS=false
 ### Automatically Derived Values
 
 The system automatically derives these values:
+
 - `WEB_URL`, `API_URL` - Based on NODE_ENV and BASE_DOMAIN
 - `WEB_PORT`, `API_PORT`, `BOT_PORT` - Based on PORT_OFFSET
 - `DISCORD_REDIRECT_URI` - Based on API_URL
@@ -300,18 +301,20 @@ This reduces configuration from 23+ variables to just 6 required ones!
 The application supports build-time feature flags for UI features using Next.js environment variables:
 
 1. **Available Feature Flags**:
+
    ```env
    # Enable new ticket UI design
    NEXT_PUBLIC_FEATURE_NEW_TICKET_UI=true
-   
+
    # Enable bulk ticket operations
    NEXT_PUBLIC_FEATURE_BULK_ACTIONS=true
-   
+
    # Enable advanced form builder
    NEXT_PUBLIC_FEATURE_ADVANCED_FORMS=true
    ```
 
 2. **Usage in Code**:
+
    ```typescript
    // In React components
    if (process.env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI === 'true') {

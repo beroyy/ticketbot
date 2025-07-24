@@ -8,9 +8,7 @@ export const SuccessResponses = {
   }),
 
   ticketClosed: (reason?: string) => ({
-    content: reason
-      ? `✅ Ticket closed with reason: ${reason}`
-      : "✅ Ticket closed successfully.",
+    content: reason ? `✅ Ticket closed with reason: ${reason}` : "✅ Ticket closed successfully.",
     ephemeral: true,
   }),
 

@@ -53,14 +53,18 @@ export const StaffPerformanceQuerySchema = z.object({
   guildId: DiscordGuildIdSchema,
   staffId: DiscordUserIdSchema.optional(),
   dateRange: DateRangeSchema.optional(),
-  metrics: z.array(z.enum([
-    "tickets_claimed",
-    "tickets_closed",
-    "avg_response_time",
-    "avg_resolution_time",
-    "satisfaction_rating",
-    "messages_sent"
-  ])).optional(),
+  metrics: z
+    .array(
+      z.enum([
+        "tickets_claimed",
+        "tickets_closed",
+        "avg_response_time",
+        "avg_resolution_time",
+        "satisfaction_rating",
+        "messages_sent",
+      ])
+    )
+    .optional(),
 });
 
 /**
@@ -71,10 +75,12 @@ export const PanelPerformanceSchema = z.object({
   totalTickets: z.number(),
   avgResolutionTime: z.number().nullable(),
   satisfactionScore: z.number().min(0).max(5).nullable(),
-  topCategories: z.array(z.object({
-    category: z.string(),
-    count: z.number(),
-  })),
+  topCategories: z.array(
+    z.object({
+      category: z.string(),
+      count: z.number(),
+    })
+  ),
 });
 
 /**
@@ -85,12 +91,14 @@ export const TicketTrendsSchema = z.object({
     start: z.date(),
     end: z.date(),
   }),
-  data: z.array(z.object({
-    date: z.date(),
-    created: z.number(),
-    closed: z.number(),
-    avgResolutionTime: z.number().nullable(),
-  })),
+  data: z.array(
+    z.object({
+      date: z.date(),
+      created: z.number(),
+      closed: z.number(),
+      avgResolutionTime: z.number().nullable(),
+    })
+  ),
   summary: z.object({
     totalCreated: z.number(),
     totalClosed: z.number(),
@@ -119,14 +127,18 @@ export const GenerateReportSchema = z.object({
   guildId: DiscordGuildIdSchema,
   reportType: z.enum(["daily", "weekly", "monthly", "custom"]),
   dateRange: DateRangeSchema.optional(),
-  includeSections: z.array(z.enum([
-    "overview",
-    "ticket_trends",
-    "staff_performance",
-    "panel_breakdown",
-    "satisfaction_scores",
-    "response_times"
-  ])).optional(),
+  includeSections: z
+    .array(
+      z.enum([
+        "overview",
+        "ticket_trends",
+        "staff_performance",
+        "panel_breakdown",
+        "satisfaction_scores",
+        "response_times",
+      ])
+    )
+    .optional(),
   format: z.enum(["json", "csv", "pdf"]).default("json"),
 });
 

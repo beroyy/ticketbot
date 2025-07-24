@@ -1,10 +1,14 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
-import { container } from "@sapphire/framework";
 import { Embed, InteractionResponse, type Result, err, ok } from "@bot/lib/discord-utils";
-import { User, Ticket, Transcripts, TicketLifecycle } from "@ticketsbot/core/domains";
+import { User, Transcripts, TicketLifecycle } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, type ChatInputCommandInteraction } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  type ChatInputCommandInteraction,
+} from "discord.js";
 
 export class CloseRequestCommand extends TicketCommandBase {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -79,44 +83,44 @@ export class CloseRequestCommand extends TicketCommandBase {
 
       // Build response
       const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`close_confirm_${closeRequestId}`)
-        .setLabel("✅ Approve")
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`close_cancel_${closeRequestId}`)
-        .setLabel("❌ Deny")
-        .setStyle(ButtonStyle.Danger)
-    );
+        new ButtonBuilder()
+          .setCustomId(`close_confirm_${closeRequestId}`)
+          .setLabel("✅ Approve")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`close_cancel_${closeRequestId}`)
+          .setLabel("❌ Deny")
+          .setStyle(ButtonStyle.Danger)
+      );
 
-    const description = [
-      `<@${ticket.openerId}>, staff member <@${interaction.user.id}> has requested to close this ticket.`,
-      reason && `**Reason:** ${reason}`,
-      delay > 0 &&
-        !ticket.excludeFromAutoclose &&
-        `⏰ This ticket will automatically close in **${delay} hour${delay === 1 ? "" : "s"}** if no response is given.`,
-      `Do you approve closing this ticket?`,
-    ]
-      .filter(Boolean)
-      .join("\n\n");
+      const description = [
+        `<@${ticket.openerId}>, staff member <@${interaction.user.id}> has requested to close this ticket.`,
+        reason && `**Reason:** ${reason}`,
+        delay > 0 &&
+          !ticket.excludeFromAutoclose &&
+          `⏰ This ticket will automatically close in **${delay} hour${delay === 1 ? "" : "s"}** if no response is given.`,
+        `Do you approve closing this ticket?`,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
-    await InteractionResponse.reply(interaction, {
-      embeds: [
-        Embed.warning("Close Request", description).setFooter({
-          text: "Only the ticket opener can approve or deny this request",
-        }),
-      ],
-      components: [buttons],
-    });
+      await InteractionResponse.reply(interaction, {
+        embeds: [
+          Embed.warning("Close Request", description).setFooter({
+            text: "Only the ticket opener can approve or deny this request",
+          }),
+        ],
+        components: [buttons],
+      });
 
-    return ok(undefined);
+      return ok(undefined);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An error occurred";
       await InteractionResponse.reply(interaction, {
         embeds: [Embed.error("Error", errorMessage)],
         ephemeral: true,
       });
-      
+
       return err(errorMessage);
     }
   }

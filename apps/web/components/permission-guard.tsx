@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/router";
 import { useSelectServer } from "@/features/user/ui/select-server-provider";

@@ -67,7 +67,7 @@ export const RemoveStaffCommand = createCommand({
               interaction.guild!,
               "remove"
             );
-            
+
             if (failed.length > 0) {
               container.logger.warn(
                 `Failed to remove Discord roles [${failed.join(", ")}] from user ${targetUser.id}`

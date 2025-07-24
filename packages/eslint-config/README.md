@@ -5,21 +5,27 @@ Shared ESLint configurations for the TicketsBot monorepo. Provides consistent li
 ## Available Configurations
 
 ### `base.js`
+
 Core configuration for all TypeScript projects. Includes:
+
 - TypeScript-ESLint recommended rules
 - Prettier compatibility
 - Turbo plugin for monorepo support
 - Relaxed rules for modern TypeScript patterns
 
 ### `node.js`
+
 Extends base config for Node.js applications (API, Bot, Core):
+
 - Node.js globals
 - Allows all console methods
 - CommonJS compatibility
 - Prevents `process.exit()` usage
 
 ### `next.js`
+
 Extends base config for Next.js applications:
+
 - Browser + Node.js globals
 - React-specific rule adjustments
 - Server-side console logging allowed
@@ -62,12 +68,14 @@ Our ESLint setup prioritizes:
 ## Rule Highlights
 
 ### Allowed Patterns
+
 - `any` type when needed
 - Implicit function returns
 - Console warnings and errors
 - Unused vars prefixed with `_`
 
 ### Enforced Rules
+
 - Consistent type imports
 - No var declarations (const/let only)
 - Strict equality checks
@@ -75,6 +83,7 @@ Our ESLint setup prioritizes:
 - Turbo environment variable declarations
 
 ### Ignored Paths
+
 - `dist/`, `build/` - Compiled output
 - `node_modules/` - Dependencies
 - `.turbo/`, `.next/` - Framework directories

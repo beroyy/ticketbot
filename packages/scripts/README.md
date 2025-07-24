@@ -14,18 +14,21 @@ Centralized development, database, and utility scripts for the TicketsBot monore
 ## Key Features
 
 ### 🚀 Smart Environment Setup
+
 - Automatic port detection for multi-worktree development
 - Environment-specific configurations (dev/staging/prod)
 - Neon database branch management
 - Comprehensive environment validation
 
 ### 🌱 Intelligent Database Seeding
+
 - Three environment sizes (small/medium/large)
 - Domain-driven seeder architecture
 - Realistic data with Faker.js
 - Batch processing for large datasets
 
 ### 🔧 Development Orchestration
+
 - One-command development startup
 - Automatic Redis container management
 - Graceful service shutdown
@@ -36,7 +39,9 @@ Centralized development, database, and utility scripts for the TicketsBot monore
 ### Development Scripts (`src/dev/`)
 
 #### `env-setup.ts`
+
 Sophisticated environment configuration with:
+
 - Port level detection (4000, 5000, 6000, etc.)
 - Worktree-aware configuration
 - Neon branch creation/management
@@ -54,7 +59,9 @@ AUTO_PORT_DETECTION=false pnpm env:setup dev
 ```
 
 #### `start-dev-services.ts`
+
 Orchestrates all development services:
+
 ```bash
 # Start everything (Redis + all apps)
 pnpm dev
@@ -66,7 +73,9 @@ pnpm dev
 ```
 
 #### `start-redis.ts`
+
 Redis container management:
+
 ```bash
 # Start Redis
 pnpm redis:start
@@ -76,7 +85,9 @@ pnpm redis:stop
 ```
 
 #### `validate-env.mjs`
+
 Environment validation:
+
 ```bash
 # Validate current environment
 pnpm env:validate
@@ -88,7 +99,9 @@ pnpm env:validate --verbose
 ### Database Scripts (`src/db/`)
 
 #### `init-db.ts`
+
 Database schema initialization:
+
 ```bash
 # Initialize database
 pnpm db:init
@@ -100,7 +113,9 @@ pnpm db:init
 ```
 
 #### `seed.ts`
+
 Comprehensive database seeding:
+
 ```bash
 # Default seeding (medium environment)
 pnpm db:seed
@@ -119,7 +134,9 @@ pnpm db:seed --batch-size 100
 ```
 
 #### Seeder Architecture (`seeders/`)
+
 Domain-specific seeders with dependency management:
+
 - **UserSeeder** - Discord users with roles
 - **GuildSeeder** - Servers with settings
 - **TeamSeeder** - Role assignments
@@ -132,7 +149,9 @@ Domain-specific seeders with dependency management:
 ### Test Scripts (`src/test/`)
 
 #### `generate-test-token.ts`
+
 JWT token generation for testing:
+
 ```bash
 # Generate test token
 tsx packages/scripts/src/test/generate-test-token.ts
@@ -163,6 +182,7 @@ pnpm redis:stop        # Stop Redis container
 ### Direct Execution
 
 Scripts with bin entries:
+
 ```bash
 pnpm exec ticketsbot-env-setup dev
 pnpm exec ticketsbot-db-init
@@ -172,6 +192,7 @@ pnpm exec ticketsbot-db-seed
 ### Programmatic Usage
 
 Import as modules:
+
 ```typescript
 import { Seeder } from "@ticketsbot/scripts/db/seeders";
 
@@ -187,18 +208,21 @@ await seeder.seed();
 ## Environment Sizes
 
 ### Small Environment
+
 - 3 users (1 admin, 1 support, 1 customer)
 - 2 panels
 - 10 tickets
 - Quick setup for basic testing
 
 ### Medium Environment (Default)
+
 - 5 users (mixed roles)
 - 3 panels
 - 500 tickets
 - Balanced for development
 
 ### Large Environment
+
 - 10 users
 - 5 panels
 - 1000 tickets
@@ -207,19 +231,25 @@ await seeder.seed();
 ## Architecture Highlights
 
 ### Port Detection System
+
 The env-setup script intelligently assigns ports based on:
+
 1. Git worktree location (unique ID per worktree)
 2. Available port ranges (4xxx, 5xxx, 6xxx, etc.)
 3. Automatic conflict detection
 
 ### Domain Integration
+
 Seeders use the core package's domain methods:
+
 - Respects business logic validation
 - Uses proper context system
 - Falls back to Prisma for seed-specific operations
 
 ### Progress Tracking
+
 All long-running operations include:
+
 - Progress bars for batch operations
 - Clear status messages
 - Error reporting with context
@@ -232,6 +262,7 @@ All long-running operations include:
    - `src/test/` - Testing utilities
 
 2. Add exports to package.json:
+
    ```json
    "exports": {
      "./my-script": "./src/category/my-script.ts"
@@ -239,6 +270,7 @@ All long-running operations include:
    ```
 
 3. Add bin entry if executable:
+
    ```json
    "bin": {
      "ticketsbot-my-script": "./src/category/my-script.ts"

@@ -1,7 +1,12 @@
 import { prisma } from "../../prisma/client";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../schemas/permissions-constants";
-import type { Form as PrismaForm, FormField, Panel as PrismaPanel, FormFieldType } from "@prisma/client";
+import type {
+  Form as PrismaForm,
+  FormField,
+  Panel as PrismaPanel,
+  FormFieldType,
+} from "@prisma/client";
 
 type FormWithFields = PrismaForm & {
   formFields: FormField[];

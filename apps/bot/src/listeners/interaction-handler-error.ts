@@ -9,7 +9,7 @@ export const InteractionHandlerErrorListener = createSapphireListener(
   async (...args: unknown[]) => {
     const [error, payload] = args as [Error, InteractionHandlerError];
     const { interaction, handler } = payload;
-    
+
     // Log the error with context
     container.logger.error(`Error in ${handler.name}:`, error);
 

@@ -11,7 +11,7 @@ import net from "net";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { z } from "zod";
+import { validateEnv, z } from "@ticketsbot/core/env";
 
 // ===================================
 // Type Definitions
@@ -466,7 +466,7 @@ async function calculatePorts(envVars: EnvVars): Promise<PortConfig> {
 function validateEnvSetup(env: Environment, envVars: EnvVars): boolean {
   try {
     // Use zod schema for validation
-    EnvSetupSchema.parse(envVars);
+    validateEnv(EnvSetupSchema, envVars);
 
     // Additional environment-specific validation
     if (env === "dev" && envVars.NODE_ENV !== "development") {

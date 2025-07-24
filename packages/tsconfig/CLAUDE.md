@@ -22,12 +22,15 @@ Our TypeScript setup balances strict type checking with practical development ne
 ## Key Settings
 
 ### All Configurations
+
 - **Target**: ES2022 for modern JavaScript features
 - **Lib**: ES2022 (plus DOM for Next.js)
 - **Skip Lib Check**: Enabled for faster builds
 
 ### Strict Mode (Balanced Approach)
+
 **Enabled**:
+
 - `strict: true` (base setting)
 - `noUncheckedIndexedAccess: true` - Safer array/object access
 - `strictNullChecks: true` - Null/undefined safety
@@ -36,18 +39,21 @@ Our TypeScript setup balances strict type checking with practical development ne
 - `noImplicitReturns: true` - All code paths must return
 
 **Disabled for Flexibility**:
+
 - `exactOptionalPropertyTypes: false` - Too restrictive for many libraries
 - `strictPropertyInitialization: false` - Issues with decorators
 - `noUnusedLocals: false` - Too restrictive during development
 - `noUnusedParameters: false` - Too restrictive during development
 
 ### Module Systems
+
 - **base.json**: ESNext modules with bundler resolution
 - **node.json**: CommonJS for Node.js compatibility
 - **nextjs.json**: ESNext modules for modern web
 - **library.json**: ESNext modules for packages
 
 ### Build Settings
+
 - **Incremental**: Enabled for faster rebuilds
 - **Source Maps**: Enabled for debugging
 - **Declaration Maps**: Enabled for go-to-definition
@@ -56,6 +62,7 @@ Our TypeScript setup balances strict type checking with practical development ne
 ## Usage Examples
 
 ### Node.js Applications (API, Bot)
+
 ```json
 {
   "extends": "@ticketsbot/tsconfig/node.json",
@@ -67,6 +74,7 @@ Our TypeScript setup balances strict type checking with practical development ne
 ```
 
 ### Next.js Application
+
 ```json
 {
   "extends": "@ticketsbot/tsconfig/nextjs.json",
@@ -77,6 +85,7 @@ Our TypeScript setup balances strict type checking with practical development ne
 ```
 
 ### Core Package (Library)
+
 ```json
 {
   "extends": "@ticketsbot/tsconfig/library.json",
@@ -88,6 +97,7 @@ Our TypeScript setup balances strict type checking with practical development ne
 ```
 
 ### Scripts Package
+
 ```json
 {
   "extends": "@ticketsbot/tsconfig/base.json",

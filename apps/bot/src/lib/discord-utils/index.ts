@@ -25,7 +25,12 @@ export {
 
 export { InteractionResponse, InteractionEdit } from "@bot/lib/discord-utils/responses";
 
-export { type EmbedColors, DEFAULT_COLORS, createEmbedHelpers, Embed } from "@bot/lib/discord-utils/embed-helpers";
+export {
+  type EmbedColors,
+  DEFAULT_COLORS,
+  createEmbedHelpers,
+  Embed,
+} from "@bot/lib/discord-utils/embed-helpers";
 
 export { COLORS } from "@bot/lib/discord-utils/colors";
 

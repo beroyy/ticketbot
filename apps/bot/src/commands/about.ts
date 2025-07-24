@@ -21,9 +21,9 @@ export const AboutCommand = createCommand({
   description: "Display information about DiscordTickets",
 
   execute: async (interaction) => {
-    await InteractionResponse.reply(interaction, { 
-      embeds: [aboutEmbed], 
-      ephemeral: true 
+    await InteractionResponse.reply(interaction, {
+      embeds: [aboutEmbed],
+      ephemeral: true,
     });
     return ok(undefined);
   },

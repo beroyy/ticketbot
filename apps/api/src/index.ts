@@ -28,8 +28,11 @@ logger.debug("🔍 Validated Environment Variables:", {
 
 const app = new Hono<AppEnv>().onError(errorHandler);
 
+// Parse allowed origins from env
 const webUrl = env.WEB_URL;
-const allowedOrigins = [webUrl];
+const allowedOrigins = env.ALLOWED_ORIGINS 
+  ? env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : [webUrl];
 
 logger.debug("🔒 CORS Configuration:", {
   allowedOrigins,

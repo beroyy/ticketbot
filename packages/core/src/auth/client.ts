@@ -2,7 +2,8 @@ import { createAuthClient } from "better-auth/react";
 
 // Create the auth client internally
 const authClient = createAuthClient({
-  baseURL: (process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:4001") + "/api/auth",
+  baseURL: process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:4001",
+  basePath: "/auth",
 });
 
 // Export methods with any type to avoid Next.js build issues

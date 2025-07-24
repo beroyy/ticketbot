@@ -1,8 +1,4 @@
 import { logger } from "./utils/logger";
-
-// Environment variables should already be loaded by the application
-// The auth package doesn't need to load them again
-
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
@@ -14,7 +10,6 @@ import { Redis } from "../redis";
 import { fetchDiscordUser, getDiscordAvatarUrl } from "./services/discord-api";
 import type { User, Session } from "./types";
 
-// Type for Better Auth context
 interface AuthContext {
   newSession?: {
     user: User;
@@ -45,17 +40,14 @@ type SessionData = {
   };
 };
 
-// Helper function to get environment variables with fallbacks
 function getEnvVar(key: string, fallback?: string): string {
   return process.env[key] || fallback || "";
 }
 
-// Lazy initialization of origins to ensure environment variables are loaded
 const getOrigins = () => {
   const webOrigin = getEnvVar("WEB_URL", "http://localhost:4000");
   const apiOrigin = getEnvVar("API_URL", "http://localhost:4001");
 
-  // Log only once when first accessed
   if (!getOrigins.logged) {
     logger.info("Auth trusted origins:", {
       webOrigin,
@@ -70,7 +62,6 @@ const getOrigins = () => {
 };
 getOrigins.logged = false;
 
-// Set up Redis secondary storage if available
 let secondaryStorage:
   | {
       get: (key: string) => Promise<string | null>;
@@ -82,7 +73,6 @@ let secondaryStorage:
 if (Redis.isAvailable()) {
   logger.debug("Configuring Better Auth with Redis secondary storage");
 
-  // Secondary storage for sessions and rate limiting
   secondaryStorage = {
     get: async (key: string) => {
       try {
@@ -122,13 +112,11 @@ if (Redis.isAvailable()) {
   };
 }
 
-// Validate required environment variables
 const authSecret = getEnvVar("BETTER_AUTH_SECRET");
 if (!authSecret) {
   logger.error("BETTER_AUTH_SECRET is not set! Sessions will not work properly.");
 }
 
-// Validate Discord credentials
 const discordClientId = getEnvVar("DISCORD_CLIENT_ID");
 const discordClientSecret = getEnvVar("DISCORD_CLIENT_SECRET");
 
@@ -139,8 +127,6 @@ if (!discordClientId || !discordClientSecret) {
   });
 }
 
-// Create auth directly without wrapper function
-// Define a properly typed auth instance
 interface AuthInstance {
   handler: (request: Request) => Promise<Response>;
   api: {
@@ -151,7 +137,6 @@ interface AuthInstance {
   [key: string]: unknown;
 }
 
-// Create auth with lazy-loaded configuration
 const createAuthInstance = () => {
   const { webOrigin, apiOrigin } = getOrigins();
 
@@ -169,31 +154,26 @@ const createAuthInstance = () => {
     secret: authSecret,
     ...(secondaryStorage && { secondaryStorage }),
     session: {
-      storeSessionInDatabase: true, // Store in DB for audit trail
+      storeSessionInDatabase: true,
       cookieCache: {
-        enabled: true, // Always use cookie cache for better performance
-        maxAge: parseInt(process.env["COOKIE_CACHE_MAX_AGE"] || "300"), // Default: 5 minutes
+        enabled: true,
+        maxAge: parseInt(process.env["COOKIE_CACHE_MAX_AGE"] || "300"),
       },
-      expiresIn: 60 * 60 * 24 * 7, // 7 days session expiry
+      expiresIn: 60 * 60 * 24 * 7,
     },
     rateLimit: {
       enabled:
         process.env["NODE_ENV"] === "production" || process.env["RATE_LIMIT_ENABLED"] === "true",
-      window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"), // Default: 1 minute
-      max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"), // Default: 100 requests
-      storage: Redis.isAvailable() ? "secondary-storage" : "memory", // Use secondary storage if Redis available
+      window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"),
+      max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"),
+      storage: Redis.isAvailable() ? "secondary-storage" : "memory",
       customRules: {
-        // Strict limits for authentication endpoints
-        "/auth/signin": { window: 300, max: 5 }, // 5 attempts per 5 minutes
-        "/auth/signup": { window: 300, max: 3 }, // 3 signups per 5 minutes
-        "/auth/callback/*": { window: 60, max: 10 }, // 10 OAuth callbacks per minute
-
-        // Password reset and sensitive operations
-        "/auth/forgot-password": { window: 900, max: 3 }, // 3 attempts per 15 minutes
-        "/auth/reset-password": { window: 300, max: 5 }, // 5 attempts per 5 minutes
-
-        // Moderate limits for authenticated endpoints
-        "/api/auth/me": { window: 60, max: 30 }, // 30 requests per minute
+        "/auth/signin": { window: 300, max: 5 },
+        "/auth/signup": { window: 300, max: 3 },
+        "/auth/callback/*": { window: 60, max: 10 },
+        "/auth/forgot-password": { window: 900, max: 3 },
+        "/auth/reset-password": { window: 300, max: 5 },
+        "/api/auth/me": { window: 60, max: 30 },
       },
     },
     baseURL: apiOrigin,
@@ -209,7 +189,6 @@ const createAuthInstance = () => {
       disableCSRFCheck: process.env["NODE_ENV"] === "development",
     },
     account: {
-      // Ensure accounts can only be linked by the authenticated user
       accountLinking: {
         enabled: true,
         trustedProviders: ["discord"],
@@ -217,8 +196,9 @@ const createAuthInstance = () => {
     },
     socialProviders: {
       discord: {
-        clientId: "1397412199869186090",
-        clientSecret: "IN0m7LIB0TJwMbn0Y9-KqIF21hbgvPM1",
+        clientId: discordClientId,
+        clientSecret: discordClientSecret,
+        scope: ["identify", "guilds"],
       },
     },
     user: {
@@ -242,14 +222,13 @@ const createAuthInstance = () => {
           type: "string",
           required: false,
           defaultValue: null,
-          input: false, // Don't allow user input for this field
+          input: false,
         },
       },
     },
     plugins: [
       customSession(async (sessionData: SessionData) => {
         const { user, session } = sessionData;
-        // Get the full user data from database
         const fullUser = await UserDomain.getBetterAuthUser(user.id);
         let discordUser = null;
         if (fullUser?.discordUserId) {
@@ -260,35 +239,28 @@ const createAuthInstance = () => {
           return { session, user };
         }
 
-        // Ensure we have the Discord user ID
         let discordUserId = fullUser.discordUserId;
 
-        // If not in the user object, check if there's a linked Discord account
         if (!discordUserId) {
           const discordAccount = await AccountDomain.getDiscordAccount(user.id);
 
           if (discordAccount?.accountId) {
             discordUserId = discordAccount.accountId;
 
-            // Ensure Discord user exists before linking
-            // Use a placeholder username that will be updated by the OAuth callback
             await UserDomain.ensure(
               discordAccount.accountId,
-              `User_${discordAccount.accountId.slice(-6)}`, // Temporary username
+              `User_${discordAccount.accountId.slice(-6)}`,
               undefined,
               undefined,
               { source: "customSession" }
             );
 
-            // Update the user record for future sessions
             await UserDomain.updateDiscordUserId(user.id, discordAccount.accountId);
 
-            // Fetch the Discord user data
             discordUser = await UserDomain.getDiscordUser(discordAccount.accountId);
           }
         }
 
-        // Return enriched session with Discord data
         return {
           session,
           user: {
@@ -303,10 +275,8 @@ const createAuthInstance = () => {
     ],
     hooks: {
       after: createAuthMiddleware(async (ctx) => {
-        // Log all hooks for debugging
         logger.debug("Auth Hook - Path:", ctx.path);
 
-        // Log OAuth sign-in attempts
         if (ctx.path && ctx.path.includes("/sign-in/social")) {
           logger.info("OAuth sign-in request detected", {
             path: ctx.path,
@@ -314,7 +284,6 @@ const createAuthInstance = () => {
           });
         }
 
-        // Log OAuth sign-in attempts
         if (ctx.path && ctx.path.includes("/sign-in/social")) {
           logger.info("OAuth sign-in request detected", {
             path: ctx.path,
@@ -322,11 +291,9 @@ const createAuthInstance = () => {
           });
         }
 
-        // Handle Discord OAuth callback
         if (ctx.path && ctx.path.includes("/callback/discord")) {
           logger.debug("Discord OAuth callback detected");
 
-          // For new sign-ups/sign-ins, the user will be in newSession
           const contextData = ctx.context as AuthContext;
           const user = contextData?.newSession?.user || contextData?.user;
 
@@ -338,7 +305,6 @@ const createAuthInstance = () => {
           logger.debug("User found after Discord callback:", user.id);
 
           try {
-            // Get the Discord account that was just linked
             const account = await AccountDomain.getDiscordAccount(user.id);
 
             logger.debug("Discord account found:", account?.accountId);
@@ -348,7 +314,6 @@ const createAuthInstance = () => {
               return;
             }
 
-            // Fetch Discord user data using the access token
             const discordUser = await fetchDiscordUser(account.accessToken);
 
             if (!discordUser) {
@@ -362,14 +327,12 @@ const createAuthInstance = () => {
               discriminator: discordUser.discriminator,
             });
 
-            // Get the avatar URL
             const avatarUrl = getDiscordAvatarUrl(
               discordUser.id,
               discordUser.avatar,
               discordUser.discriminator
             );
 
-            // Use our dedicated function to link Discord account with complete data
             await linkDiscordAccount(user.id, account.accountId, {
               username: discordUser.username,
               discriminator: discordUser.discriminator,
@@ -378,7 +341,6 @@ const createAuthInstance = () => {
 
             logger.debug("Discord account linked successfully with full profile data");
 
-            // Fetch user's guilds to set guild ownership
             try {
               logger.debug("Fetching user guilds to set ownership...");
 
@@ -396,7 +358,6 @@ const createAuthInstance = () => {
                   owner?: boolean;
                 }>;
 
-                // Find guilds where user is owner
                 const ownedGuilds = guilds.filter((g) => g.owner);
 
                 if (ownedGuilds.length > 0) {
@@ -404,17 +365,14 @@ const createAuthInstance = () => {
                     `Found ${ownedGuilds.length} owned guilds for user ${account.accountId}`
                   );
 
-                  // Import guild domain to set ownership
                   const { ensure: ensureGuild } = await import("../domains/guild");
 
-                  // Set ownership for each guild
                   await Promise.all(
                     ownedGuilds.map(async (guild) => {
                       try {
                         await ensureGuild(guild.id, guild.name, account.accountId);
                         logger.debug(`Set ownership for guild ${guild.id} (${guild.name})`);
 
-                        // Invalidate permission caches for this guild
                         const { cacheService, CacheKeys } = await import(
                           "../prisma/services/cache"
                         );
@@ -425,7 +383,6 @@ const createAuthInstance = () => {
                           `Invalidated ${deletedCount} cached entries for guild ${guild.id}`
                         );
 
-                        // Ensure default team roles exist for this guild
                         const { Team } = await import("../domains/team");
                         await Team.ensureDefaultRoles(guild.id);
                         logger.debug(`Ensured default roles exist for guild ${guild.id}`);
@@ -444,11 +401,9 @@ const createAuthInstance = () => {
               }
             } catch (error) {
               logger.error("Error setting up guild ownership during auth:", error);
-              // Don't throw - allow login to continue even if guild setup fails
             }
           } catch (error) {
             logger.error("Error linking Discord account:", error);
-            // Don't throw - allow login to continue even if linking fails
           }
         }
       }),
@@ -456,7 +411,6 @@ const createAuthInstance = () => {
   }) as AuthInstance;
 };
 
-// Create a lazy-loaded auth instance
 let authInstance: AuthInstance | null = null;
 
 export const auth = new Proxy({} as AuthInstance, {
@@ -468,8 +422,6 @@ export const auth = new Proxy({} as AuthInstance, {
   },
 });
 
-// Re-export getSessionFromContext from services/session
 export { getSessionFromContext } from "./services/session";
 
-// Export auth instance
 export default auth;

@@ -1,7 +1,3 @@
-/**
- * Discord API helper for fetching user data
- */
-
 import { logger } from "../utils/logger";
 
 interface DiscordUser {
@@ -44,9 +40,6 @@ export async function fetchDiscordUser(accessToken: string): Promise<DiscordUser
   }
 }
 
-/**
- * Get Discord avatar URL
- */
 export function getDiscordAvatarUrl(
   userId: string,
   avatarHash: string | null,
@@ -56,7 +49,6 @@ export function getDiscordAvatarUrl(
     const format = avatarHash.startsWith("a_") ? "gif" : "png";
     return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${format}`;
   } else {
-    // Default avatar based on discriminator (or user ID for new usernames)
     const defaultIndex =
       discriminator === "0" ? (BigInt(userId) >> 22n) % 6n : parseInt(discriminator) % 5;
     return `https://cdn.discordapp.com/embed/avatars/${defaultIndex.toString()}.png`;

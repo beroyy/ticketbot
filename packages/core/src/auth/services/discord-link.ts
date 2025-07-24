@@ -1,10 +1,6 @@
 import { User } from "../../domains";
 import { logger } from "../utils/logger";
 
-/**
- * Links a Discord account to a Better Auth user
- * This ensures the Discord ID is properly stored and cached
- */
 export async function linkDiscordAccount(
   betterAuthUserId: string,
   discordId: string,
@@ -24,20 +20,14 @@ export async function linkDiscordAccount(
   }
 }
 
-/**
- * Ensures a Discord account is linked for the current Better Auth user
- * Fetches the Discord account from the OAuth provider if not already linked
- */
 export async function ensureDiscordLinked(betterAuthUserId: string): Promise<string | null> {
   try {
-    // First check if already linked
     const user = await User.getBetterAuthUser(betterAuthUserId);
 
     if (user?.discordUserId) {
       return user.discordUserId;
     }
 
-    // Check if there's a Discord OAuth account
     const { Account } = await import("@ticketsbot/core/domains");
     const discordAccount = await Account.getDiscordAccount(betterAuthUserId);
 
@@ -46,7 +36,6 @@ export async function ensureDiscordLinked(betterAuthUserId: string): Promise<str
       return null;
     }
 
-    // Link the Discord account
     await linkDiscordAccount(betterAuthUserId, discordAccount.accountId);
 
     return discordAccount.accountId;

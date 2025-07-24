@@ -36,13 +36,13 @@ envVarGroups:
 
       # Service URLs (update these with your actual URLs)
       - key: WEB_URL
-        value: "https://your-app.vercel.app"
+        value: ""
       - key: API_URL
-        value: "https://your-app.onrender.com"
-      
+        value: ""
+
       # CORS configuration
       - key: ALLOWED_ORIGINS
-        value: "https://your-app.vercel.app"
+        value: ""
 
       # Optional services
       - key: REDIS_URL

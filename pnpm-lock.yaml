@@ -179,6 +179,9 @@ importers:
       '@ticketsbot/core':
         specifier: workspace:*
         version: link:../../packages/core
+      better-auth:
+        specifier: ^1.3.2
+        version: 1.3.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1

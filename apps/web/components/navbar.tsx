@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
-import { useSession, signIn, signOut } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
 
 export function Navbar() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = authClient.useSession();
   const [isClient, setIsClient] = useState(false);
   const { selectedGuildId } = useSelectServer();
   const { hasPermission, hasAnyPermission } = usePermissions();
@@ -153,7 +153,7 @@ export function Navbar() {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   onClick={() => {
-                    signOut();
+                    authClient.signOut();
                   }}
                 >
                   Logout
@@ -163,10 +163,10 @@ export function Navbar() {
           ) : (
             <button
               onClick={() => {
-                signIn.social({
+                authClient.signIn.social({
                   provider: "discord",
-                  redirectURI:
-                    "https://discord.com/oauth2/authorize?client_id=1397412199869186090&response_type=code&redirect_uri=https%3A%2F%2Fticketbot-5t9c.onrender.com%2Fauth%2Fcallback%2Fdiscord&scope=identify+guilds",
+                  callbackURL: `${process.env["NEXT_PUBLIC_API_URL"]}/auth/callback/discord`,
+                  scopes: ["identify", "guilds"],
                 });
               }}
               className="rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30"

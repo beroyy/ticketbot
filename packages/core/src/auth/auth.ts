@@ -145,6 +145,8 @@ const createAuthInstance = () => {
     basePath: "/auth",
     discordConfigured: !!discordClientId && !!discordClientSecret,
     redirectURI: `${apiOrigin}/auth/callback/discord`,
+    discordClientId: discordClientId?.substring(0, 6) + "...",
+    nodeEnv: process.env["NODE_ENV"],
   });
 
   return betterAuth({
@@ -198,7 +200,7 @@ const createAuthInstance = () => {
       discord: {
         clientId: discordClientId,
         clientSecret: discordClientSecret,
-        scope: ["identify", "guilds"],
+        scope: ["identify", "email", "guilds"],
       },
     },
     user: {

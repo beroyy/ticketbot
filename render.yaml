@@ -15,13 +15,12 @@ services:
       bash -c "pnpm db:push && npx concurrently -n api,bot -c blue,green 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start'"
 
     envVars:
-      - fromGroup: ticketsbot-core
-      - fromGroup: ticketsbot-secrets
+      - fromGroup: ticketsbot-env
       - key: NODE_ENV
         value: production
 
 envVarGroups:
-  - name: ticketsbot-core
+  - name: ticketsbot-env
     envVars:
       - key: API_PORT
         value: "3001"
@@ -30,15 +29,15 @@ envVarGroups:
       - key: BASE_DOMAIN
         value: "ticketsbot.dev"
       - key: WEB_URL
-        value: "https://ticketsbot.vercel.app"
+        value: "https://ticketbot-p818hk7he-brody-scotts-projects.vercel.app/"
       - key: API_URL
-        value: "https://ticketsbot-api-bot.onrender.com"
+        value: "https://ticketbot-5t9c.onrender.com"
       - key: DISCORD_REDIRECT_URI
-        value: "https://ticketsbot-api-bot.onrender.com/auth/callback/discord"
+        value: "https://ticketbot-5t9c.onrender.com/auth/callback/discord"
 
-  - name: ticketsbot-secrets
-    envVars:
       - key: DATABASE_URL
+        value: ""
+      - key: DIRECT_URL
         value: ""
       - key: REDIS_URL
         value: ""

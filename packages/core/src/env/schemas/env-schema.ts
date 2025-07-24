@@ -29,10 +29,12 @@ export const EnvSchema = z.object({
     .min(32)
     .regex(/^[A-Za-z0-9_-]+$/, "Invalid Discord client secret format"),
   
-  // URLs (required in production)
+  // URLs (required)
   WEB_URL: z.string().url(),
   API_URL: z.string().url(),
-  NEXT_PUBLIC_API_URL: z.string().url(),
+  
+  // Next.js specific (only required for web app)
+  NEXT_PUBLIC_API_URL: z.string().url().optional(),
   
   // Redis (optional)
   REDIS_URL: RedisUrlSchema.optional(),

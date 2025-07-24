@@ -24,7 +24,9 @@ export interface EnvConfig {
   // URLs (required)
   WEB_URL: string;
   API_URL: string;
-  NEXT_PUBLIC_API_URL: string;
+  
+  // Next.js specific (optional)
+  NEXT_PUBLIC_API_URL?: string;
   
   // Redis (optional)
   REDIS_URL?: string;
@@ -66,7 +68,7 @@ export interface EnvConfig {
 /**
  * Complete environment configuration with all values resolved
  */
-export interface CompleteEnvConfig extends Required<Omit<EnvConfig, 'REDIS_URL' | 'DEV_PERMISSIONS_HEX' | 'DEV_GUILD_ID' | 'DEV_DB_AUTO_SEED' | 'NEXT_PUBLIC_GUILD_ID' | 'RATE_LIMIT_ENABLED' | 'COOKIE_DOMAIN' | 'ALLOWED_ORIGINS' | 'RUNNING_IN_DOCKER' | 'API_HOST' | 'API_SECRET'>> {
+export interface CompleteEnvConfig extends Required<Omit<EnvConfig, 'REDIS_URL' | 'DEV_PERMISSIONS_HEX' | 'DEV_GUILD_ID' | 'DEV_DB_AUTO_SEED' | 'NEXT_PUBLIC_GUILD_ID' | 'RATE_LIMIT_ENABLED' | 'COOKIE_DOMAIN' | 'ALLOWED_ORIGINS' | 'RUNNING_IN_DOCKER' | 'API_HOST' | 'API_SECRET' | 'NEXT_PUBLIC_API_URL'>> {
   // Ports are always numbers
   WEB_PORT: number;
   API_PORT: number;
@@ -83,6 +85,7 @@ export interface CompleteEnvConfig extends Required<Omit<EnvConfig, 'REDIS_URL' 
   COOKIE_DOMAIN?: string;
   RATE_LIMIT_ENABLED?: boolean;
   ALLOWED_ORIGINS?: string;
+  NEXT_PUBLIC_API_URL?: string;
   DEV_PERMISSIONS_HEX?: string;
   DEV_GUILD_ID?: string;
   DEV_DB_AUTO_SEED?: boolean;
@@ -148,6 +151,8 @@ export function transformEnv(env: EnvConfig): CompleteEnvConfig {
     // Pass through required URLs
     WEB_URL: env.WEB_URL,
     API_URL: env.API_URL,
+    
+    // Pass through optional Next.js URL
     NEXT_PUBLIC_API_URL: env.NEXT_PUBLIC_API_URL,
     
     // Use explicit ports or defaults

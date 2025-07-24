@@ -45,16 +45,16 @@ type SessionData = {
   };
 };
 
-// Function to get environment variables with fallbacks
-function getEnvVar(key: string, fallback?: string): string {
-  return process.env[key] || fallback || "";
-}
+// Get origins from environment variables
+const webOrigin = process.env.WEB_URL || "http://localhost:10000";
+const apiOrigin = process.env.API_URL || "http://localhost:10001";
 
-// Get origins - read directly from process.env as fallback
-const webOrigin = getEnvVar("WEB_URL") || process.env["WEB_URL"] || "http://localhost:10000";
-const apiOrigin = getEnvVar("API_URL") || process.env["API_URL"] || "http://localhost:10001";
-
-logger.debug("Auth trusted origins:", { webOrigin, apiOrigin });
+logger.info("Auth trusted origins:", { 
+  webOrigin, 
+  apiOrigin,
+  envWebUrl: process.env.WEB_URL,
+  envApiUrl: process.env.API_URL,
+});
 
 // Set up Redis secondary storage if available
 let secondaryStorage:
@@ -109,7 +109,7 @@ if (Redis.isAvailable()) {
 }
 
 // Validate auth secret
-const authSecret = getEnvVar("BETTER_AUTH_SECRET");
+const authSecret = process.env.BETTER_AUTH_SECRET;
 if (!authSecret) {
   logger.error("BETTER_AUTH_SECRET is not set! Sessions will not work properly.");
 }
@@ -181,8 +181,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     discord: {
-      clientId: getEnvVar("DISCORD_CLIENT_ID", ""),
-      clientSecret: getEnvVar("DISCORD_CLIENT_SECRET", ""),
+      clientId: process.env.DISCORD_CLIENT_ID || "",
+      clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
       redirectURI: `${apiOrigin}/auth/callback/discord`,
       scope: ["identify", "guilds"],
     },

@@ -30,8 +30,8 @@ const app = new Hono<AppEnv>().onError(errorHandler);
 
 // Parse allowed origins from env
 const webUrl = env.WEB_URL;
-const allowedOrigins = env.ALLOWED_ORIGINS 
-  ? env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+const allowedOrigins = env.ALLOWED_ORIGINS
+  ? env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
   : [webUrl];
 
 logger.debug("🔒 CORS Configuration:", {
@@ -58,7 +58,7 @@ app.on(["POST", "GET"], "/auth/*", (c) => {
 });
 
 const _routes = app
-  .route("/api/auth", authRoutes)
+  .route("/auth", authRoutes)
   .route("/health", healthRoutes)
   .route("/schemas", schemaRoutes)
   .route("/user", userRoutes)

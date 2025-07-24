@@ -158,7 +158,6 @@ BOT_PORT=4002                      # Bot health check port
 WEB_URL="http://localhost:4000"
 API_URL="http://localhost:4001"
 NEXT_PUBLIC_API_URL="http://localhost:4001"
-DISCORD_REDIRECT_URI="http://localhost:4001/auth/callback/discord"
 
 # Discord (required)
 DISCORD_TOKEN="bot_token"

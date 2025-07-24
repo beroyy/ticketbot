@@ -223,7 +223,6 @@ The system automatically derives these values:
 
 - `WEB_URL`, `API_URL` - Based on NODE_ENV and BASE_DOMAIN
 - `WEB_PORT`, `API_PORT`, `BOT_PORT` - Based on PORT_OFFSET
-- `DISCORD_REDIRECT_URI` - Based on API_URL
 - `LOG_LEVEL`, `LOG_REQUESTS` - Based on NODE_ENV
 - And many more...
 
@@ -430,7 +429,6 @@ If you encounter "State Mismatch. Verification not found" error when signing in:
    ```
    WEB_URL=http://localhost:9000
    API_URL=http://localhost:9001
-   DISCORD_REDIRECT_URI=http://localhost:9001/auth/callback/discord
    ```
 
 3. **Common causes**:

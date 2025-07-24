@@ -34,7 +34,6 @@ interface EnvVars {
   BOT_PORT?: number;
   WEB_URL?: string;
   API_URL?: string;
-  DISCORD_REDIRECT_URI?: string;
   NEXT_PUBLIC_API_URL?: string;
   WORKTREE_ID?: string;
   DEV_GUILD_ID?: string;
@@ -65,7 +64,6 @@ interface PortConfig {
   BOT_PORT: number;
   WEB_URL: string;
   API_URL: string;
-  DISCORD_REDIRECT_URI: string;
   NEXT_PUBLIC_API_URL: string;
   REDIS_URL: string;
   WORKTREE_ID: string;
@@ -452,7 +450,6 @@ async function calculatePorts(envVars: EnvVars): Promise<PortConfig> {
     BOT_PORT: botPort,
     WEB_URL: `http://localhost:${webPort}`,
     API_URL: `http://localhost:${apiPort}`,
-    DISCORD_REDIRECT_URI: `http://localhost:${apiPort}/auth/callback/discord`,
     NEXT_PUBLIC_API_URL: `http://localhost:${apiPort}`,
     REDIS_URL: `redis://localhost:${redisPort}`,
     WORKTREE_ID: getWorktreeId(),
@@ -559,7 +556,6 @@ REDIS_PORT="${vars.REDIS_PORT || "6379"}"`);
     authSection.push(`DISCORD_CLIENT_ID="${vars.DISCORD_CLIENT_ID}"
 DISCORD_CLIENT_SECRET="${vars.DISCORD_CLIENT_SECRET || ""}"
 DISCORD_TOKEN="${vars.DISCORD_TOKEN || ""}"
-DISCORD_REDIRECT_URI="${vars.DISCORD_REDIRECT_URI}"
 NEXT_PUBLIC_GUILD_ID="${vars.NEXT_PUBLIC_GUILD_ID || ""}"`);
   }
 

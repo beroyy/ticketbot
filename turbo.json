@@ -21,7 +21,6 @@
         "DISCORD_CLIENT_ID",
         "DISCORD_CLIENT_SECRET",
         "DISCORD_TOKEN",
-        "DISCORD_REDIRECT_URI",
         "WEB_URL",
         "API_URL",
         "WEB_PORT",

@@ -59,7 +59,6 @@ WEB_URL=http://localhost:9000
 # Discord OAuth
 DISCORD_CLIENT_ID=your-client-id
 DISCORD_CLIENT_SECRET=your-client-secret
-DISCORD_REDIRECT_URI=http://localhost:9001/auth/callback/discord
 
 # Optional
 REDIS_URL=redis://localhost:6379

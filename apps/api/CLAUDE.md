@@ -258,7 +258,6 @@ await withTransaction(async () => {
 
 - `DISCORD_CLIENT_ID` - Discord application client ID
 - `DISCORD_CLIENT_SECRET` - Discord application secret
-- `DISCORD_REDIRECT_URI` - OAuth callback URL
 
 ### Optional
 

@@ -109,9 +109,6 @@ WEB_PORT                   # PORT_OFFSET (default: 3000)
 API_PORT                   # PORT_OFFSET + 1 (default: 3001)
 BOT_PORT                   # PORT_OFFSET + 2 (default: 3002)
 
-# Discord OAuth (derived from API_URL)
-DISCORD_REDIRECT_URI       # {API_URL}/auth/callback/discord
-
 # Smart Defaults (based on NODE_ENV)
 LOG_LEVEL                  # debug in dev, warn in prod
 LOG_REQUESTS               # true in dev, false in prod

@@ -75,7 +75,7 @@ app.route("/user", user);
 app.route("/health", healthRoutes);
 app.route("/schemas", schemas);
 
-const port = env.API_PORT;
+const port = process.env.PORT ? parseInt(process.env.PORT) : env.API_PORT;
 const host = env.API_HOST;
 
 // Initialize Redis

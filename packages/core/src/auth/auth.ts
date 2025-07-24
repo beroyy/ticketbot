@@ -193,12 +193,22 @@ const createAuthInstance = () => {
     },
   },
   socialProviders: {
-    discord: {
-      clientId: process.env.DISCORD_CLIENT_ID || "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
+    discord: (() => {
+      const discordConfig = {
+        clientId: process.env.DISCORD_CLIENT_ID || "",
+        clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
         redirectURI: `${apiOrigin}/auth/callback/discord`,
-      scope: ["identify", "guilds"],
-    },
+        scope: ["identify", "guilds"], // Note: Better Auth may add 'email' scope automatically
+      };
+      
+      logger.info("Discord OAuth Configuration:", {
+        clientId: discordConfig.clientId,
+        redirectURI: discordConfig.redirectURI,
+        scope: discordConfig.scope,
+      });
+      
+      return discordConfig;
+    })(),
   },
   user: {
     additionalFields: {
@@ -284,6 +294,26 @@ const createAuthInstance = () => {
     after: createAuthMiddleware(async (ctx) => {
       // Log all hooks for debugging
       logger.debug("Auth Hook - Path:", ctx.path);
+      
+      // Log OAuth redirects
+      if (ctx.path && ctx.path.includes("/sign-in/social") && ctx.response) {
+        const location = ctx.response.headers.get("location");
+        if (location) {
+          logger.info("OAuth Redirect URL:", location);
+          
+          // Parse and log the redirect URL components
+          try {
+            const url = new URL(location);
+            logger.info("OAuth URL Components:", {
+              host: url.host,
+              pathname: url.pathname,
+              searchParams: Object.fromEntries(url.searchParams),
+            });
+          } catch (e) {
+            logger.error("Failed to parse OAuth URL:", e);
+          }
+        }
+      }
 
       // Handle Discord OAuth callback
       if (ctx.path && ctx.path.includes("/callback/discord")) {

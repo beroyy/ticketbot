@@ -1,29 +1,47 @@
 /**
  * Environment variable transformers
  * 
- * These functions derive complete environment configurations from minimal inputs,
- * reducing the number of environment variables that need to be explicitly set.
+ * Simplified transformers that provide smart defaults without complex derivation.
+ * URLs must be explicitly provided for multi-platform deployments.
  */
 
 import type { NodeEnv } from "./schemas/env";
 
 /**
- * Base environment configuration with only required values
+ * Environment configuration
  */
-export interface BaseEnvConfig {
+export interface EnvConfig {
+  // Core (required)
   NODE_ENV: NodeEnv;
   DATABASE_URL: string;
   BETTER_AUTH_SECRET: string;
   
-  // Discord
+  // Discord (required)
   DISCORD_TOKEN: string;
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   
-  // Optional base configuration
-  BASE_DOMAIN?: string;
-  PORT_OFFSET?: number;
+  // URLs (required)
+  WEB_URL: string;
+  API_URL: string;
+  NEXT_PUBLIC_API_URL: string;
+  
+  // Redis (optional)
   REDIS_URL?: string;
+  
+  // Ports (optional - have defaults)
+  WEB_PORT?: string | number;
+  API_PORT?: string | number;
+  BOT_PORT?: string | number;
+  
+  // Logging (optional - smart defaults based on NODE_ENV)
+  LOG_LEVEL?: string;
+  LOG_REQUESTS?: string | boolean;
+  
+  // Additional configuration (optional)
+  ALLOWED_ORIGINS?: string;
+  COOKIE_DOMAIN?: string;
+  RATE_LIMIT_ENABLED?: string | boolean;
   
   // Feature flags
   NEXT_PUBLIC_FEATURE_NEW_TICKET_UI?: boolean;
@@ -36,52 +54,6 @@ export interface BaseEnvConfig {
   DEV_GUILD_ID?: string;
   DEV_DB_AUTO_SEED?: boolean;
   
-  // Optional overrides (if provided, skip derivation)
-  WEB_URL?: string;
-  API_URL?: string;
-  WEB_PORT?: string | number;
-  API_PORT?: string | number;
-  BOT_PORT?: string | number;
-  DISCORD_REDIRECT_URI?: string;
-  LOG_LEVEL?: string;
-  LOG_REQUESTS?: string | boolean;
-  COOKIE_DOMAIN?: string;
-  RATE_LIMIT_ENABLED?: string | boolean;
-}
-
-/**
- * Complete environment configuration with all derived values
- */
-export interface CompleteEnvConfig extends Required<Omit<BaseEnvConfig, 'REDIS_URL' | 'DEV_PERMISSIONS_HEX' | 'DEV_GUILD_ID' | 'DEV_DB_AUTO_SEED' | 'NEXT_PUBLIC_GUILD_ID' | 'RATE_LIMIT_ENABLED' | 'COOKIE_DOMAIN'>> {
-  // URLs are always strings
-  WEB_URL: string;
-  API_URL: string;
-  NEXT_PUBLIC_API_URL: string;
-  DISCORD_REDIRECT_URI: string;
-  
-  // Ports are always numbers
-  WEB_PORT: number;
-  API_PORT: number;
-  BOT_PORT: number;
-  
-  // Optional fields remain optional
-  REDIS_URL?: string;
-  COOKIE_DOMAIN?: string;
-  LOG_LEVEL: string;
-  LOG_REQUESTS: boolean;
-  RATE_LIMIT_ENABLED?: boolean;
-  
-  // Feature flags
-  NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: boolean;
-  NEXT_PUBLIC_FEATURE_BULK_ACTIONS: boolean;
-  NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: boolean;
-  
-  // Development
-  DEV_PERMISSIONS_HEX?: string;
-  DEV_GUILD_ID?: string;
-  DEV_DB_AUTO_SEED?: boolean;
-  NEXT_PUBLIC_GUILD_ID?: string;
-  
   // Runtime helpers
   RUNNING_IN_DOCKER?: string;
   API_HOST?: string;
@@ -89,6 +61,35 @@ export interface CompleteEnvConfig extends Required<Omit<BaseEnvConfig, 'REDIS_U
   
   // Legacy support (will be removed)
   TURBO_ENV?: "dev" | "staging" | "prod";
+}
+
+/**
+ * Complete environment configuration with all values resolved
+ */
+export interface CompleteEnvConfig extends Required<Omit<EnvConfig, 'REDIS_URL' | 'DEV_PERMISSIONS_HEX' | 'DEV_GUILD_ID' | 'DEV_DB_AUTO_SEED' | 'NEXT_PUBLIC_GUILD_ID' | 'RATE_LIMIT_ENABLED' | 'COOKIE_DOMAIN' | 'ALLOWED_ORIGINS' | 'RUNNING_IN_DOCKER' | 'API_HOST' | 'API_SECRET'>> {
+  // Ports are always numbers
+  WEB_PORT: number;
+  API_PORT: number;
+  BOT_PORT: number;
+  
+  // Booleans are resolved
+  LOG_REQUESTS: boolean;
+  NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: boolean;
+  NEXT_PUBLIC_FEATURE_BULK_ACTIONS: boolean;
+  NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: boolean;
+  
+  // Optional fields remain optional
+  REDIS_URL?: string;
+  COOKIE_DOMAIN?: string;
+  RATE_LIMIT_ENABLED?: boolean;
+  ALLOWED_ORIGINS?: string;
+  DEV_PERMISSIONS_HEX?: string;
+  DEV_GUILD_ID?: string;
+  DEV_DB_AUTO_SEED?: boolean;
+  NEXT_PUBLIC_GUILD_ID?: string;
+  RUNNING_IN_DOCKER?: string;
+  API_HOST?: string;
+  API_SECRET?: string;
 }
 
 /**
@@ -120,96 +121,69 @@ const deriveTurboEnv = (nodeEnv: NodeEnv): "dev" | "staging" | "prod" => {
 };
 
 /**
- * Derive complete environment configuration from minimal inputs
+ * Transform environment configuration with smart defaults
  */
-export function deriveEnvironment(base: BaseEnvConfig): CompleteEnvConfig {
-  const isDev = isDevelopment(base.NODE_ENV);
-  const isProd = isProduction(base.NODE_ENV);
-  const portOffset = Number(base.PORT_OFFSET) || 3000;
-  
-  // Derive base URLs
-  const webUrl = base.WEB_URL || (
-    isDev 
-      ? `http://localhost:${portOffset}` 
-      : `https://${base.BASE_DOMAIN || 'ticketsbot.dev'}`
-  );
-  
-  const apiUrl = base.API_URL || (
-    isDev 
-      ? `http://localhost:${portOffset + 1}` 
-      : `https://${base.BASE_DOMAIN || 'ticketsbot.dev'}`
-  );
-  
-  // Ensure ports are numbers
-  const webPort = Number(base.WEB_PORT) || portOffset;
-  const apiPort = Number(base.API_PORT) || (portOffset + 1);
-  const botPort = Number(base.BOT_PORT) || (portOffset + 2);
+export function transformEnv(env: EnvConfig): CompleteEnvConfig {
+  const isDev = isDevelopment(env.NODE_ENV);
+  const isProd = isProduction(env.NODE_ENV);
   
   // Parse boolean values
-  const logRequests = base.LOG_REQUESTS === undefined 
+  const logRequests = env.LOG_REQUESTS === undefined 
     ? !isProd 
-    : (typeof base.LOG_REQUESTS === 'boolean' ? base.LOG_REQUESTS : base.LOG_REQUESTS === 'true');
+    : (typeof env.LOG_REQUESTS === 'boolean' ? env.LOG_REQUESTS : env.LOG_REQUESTS === 'true');
     
-  const rateLimitEnabled = base.RATE_LIMIT_ENABLED === undefined
+  const rateLimitEnabled = env.RATE_LIMIT_ENABLED === undefined
     ? isProd
-    : (typeof base.RATE_LIMIT_ENABLED === 'boolean' ? base.RATE_LIMIT_ENABLED : base.RATE_LIMIT_ENABLED === 'true');
+    : (typeof env.RATE_LIMIT_ENABLED === 'boolean' ? env.RATE_LIMIT_ENABLED : env.RATE_LIMIT_ENABLED === 'true');
   
   return {
     // Pass through required values
-    NODE_ENV: base.NODE_ENV,
-    DATABASE_URL: base.DATABASE_URL,
-    BETTER_AUTH_SECRET: base.BETTER_AUTH_SECRET,
-    DISCORD_TOKEN: base.DISCORD_TOKEN,
-    DISCORD_CLIENT_ID: base.DISCORD_CLIENT_ID,
-    DISCORD_CLIENT_SECRET: base.DISCORD_CLIENT_SECRET,
+    NODE_ENV: env.NODE_ENV,
+    DATABASE_URL: env.DATABASE_URL,
+    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+    DISCORD_TOKEN: env.DISCORD_TOKEN,
+    DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
+    DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET,
     
-    // Derive URLs
-    WEB_URL: webUrl,
-    API_URL: apiUrl,
-    NEXT_PUBLIC_API_URL: apiUrl, // Always matches API_URL
+    // Pass through required URLs
+    WEB_URL: env.WEB_URL,
+    API_URL: env.API_URL,
+    NEXT_PUBLIC_API_URL: env.NEXT_PUBLIC_API_URL,
     
-    // Derive ports
-    WEB_PORT: webPort,
-    API_PORT: apiPort,
-    BOT_PORT: botPort,
-    
-    // Derive Discord redirect
-    DISCORD_REDIRECT_URI: base.DISCORD_REDIRECT_URI || `${apiUrl}/auth/callback/discord`,
+    // Use explicit ports or defaults
+    WEB_PORT: Number(env.WEB_PORT) || 3000,
+    API_PORT: Number(env.API_PORT) || 3001,
+    BOT_PORT: Number(env.BOT_PORT) || 3002,
     
     // Smart defaults based on environment
-    LOG_LEVEL: base.LOG_LEVEL || (isDev ? "debug" : "warn"),
+    LOG_LEVEL: env.LOG_LEVEL || (isDev ? "debug" : "warn"),
     LOG_REQUESTS: logRequests,
-    COOKIE_DOMAIN: base.COOKIE_DOMAIN || (isProd && base.BASE_DOMAIN ? `.${base.BASE_DOMAIN}` : undefined),
-    RATE_LIMIT_ENABLED: rateLimitEnabled,
     
     // Optional pass-throughs
-    BASE_DOMAIN: base.BASE_DOMAIN || 'ticketsbot.dev',
-    PORT_OFFSET: portOffset,
-    REDIS_URL: base.REDIS_URL,
+    REDIS_URL: env.REDIS_URL,
+    COOKIE_DOMAIN: env.COOKIE_DOMAIN,
+    RATE_LIMIT_ENABLED: rateLimitEnabled,
+    ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,
     
-    // Feature flags (pass through as-is)
-    NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: base.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI ?? false,
-    NEXT_PUBLIC_FEATURE_BULK_ACTIONS: base.NEXT_PUBLIC_FEATURE_BULK_ACTIONS ?? false,
-    NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: base.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS ?? false,
-    NEXT_PUBLIC_GUILD_ID: base.NEXT_PUBLIC_GUILD_ID,
+    // Feature flags (default to false)
+    NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI ?? false,
+    NEXT_PUBLIC_FEATURE_BULK_ACTIONS: env.NEXT_PUBLIC_FEATURE_BULK_ACTIONS ?? false,
+    NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: env.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS ?? false,
+    NEXT_PUBLIC_GUILD_ID: env.NEXT_PUBLIC_GUILD_ID,
     
     // Development helpers
-    DEV_PERMISSIONS_HEX: base.DEV_PERMISSIONS_HEX,
-    DEV_GUILD_ID: base.DEV_GUILD_ID,
-    DEV_DB_AUTO_SEED: base.DEV_DB_AUTO_SEED,
+    DEV_PERMISSIONS_HEX: env.DEV_PERMISSIONS_HEX,
+    DEV_GUILD_ID: env.DEV_GUILD_ID,
+    DEV_DB_AUTO_SEED: env.DEV_DB_AUTO_SEED,
+    
+    // Runtime helpers
+    RUNNING_IN_DOCKER: env.RUNNING_IN_DOCKER,
+    API_HOST: env.API_HOST,
+    API_SECRET: env.API_SECRET,
     
     // Legacy support
-    TURBO_ENV: deriveTurboEnv(base.NODE_ENV),
+    TURBO_ENV: deriveTurboEnv(env.NODE_ENV),
   };
-}
-
-/**
- * Transform schema output to complete configuration
- */
-export function transformEnv<T extends BaseEnvConfig>(
-  parsedEnv: T
-): CompleteEnvConfig {
-  return deriveEnvironment(parsedEnv);
 }
 
 /**
@@ -217,26 +191,26 @@ export function transformEnv<T extends BaseEnvConfig>(
  */
 export function getEnvironmentSummary(env: CompleteEnvConfig): string {
   return `
-📊 Environment Configuration:
-   Environment: ${env.NODE_ENV}
-   Base Domain: ${env.BASE_DOMAIN}
-   
-   🌐 URLs:
-   Web: ${env.WEB_URL} (port ${env.WEB_PORT})
-   API: ${env.API_URL} (port ${env.API_PORT})
-   Bot: Port ${env.BOT_PORT}
-   
-   🗄️  Services:
-   Database: Connected
-   Redis: ${env.REDIS_URL ? 'Connected' : 'Not configured'}
-   
-   🔐 Auth:
-   Discord OAuth: Configured
-   Redirect URI: ${env.DISCORD_REDIRECT_URI}
-   
-   🚀 Features:
-   New Ticket UI: ${env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI}
-   Bulk Actions: ${env.NEXT_PUBLIC_FEATURE_BULK_ACTIONS}
-   Advanced Forms: ${env.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS}
-`;
+Environment: ${env.NODE_ENV}
+URLs:
+  - Web: ${env.WEB_URL}
+  - API: ${env.API_URL}
+Ports:
+  - Web: ${env.WEB_PORT}
+  - API: ${env.API_PORT}
+  - Bot: ${env.BOT_PORT}
+Services:
+  - Redis: ${env.REDIS_URL ? 'Connected' : 'Not configured'}
+`.trim();
 }
+
+/**
+ * Helper functions for environment checks
+ */
+export const isDevEnvironment = () => process.env.NODE_ENV === 'development';
+export const isProdEnvironment = () => process.env.NODE_ENV === 'production';
+export const isTestEnvironment = () => process.env.NODE_ENV === 'test';
+
+// For backward compatibility
+export { transformEnv as deriveEnvironment };
+export type { EnvConfig as BaseEnvConfig };

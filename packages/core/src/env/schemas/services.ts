@@ -20,9 +20,6 @@ export const DiscordEnvSchema = z.object({
     .min(32)
     .regex(/^[A-Za-z0-9_-]+$/, "Invalid Discord client secret format"),
 
-  // OAuth redirect
-  DISCORD_REDIRECT_URI: z.url().optional(),
-
   // Bot settings
   DISCORD_BOT_PREFIX: z.string().max(5).default("!").optional(),
   DISCORD_BOT_STATUS: z.string().max(128).optional(),

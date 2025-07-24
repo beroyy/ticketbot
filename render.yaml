@@ -22,24 +22,10 @@ services:
 envVarGroups:
   - name: ticketsbot-env
     envVars:
-      - key: API_PORT
-        value: "3001"
-      - key: BOT_PORT
-        value: "3002"
-      - key: BASE_DOMAIN
-        value: "ticketsbot.dev"
-      - key: WEB_URL
-        value: "https://ticketbot-p818hk7he-brody-scotts-projects.vercel.app/"
-      - key: API_URL
-        value: "https://ticketbot-5t9c.onrender.com"
-      - key: DISCORD_REDIRECT_URI
-        value: "https://ticketbot-5t9c.onrender.com/auth/callback/discord"
-
+      # Core secrets (fill these in Render dashboard)
       - key: DATABASE_URL
         value: ""
-      - key: DIRECT_URL
-        value: ""
-      - key: REDIS_URL
+      - key: BETTER_AUTH_SECRET
         value: ""
       - key: DISCORD_TOKEN
         value: ""
@@ -47,5 +33,13 @@ envVarGroups:
         value: ""
       - key: DISCORD_CLIENT_SECRET
         value: ""
-      - key: BETTER_AUTH_SECRET
+      
+      # Service URLs (update these with your actual URLs)
+      - key: WEB_URL
+        value: "https://your-app.vercel.app"
+      - key: API_URL
+        value: "https://your-app.onrender.com"
+      
+      # Optional services
+      - key: REDIS_URL
         value: ""

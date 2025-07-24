@@ -41,9 +41,6 @@ export const DatabaseEnvSchema = z.object({
   // Primary database
   DATABASE_URL: PostgresUrlSchema,
 
-  // Optional direct connection (for migrations)
-  DIRECT_URL: PostgresUrlSchema.optional(),
-
   // Redis for caching/sessions
   REDIS_URL: RedisUrlSchema.optional(),
 

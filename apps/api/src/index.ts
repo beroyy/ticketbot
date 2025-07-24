@@ -38,7 +38,8 @@ app.onError(errorHandler);
 
 const webUrl = env.WEB_URL;
 
-const allowedOrigins = [webUrl];
+const additionalOrigins = env.ALLOWED_ORIGINS?.split(",").map((origin) => origin.trim()) || [];
+const allowedOrigins = [webUrl, ...additionalOrigins].filter(Boolean);
 
 logger.debug("🔒 CORS Configuration:", {
   allowedOrigins,
@@ -79,11 +80,13 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : env.API_PORT;
 const host = env.API_HOST;
 
 // Initialize Redis
-Redis.initialize().then(() => {
-  logger.info("✅ Redis initialized (if configured)");
-}).catch((error: unknown) => {
-  logger.warn("⚠️ Redis initialization failed:", error);
-});
+Redis.initialize()
+  .then(() => {
+    logger.info("✅ Redis initialized (if configured)");
+  })
+  .catch((error: unknown) => {
+    logger.warn("⚠️ Redis initialization failed:", error);
+  });
 
 logger.info(`🚀 API server listening on ${host}:${port} (${env.NODE_ENV})`);
 

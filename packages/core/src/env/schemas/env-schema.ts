@@ -29,9 +29,10 @@ export const EnvSchema = z.object({
     .min(32)
     .regex(/^[A-Za-z0-9_-]+$/, "Invalid Discord client secret format"),
   
-  // Base configuration (optional with smart defaults)
-  BASE_DOMAIN: z.string().optional(),
-  PORT_OFFSET: z.coerce.number().positive().default(3000).optional(),
+  // URLs (required in production)
+  WEB_URL: z.string().url(),
+  API_URL: z.string().url(),
+  NEXT_PUBLIC_API_URL: z.string().url(),
   
   // Redis (optional)
   REDIS_URL: RedisUrlSchema.optional(),
@@ -50,31 +51,20 @@ export const EnvSchema = z.object({
   DEV_GUILD_ID: z.string().regex(/^\d{17,20}$/, "Must be a valid Discord guild ID").optional(),
   DEV_DB_AUTO_SEED: z.stringbool().optional(),
   
-  // Optional overrides (if you need to override derived values)
-  WEB_URL: z.string().url().optional(),
-  API_URL: z.string().url().optional(),
-  WEB_PORT: z.coerce.number().positive().optional(),
-  API_PORT: z.coerce.number().positive().optional(),
-  BOT_PORT: z.coerce.number().positive().optional(),
-  DISCORD_REDIRECT_URI: z.string().url().optional(),
+  // Ports (optional - have defaults)
+  WEB_PORT: z.coerce.number().positive().default(3000).optional(),
+  API_PORT: z.coerce.number().positive().default(3001).optional(),
+  BOT_PORT: z.coerce.number().positive().default(3002).optional(),
+  
+  // Logging (optional - smart defaults based on NODE_ENV)
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).optional(),
   LOG_REQUESTS: z.stringbool().optional(),
-  COOKIE_DOMAIN: z.string().optional(),
+  
+  // Additional configuration (optional)
+  ALLOWED_ORIGINS: z.string().optional(), // Comma-separated list
+  COOKIE_DOMAIN: z.string().optional(), // Only useful for subdomains
   RATE_LIMIT_ENABLED: z.stringbool().optional(),
-}).refine(
-  (data) => {
-    // In production, BASE_DOMAIN is required unless URLs are explicitly provided
-    if (data.NODE_ENV === "production" && !data.BASE_DOMAIN) {
-      if (!data.WEB_URL || !data.API_URL) {
-        return false;
-      }
-    }
-    return true;
-  },
-  {
-    message: "BASE_DOMAIN is required in production unless WEB_URL and API_URL are explicitly provided",
-  }
-);
+});
 
 export type Env = z.infer<typeof EnvSchema>;
 

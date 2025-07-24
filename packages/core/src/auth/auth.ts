@@ -183,7 +183,7 @@ export const auth = betterAuth({
     discord: {
       clientId: getEnvVar("DISCORD_CLIENT_ID", ""),
       clientSecret: getEnvVar("DISCORD_CLIENT_SECRET", ""),
-      redirectURI: getEnvVar("DISCORD_REDIRECT_URI", "http://localhost:9001/auth/callback/discord"),
+      redirectURI: `${apiOrigin}/auth/callback/discord`,
       scope: ["identify", "guilds"],
     },
   },

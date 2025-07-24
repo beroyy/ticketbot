@@ -45,10 +45,15 @@ type SessionData = {
   };
 };
 
+// Helper function to get environment variables with fallbacks
+function getEnvVar(key: string, fallback?: string): string {
+  return process.env[key] || fallback || "";
+}
+
 // Lazy initialization of origins to ensure environment variables are loaded
 const getOrigins = () => {
-  const webOrigin = process.env.WEB_URL || "http://localhost:10000";
-  const apiOrigin = process.env.API_URL || "http://localhost:10001";
+  const webOrigin = getEnvVar("WEB_URL", "http://localhost:4000");
+  const apiOrigin = getEnvVar("API_URL", "http://localhost:4001");
   
   // Log only once when first accessed
   if (!getOrigins.logged) {
@@ -117,10 +122,21 @@ if (Redis.isAvailable()) {
   };
 }
 
-// Validate auth secret
-const authSecret = process.env.BETTER_AUTH_SECRET;
+// Validate required environment variables
+const authSecret = getEnvVar("BETTER_AUTH_SECRET");
 if (!authSecret) {
   logger.error("BETTER_AUTH_SECRET is not set! Sessions will not work properly.");
+}
+
+// Validate Discord credentials
+const discordClientId = getEnvVar("DISCORD_CLIENT_ID");
+const discordClientSecret = getEnvVar("DISCORD_CLIENT_SECRET");
+
+if (!discordClientId || !discordClientSecret) {
+  logger.warn("Discord OAuth credentials not set. OAuth login will not work.", {
+    clientIdSet: !!discordClientId,
+    clientSecretSet: !!discordClientSecret,
+  });
 }
 
 // Create auth directly without wrapper function
@@ -138,6 +154,13 @@ interface AuthInstance {
 // Create auth with lazy-loaded configuration
 const createAuthInstance = () => {
   const { webOrigin, apiOrigin } = getOrigins();
+  
+  logger.debug("Creating Better Auth instance", {
+    baseURL: apiOrigin,
+    basePath: "/auth",
+    discordConfigured: !!discordClientId && !!discordClientSecret,
+    redirectURI: `${apiOrigin}/auth/callback/discord`,
+  });
   
   return betterAuth({
     database: prismaAdapter(prisma, {
@@ -194,8 +217,10 @@ const createAuthInstance = () => {
   },
   socialProviders: {
     discord: {
-      clientId: process.env.DISCORD_CLIENT_ID || "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
+      clientId: discordClientId,
+      clientSecret: discordClientSecret,
+      redirectURI: `${apiOrigin}/auth/callback/discord`,
+      scope: ["identify", "guilds"],
     },
   },
   user: {
@@ -282,6 +307,14 @@ const createAuthInstance = () => {
     after: createAuthMiddleware(async (ctx) => {
       // Log all hooks for debugging
       logger.debug("Auth Hook - Path:", ctx.path);
+      
+      // Log OAuth sign-in attempts
+      if (ctx.path && ctx.path.includes("/sign-in/social")) {
+        logger.info("OAuth sign-in request detected", {
+          path: ctx.path,
+          method: ctx.method,
+        });
+      }
       
       // Log OAuth sign-in attempts
       if (ctx.path && ctx.path.includes("/sign-in/social")) {

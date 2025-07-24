@@ -54,7 +54,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     try {
       await signIn.social({
         provider: "discord",
-        callbackURL: typeof window !== "undefined" ? window.location.href : undefined,
       });
     } catch (error) {
       console.error("Error connecting Discord:", error);

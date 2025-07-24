@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
-import { signIn } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -52,7 +52,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   handleConnectDiscord = async () => {
     try {
-      await signIn.social({
+      await authClient.signIn.social({
         provider: "discord",
       });
     } catch (error) {

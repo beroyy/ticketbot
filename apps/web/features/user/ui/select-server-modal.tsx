@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/modal";
 import { apiClient } from "@/lib/api";
-import { signIn } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 
 interface Guild {
   id: string;
@@ -110,7 +110,7 @@ export function SelectServerModal({ isOpen, onGuildSelect }: SelectServerModalPr
 
   const handleConnectDiscord = async () => {
     try {
-      await signIn.social({
+      await authClient.signIn.social({
         provider: "discord",
       });
     } catch (error) {

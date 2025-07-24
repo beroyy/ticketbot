@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import { useSession } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 
 interface PreferenceResponse {
   value: any;
@@ -12,7 +12,7 @@ interface SetPreferenceData {
 }
 
 export function useUserPreference<T = any>(key: string, defaultValue?: T) {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const queryClient = useQueryClient();
 
   // Query for getting preference

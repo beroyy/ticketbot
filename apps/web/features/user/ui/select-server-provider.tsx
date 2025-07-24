@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { useSession } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 import { SelectServerModal } from "./select-server-modal";
 import { useUserPreference } from "@/hooks/use-user-preference";
 
@@ -24,7 +24,7 @@ interface SelectServerProviderProps {
 }
 
 export function SelectServerProvider({ children }: SelectServerProviderProps) {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = authClient.useSession();
   const [selectedGuildId, setSelectedGuildIdState] = useState<string | null>(null);
   const [showSelectServerModal, setShowSelectServerModal] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);

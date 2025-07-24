@@ -1,11 +1,11 @@
-import { useSession } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 
 /**
  * Custom hook to get the current user's Discord ID
  * Returns null if not available
  */
 export function useDiscordId(): string | null {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const user = session?.user as { discordUserId?: string | null } | undefined;
   return user?.discordUserId ?? null;
 }
@@ -14,7 +14,7 @@ export function useDiscordId(): string | null {
  * Custom hook to get all user data from the session
  */
 export function useUserData() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const user = session?.user as { discordUserId?: string | null } | undefined;
 
   return {

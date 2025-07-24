@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { signIn } from "@ticketsbot/core/auth/client";
+import { authClient } from "@/lib/auth-client";
 import { AlertTriangle, RefreshCw, Zap } from "lucide-react";
 
 interface ErrorStateProps {
@@ -25,7 +25,7 @@ export function DiscordConnectionError({
 }: DiscordConnectionErrorProps) {
   const handleConnectDiscord = async () => {
     try {
-      await signIn.social({
+      await authClient.signIn.social({
         provider: "discord",
       });
     } catch (error) {

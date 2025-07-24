@@ -39,6 +39,10 @@ envVarGroups:
         value: "https://your-app.vercel.app"
       - key: API_URL
         value: "https://your-app.onrender.com"
+      
+      # CORS configuration
+      - key: ALLOWED_ORIGINS
+        value: "https://your-app.vercel.app"
 
       # Optional services
       - key: REDIS_URL

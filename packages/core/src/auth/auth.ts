@@ -45,16 +45,25 @@ type SessionData = {
   };
 };
 
-// Get origins from environment variables
-const webOrigin = process.env.WEB_URL || "http://localhost:10000";
-const apiOrigin = process.env.API_URL || "http://localhost:10001";
-
-logger.info("Auth trusted origins:", { 
-  webOrigin, 
-  apiOrigin,
-  envWebUrl: process.env.WEB_URL,
-  envApiUrl: process.env.API_URL,
-});
+// Lazy initialization of origins to ensure environment variables are loaded
+const getOrigins = () => {
+  const webOrigin = process.env.WEB_URL || "http://localhost:10000";
+  const apiOrigin = process.env.API_URL || "http://localhost:10001";
+  
+  // Log only once when first accessed
+  if (!getOrigins.logged) {
+    logger.info("Auth trusted origins:", {
+      webOrigin,
+      apiOrigin,
+      envWebUrl: process.env.WEB_URL,
+      envApiUrl: process.env.API_URL,
+    });
+    getOrigins.logged = true;
+  }
+  
+  return { webOrigin, apiOrigin };
+};
+getOrigins.logged = false;
 
 // Set up Redis secondary storage if available
 let secondaryStorage:
@@ -126,43 +135,47 @@ interface AuthInstance {
   [key: string]: unknown;
 }
 
-export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
-    provider: "postgresql",
-  }),
-  secret: authSecret,
-  ...(secondaryStorage && { secondaryStorage }),
-  session: {
-    storeSessionInDatabase: true, // Store in DB for audit trail
-    cookieCache: {
-      enabled: true, // Always use cookie cache for better performance
-      maxAge: parseInt(process.env["COOKIE_CACHE_MAX_AGE"] || "300"), // Default: 5 minutes
+// Create auth with lazy-loaded configuration
+const createAuthInstance = () => {
+  const { webOrigin, apiOrigin } = getOrigins();
+  
+  return betterAuth({
+    database: prismaAdapter(prisma, {
+      provider: "postgresql",
+    }),
+    secret: authSecret,
+    ...(secondaryStorage && { secondaryStorage }),
+    session: {
+      storeSessionInDatabase: true, // Store in DB for audit trail
+      cookieCache: {
+        enabled: true, // Always use cookie cache for better performance
+        maxAge: parseInt(process.env["COOKIE_CACHE_MAX_AGE"] || "300"), // Default: 5 minutes
+      },
+      expiresIn: 60 * 60 * 24 * 7, // 7 days session expiry
     },
-    expiresIn: 60 * 60 * 24 * 7, // 7 days session expiry
-  },
-  rateLimit: {
-    enabled:
-      process.env["NODE_ENV"] === "production" || process.env["RATE_LIMIT_ENABLED"] === "true",
-    window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"), // Default: 1 minute
-    max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"), // Default: 100 requests
-    storage: Redis.isAvailable() ? "secondary-storage" : "memory", // Use secondary storage if Redis available
-    customRules: {
-      // Strict limits for authentication endpoints
-      "/auth/signin": { window: 300, max: 5 }, // 5 attempts per 5 minutes
-      "/auth/signup": { window: 300, max: 3 }, // 3 signups per 5 minutes
-      "/auth/callback/*": { window: 60, max: 10 }, // 10 OAuth callbacks per minute
+    rateLimit: {
+      enabled:
+        process.env["NODE_ENV"] === "production" || process.env["RATE_LIMIT_ENABLED"] === "true",
+      window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"), // Default: 1 minute
+      max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"), // Default: 100 requests
+      storage: Redis.isAvailable() ? "secondary-storage" : "memory", // Use secondary storage if Redis available
+      customRules: {
+        // Strict limits for authentication endpoints
+        "/auth/signin": { window: 300, max: 5 }, // 5 attempts per 5 minutes
+        "/auth/signup": { window: 300, max: 3 }, // 3 signups per 5 minutes
+        "/auth/callback/*": { window: 60, max: 10 }, // 10 OAuth callbacks per minute
 
-      // Password reset and sensitive operations
-      "/auth/forgot-password": { window: 900, max: 3 }, // 3 attempts per 15 minutes
-      "/auth/reset-password": { window: 300, max: 5 }, // 5 attempts per 5 minutes
+        // Password reset and sensitive operations
+        "/auth/forgot-password": { window: 900, max: 3 }, // 3 attempts per 15 minutes
+        "/auth/reset-password": { window: 300, max: 5 }, // 5 attempts per 5 minutes
 
-      // Moderate limits for authenticated endpoints
-      "/api/auth/me": { window: 60, max: 30 }, // 30 requests per minute
+        // Moderate limits for authenticated endpoints
+        "/api/auth/me": { window: 60, max: 30 }, // 30 requests per minute
+      },
     },
-  },
-  baseURL: apiOrigin,
-  basePath: "/auth",
-  trustedOrigins: [webOrigin, apiOrigin],
+    baseURL: apiOrigin,
+    basePath: "/auth",
+    trustedOrigins: [webOrigin, apiOrigin],
   advanced: {
     cookiePrefix: "ticketsbot",
     useSecureCookies: process.env["NODE_ENV"] === "production",
@@ -183,7 +196,7 @@ export const auth = betterAuth({
     discord: {
       clientId: process.env.DISCORD_CLIENT_ID || "",
       clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
-      redirectURI: `${apiOrigin}/auth/callback/discord`,
+        redirectURI: `${apiOrigin}/auth/callback/discord`,
       scope: ["identify", "guilds"],
     },
   },
@@ -401,7 +414,20 @@ export const auth = betterAuth({
       }
     }),
   },
-}) as AuthInstance;
+  }) as AuthInstance;
+};
+
+// Create a lazy-loaded auth instance
+let authInstance: AuthInstance | null = null;
+
+export const auth = new Proxy({} as AuthInstance, {
+  get(target, prop) {
+    if (!authInstance) {
+      authInstance = createAuthInstance();
+    }
+    return authInstance[prop as keyof AuthInstance];
+  },
+});
 
 // Re-export getSessionFromContext from services/session
 export { getSessionFromContext } from "./services/session";

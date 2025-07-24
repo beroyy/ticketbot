@@ -7,7 +7,7 @@ const stringbool = () => z.string().transform((val) => val === "true");
 const envSchema = z.object({
   // Core configuration
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(32),
   
   // Discord configuration
@@ -16,9 +16,9 @@ const envSchema = z.object({
   DISCORD_CLIENT_SECRET: z.string().min(1),
   
   // Service URLs (required)
-  WEB_URL: z.string().url(),
-  API_URL: z.string().url(),
-  NEXT_PUBLIC_API_URL: z.string().url().optional(), // For CORS validation
+  WEB_URL: z.url(),
+  API_URL: z.url(),
+  NEXT_PUBLIC_API_URL: z.url().optional(), // For CORS validation
   
   // API specific configuration
   API_HOST: z.string().default("0.0.0.0"),
@@ -29,7 +29,7 @@ const envSchema = z.object({
   WEB_PORT: z.coerce.number().int().positive().default(3000),
   
   // Optional services
-  REDIS_URL: z.string().url().optional(),
+  REDIS_URL: z.url().optional(),
   
   // Logging configuration
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).optional(),

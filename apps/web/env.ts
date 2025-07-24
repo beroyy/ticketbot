@@ -10,29 +10,19 @@ const stringbool = () => z.string().transform((val) => val === "true");
 
 /**
  * Server-side environment schema
- * Uses the standard approach - most values are derived
+ * The web app is a pure frontend and doesn't need database or auth secrets
+ * Only includes variables actually used by the web app
  */
 const serverSchema = z.object({
-  // Core configuration (from env)
+  // Core configuration
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
-  // Derived URLs
-  WEB_URL: z.string().url(),
-  API_URL: z.string().url(),
+  // URLs for server-side API calls (if any)
+  WEB_URL: z.url(),
+  API_URL: z.url(),
   
-  // Derived ports
+  // Port for Next.js server
   WEB_PORT: z.coerce.number().positive(),
-
-  // Database (from env)
-  DATABASE_URL: z.string(),
-
-  // Auth secrets (from env)
-  DISCORD_CLIENT_SECRET: z.string(),
-  BETTER_AUTH_SECRET: z.string().min(32),
-  DISCORD_REDIRECT_URI: z.string().url(),
-
-  // Redis (optional from env)
-  REDIS_URL: z.string().optional(),
   
   // Web-specific (optional)
   NEXT_TELEMETRY_DISABLED: stringbool().optional(),
@@ -44,7 +34,7 @@ const serverSchema = z.object({
  */
 const clientSchema = z.object({
   // Public API URL - should match server API_URL
-  NEXT_PUBLIC_API_URL: z.string().url(),
+  NEXT_PUBLIC_API_URL: z.url(),
 
   // Discord OAuth (optional in client)
   NEXT_PUBLIC_DISCORD_CLIENT_ID: z.string().optional(),
@@ -90,25 +80,18 @@ const validateEnvironment = () => {
     const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
     
     if (isBuildPhase) {
-      // During build, return minimal valid config to allow page data collection
-      // The actual validation will happen at runtime
-      console.warn('Build phase detected - using minimal env validation');
+      // During build, provide defaults for server vars that aren't critical during build
+      console.warn('Build phase detected - using defaults for missing env vars');
       
-      // Return minimal valid values for build phase
       const server: z.infer<typeof serverSchema> = {
         NODE_ENV: process.env.NODE_ENV as any || "production",
         WEB_URL: process.env.WEB_URL || "http://localhost:9000",
         API_URL: process.env.API_URL || "http://localhost:9001", 
         WEB_PORT: Number(process.env.WEB_PORT) || 9000,
-        DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5432/ticketsbot",
-        DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET || "build-phase",
-        BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || "build-phase-secret-minimum-32-characters",
-        DISCORD_REDIRECT_URI: process.env.DISCORD_REDIRECT_URI || "http://localhost:9001/auth/callback/discord",
-        REDIS_URL: process.env.REDIS_URL,
         NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED === 'true' ? true : process.env.NEXT_TELEMETRY_DISABLED === 'false' ? false : undefined,
       };
       
-      // For client schema, provide minimal values during build
+      // For client vars during build, provide defaults
       const clientEnv = {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001",
         NEXT_PUBLIC_DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,

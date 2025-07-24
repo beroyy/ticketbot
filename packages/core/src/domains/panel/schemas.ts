@@ -35,8 +35,8 @@ export const CreatePanelSchema = z.object({
   orderIndex: z.number().int().default(0),
   enabled: z.boolean().default(true),
   permissions: JsonMetadataSchema.optional(),
-  imageUrl: z.string().url("Invalid image URL").nullable().optional(),
-  thumbnailUrl: z.string().url("Invalid thumbnail URL").nullable().optional(),
+  imageUrl: z.url({ error: "Invalid image URL" }).nullable().optional(),
+  thumbnailUrl: z.url({ error: "Invalid thumbnail URL" }).nullable().optional(),
   textSections: JsonMetadataSchema.optional(),
 });
 

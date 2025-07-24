@@ -11,7 +11,7 @@ export const CreateTagSchema = z.object({
     .min(1)
     .max(50)
     .regex(/^[a-zA-Z0-9_-]+$/, {
-      message: "Tag ID must contain only letters, numbers, underscores, and hyphens",
+      error: "Tag ID must contain only letters, numbers, underscores, and hyphens",
     }),
   content: z.string().min(1).max(2000), // Discord message limit
   created_by_id: DiscordUserIdSchema.optional(),

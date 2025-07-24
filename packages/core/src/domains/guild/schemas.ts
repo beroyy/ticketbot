@@ -19,7 +19,7 @@ export const CreateGuildSchema = z.object({
  */
 export const UpdateGuildSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  icon_url: z.string().url().nullable().optional(),
+  icon_url: z.url({ error: "Invalid URL" }).nullable().optional(),
   owner_discord_id: DiscordUserIdSchema.nullable().optional(),
   ticket_category_id: DiscordChannelIdSchema.nullable().optional(),
   transcript_channel_id: DiscordChannelIdSchema.nullable().optional(),
@@ -54,7 +54,7 @@ export const GeneralSettingsSchema = z.object({
     .min(1, "Must allow at least 1 ticket")
     .max(10, "Cannot exceed 10 simultaneous tickets"),
   language: z.enum(["en", "es", "fr"], {
-    message: "Unsupported language",
+    error: "Unsupported language",
   }),
   allowUsersToClose: z.boolean(),
   ticketCloseConfirmation: z.boolean(),

@@ -141,10 +141,10 @@ export const validateFormFieldValue = (
       if (validation.pattern && !new RegExp(validation.pattern).test(stringValue)) {
         throw new Error(validation.errorMessage || "Invalid format");
       }
-      if (fieldType === "EMAIL" && !z.string().email().safeParse(stringValue).success) {
+      if (fieldType === "EMAIL" && !z.email({ error: "Invalid email address" }).safeParse(stringValue).success) {
         throw new Error(validation.errorMessage || "Invalid email address");
       }
-      if (fieldType === "URL" && !z.string().url().safeParse(stringValue).success) {
+      if (fieldType === "URL" && !z.url({ error: "Invalid URL" }).safeParse(stringValue).success) {
         throw new Error(validation.errorMessage || "Invalid URL");
       }
       break;
@@ -192,7 +192,7 @@ export const validateFormFieldValue = (
     case "DATE":
     case "TIME":
     case "DATETIME": {
-      if (!z.string().datetime().safeParse(value).success) {
+      if (!z.iso.datetime({ error: "Invalid date/time format" }).safeParse(value).success) {
         throw new Error(validation.errorMessage || "Invalid date/time format");
       }
       break;

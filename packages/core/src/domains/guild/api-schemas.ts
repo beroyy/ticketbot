@@ -22,7 +22,7 @@ export const UpdateSettingsSchema = z.object({
   footer: z
     .object({
       text: z.string().max(200).nullable().optional(),
-      link: z.string().url().nullable().optional(),
+      link: z.url({ error: "Invalid URL" }).nullable().optional(),
     })
     .optional(),
   colors: z
@@ -44,8 +44,8 @@ export const UpdateSettingsSchema = z.object({
   branding: z
     .object({
       name: z.string().max(100).optional(),
-      logo: z.string().url().nullable().optional(),
-      banner: z.string().url().nullable().optional(),
+      logo: z.url({ error: "Invalid URL" }).nullable().optional(),
+      banner: z.url({ error: "Invalid URL" }).nullable().optional(),
     })
     .optional(),
 });

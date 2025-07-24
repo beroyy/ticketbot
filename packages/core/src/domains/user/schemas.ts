@@ -12,7 +12,7 @@ export const UpsertDiscordUserSchema = z.object({
     .regex(/^[0-9]{4}$/)
     .nullable()
     .optional(),
-  avatar_url: z.string().url().nullish(),
+  avatar_url: z.url({ error: "Invalid URL" }).nullish(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 

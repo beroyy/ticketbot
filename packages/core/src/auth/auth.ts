@@ -177,7 +177,7 @@ const createAuthInstance = () => {
       },
     },
     baseURL: apiOrigin,
-    basePath: "/auth",
+    // basePath: "/auth",
     trustedOrigins: [webOrigin, apiOrigin],
     advanced: {
       cookiePrefix: "ticketsbot",

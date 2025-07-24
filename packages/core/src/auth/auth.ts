@@ -295,24 +295,12 @@ const createAuthInstance = () => {
       // Log all hooks for debugging
       logger.debug("Auth Hook - Path:", ctx.path);
       
-      // Log OAuth redirects
-      if (ctx.path && ctx.path.includes("/sign-in/social") && ctx.response) {
-        const location = ctx.response.headers.get("location");
-        if (location) {
-          logger.info("OAuth Redirect URL:", location);
-          
-          // Parse and log the redirect URL components
-          try {
-            const url = new URL(location);
-            logger.info("OAuth URL Components:", {
-              host: url.host,
-              pathname: url.pathname,
-              searchParams: Object.fromEntries(url.searchParams),
-            });
-          } catch (e) {
-            logger.error("Failed to parse OAuth URL:", e);
-          }
-        }
+      // Log OAuth sign-in attempts
+      if (ctx.path && ctx.path.includes("/sign-in/social")) {
+        logger.info("OAuth sign-in request detected", {
+          path: ctx.path,
+          method: ctx.method,
+        });
       }
 
       // Handle Discord OAuth callback

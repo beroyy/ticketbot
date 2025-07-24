@@ -1,11 +1,5 @@
-import { env, isDocker } from "./env";
+import { env } from "./env";
 import { logger } from "./utils/logger";
-
-if (isDocker()) {
-  logger.debug("🐳 Running in Docker - using environment variables from container");
-} else {
-  logger.debug("✅ Environment variables loaded and validated");
-}
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";

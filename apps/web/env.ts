@@ -3,7 +3,10 @@
  * Provides type-safe, validated environment variables
  */
 
-import { validateEnvFromValues, z } from "@ticketsbot/core/env/client"; // Browser-safe imports only
+import { z } from "zod";
+
+// Custom stringbool type for parsing "true"/"false" strings to boolean
+const stringbool = () => z.string().transform((val) => val === "true");
 
 /**
  * Server-side environment schema
@@ -32,7 +35,7 @@ const serverSchema = z.object({
   REDIS_URL: z.string().optional(),
   
   // Web-specific (optional)
-  NEXT_TELEMETRY_DISABLED: z.stringbool().optional(),
+  NEXT_TELEMETRY_DISABLED: stringbool().optional(),
 });
 
 /**
@@ -47,9 +50,9 @@ const clientSchema = z.object({
   NEXT_PUBLIC_DISCORD_CLIENT_ID: z.string().optional(),
 
   // Feature flags
-  NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: z.stringbool().default(false).optional(),
-  NEXT_PUBLIC_FEATURE_BULK_ACTIONS: z.stringbool().default(false).optional(),
-  NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: z.stringbool().default(false).optional(),
+  NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: stringbool().default(false).optional(),
+  NEXT_PUBLIC_FEATURE_BULK_ACTIONS: stringbool().default(false).optional(),
+  NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: stringbool().default(false).optional(),
 
   // Development helpers (optional)
   NEXT_PUBLIC_GUILD_ID: z.string().optional(),
@@ -114,13 +117,13 @@ const validateEnvironment = () => {
         NEXT_PUBLIC_FEATURE_BULK_ACTIONS: process.env.NEXT_PUBLIC_FEATURE_BULK_ACTIONS,
         NEXT_PUBLIC_FEATURE_ADVANCED_FORMS: process.env.NEXT_PUBLIC_FEATURE_ADVANCED_FORMS,
       };
-      const client = validateEnvFromValues(clientSchema, clientEnv);
+      const client = clientSchema.parse(clientEnv);
       return { server, client };
     }
     
-    // Server: Use validateEnvFromValues since .env is already loaded by Next.js
-    const server = validateEnvFromValues(serverSchema);
-    const client = validateEnvFromValues(clientSchema);
+    // Server: Parse environment variables since .env is already loaded by Next.js
+    const server = serverSchema.parse(process.env);
+    const client = clientSchema.parse(process.env);
 
     return { server, client };
   }
@@ -128,7 +131,7 @@ const validateEnvironment = () => {
   // Client-side validation (only validate client vars)
   // Use browser-safe validation with explicit values
   const clientEnv = getClientEnv();
-  const client = validateEnvFromValues(clientSchema, clientEnv);
+  const client = clientSchema.parse(clientEnv);
   return { server: {} as z.infer<typeof serverSchema>, client };
 };
 

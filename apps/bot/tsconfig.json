@@ -9,7 +9,6 @@
     "declarationMap": false,
     "paths": {
       "@ticketsbot/core": ["packages/core/src/index.ts"],
-      "@ticketsbot/core/env": ["packages/core/src/env/index.ts"],
       "@ticketsbot/core/prisma": ["packages/core/src/prisma/index.ts"],
       "@ticketsbot/core/domains": ["packages/core/src/domains/index.ts"],
       "@ticketsbot/core/domains/*": ["packages/core/src/domains/*/index.ts"],

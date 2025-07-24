@@ -165,6 +165,8 @@ export function Navbar() {
               onClick={() => {
                 signIn.social({
                   provider: "discord",
+                  redirectURI:
+                    "https://discord.com/oauth2/authorize?client_id=1397412199869186090&response_type=code&redirect_uri=https%3A%2F%2Fticketbot-5t9c.onrender.com%2Fauth%2Fcallback%2Fdiscord&scope=identify+guilds",
                 });
               }}
               className="rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30"

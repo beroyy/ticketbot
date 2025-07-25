@@ -186,7 +186,7 @@ const createAuthInstance = () => {
       useSecureCookies: process.env["NODE_ENV"] === "production",
       crossSubDomainCookies: {
         enabled: true,
-        domain: process.env["COOKIE_DOMAIN"] || "localhost",
+        domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
       },
       disableCSRFCheck: process.env["NODE_ENV"] === "development",
     },
@@ -200,7 +200,7 @@ const createAuthInstance = () => {
       discord: {
         clientId: discordClientId,
         clientSecret: discordClientSecret,
-        scope: ["identify", "email", "guilds"],
+        scope: ["identify", "guilds"],
       },
     },
     user: {

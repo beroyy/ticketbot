@@ -10,6 +10,7 @@ import { UserProvider } from "@/features/user/ui/user-provider";
 import { AppStoreProvider } from "@/shared/stores/app-store-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { AuthGate } from "@/components/auth-gate";
 import { useState } from "react";
 
 // Dynamically import Navbar with SSR disabled to avoid router issues during build
@@ -27,13 +28,15 @@ export default function App({ Component, pageProps }: AppProps) {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <UserProvider>
-          <SelectServerProvider>
-            <AppStoreProvider>
-              <Navbar />
-              <Component {...pageProps} />
-              <Toaster />
-            </AppStoreProvider>
-          </SelectServerProvider>
+          <AuthGate>
+            <SelectServerProvider>
+              <AppStoreProvider>
+                <Navbar />
+                <Component {...pageProps} />
+                <Toaster />
+              </AppStoreProvider>
+            </SelectServerProvider>
+          </AuthGate>
         </UserProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

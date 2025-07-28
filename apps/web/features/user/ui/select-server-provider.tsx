@@ -46,10 +46,8 @@ export function SelectServerProvider({ children }: SelectServerProviderProps) {
       setSelectedGuildIdState(storedGuildId);
     }
 
-    // Show modal if user has session but no guild selected
-    if (session?.user && !storedGuildId) {
-      setShowSelectServerModal(true);
-    }
+    // Note: We no longer auto-show the modal here since the AuthGate
+    // handles redirecting to /setup if no guilds exist
 
     setHasInitialized(true);
   }, [session, isPending, hasInitialized, storedGuildId, isLoadingPreference]);

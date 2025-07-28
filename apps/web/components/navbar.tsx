@@ -66,6 +66,9 @@ export function Navbar() {
     setIsClient(true);
   }, []);
 
+  // Hide navbar on invite page
+  if (["/setup", "/login"].includes(router.pathname)) return null;
+
   // Filter nav items based on permissions
   const visibleNavItems = useMemo(() => {
     return navItems.filter((item) => {

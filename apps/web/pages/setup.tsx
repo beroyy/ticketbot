@@ -6,6 +6,8 @@ import { authClient } from "@/lib/auth-client";
 import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
 import { LoadingSpinner } from "@/components/loading-spinner";
 
+const discordInviteUrl = "https://discord.com/oauth2/authorize?client_id=1397412199869186090";
+
 export default function Setup() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
@@ -16,7 +18,7 @@ export default function Setup() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!session?.user) {
-      router.push("/auth");
+      router.push("/login");
     }
   }, [session, router]);
 
@@ -40,10 +42,7 @@ export default function Setup() {
 
   const handleInviteBot = () => {
     setHasInvited(true);
-    window.open(
-      "https://discord.com/oauth2/authorize?client_id=1300000000000000000&permissions=8&scope=bot%20applications.commands",
-      "_blank"
-    );
+    window.open(discordInviteUrl, "_blank");
   };
 
   const handleCheckServers = async () => {
@@ -100,10 +99,8 @@ export default function Setup() {
                   "Check for Servers"
                 )}
               </Button>
-              
-              <p className="text-xs text-gray-500">
-                Checking automatically every few seconds...
-              </p>
+
+              <p className="text-xs text-gray-500">Checking automatically every few seconds...</p>
             </div>
           )}
         </div>

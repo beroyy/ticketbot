@@ -28,7 +28,8 @@ logger.debug("🔍 Validated Environment Variables:", {
 const app = new Hono<AppEnv>().onError(errorHandler);
 
 const webUrl = env.WEB_URL;
-const allowedOrigins = [webUrl];
+const apiUrl = env.API_URL;
+const allowedOrigins = [webUrl, apiUrl];
 
 logger.debug("🔒 CORS Configuration:", {
   allowedOrigins,
@@ -44,8 +45,29 @@ app.use("/*", async (c, next) => {
 app.use(
   "/*",
   cors({
-    origin: allowedOrigins,
+    origin: (origin) => {
+      logger.debug("CORS check:", {
+        origin,
+        allowedOrigins,
+        isAllowed: !origin || allowedOrigins.includes(origin),
+      });
+
+      // Allow requests with no origin (e.g., Postman, server-side requests)
+      if (!origin) {
+        return undefined;
+      }
+
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
+        return origin;
+      } else {
+        logger.warn("CORS blocked request from:", origin);
+        return null;
+      }
+    },
     credentials: true,
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 

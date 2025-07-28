@@ -5,9 +5,8 @@ import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
 import { prisma } from "../prisma";
 import { User as UserDomain, Account as AccountDomain } from "../domains";
-import { linkDiscordAccount } from "./services/discord-link";
 import { Redis } from "../redis";
-import { fetchDiscordUser, getDiscordAvatarUrl } from "./services/discord-api";
+import { getDiscordAvatarUrl } from "./services/discord-api";
 import type { User, Session } from "./types";
 
 interface AuthContext {
@@ -201,6 +200,32 @@ const createAuthInstance = () => {
         clientId: discordClientId,
         clientSecret: discordClientSecret,
         scope: ["identify", "guilds"],
+        mapProfileToUser: (profile: any) => {
+          logger.debug("Discord OAuth profile received:", {
+            id: profile.id,
+            username: profile.username,
+            discriminator: profile.discriminator,
+            hasAvatar: !!profile.avatar,
+          });
+
+          // Calculate avatar URL
+          const avatarUrl = getDiscordAvatarUrl(
+            profile.id,
+            profile.avatar,
+            profile.discriminator || "0"
+          );
+
+          // Return mapped user data that will be stored
+          // Note: discordUserId is NOT set here to avoid foreign key constraint
+          // It will be linked after the DiscordUser is created in the callback hook
+          return {
+            username: profile.username,
+            discriminator: profile.discriminator || null,
+            avatar_url: avatarUrl,
+            name: profile.username, // Update the display name
+            email: profile.email || `${profile.id}@discord.local`, // Fallback email
+          };
+        },
       },
     },
     user: {
@@ -226,11 +251,39 @@ const createAuthInstance = () => {
           defaultValue: null,
           input: false,
         },
+        discordDataFetchedAt: {
+          type: "date",
+          required: false,
+          defaultValue: null,
+          input: false,
+        },
       },
     },
     plugins: [
       customSession(async (sessionData: SessionData) => {
         const { user, session } = sessionData;
+
+        // Quick path: If user already has Discord data and it's fresh, return immediately
+        const existingUser = user as any;
+        if (
+          existingUser.discordUserId &&
+          existingUser.username &&
+          existingUser.discordDataFetchedAt
+        ) {
+          const dataAge = Date.now() - new Date(existingUser.discordDataFetchedAt).getTime();
+          const MAX_AGE = 30 * 60 * 1000; // 30 minutes
+
+          if (dataAge < MAX_AGE) {
+            logger.debug("Using cached Discord data from session", {
+              userId: user.id,
+              discordUserId: existingUser.discordUserId,
+              dataAge: Math.round(dataAge / 1000) + "s",
+            });
+            return { session, user };
+          }
+        }
+
+        // Slow path: Fetch Discord data if missing or stale
         const fullUser = await UserDomain.getBetterAuthUser(user.id);
         let discordUser = null;
         if (fullUser?.discordUserId) {
@@ -243,6 +296,7 @@ const createAuthInstance = () => {
 
         let discordUserId = fullUser.discordUserId;
 
+        // Only do the account lookup if we don't have a Discord ID
         if (!discordUserId) {
           const discordAccount = await AccountDomain.getDiscordAccount(user.id);
 
@@ -268,9 +322,10 @@ const createAuthInstance = () => {
           user: {
             ...user,
             discordUserId: discordUserId ?? null,
-            username: discordUser?.username ?? null,
-            discriminator: discordUser?.discriminator ?? null,
-            avatar_url: discordUser?.avatarUrl ?? null,
+            username: discordUser?.username ?? fullUser.username ?? null,
+            discriminator: discordUser?.discriminator ?? fullUser.discriminator ?? null,
+            avatar_url: discordUser?.avatarUrl ?? fullUser.avatar_url ?? null,
+            discordDataFetchedAt: new Date(),
           },
         };
       }),
@@ -278,13 +333,6 @@ const createAuthInstance = () => {
     hooks: {
       after: createAuthMiddleware(async (ctx) => {
         logger.debug("Auth Hook - Path:", ctx.path);
-
-        if (ctx.path && ctx.path.includes("/sign-in/social")) {
-          logger.info("OAuth sign-in request detected", {
-            path: ctx.path,
-            method: ctx.method,
-          });
-        }
 
         if (ctx.path && ctx.path.includes("/sign-in/social")) {
           logger.info("OAuth sign-in request detected", {
@@ -316,32 +364,53 @@ const createAuthInstance = () => {
               return;
             }
 
-            const discordUser = await fetchDiscordUser(account.accessToken);
+            // First, fetch Discord user info to ensure we have the data
+            const discordUserResponse = await fetch("https://discord.com/api/v10/users/@me", {
+              headers: {
+                Authorization: `Bearer ${account.accessToken}`,
+                "User-Agent": "ticketsbot.ai (https://github.com/ticketsbot/ticketsbot, 1.0.0)",
+              },
+            });
 
-            if (!discordUser) {
-              logger.debug("Failed to fetch Discord user data");
-              return;
+            if (discordUserResponse.ok) {
+              const discordProfile = await discordUserResponse.json() as {
+                id: string;
+                username: string;
+                discriminator: string | null;
+                avatar: string | null;
+              };
+              
+              // Calculate avatar URL
+              const avatarUrl = getDiscordAvatarUrl(
+                discordProfile.id,
+                discordProfile.avatar,
+                discordProfile.discriminator || "0"
+              );
+
+              // Ensure DiscordUser exists first
+              await UserDomain.ensure(
+                account.accountId,
+                discordProfile.username,
+                discordProfile.discriminator || undefined,
+                avatarUrl
+              );
+              
+              logger.debug("Ensured DiscordUser exists", {
+                discordId: account.accountId,
+                username: discordProfile.username,
+              });
             }
 
-            logger.debug("Fetched Discord user data:", {
-              id: discordUser.id,
-              username: discordUser.username,
-              discriminator: discordUser.discriminator,
+            // Now update the Better Auth user with the Discord link
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                discordDataFetchedAt: new Date(),
+                discordUserId: account.accountId,
+              },
             });
 
-            const avatarUrl = getDiscordAvatarUrl(
-              discordUser.id,
-              discordUser.avatar,
-              discordUser.discriminator
-            );
-
-            await linkDiscordAccount(user.id, account.accountId, {
-              username: discordUser.username,
-              discriminator: discordUser.discriminator,
-              avatarUrl: avatarUrl,
-            });
-
-            logger.debug("Discord account linked successfully with full profile data");
+            logger.debug("Linked Discord account to user");
 
             try {
               logger.debug("Fetching user guilds to set ownership...");
@@ -349,7 +418,7 @@ const createAuthInstance = () => {
               const guildsResponse = await fetch("https://discord.com/api/v10/users/@me/guilds", {
                 headers: {
                   Authorization: `Bearer ${account.accessToken}`,
-                  "User-Agent": "DiscordTickets (https://github.com/ticketsbot/ticketsbot, 1.0.0)",
+                  "User-Agent": "ticketsbot.ai (https://github.com/ticketsbot/ticketsbot, 1.0.0)",
                 },
               });
 
@@ -357,9 +426,38 @@ const createAuthInstance = () => {
                 const guilds = (await guildsResponse.json()) as Array<{
                   id: string;
                   name: string;
+                  icon?: string | null;
                   owner?: boolean;
+                  permissions?: string;
+                  features?: string[];
                 }>;
 
+                // Cache all admin guilds for the user
+                const { DiscordCache } = await import("./services/discord-cache");
+                const MANAGE_GUILD = BigInt(0x20);
+                
+                const adminGuilds = guilds
+                  .filter((guild) => {
+                    if (guild.owner) return true;
+                    if (guild.permissions) {
+                      return (BigInt(guild.permissions) & MANAGE_GUILD) === MANAGE_GUILD;
+                    }
+                    return false;
+                  })
+                  .map((guild) => ({
+                    id: guild.id,
+                    name: guild.name,
+                    icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+                    owner: guild.owner || false,
+                    permissions: guild.permissions || "0",
+                    features: guild.features || [],
+                  }));
+
+                // Cache the guilds immediately
+                await DiscordCache.setGuilds(user.id, adminGuilds);
+                logger.debug(`Cached ${adminGuilds.length} admin guilds for user during OAuth`);
+
+                // Handle owned guilds for ownership setup
                 const ownedGuilds = guilds.filter((g) => g.owner);
 
                 if (ownedGuilds.length > 0) {

@@ -12,7 +12,7 @@ services:
     healthCheckPath: /health
     numInstances: 1
     dockerCommand: |
-      bash -c "pnpm db:push && npx concurrently -n api,bot -c blue,green 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start'"
+      bash -c "pnpm db:deploy && npx concurrently -n api,bot -c blue,green 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start'"
 
     envVars:
       - fromGroup: ticketsbot-env

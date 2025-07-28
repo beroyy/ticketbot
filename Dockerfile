@@ -35,7 +35,7 @@ EXPOSE ${API_PORT:-3001} ${BOT_PORT:-3002}
 CMD ["bash", "-c", "\
   # Run database initialization if needed \
   echo '🚀 Starting API and Bot services...'; \
-  pnpm db:push && \
+  pnpm db:deploy && \
   npx concurrently -n api,bot -c blue,green \
     'pnpm --filter @ticketsbot/api start' \
     'pnpm --filter @ticketsbot/bot start' \

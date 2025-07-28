@@ -123,10 +123,24 @@ export namespace User {
    */
   export const getBetterAuthUser = async (
     userId: string
-  ): Promise<{ id: string; discordUserId: string | null } | null> => {
+  ): Promise<{ 
+    id: string; 
+    discordUserId: string | null;
+    username: string | null;
+    discriminator: string | null;
+    avatar_url: string | null;
+    discordDataFetchedAt: Date | null;
+  } | null> => {
     return prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, discordUserId: true },
+      select: { 
+        id: true, 
+        discordUserId: true,
+        username: true,
+        discriminator: true,
+        avatar_url: true,
+        discordDataFetchedAt: true,
+      },
     });
   };
 

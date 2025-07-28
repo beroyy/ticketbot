@@ -10,3 +10,6 @@ export { getSession, getSessionFromContext, requireSession } from "./services/se
 
 // Permission utilities
 export { AuthPermissionUtils } from "./services/permissions";
+
+// Discord cache
+export { DiscordCache } from "./services/discord-cache";

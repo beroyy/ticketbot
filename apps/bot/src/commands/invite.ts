@@ -4,17 +4,17 @@ import { botConfig } from "@bot/config";
 
 export const InviteCommand = createCommand({
   name: "invite",
-  description: "Get the invite link for DiscordTickets",
+  description: "Get the invite link for ticketsbot.ai",
 
   execute: async (interaction) => {
     const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${botConfig.clientId}&permissions=8&scope=bot%20applications.commands`;
 
     const embed = Embed.builder()
-      .setTitle("📨 Invite DiscordTickets")
+      .setTitle("📨 Invite ticketsbot.ai")
       .setDescription(
         `Click the link below to invite the bot to your server 👇
 
-[**🔗 Invite DiscordTickets**](${inviteUrl})
+[**🔗 Invite ticketsbot.ai**](${inviteUrl})
 
 **Getting Started**
 After inviting, use \`/setup auto\` to get up-and-running in seconds ⚡`

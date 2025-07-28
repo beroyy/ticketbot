@@ -9,6 +9,17 @@ import { logger } from "../utils/logger";
  */
 export async function getSession(request: Request): Promise<AuthSession | null> {
   try {
+    // Log session retrieval attempt in development
+    if (process.env.NODE_ENV === "development") {
+      const cookies = request.headers.get("cookie");
+      logger.debug("Getting session", {
+        hasCookies: !!cookies,
+        cookieCount: cookies ? cookies.split(";").length : 0,
+        origin: request.headers.get("origin"),
+        referer: request.headers.get("referer"),
+      });
+    }
+
     // Use Better Auth's built-in session retrieval
     const getSessionFn = auth.api.getSession as (params: {
       headers: Headers;
@@ -18,7 +29,19 @@ export async function getSession(request: Request): Promise<AuthSession | null> 
     });
 
     if (!session) {
+      logger.debug("No session found");
       return null;
+    }
+
+    // Log session details in development
+    if (process.env.NODE_ENV === "development") {
+      logger.debug("Session found", {
+        userId: session.user.id,
+        email: session.user.email,
+        discordUserId: session.user.discordUserId,
+        sessionId: session.session.id,
+        expiresAt: session.session.expiresAt,
+      });
     }
 
     // Session is automatically validated by Better Auth

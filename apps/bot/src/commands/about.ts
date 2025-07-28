@@ -2,7 +2,7 @@ import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, ok } from "@bot/lib/discord-utils";
 
 const aboutEmbed = Embed.info(
-  "🎫 About DiscordTickets",
+  "🎫 About ticketsbot.ai",
   `Build fully-featured support workflows right in your Discord server 💥
 
 **Features:**
@@ -14,11 +14,11 @@ const aboutEmbed = Embed.info(
 
 **Version:** 0.0.1
 **Built with:** Discord.js v14, Prisma & Sapphire Framework`
-).setFooter({ text: "DiscordTickets - Pro-level Support Workflows" });
+).setFooter({ text: "ticketsbot.ai - Pro-level Support Workflows" });
 
 export const AboutCommand = createCommand({
   name: "about",
-  description: "Display information about DiscordTickets",
+  description: "Display information about ticketsbot.ai",
 
   execute: async (interaction) => {
     await InteractionResponse.reply(interaction, {

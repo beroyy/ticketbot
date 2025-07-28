@@ -44,9 +44,9 @@ const COMMAND_CATEGORIES = [
   },
   {
     name: "📖 General",
-    value: `/about - About DiscordTickets
+    value: `/about - About ticketsbot.ai
 /help - This help message
-/invite - Invite DiscordTickets`,
+/invite - Invite ticketsbot.ai`,
     inline: false,
   },
 ];
@@ -58,7 +58,7 @@ export const HelpCommand = createCommand({
   execute: async (interaction) => {
     const embed = Embed.builder()
       .setTitle("📚 Available Commands")
-      .setDescription("Here's everything you can do with DiscordTickets 💥")
+      .setDescription("Here's everything you can do with ticketsbot.ai 💥")
       .setColor(COLORS.INFO)
       .addFields(COMMAND_CATEGORIES)
       .setFooter({

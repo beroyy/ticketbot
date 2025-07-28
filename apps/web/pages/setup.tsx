@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
 import { LoadingSpinner } from "@/components/loading-spinner";
 
-const discordInviteUrl = "https://discord.com/oauth2/authorize?client_id=1397412199869186090";
+const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${process.env.NODE_ENV === "production" ? "1397412199869186090" : "1397414095753318522"}`;
 
 export default function Setup() {
   const router = useRouter();

@@ -3,8 +3,10 @@ import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
 import { Account, findById as findGuildById } from "@ticketsbot/core/domains";
+import { DiscordCache } from "@ticketsbot/core/auth";
 import { createRoute, ApiErrors } from "../factory";
 import { compositions } from "../middleware/factory-middleware";
+import { logger } from "../utils/logger";
 
 // Response schemas
 const GuildResponse = z.object({
@@ -54,7 +56,7 @@ interface DiscordGuild {
 // Constants
 const MANAGE_GUILD_PERMISSION = BigInt(0x20);
 const DISCORD_API_BASE = "https://discord.com/api/v10";
-const USER_AGENT = "DiscordTickets (https://github.com/yourusername/ticketsbot-ai, 1.0.0)";
+const USER_AGENT = "ticketsbot.ai (https://github.com/yourusername/ticketsbot-ai, 1.0.0)";
 
 // Helper to check Discord account
 const getDiscordAccount = async (userId: string) => {
@@ -76,27 +78,60 @@ const getDiscordAccount = async (userId: string) => {
 
 // Helper to make Discord API requests
 const fetchDiscordAPI = async (path: string, accessToken: string) => {
-  const response = await fetch(`${DISCORD_API_BASE}${path}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "User-Agent": USER_AGENT,
-    },
+  logger.debug("Making Discord API request", {
+    path,
+    hasToken: !!accessToken,
   });
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      return {
-        error: "Discord token invalid, please re-authenticate",
-        code: "DISCORD_TOKEN_INVALID",
-      };
-    }
-    if (response.status === 404) {
-      throw ApiErrors.notFound("Resource");
-    }
-    throw new Error(`Discord API error: ${response.status}`);
-  }
+  try {
+    const response = await fetch(`${DISCORD_API_BASE}${path}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "User-Agent": USER_AGENT,
+      },
+    });
 
-  return { data: await response.json() };
+    logger.debug("Discord API response", {
+      path,
+      status: response.status,
+      statusText: response.statusText,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logger.error("Discord API request failed", {
+        path,
+        status: response.status,
+        statusText: response.statusText,
+        errorBody,
+      });
+
+      if (response.status === 401) {
+        return {
+          error: "Discord token invalid, please re-authenticate",
+          code: "DISCORD_TOKEN_INVALID",
+        };
+      }
+      if (response.status === 404) {
+        throw ApiErrors.notFound("Resource");
+      }
+      throw new Error(`Discord API error: ${response.status} - ${errorBody}`);
+    }
+
+    const data = await response.json();
+    logger.debug("Discord API request successful", {
+      path,
+      dataLength: Array.isArray(data) ? data.length : 1,
+    });
+
+    return { data };
+  } catch (error) {
+    logger.error("Discord API request exception", {
+      path,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 };
 
 // Create Discord routes using method chaining
@@ -105,9 +140,20 @@ export const discordRoutes = createRoute()
   .get("/guilds", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
 
+    logger.debug("Fetching Discord guilds", {
+      userId: user.id,
+      discordUserId: user.discordUserId,
+      email: user.email,
+    });
+
     // Check Discord account
     const accountResult = await getDiscordAccount(user.id);
     if ("error" in accountResult) {
+      logger.warn("Discord account not connected or expired", {
+        error: accountResult.error,
+        code: accountResult.code,
+        userId: user.id,
+      });
       return c.json({
         guilds: [],
         connected: false,
@@ -116,9 +162,34 @@ export const discordRoutes = createRoute()
       } satisfies z.infer<typeof _GuildsListResponse>);
     }
 
+    // Check cache first
+    const cachedGuilds = await DiscordCache.getGuilds(user.id);
+    if (cachedGuilds) {
+      logger.info("Returning cached guilds", {
+        userId: user.id,
+        count: cachedGuilds.length,
+      });
+      return c.json({
+        guilds: cachedGuilds,
+        connected: true,
+        error: null,
+        code: null,
+      } satisfies z.infer<typeof _GuildsListResponse>);
+    }
+
+    logger.debug("Discord account found", {
+      hasAccessToken: !!accountResult.account.accessToken,
+      expiresAt: accountResult.account.accessTokenExpiresAt?.toISOString(),
+    });
+
     // Fetch guilds from Discord
     const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
     if ("error" in result) {
+      logger.error("Failed to fetch guilds from Discord API", {
+        error: result.error,
+        code: result.code,
+        userId: user.id,
+      });
       return c.json({
         guilds: [],
         connected: false,
@@ -128,6 +199,10 @@ export const discordRoutes = createRoute()
     }
 
     const guilds = result.data as DiscordGuild[];
+    logger.debug("Fetched guilds from Discord", {
+      totalGuilds: guilds.length,
+      userId: user.id,
+    });
 
     // Filter guilds where user has MANAGE_GUILD permission
     const adminGuilds = guilds
@@ -142,6 +217,15 @@ export const discordRoutes = createRoute()
         permissions: guild.permissions,
         features: guild.features || [],
       }));
+
+    // Cache the results
+    await DiscordCache.setGuilds(user.id, adminGuilds);
+
+    logger.info("Successfully fetched Discord guilds", {
+      totalGuilds: guilds.length,
+      adminGuilds: adminGuilds.length,
+      userId: user.id,
+    });
 
     return c.json({
       guilds: adminGuilds,

@@ -99,7 +99,7 @@ const createDefaultCategories = async (guild: DiscordGuild, adminRole: Role, sup
 
 export const SetupCommand = createCommandGroup({
   name: "setup",
-  description: "Configure DiscordTickets for your server",
+  description: "Configure ticketsbot.ai for your server",
   preconditions: ["guild-only", "admin-only"],
 
   subcommands: {
@@ -206,7 +206,7 @@ const handleAutoSetup = async (interaction: ChatInputCommandInteraction): Promis
   // First show confirmation
   const confirmEmbed = Embed.warning(
     "Auto Setup Confirmation",
-    `This will configure DiscordTickets with the following:
+    `This will configure ticketsbot.ai with the following:
 
 **Will Create:**
 • Two roles: **Tickets Admin** and **Tickets Support**
@@ -343,7 +343,7 @@ Do you want to proceed?`
 
     const successEmbed = Embed.success(
       "Auto Setup Complete",
-      `DiscordTickets has been automatically configured for your server!`
+      `ticketsbot.ai has been automatically configured for your server!`
     )
       .addFields(
         {

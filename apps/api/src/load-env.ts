@@ -12,5 +12,5 @@ const result = config({ path: envPath });
 
 if (result.error) {
   console.error("❌ Failed to load .env file:", result.error);
-  process.exit(1);
+  throw new Error(`Failed to load .env file: ${result.error.message}`);
 }

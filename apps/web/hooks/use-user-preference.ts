@@ -2,10 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
-interface PreferenceResponse {
-  value: any;
-}
-
 interface SetPreferenceData {
   key: string;
   value: any;

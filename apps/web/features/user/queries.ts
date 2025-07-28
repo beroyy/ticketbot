@@ -48,7 +48,7 @@ export interface Team {
   updatedAt: string;
 }
 
-async function fetchTeams(guildId: string): Promise<Team[]> {
+async function fetchTeams(_guildId: string): Promise<Team[]> {
   // TODO: Add teams endpoint to the API
   return [];
 }

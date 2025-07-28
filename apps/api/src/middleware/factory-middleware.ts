@@ -1,4 +1,3 @@
-import { getCookie } from "hono/cookie";
 import { auth, type AuthSession } from "@ticketsbot/core/auth";
 import { Actor } from "@ticketsbot/core/context";
 import { User, Redis } from "@ticketsbot/core";

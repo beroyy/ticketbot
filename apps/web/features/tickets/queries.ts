@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { UseQueryResult } from "@tanstack/react-query";
-import type { Ticket, TicketStats, TicketMessagesResponse } from "./types";
+import type { Ticket } from "./types";
 
 /**
  * Simple ticket queries - plain objects to avoid Next.js type issues

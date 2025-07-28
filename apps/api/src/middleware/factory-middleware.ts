@@ -4,6 +4,7 @@ import { User, Redis } from "@ticketsbot/core";
 import { factory, ApiErrors, parseGuildId } from "../factory";
 import { nanoid } from "nanoid";
 import { logger } from "../utils/logger";
+import { env } from "../env";
 
 /**
  * Request tracking middleware - adds requestId and timing
@@ -23,21 +24,30 @@ export const requestMiddleware = factory.createMiddleware(async (c, next) => {
  * CORS middleware with proper configuration
  */
 export const corsMiddleware = factory.createMiddleware(async (c, next) => {
-  const origin = c.req.header("Origin") ?? "*";
+  const origin = c.req.header("Origin") ?? "";
 
-  // In production, validate against allowed origins
-  const allowedOrigins =
-    process.env.NODE_ENV === "production"
-      ? ["https://ticketsbot.net", "https://app.ticketsbot.net"]
-      : ["http://localhost:9000", "http://localhost:9001"];
+  // Use environment variables for CORS configuration
+  const allowedOrigins = [env.WEB_URL, env.API_URL];
 
-  const isAllowed = allowedOrigins.some((allowed) => origin === allowed || origin === "*");
+  logger.debug("CORS check:", {
+    origin,
+    allowedOrigins,
+    isAllowed: !origin || allowedOrigins.includes(origin),
+  });
 
-  if (isAllowed) {
+  // Allow requests with no origin (e.g., server-side requests)
+  if (!origin) {
+    c.header("Access-Control-Allow-Origin", "*");
+    c.header("Access-Control-Allow-Credentials", "true");
+    c.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  } else if (allowedOrigins.includes(origin)) {
     c.header("Access-Control-Allow-Origin", origin);
     c.header("Access-Control-Allow-Credentials", "true");
     c.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  } else {
+    logger.warn("CORS blocked request from:", origin);
   }
 
   if (c.req.method === "OPTIONS") {

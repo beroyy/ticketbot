@@ -188,6 +188,28 @@ const createAuthInstance = () => {
         domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
       },
       disableCSRFCheck: process.env["NODE_ENV"] === "development",
+      cookies: {
+        "session_token": {
+          name: "session_token",
+          attributes: {
+            sameSite: "lax",
+            secure: true,
+            httpOnly: true,
+            domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
+            path: "/"
+          }
+        },
+        "session_data": {
+          name: "session_data",
+          attributes: {
+            sameSite: "lax",
+            secure: true,
+            httpOnly: true,
+            domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
+            path: "/"
+          }
+        }
+      }
     },
     account: {
       accountLinking: {

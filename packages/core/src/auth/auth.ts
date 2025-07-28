@@ -519,7 +519,7 @@ const createAuthInstance = () => {
                                 keys.push(key);
                               }
                               if (keys.length > 0) {
-                                await (client.del as any).apply(client, keys);
+                                await client.del(keys as any);
                               }
                               return keys.length;
                             },

@@ -4,7 +4,7 @@
   "globalDependencies": ["package.json", "turbo.json", "pnpm-workspace.yaml", ".env*"],
   "tasks": {
     "build": {
-      "dependsOn": ["^db:generate", "^build"],
+      "dependsOn": ["^build", "@ticketsbot/core#db:generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*",
@@ -16,7 +16,6 @@
       "env": [
         "NODE_ENV",
         "DATABASE_URL",
-        "DIRECT_URL",
         "BETTER_AUTH_SECRET",
         "DISCORD_CLIENT_ID",
         "DISCORD_CLIENT_SECRET",
@@ -30,7 +29,7 @@
       ]
     },
     "dev": {
-      "dependsOn": ["^db:generate"],
+      "dependsOn": ["@ticketsbot/core#db:generate"],
       "cache": false,
       "persistent": true,
       "env": [
@@ -80,7 +79,7 @@
       "env": ["NEXT_PHASE", "NEXT_TELEMETRY_DISABLED"]
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@ticketsbot/core#db:generate"],
       "inputs": ["src/**", "tsconfig.json", "tsconfig.tsbuildinfo"],
       "outputs": [],
       "cache": true
@@ -100,22 +99,22 @@
       "cache": false
     },
     "db:generate": {
-      "cache": false,
+      "cache": true,
       "inputs": ["prisma/**/*.prisma"],
-      "outputs": ["node_modules/.prisma/**", "../../node_modules/.prisma/**"],
-      "env": ["DATABASE_URL", "DIRECT_URL"]
+      "outputs": ["node_modules/.prisma/**"],
+      "env": ["DATABASE_URL"]
     },
     "db:push": {
       "cache": false,
-      "env": ["DATABASE_URL", "DIRECT_URL"]
+      "env": ["DATABASE_URL"]
     },
     "db:push:force": {
       "cache": false,
-      "env": ["DATABASE_URL", "DIRECT_URL"]
+      "env": ["DATABASE_URL"]
     },
     "db:migrate": {
       "cache": false,
-      "env": ["DATABASE_URL", "DIRECT_URL"]
+      "env": ["DATABASE_URL"]
     },
     "db:studio": {
       "cache": false,

@@ -4,9 +4,7 @@
   "description": "Core schemas, validation, utilities, and database layer for TicketsBot",
   "type": "module",
   "scripts": {
-    "postinstall": "node -e \"if (process.env.CI !== 'true' || process.env.VERCEL) { require('child_process').execSync('prisma generate --schema=./prisma/ --no-hints', {stdio: 'inherit'}); }\"",
     "dev": "tsc --watch --noEmit",
-    "prebuild": "prisma generate --schema=./prisma/ --no-hints",
     "build": "tsc --project tsconfig.json --noEmit",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint --config eslint.config.js src/",
@@ -16,7 +14,10 @@
     "db:push": "prisma db push --schema=./prisma/",
     "db:push:force": "prisma db push --schema=./prisma/ --force-reset",
     "db:migrate": "prisma migrate dev --schema=./prisma/",
-    "db:studio": "prisma studio --schema=./prisma/"
+    "db:studio": "prisma studio --schema=./prisma/",
+    "db:deploy": "prisma migrate deploy --schema=./prisma/",
+    "db:reset": "prisma migrate reset --schema=./prisma/ --skip-seed",
+    "db:validate": "prisma validate --schema=./prisma/"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 interface DiscordStatus {
   connected: boolean;
@@ -18,12 +19,12 @@ export function useDiscordStatus() {
       const res = await api.user.$get();
       
       if (!res.ok) {
-        console.error("Failed to fetch user info:", res.status);
+        logger.error("Failed to fetch user info:", res.status);
         throw new Error("Failed to fetch user info");
       }
       
       const data = await res.json();
-      console.log("Discord connection status:", data.discord);
+      logger.debug("Discord connection status:", data.discord);
       
       return data.discord as DiscordStatus;
     },

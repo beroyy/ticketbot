@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/modal";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import { logger } from "@/lib/logger";
 
 interface Guild {
   id: string;
@@ -66,7 +67,7 @@ export function SelectServerModal({ isOpen, onGuildSelect }: SelectServerModalPr
         }
       }
     } catch (err) {
-      console.error("Error fetching guilds:", err);
+      logger.error("Error fetching guilds:", err);
 
       // Handle legacy error format and network errors
       if (err instanceof Error) {
@@ -111,7 +112,7 @@ export function SelectServerModal({ isOpen, onGuildSelect }: SelectServerModalPr
         provider: "discord",
       });
     } catch (error) {
-      console.error("Error connecting Discord:", error);
+      logger.error("Error connecting Discord:", error);
       setError({
         type: "generic",
         message: "Failed to connect Discord account. Please try again.",

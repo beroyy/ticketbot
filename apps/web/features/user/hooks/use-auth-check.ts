@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { api } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 interface Guild {
   id: string;
@@ -24,7 +25,7 @@ export function useAuthCheck() {
       const res = await api.discord.guilds.$get();
       
       // Log response details for debugging
-      console.log("Discord guilds API response:", {
+      logger.debug("Discord guilds API response:", {
         ok: res.ok,
         status: res.status,
         statusText: res.statusText,
@@ -36,13 +37,13 @@ export function useAuthCheck() {
         let errorMessage = `Failed to fetch guilds (${res.status})`;
         try {
           const errorData = await res.json();
-          console.error("Guild fetch error response:", errorData);
+          logger.error("Guild fetch error response:", errorData);
           errorMessage = errorData.error || errorMessage;
         } catch {
           // If JSON parsing fails, try text
           try {
             const errorText = await res.text();
-            console.error("Guild fetch error text:", errorText);
+            logger.error("Guild fetch error text:", errorText);
           } catch {
             // Ignore parsing errors
           }
@@ -51,7 +52,7 @@ export function useAuthCheck() {
       }
 
       const data = await res.json();
-      console.log("Discord guilds data:", data);
+      logger.debug("Discord guilds data:", data);
 
       // Handle the response format
       if (data.connected && !data.error) {
@@ -59,26 +60,26 @@ export function useAuthCheck() {
       } else {
         // Log specific error conditions
         if (!data.connected) {
-          console.warn("Discord account not connected");
+          logger.warn("Discord account not connected");
         }
         if (data.error) {
-          console.error("Discord API error:", data.error, "Code:", data.code);
+          logger.error("Discord API error:", data.error, "Code:", data.code);
           
           // Show user-friendly error messages
           if (data.code === "DISCORD_NOT_CONNECTED") {
-            console.error("Discord account needs to be connected. Please link your Discord account.");
+            logger.info("Discord account needs to be connected. Please link your Discord account.");
           } else if (data.code === "DISCORD_TOKEN_EXPIRED" || data.code === "DISCORD_TOKEN_INVALID") {
-            console.error("Discord authentication expired. Please re-authenticate with Discord.");
+            logger.info("Discord authentication expired. Please re-authenticate with Discord.");
           }
         }
         setGuilds([]);
       }
     } catch (err) {
-      console.error("Error fetching guilds:", err);
+      logger.error("Error fetching guilds:", err);
       
       // Log additional error details
       if (err instanceof Error) {
-        console.error("Error details:", {
+        logger.error("Error details:", {
           message: err.message,
           stack: err.stack,
         });

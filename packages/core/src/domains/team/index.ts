@@ -280,6 +280,28 @@ export namespace Team {
       });
     }
 
+    // Check if viewer role exists
+    const viewerRole = await prisma.teamRole.findFirst({
+      where: {
+        guildId: guildId,
+        name: "viewer",
+        isDefault: true,
+      },
+    });
+
+    if (!viewerRole) {
+      await prisma.teamRole.create({
+        data: {
+          guildId: guildId,
+          name: "viewer",
+          color: "#99AAB5",
+          position: 10,
+          isDefault: true,
+          permissions: DefaultRolePermissions.viewer,
+        },
+      });
+    }
+
     // Cache that we've ensured default roles exist
     cacheService.set(cacheKey, true, CacheTTL.defaultRoles);
   };

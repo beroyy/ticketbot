@@ -210,4 +210,9 @@ export const DefaultRolePermissions = {
     PermissionFlags.TICKET_ASSIGN |
     PermissionFlags.TAG_USE |
     PermissionFlags.MEMBER_VIEW,
+  viewer:
+    PermissionFlags.ANALYTICS_VIEW |
+    PermissionFlags.TICKET_VIEW_ALL |
+    PermissionFlags.MEMBER_VIEW |
+    PermissionFlags.GUILD_SETTINGS_VIEW,
 } as const;

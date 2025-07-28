@@ -431,6 +431,28 @@ export namespace Team {
           },
         });
       }
+
+      // Check if viewer role exists
+      const viewerRole = await tx.teamRole.findFirst({
+        where: {
+          guildId,
+          name: "viewer",
+          isDefault: true,
+        },
+      });
+
+      if (!viewerRole) {
+        await tx.teamRole.create({
+          data: {
+            guildId,
+            name: "viewer",
+            color: "#99AAB5",
+            position: 10,
+            isDefault: true,
+            permissions: DefaultRolePermissions.viewer,
+          },
+        });
+      }
     });
 
     // Cache that we've ensured default roles exist

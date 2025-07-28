@@ -492,8 +492,9 @@ const createAuthInstance = () => {
                   await Promise.all(
                     ownedGuilds.map(async (guild) => {
                       try {
+                        // Use Discord user ID for ownership, not account ID
                         await ensureGuild(guild.id, guild.name, account.accountId);
-                        logger.debug(`Set ownership for guild ${guild.id} (${guild.name})`);
+                        logger.debug(`Set ownership for guild ${guild.id} (${guild.name}) with Discord ID ${account.accountId}`);
 
                         const { cacheService, CacheKeys } = await import(
                           "../prisma/services/cache"
@@ -508,6 +509,13 @@ const createAuthInstance = () => {
                         const { Team } = await import("../domains/team");
                         await Team.ensureDefaultRoles(guild.id);
                         logger.debug(`Ensured default roles exist for guild ${guild.id}`);
+                        
+                        // Automatically assign owner to admin role
+                        const adminRole = await Team.getRoleByName(guild.id, "admin");
+                        if (adminRole) {
+                          await Team.assignRole(adminRole.id, account.accountId);
+                          logger.debug(`Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`);
+                        }
                       } catch (error) {
                         logger.error(`Failed to set ownership for guild ${guild.id}:`, error);
                       }

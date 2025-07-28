@@ -58,6 +58,8 @@ export default function Setup() {
         alt="blurred-bg"
         width={1440}
         height={900}
+        priority
+        draggable={false}
         className="absolute inset-0 h-full w-full"
       />
 

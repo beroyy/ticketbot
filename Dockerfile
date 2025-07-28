@@ -28,9 +28,6 @@ COPY . .
 # Generate Prisma client
 RUN pnpm --filter @ticketsbot/core db:generate
 
-# Build only API and Bot applications
-RUN pnpm turbo build --filter=@ticketsbot/api --filter=@ticketsbot/bot
-
 # Expose ports for API and Bot
 EXPOSE ${API_PORT:-3001} ${BOT_PORT:-3002}
 

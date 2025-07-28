@@ -12,7 +12,7 @@
         "!**/*.spec.{ts,tsx}",
         "!**/node_modules/**"
       ],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "NODE_ENV",
         "DATABASE_URL",

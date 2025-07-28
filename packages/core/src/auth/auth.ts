@@ -45,8 +45,8 @@ function getEnvVar(key: string, fallback?: string): string {
 }
 
 const getOrigins = () => {
-  const webOrigin = getEnvVar("WEB_URL", "http://localhost:4000");
-  const apiOrigin = getEnvVar("API_URL", "http://localhost:4001");
+  const webOrigin = getEnvVar("WEB_URL", "http://localhost:3000");
+  const apiOrigin = getEnvVar("API_URL", "http://localhost:3001");
 
   if (!getOrigins.logged) {
     logger.info("Auth trusted origins:", {

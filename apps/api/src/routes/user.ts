@@ -4,7 +4,7 @@ import { Redis } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains";
 import { Actor } from "@ticketsbot/core/context";
 import { createRoute, ApiErrors, successResponse } from "../factory";
-import { compositions } from "../middleware/factory-middleware";
+import { compositions } from "../middleware/context";
 import { PreferenceKeySchema } from "../utils/validation-schemas";
 import { logger } from "../utils/logger";
 

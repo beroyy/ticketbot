@@ -1,5 +1,5 @@
 import { createRoute } from "../factory";
-import { compositions } from "../middleware/factory-middleware";
+import { compositions } from "../middleware/context";
 
 // Create auth routes using method chaining
 export const authRoutes = createRoute()

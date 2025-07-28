@@ -10,7 +10,7 @@ import {
   TicketStatusSchema,
 } from "@ticketsbot/core";
 import { createRoute, ApiErrors } from "../factory";
-import { compositions } from "../middleware/factory-middleware";
+import { compositions } from "../middleware/context";
 import { globalRegistry } from "../utils/validation";
 
 // Register core schemas with metadata

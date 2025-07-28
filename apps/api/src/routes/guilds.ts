@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
 import { Guild } from "@ticketsbot/core/domains";
 import { createRoute } from "../factory";
-import { compositions, requirePermission } from "../middleware/factory-middleware";
+import { compositions, requirePermission } from "../middleware/context";
 
 // Create guild routes using method chaining
 export const guildRoutes = createRoute()
@@ -19,11 +19,7 @@ export const guildRoutes = createRoute()
     ),
     requirePermission(PermissionFlags.ANALYTICS_VIEW),
     async (c) => {
-      const { guildId } = c.req.valid("param");
-
-      // Set guild context
-      c.set("guildId", guildId);
-
+      // Guild ID is extracted from params by context middleware
       // Get statistics from the Guild domain - returns all timeframes
       const stats = await Guild.getStatistics();
 

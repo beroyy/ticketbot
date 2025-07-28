@@ -1,4 +1,5 @@
 import type { Context, ErrorHandler } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 import {
   Actor,
@@ -24,6 +25,7 @@ interface ErrorResponse {
  * Get appropriate HTTP status code for an error
  */
 const getStatusCode = (error: unknown) => {
+  if (error instanceof HTTPException) return error.status as any;
   if (error instanceof ZodError) return 400 as const;
   if (error instanceof PermissionDeniedError) return 403 as const;
   if (error instanceof ContextNotFoundError) return 500 as const;
@@ -53,11 +55,40 @@ const getStatusCode = (error: unknown) => {
 /**
  * Format error for response
  */
-const formatError = (error: unknown): ErrorResponse => {
+const formatError = async (error: unknown): Promise<ErrorResponse> => {
   // Get request ID from context if available
   const actor = Actor.maybeUse();
   const requestId =
     actor && actor.type === "web_user" ? actor.properties.session.session.id : undefined;
+
+  // Handle HTTPException (includes ApiError)
+  if (error instanceof HTTPException) {
+    // Try to parse the response body if it's JSON
+    const response = error.getResponse();
+    if (response instanceof Response) {
+      try {
+        const body = await response.clone().json() as any;
+        return {
+          error: body.error || error.message,
+          code: body.code || "http_error",
+          details: body.details,
+          requestId,
+        };
+      } catch {
+        // If not JSON, use the message
+        return {
+          error: error.message,
+          code: "http_error",
+          requestId,
+        };
+      }
+    }
+    return {
+      error: error.message,
+      code: "http_error",
+      requestId,
+    };
+  }
 
   // Handle ZodError with prettified output
   if (error instanceof ZodError) {
@@ -114,9 +145,9 @@ const formatError = (error: unknown): ErrorResponse => {
 /**
  * Global error handler for Hono
  */
-export const errorHandler: ErrorHandler = (err, c) => {
+export const errorHandler: ErrorHandler = async (err, c) => {
   const status = getStatusCode(err);
-  const response = formatError(err);
+  const response = await formatError(err);
 
   return c.json(response, status);
 };
@@ -131,7 +162,7 @@ export const catchErrors = <T extends unknown[], R>(handler: (...args: T) => Pro
     } catch (error) {
       const c = args[0] as Context;
       const status = getStatusCode(error);
-      const response = formatError(error);
+      const response = await formatError(error);
       return c.json(response, status) as R;
     }
   };
@@ -157,12 +188,12 @@ export const toResult = async <T>(promise: Promise<T>): Promise<Result<T>> => {
 /**
  * Handle a Result type in a route handler
  */
-export const handleResult = <T>(c: Context, result: Result<T>, successStatus = 200): Response => {
+export const handleResult = async <T>(c: Context, result: Result<T>, successStatus = 200): Promise<Response> => {
   if (result.ok) {
     return c.json(result.value as any, successStatus as any);
   }
 
   const status = getStatusCode(result.error);
-  const response = formatError(result.error);
+  const response = await formatError(result.error);
   return c.json(response as any, status as any);
 };

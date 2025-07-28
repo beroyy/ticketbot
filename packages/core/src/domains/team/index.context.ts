@@ -1,7 +1,8 @@
 import { prisma } from "../../prisma/client";
 import { TeamRoleStatus, type TeamRole, type TeamRoleMember } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
-import { cacheService, CacheKeys, CacheTTL } from "../../prisma/services/cache";
+import { Redis } from "../../redis";
+import { logger } from "../../utils/logger";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
 import { PermissionFlags } from "../../schemas/permissions-constants";
 
@@ -60,13 +61,6 @@ export namespace Team {
       Actor.requirePermission(PermissionFlags.MEMBER_VIEW);
     }
 
-    // Check cache first
-    const cacheKey = CacheKeys.userRoles(guildId, userId);
-    const cached = cacheService.get(cacheKey) as TeamRole[] | null;
-    if (cached !== null) {
-      return cached;
-    }
-
     const roleMembers = await prisma.teamRoleMember.findMany({
       where: {
         discordId: userId,
@@ -80,12 +74,7 @@ export namespace Team {
       },
     });
 
-    const roles = roleMembers.map((rm: TeamRoleMember & { teamRole: TeamRole }) => rm.teamRole);
-
-    // Cache the result
-    cacheService.set(cacheKey, roles, CacheTTL.userRoles);
-
-    return roles;
+    return roleMembers.map((rm: TeamRoleMember & { teamRole: TeamRole }) => rm.teamRole);
   };
 
   /**
@@ -127,11 +116,16 @@ export namespace Team {
       return devPerms;
     }
 
-    // Check cache first
-    const cacheKey = CacheKeys.userPermissions(guildId, userId);
-    const cached = cacheService.get(cacheKey) as string | null;
-    if (cached !== null) {
-      return BigInt(cached);
+    // Try Redis cache if available
+    const cacheKey = `perms:${guildId}:${userId}`;
+    if (Redis.isAvailable()) {
+      const cached = await Redis.withRetry(
+        async (client) => client.get(cacheKey),
+        `getUserPermissions.get(${guildId}:${userId})`
+      );
+      if (cached) {
+        return BigInt(cached);
+      }
     }
 
     // Check if user is guild owner
@@ -141,9 +135,17 @@ export namespace Team {
     });
 
     if (guild?.ownerDiscordId === userId) {
-      console.log(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
+      logger.debug(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
       const allPerms = ALL_PERMISSIONS;
-      cacheService.set(cacheKey, allPerms.toString(), CacheTTL.permissions);
+      
+      // Cache the result
+      if (Redis.isAvailable()) {
+        await Redis.withRetry(
+          async (client) => client.setEx(cacheKey, 300, allPerms.toString()),
+          `getUserPermissions.set(${guildId}:${userId})`
+        );
+      }
+      
       return allPerms;
     }
 
@@ -173,8 +175,13 @@ export namespace Team {
       );
     }
 
-    // Cache the result (store as string since BigInt can't be JSON serialized)
-    cacheService.set(cacheKey, finalPermissions.toString(), CacheTTL.permissions);
+    // Cache the result
+    if (Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.setEx(cacheKey, 300, finalPermissions.toString()),
+        `getUserPermissions.set(${guildId}:${userId})`
+      );
+    }
 
     return finalPermissions;
   };
@@ -262,7 +269,24 @@ export namespace Team {
 
       afterTransaction(async () => {
         // Invalidate all user permission caches for this guild
-        cacheService.deletePattern(CacheKeys.guildPattern(guildId));
+        if (Redis.isAvailable()) {
+          await Redis.withRetry(
+            async (client) => {
+              const keys = [];
+              for await (const key of client.scanIterator({
+                MATCH: `perms:${guildId}:*`,
+                COUNT: 100
+              })) {
+                keys.push(key);
+              }
+              if (keys.length > 0) {
+                await (client.del as any).apply(client, keys);
+              }
+              return keys.length;
+            },
+            `updateRolePermissions.invalidateGuild(${guildId})`
+          );
+        }
 
         // TODO: Add event logging when eventLog model is available
         console.log(`Role permissions updated: ${role.name} by ${userId}`);
@@ -316,9 +340,13 @@ export namespace Team {
       });
 
       afterTransaction(async () => {
-        // Invalidate caches
-        cacheService.delete(CacheKeys.userPermissions(guildId, targetUserId));
-        cacheService.delete(CacheKeys.userRoles(guildId, targetUserId));
+        // Invalidate permission cache
+        if (Redis.isAvailable()) {
+          await Redis.withRetry(
+            async (client) => client.del(`perms:${guildId}:${targetUserId}`),
+            `assignRole.invalidate(${guildId}:${targetUserId})`
+          );
+        }
 
         // TODO: Add event logging when eventLog model is available
         console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
@@ -360,9 +388,13 @@ export namespace Team {
       });
 
       afterTransaction(async () => {
-        // Invalidate caches
-        cacheService.delete(CacheKeys.userPermissions(guildId, targetUserId));
-        cacheService.delete(CacheKeys.userRoles(guildId, targetUserId));
+        // Invalidate permission cache
+        if (Redis.isAvailable()) {
+          await Redis.withRetry(
+            async (client) => client.del(`perms:${guildId}:${targetUserId}`),
+            `removeRole.invalidate(${guildId}:${targetUserId})`
+          );
+        }
 
         // TODO: Add event logging when eventLog model is available
         console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
@@ -377,13 +409,6 @@ export namespace Team {
   export const ensureDefaultRoles = async (): Promise<void> => {
     Actor.requirePermission(PermissionFlags.ROLE_CREATE);
     const guildId = Actor.guildId();
-
-    // Check cache first
-    const cacheKey = CacheKeys.defaultRoles(guildId);
-    const cached = cacheService.get(cacheKey) as boolean | null;
-    if (cached === true) {
-      return;
-    }
 
     await withTransaction(async () => {
       const tx = useTransaction();
@@ -454,9 +479,6 @@ export namespace Team {
         });
       }
     });
-
-    // Cache that we've ensured default roles exist
-    cacheService.set(cacheKey, true, CacheTTL.defaultRoles);
   };
 
   /**

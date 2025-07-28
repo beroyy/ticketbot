@@ -4,11 +4,14 @@ import { User, DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
 import { env, isDevelopment } from "../env";
 import { logger } from "../utils/logger";
+import { nanoid } from "nanoid";
 
 type Variables = {
   user: AuthSession["user"];
   session: AuthSession;
   guildId?: string;
+  requestId: string;
+  startTime: number;
 };
 
 /**
@@ -84,6 +87,7 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
         permissions = devPermissions;
       } else {
         permissions = await User.getPermissions(guildId, session.user.discordUserId);
+        logger.debug(`Context middleware - calculated permissions for user ${session.user.discordUserId} in guild ${guildId}: ${permissions.toString()}`);
       }
     } catch (error) {
       logger.error("Failed to get permissions:", error);
@@ -209,3 +213,46 @@ export const requireAnyPermission = (...permissions: bigint[]) => {
     }
   };
 };
+
+/**
+ * Request tracking middleware - adds requestId and timing
+ */
+export const requestTracking: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
+  c.set("requestId", nanoid());
+  c.set("startTime", Date.now());
+
+  await next();
+
+  const duration = Date.now() - c.get("startTime");
+  c.header("X-Request-ID", c.get("requestId"));
+  c.header("X-Response-Time", `${duration}ms`);
+};
+
+/**
+ * Middleware compositions for common patterns
+ * These replace the old compositions from factory-middleware.ts
+ */
+export const middleware = {
+  /**
+   * Public endpoints - no auth required
+   */
+  public: [requestTracking] as const,
+
+  /**
+   * Authenticated endpoints - require valid session
+   * withContext automatically extracts guild ID if present
+   */
+  authenticated: [requestTracking, withContext] as const,
+
+  /**
+   * Guild-scoped endpoints - same as authenticated in new system
+   * withContext automatically extracts guild ID from params/query
+   */
+  guildScoped: [requestTracking, withContext] as const,
+} as const;
+
+/**
+ * Backward compatibility export for easier migration
+ * Maps old names to new middleware
+ */
+export const compositions = middleware;

@@ -9,7 +9,7 @@ import {
   PermissionFlags,
 } from "@ticketsbot/core";
 import { createRoute, ApiErrors } from "../factory";
-import { compositions, requirePermission } from "../middleware/factory-middleware";
+import { compositions, requirePermission } from "../middleware/context";
 import { transformApiPanelToDomain } from "../utils/schema-transforms";
 import { patterns } from "../utils/validation";
 
@@ -222,9 +222,6 @@ export const panelRoutes = createRoute()
     zValidator("json", CreatePanelSchema),
     async (c) => {
       const input = c.req.valid("json");
-
-      // Set guild context
-      c.set("guildId", input.guildId);
 
       // Transform API input to domain format
       const domainInput = transformApiPanelToDomain(input);

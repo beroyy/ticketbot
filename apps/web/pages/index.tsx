@@ -1,5 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { useSelectServer } from "@/features/user/ui/select-server-provider";
+import { useAuth } from "@/features/auth/auth-provider";
 import {
   useTicketStats,
   useRecentActivity,
@@ -11,7 +11,7 @@ import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-rea
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { selectedGuildId } = useSelectServer();
+  const { selectedGuildId } = useAuth();
   const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
 
   const { data: ticketStats, isLoading, error } = useTicketStats(selectedGuildId);

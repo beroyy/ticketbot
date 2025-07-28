@@ -6,7 +6,8 @@ import {
   type DiscordUser,
 } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
-import { cacheService, CacheKeys, CacheTTL } from "../../prisma/services/cache";
+import { Redis } from "../../redis";
+import { logger } from "../../utils/logger";
 
 // Export specific schemas
 export {
@@ -50,13 +51,6 @@ export namespace Team {
    * Get all roles for a user in a guild
    */
   export const getUserRoles = async (guildId: string, userId: string): Promise<TeamRole[]> => {
-    // Check cache first
-    const cacheKey = CacheKeys.userRoles(guildId, userId);
-    const cached = cacheService.get(cacheKey) as TeamRole[] | null;
-    if (cached !== null) {
-      return cached;
-    }
-
     const roleMembers = await prisma.teamRoleMember.findMany({
       where: {
         discordId: userId,
@@ -70,12 +64,7 @@ export namespace Team {
       },
     });
 
-    const roles = roleMembers.map((rm: TeamRoleMember & { teamRole: TeamRole }) => rm.teamRole);
-
-    // Cache the result
-    cacheService.set(cacheKey, roles, CacheTTL.userRoles);
-
-    return roles;
+    return roleMembers.map((rm: TeamRoleMember & { teamRole: TeamRole }) => rm.teamRole);
   };
 
   /**
@@ -91,11 +80,19 @@ export namespace Team {
       return devPerms;
     }
 
-    // Check cache first
-    const cacheKey = CacheKeys.userPermissions(guildId, userId);
-    const cached = cacheService.get(cacheKey) as string | null;
-    if (cached !== null) {
-      return BigInt(cached);
+    // Try Redis cache if available
+    const cacheKey = `perms:${guildId}:${userId}`;
+    if (Redis.isAvailable()) {
+      const cached = await Redis.withRetry(
+        async (client) => client.get(cacheKey),
+        `getUserPermissions.get(${guildId}:${userId})`
+      );
+      if (cached) {
+        logger.debug(`Found cached permissions for ${userId} in guild ${guildId}: ${cached}`);
+        return BigInt(cached);
+      } else {
+        logger.debug(`No cached permissions found for ${userId} in guild ${guildId}, calculating...`);
+      }
     }
 
     // Check if user is guild owner
@@ -104,10 +101,25 @@ export namespace Team {
       select: { ownerDiscordId: true },
     });
 
+    logger.debug(`Checking guild ownership for getUserPermissions:`, {
+      guildId,
+      userId,
+      guildOwnerDiscordId: guild?.ownerDiscordId,
+      isOwner: guild?.ownerDiscordId === userId,
+    });
+
     if (guild?.ownerDiscordId === userId) {
-      console.log(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
+      logger.debug(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
       const allPerms = ALL_PERMISSIONS;
-      cacheService.set(cacheKey, allPerms.toString(), CacheTTL.permissions);
+      
+      // Cache the result
+      if (Redis.isAvailable()) {
+        await Redis.withRetry(
+          async (client) => client.setEx(cacheKey, 300, allPerms.toString()),
+          `getUserPermissions.set(${guildId}:${userId})`
+        );
+      }
+      
       return allPerms;
     }
 
@@ -137,8 +149,13 @@ export namespace Team {
       );
     }
 
-    // Cache the result (store as string since BigInt can't be JSON serialized)
-    cacheService.set(cacheKey, finalPermissions.toString(), CacheTTL.permissions);
+    // Cache the result
+    if (Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.setEx(cacheKey, 300, finalPermissions.toString()),
+        `getUserPermissions.set(${guildId}:${userId})`
+      );
+    }
 
     return finalPermissions;
   };
@@ -229,13 +246,6 @@ export namespace Team {
    * Ensure default roles exist for a guild
    */
   export const ensureDefaultRoles = async (guildId: string): Promise<void> => {
-    // Check cache first
-    const cacheKey = CacheKeys.defaultRoles(guildId);
-    const cached = cacheService.get(cacheKey) as boolean | null;
-    if (cached === true) {
-      return;
-    }
-
     // Check if admin role exists
     const adminRole = await prisma.teamRole.findFirst({
       where: {
@@ -301,9 +311,6 @@ export namespace Team {
         },
       });
     }
-
-    // Cache that we've ensured default roles exist
-    cacheService.set(cacheKey, true, CacheTTL.defaultRoles);
   };
 
   /**
@@ -338,10 +345,12 @@ export namespace Team {
       },
     });
 
-    // Invalidate caches
-    if (role) {
-      cacheService.delete(CacheKeys.userPermissions(role.guildId, userId));
-      cacheService.delete(CacheKeys.userRoles(role.guildId, userId));
+    // Invalidate permission cache
+    if (role && Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.del(`perms:${role.guildId}:${userId}`),
+        `assignRole.invalidate(${role.guildId}:${userId})`
+      );
     }
 
     return result;
@@ -366,10 +375,12 @@ export namespace Team {
       },
     });
 
-    // Invalidate caches
-    if (role) {
-      cacheService.delete(CacheKeys.userPermissions(role.guildId, userId));
-      cacheService.delete(CacheKeys.userRoles(role.guildId, userId));
+    // Invalidate permission cache
+    if (role && Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.del(`perms:${role.guildId}:${userId}`),
+        `assignRole.invalidate(${role.guildId}:${userId})`
+      );
     }
 
     return result;
@@ -404,8 +415,23 @@ export namespace Team {
     });
 
     // Invalidate all user permission caches for this guild
-    if (role) {
-      cacheService.deletePattern(CacheKeys.guildPattern(role.guildId));
+    if (role && Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => {
+          const keys = [];
+          for await (const key of client.scanIterator({
+            MATCH: `perms:${role.guildId}:*`,
+            COUNT: 100
+          })) {
+            keys.push(key);
+          }
+          if (keys.length > 0) {
+            await (client.del as any).apply(client, keys);
+          }
+          return keys.length;
+        },
+        `updateRolePermissions.invalidateGuild(${role.guildId})`
+      );
     }
 
     return result;
@@ -437,7 +463,12 @@ export namespace Team {
     });
 
     // Invalidate user permission cache
-    cacheService.delete(CacheKeys.userPermissions(guildId, userId));
+    if (Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.del(`perms:${guildId}:${userId}`),
+        `setAdditionalPermissions.invalidate(${guildId}:${userId})`
+      );
+    }
 
     return result;
   };
@@ -530,9 +561,13 @@ export namespace Team {
       },
     });
 
-    // Invalidate caches
-    cacheService.delete(CacheKeys.userPermissions(guildId, userId));
-    cacheService.delete(CacheKeys.userRoles(guildId, userId));
+    // Invalidate permission cache
+    if (Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.del(`perms:${guildId}:${userId}`),
+        `removeAllRoles.invalidate(${guildId}:${userId})`
+      );
+    }
 
     return result.count;
   };

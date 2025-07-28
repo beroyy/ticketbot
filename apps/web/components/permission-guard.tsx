@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useRouter } from "next/router";
-import { useSelectServer } from "@/features/user/ui/select-server-provider";
+import { useAuth } from "@/features/auth/auth-provider";
 import { usePermissions } from "@/features/permissions/hooks/use-permissions";
 
 interface PermissionGuardProps {
@@ -18,7 +18,7 @@ export function PermissionGuard({
   fallback,
   requireGuild = true,
 }: PermissionGuardProps) {
-  const { selectedGuildId } = useSelectServer();
+  const { selectedGuildId } = useAuth();
   const { hasPermission, hasAnyPermission, isLoading } = usePermissions();
   const router = useRouter();
 

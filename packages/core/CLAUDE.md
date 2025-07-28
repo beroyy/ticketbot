@@ -13,7 +13,6 @@ core/
 │   ├── schema.prisma   # Main schema file
 │   ├── *.prisma        # Domain-specific schema files
 │   └── services/       # Database services
-│       ├── cache.ts    # In-memory caching with TTL
 │       └── validation.ts # Zod validation utilities
 ├── domains/            # 13 Domain namespaces
 │   ├── account/       # Account management
@@ -91,7 +90,7 @@ core/
 
 - **PermissionUtils** - BigInt permission flag operations
 - **parseDiscordId** - Convert Discord snowflakes to strings
-- **CacheService** - In-memory caching with TTL and metrics
+- **Direct Redis usage** - Permissions caching without abstraction layers
 - **ValidationService** - Zod validation with error formatting
 
 ### Constants

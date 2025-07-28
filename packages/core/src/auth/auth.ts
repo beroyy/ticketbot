@@ -363,8 +363,8 @@ const createAuthInstance = () => {
           });
         }
 
-        if (ctx.path && ctx.path.includes("/callback/discord")) {
-          logger.debug("Discord OAuth callback detected");
+        if (ctx.path && ctx.path.includes("/callback/")) {
+          logger.debug("OAuth callback detected", { path: ctx.path });
 
           const contextData = ctx.context as AuthContext;
           const user = contextData?.newSession?.user || contextData?.user;
@@ -479,52 +479,84 @@ const createAuthInstance = () => {
                 await DiscordCache.setGuilds(user.id, adminGuilds);
                 logger.debug(`Cached ${adminGuilds.length} admin guilds for user during OAuth`);
 
-                // Handle owned guilds for ownership setup
-                const ownedGuilds = guilds.filter((g) => g.owner);
-
-                if (ownedGuilds.length > 0) {
+                // Handle all admin guilds for database setup
+                if (adminGuilds.length > 0) {
                   logger.debug(
-                    `Found ${ownedGuilds.length} owned guilds for user ${account.accountId}`
+                    `Found ${adminGuilds.length} admin guilds for user ${account.accountId}`
                   );
 
                   const { ensure: ensureGuild } = await import("../domains/guild");
+                  const { Team } = await import("../domains/team");
 
                   await Promise.all(
-                    ownedGuilds.map(async (guild) => {
+                    adminGuilds.map(async (guild) => {
                       try {
-                        // Use Discord user ID for ownership, not account ID
-                        await ensureGuild(guild.id, guild.name, account.accountId);
-                        logger.debug(`Set ownership for guild ${guild.id} (${guild.name}) with Discord ID ${account.accountId}`);
+                        // Create guild record - only set owner if they actually own it
+                        const ownerId = guild.owner ? account.accountId : undefined;
+                        logger.debug(`Processing guild ${guild.id}:`, {
+                          guildName: guild.name,
+                          isOwner: guild.owner,
+                          accountId: account.accountId,
+                          ownerId,
+                        });
+                        await ensureGuild(guild.id, guild.name, ownerId);
+                        
+                        if (guild.owner) {
+                          logger.debug(`Set ownership for guild ${guild.id} (${guild.name}) with Discord ID ${account.accountId}`);
+                        } else {
+                          logger.debug(`Created guild record for ${guild.id} (${guild.name}) where user is admin but not owner`);
+                        }
 
-                        const { cacheService, CacheKeys } = await import(
-                          "../prisma/services/cache"
-                        );
-                        const deletedCount = cacheService.deletePattern(
-                          CacheKeys.guildPattern(guild.id)
-                        );
-                        logger.debug(
-                          `Invalidated ${deletedCount} cached entries for guild ${guild.id}`
-                        );
+                        // Invalidate permission cache for this guild
+                        if (Redis.isAvailable()) {
+                          await Redis.withRetry(
+                            async (client) => {
+                              const keys = [];
+                              for await (const key of client.scanIterator({
+                                MATCH: `perms:${guild.id}:*`,
+                                COUNT: 100
+                              })) {
+                                keys.push(key);
+                              }
+                              if (keys.length > 0) {
+                                await (client.del as any).apply(client, keys);
+                              }
+                              return keys.length;
+                            },
+                            `auth.invalidateGuild(${guild.id})`
+                          );
+                          logger.debug(`Invalidated permission cache for guild ${guild.id}`);
+                        }
 
-                        const { Team } = await import("../domains/team");
+                        // Ensure default roles exist
                         await Team.ensureDefaultRoles(guild.id);
                         logger.debug(`Ensured default roles exist for guild ${guild.id}`);
                         
-                        // Automatically assign owner to admin role
-                        const adminRole = await Team.getRoleByName(guild.id, "admin");
-                        if (adminRole) {
-                          await Team.assignRole(adminRole.id, account.accountId);
-                          logger.debug(`Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`);
+                        // Assign appropriate role based on permissions
+                        if (guild.owner) {
+                          // Owner gets admin role
+                          const adminRole = await Team.getRoleByName(guild.id, "admin");
+                          if (adminRole) {
+                            await Team.assignRole(adminRole.id, account.accountId);
+                            logger.debug(`Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`);
+                          }
+                        } else {
+                          // Non-owner admin gets viewer role by default
+                          const viewerRole = await Team.getRoleByName(guild.id, "viewer");
+                          if (viewerRole) {
+                            await Team.assignRole(viewerRole.id, account.accountId);
+                            logger.debug(`Assigned viewer role to admin user ${account.accountId} in guild ${guild.id}`);
+                          }
                         }
                       } catch (error) {
-                        logger.error(`Failed to set ownership for guild ${guild.id}:`, error);
+                        logger.error(`Failed to setup guild ${guild.id}:`, error);
                       }
                     })
                   );
 
-                  logger.debug("Guild ownership setup completed");
+                  logger.debug("Guild setup completed for all admin guilds");
                 } else {
-                  logger.debug("No owned guilds found for user");
+                  logger.debug("No admin guilds found for user");
                 }
               } else {
                 logger.warn("Failed to fetch user guilds during auth:", guildsResponse.status);

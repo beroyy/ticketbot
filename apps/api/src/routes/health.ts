@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Redis } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/core/prisma";
 import { createRoute } from "../factory";
-import { compositions } from "../middleware/factory-middleware";
+import { compositions } from "../middleware/context";
 import { env, isProduction } from "../env";
 
 // Response schemas for type safety and documentation

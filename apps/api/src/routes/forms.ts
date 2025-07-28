@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Form } from "@ticketsbot/core/domains";
 import { createRoute, ApiErrors } from "../factory";
-import { compositions } from "../middleware/factory-middleware";
+import { compositions } from "../middleware/context";
 import { API_TO_DOMAIN_FIELD_TYPE } from "../utils/schema-transforms";
 
 // API-specific field schema

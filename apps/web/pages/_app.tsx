@@ -5,12 +5,11 @@ import dynamic from "next/dynamic";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query-client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { SelectServerProvider } from "@/features/user/ui/select-server-provider";
 import { UserProvider } from "@/features/user/ui/user-provider";
+import { AuthProvider } from "@/features/auth/auth-provider";
 import { AppStoreProvider } from "@/shared/stores/app-store-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { AuthGate } from "@/components/auth-gate";
 import { useState } from "react";
 
 // Dynamically import Navbar with SSR disabled to avoid router issues during build
@@ -28,15 +27,13 @@ export default function App({ Component, pageProps }: AppProps) {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <UserProvider>
-          <AuthGate>
-            <SelectServerProvider>
-              <AppStoreProvider>
-                <Navbar />
-                <Component {...pageProps} />
-                <Toaster />
-              </AppStoreProvider>
-            </SelectServerProvider>
-          </AuthGate>
+          <AuthProvider>
+            <AppStoreProvider>
+              <Navbar />
+              <Component {...pageProps} />
+              <Toaster />
+            </AppStoreProvider>
+          </AuthProvider>
         </UserProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

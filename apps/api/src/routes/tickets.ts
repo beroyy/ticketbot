@@ -8,7 +8,7 @@ import {
 } from "@ticketsbot/core";
 import { Ticket, TicketLifecycle, Transcripts, Analytics, User } from "@ticketsbot/core/domains";
 import { createRoute, ApiErrors } from "../factory";
-import { compositions, requirePermission } from "../middleware/factory-middleware";
+import { compositions, requirePermission } from "../middleware/context";
 
 // Response schemas
 const _TicketDashboardResponse = z.object({
@@ -204,9 +204,6 @@ export const ticketRoutes = createRoute()
     async (c) => {
       const { guildId, status, page, pageSize } = c.req.valid("query");
 
-      // Set guild context
-      c.set("guildId", guildId);
-
       const tickets = await Ticket.list({
         guildId,
         status,
@@ -218,6 +215,41 @@ export const ticketRoutes = createRoute()
       );
 
       return c.json(formattedTickets);
+    }
+  )
+
+  // Get recent activity
+  .get(
+    "/recent-activity",
+    ...compositions.authenticated,
+    zValidator(
+      "query",
+      z.object({
+        guildId: DiscordGuildIdSchema,
+        limit: z.coerce.number().int().positive().max(50).default(10),
+      })
+    ),
+    requirePermission(PermissionFlags.TICKET_VIEW_ALL),
+    async (c) => {
+      // Guild ID is available from query through context
+      // TODO: Implement event listing in Event domain or Analytics
+      // For now, return empty array to match current behavior
+      const recentEvents: any[] = [];
+
+      const formattedEvents = recentEvents.map((event: any, index: number) => ({
+        id: event.id || index,
+        event: event.action,
+        timestamp: new Date(event.createdAt).toISOString(),
+        ticketId: event.ticketId,
+        performedBy: {
+          id: event.actorId || "system",
+          username: event.actor?.username || "System",
+          avatarUrl: event.actor?.avatarUrl,
+        },
+        metadata: event.metadata,
+      }));
+
+      return c.json(formattedEvents);
     }
   )
 
@@ -246,9 +278,6 @@ export const ticketRoutes = createRoute()
   // Create ticket
   .post("/", ...compositions.authenticated, zValidator("json", CreateTicketSchema), async (c) => {
     const input = c.req.valid("json");
-
-    // Set guild context
-    c.set("guildId", input.guildId);
 
     try {
       // Use TicketLifecycle.create for ticket creation
@@ -595,9 +624,6 @@ export const ticketRoutes = createRoute()
     async (c) => {
       const { guildId } = c.req.valid("param");
 
-      // Set guild context
-      c.set("guildId", guildId);
-
       const _stats = await Analytics.getTicketStatistics({
         guildId,
         includeDeleted: false,
@@ -611,44 +637,5 @@ export const ticketRoutes = createRoute()
         closureRate: _stats.closureRate,
         groupedStats: _stats.groupedStats,
       } satisfies z.infer<typeof _TicketStatistics>);
-    }
-  )
-
-  // Get recent activity
-  .get(
-    "/recent-activity",
-    ...compositions.authenticated,
-    zValidator(
-      "query",
-      z.object({
-        guildId: DiscordGuildIdSchema,
-        limit: z.coerce.number().int().positive().max(50).default(10),
-      })
-    ),
-    requirePermission(PermissionFlags.TICKET_VIEW_ALL),
-    async (c) => {
-      const { guildId } = c.req.valid("query");
-
-      // Set guild context
-      c.set("guildId", guildId);
-
-      // TODO: Implement event listing in Event domain or Analytics
-      // For now, return empty array to match current behavior
-      const recentEvents: any[] = [];
-
-      const formattedEvents = recentEvents.map((event: any, index: number) => ({
-        id: event.id || index,
-        event: event.action,
-        timestamp: new Date(event.createdAt).toISOString(),
-        ticketId: event.ticketId,
-        performedBy: {
-          id: event.actorId || "system",
-          username: event.actor?.username || "System",
-          avatarUrl: event.actor?.avatarUrl,
-        },
-        metadata: event.metadata,
-      }));
-
-      return c.json(formattedEvents);
     }
   );

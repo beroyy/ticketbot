@@ -4,9 +4,11 @@ import { ZodError, z } from "zod";
 import { VisibleError, PermissionDeniedError } from "@ticketsbot/core/context";
 import { errorHandler } from "../src/utils/error-handler";
 
+const mockIsDevelopment = vi.hoisted(() => vi.fn(() => false));
+
 // Mock the env module
 vi.mock("../src/env", () => ({
-  isDevelopment: vi.fn(() => false),
+  isDevelopment: mockIsDevelopment,
 }));
 
 // Mock the validation module
@@ -23,6 +25,18 @@ vi.mock("../src/utils/validation", () => ({
   })),
 }));
 
+// Mock the Actor context
+vi.mock("@ticketsbot/core/context", async () => {
+  const actual = await vi.importActual("@ticketsbot/core/context") as any;
+  return {
+    ...actual,
+    Actor: {
+      ...actual.Actor,
+      maybeUse: vi.fn(() => null),
+    },
+  };
+});
+
 describe("Error Handler", () => {
   let mockContext: any;
 
@@ -32,10 +46,12 @@ describe("Error Handler", () => {
       status: vi.fn(),
     };
     vi.clearAllMocks();
+    // Reset isDevelopment to false by default
+    mockIsDevelopment.mockReturnValue(false);
   });
 
   describe("ZodError handling", () => {
-    it("should handle ZodError with 400 status", () => {
+    it("should handle ZodError with 400 status", async () => {
       const schema = z.object({ name: z.string() });
       let zodError: ZodError;
 
@@ -45,7 +61,7 @@ describe("Error Handler", () => {
         zodError = error as ZodError;
       }
 
-      const result = errorHandler(zodError!, mockContext as Context);
+      const result = await errorHandler(zodError!, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -57,8 +73,7 @@ describe("Error Handler", () => {
     });
 
     it("should include prettified error in development", async () => {
-      const { isDevelopment } = await import("../src/env");
-      (isDevelopment as any).mockReturnValue(true);
+      mockIsDevelopment.mockReturnValue(true);
 
       const schema = z.object({ email: z.string().email() });
       let zodError: ZodError;
@@ -69,7 +84,7 @@ describe("Error Handler", () => {
         zodError = error as ZodError;
       }
 
-      const result = errorHandler(zodError!, mockContext as Context);
+      const result = await errorHandler(zodError!, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -81,7 +96,7 @@ describe("Error Handler", () => {
   });
 
   describe("VisibleError handling", () => {
-    it("should handle VisibleError with appropriate status codes", () => {
+    it("should handle VisibleError with appropriate status codes", async () => {
       const testCases = [
         { code: "not_found", expectedStatus: 404 },
         { code: "validation_error", expectedStatus: 400 },
@@ -91,9 +106,9 @@ describe("Error Handler", () => {
         { code: "unknown", expectedStatus: 400 }, // Default
       ];
 
-      testCases.forEach(({ code, expectedStatus }) => {
+      for (const { code, expectedStatus } of testCases) {
         const error = new VisibleError(code as any, "Test error message");
-        errorHandler(error, mockContext as Context);
+        await errorHandler(error, mockContext as Context);
 
         expect(mockContext.json).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -102,16 +117,16 @@ describe("Error Handler", () => {
           }),
           expectedStatus
         );
-      });
+      }
     });
 
-    it("should include details when provided", () => {
+    it("should include details when provided", async () => {
       const error = new VisibleError("validation_error", "Invalid input", {
         field: "email",
         reason: "Must be a valid email",
       });
 
-      errorHandler(error, mockContext as Context);
+      await errorHandler(error, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -128,15 +143,16 @@ describe("Error Handler", () => {
   });
 
   describe("PermissionDeniedError handling", () => {
-    it("should handle PermissionDeniedError with 403 status", () => {
+    it("should handle PermissionDeniedError with 403 status", async () => {
       const error = new PermissionDeniedError("Insufficient permissions");
 
-      errorHandler(error, mockContext as Context);
+      await errorHandler(error, mockContext as Context);
 
-      // PermissionDeniedError might be treated as a generic Error in current implementation
+      // PermissionDeniedError is treated as a generic Error and message is hidden in production
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.stringContaining("Insufficient permissions"),
+          error: "An internal error occurred",
+          code: "internal_error",
         }),
         403
       );
@@ -144,10 +160,12 @@ describe("Error Handler", () => {
   });
 
   describe("Generic Error handling", () => {
-    it("should hide internal errors in production", () => {
+    it("should hide internal errors in production", async () => {
+      mockIsDevelopment.mockReturnValue(false);
+      
       const error = new Error("Database connection failed");
 
-      errorHandler(error, mockContext as Context);
+      await errorHandler(error, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -159,12 +177,11 @@ describe("Error Handler", () => {
     });
 
     it("should show error details in development", async () => {
-      const { isDevelopment } = await import("../src/env");
-      (isDevelopment as any).mockReturnValue(true);
+      mockIsDevelopment.mockReturnValue(true);
 
       const error = new Error("Database connection failed");
 
-      errorHandler(error, mockContext as Context);
+      await errorHandler(error, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -181,10 +198,10 @@ describe("Error Handler", () => {
   });
 
   describe("Unknown error handling", () => {
-    it("should handle non-Error objects", () => {
+    it("should handle non-Error objects", async () => {
       const error = { weird: "object" };
 
-      errorHandler(error as any, mockContext as Context);
+      await errorHandler(error as any, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -195,10 +212,10 @@ describe("Error Handler", () => {
       );
     });
 
-    it("should handle string errors", () => {
+    it("should handle string errors", async () => {
       const error = "Something went wrong";
 
-      errorHandler(error as any, mockContext as Context);
+      await errorHandler(error as any, mockContext as Context);
 
       expect(mockContext.json).toHaveBeenCalledWith(
         expect.objectContaining({

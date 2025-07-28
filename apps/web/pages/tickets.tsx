@@ -19,7 +19,7 @@ import {
   useActiveTab,
   useTicketActions,
 } from "@/shared/stores/app-store";
-import { useSelectServer } from "@/features/user/ui/select-server-provider";
+import { useAuth } from "@/features/auth/auth-provider";
 import { filterAndSortTickets } from "@/features/tickets/utils/ticket-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -122,7 +122,7 @@ function TicketsContent() {
   const [isSortOpen, setIsSortOpen] = useState(false);
 
   // Guild context
-  const { selectedGuildId } = useSelectServer();
+  const { selectedGuildId } = useAuth();
 
   // UI state from global app store
   const filters = useTicketFilters();

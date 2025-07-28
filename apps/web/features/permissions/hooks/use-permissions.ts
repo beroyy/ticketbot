@@ -1,12 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { PermissionUtils } from "@ticketsbot/core/client";
-import { useSelectServer } from "@/features/user/ui/select-server-provider";
+import { useAuth } from "@/features/auth/auth-provider";
 import { permissionQueries } from "../queries";
 
-export function usePermissions(guildIdOverride?: string): any {
+interface UsePermissionsReturn {
+  // Data
+  permissions: bigint;
+  roles: Array<{ id: number; name: string; permissions: bigint }>;
+  guildId?: string;
+  
+  // Query states
+  isLoading: boolean;
+  error: unknown;
+  
+  // Helper functions
+  hasPermission: (permission: bigint) => boolean;
+  hasAnyPermission: (...permissions: bigint[]) => boolean;
+  hasAllPermissions: (...permissions: bigint[]) => boolean;
+  getPermissionNames: () => string[];
+  
+  // Actions
+  refetch: () => void;
+}
+
+export function usePermissions(guildIdOverride?: string): UsePermissionsReturn {
   const router = useRouter();
-  const { selectedGuildId } = useSelectServer();
+  const { selectedGuildId } = useAuth();
 
   // Determine guild ID from multiple sources
   // During SSG, router.query will be empty, so we safely handle it
@@ -43,7 +63,7 @@ export function usePermissions(guildIdOverride?: string): any {
     // Data
     permissions,
     roles,
-    guildId,
+    guildId: guildId || undefined,
 
     // Query states
     isLoading: query.isLoading,

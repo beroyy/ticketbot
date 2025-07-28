@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema } from "@ticketsbot/core";
+import { DiscordGuildIdSchema, Redis } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
-import { Account, findById as findGuildById } from "@ticketsbot/core/domains";
+import { Account, Team, findById as findGuildById } from "@ticketsbot/core/domains";
+import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
 import { DiscordCache } from "@ticketsbot/core/auth";
 import { createRoute, ApiErrors } from "../factory";
-import { compositions } from "../middleware/factory-middleware";
+import { compositions } from "../middleware/context";
 import { logger } from "../utils/logger";
 
 // Response schemas
@@ -40,6 +41,13 @@ const _ChannelResponse = z.object({
   name: z.string(),
   type: z.number().nullable(),
   parentId: z.string().nullable(),
+});
+
+const _GuildSyncResponse = z.object({
+  success: z.boolean(),
+  syncedCount: z.number(),
+  totalAdminGuilds: z.number(),
+  errors: z.array(z.string()).optional(),
 });
 
 // Discord API types
@@ -233,6 +241,147 @@ export const discordRoutes = createRoute()
       error: null,
       code: null,
     } satisfies z.infer<typeof _GuildsListResponse>);
+  })
+
+  // Sync user's guilds to database
+  .post("/guilds/sync", ...compositions.authenticated, async (c) => {
+    const user = c.get("user");
+
+    logger.info("Starting guild sync", {
+      userId: user.id,
+      discordUserId: user.discordUserId,
+    });
+
+    // Check Discord account
+    const accountResult = await getDiscordAccount(user.id);
+    if ("error" in accountResult) {
+      logger.warn("Discord account not connected for guild sync", {
+        error: accountResult.error,
+        userId: user.id,
+      });
+      return c.json({
+        success: false,
+        syncedCount: 0,
+        totalAdminGuilds: 0,
+        errors: [accountResult.error || "Discord account not connected"],
+      } satisfies z.infer<typeof _GuildSyncResponse>, 400);
+    }
+
+    // Fetch guilds from Discord
+    const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
+    if ("error" in result) {
+      logger.error("Failed to fetch guilds for sync", {
+        error: result.error,
+        userId: user.id,
+      });
+      return c.json({
+        success: false,
+        syncedCount: 0,
+        totalAdminGuilds: 0,
+        errors: [result.error || "Failed to fetch guilds from Discord"],
+      } satisfies z.infer<typeof _GuildSyncResponse>, 500);
+    }
+
+    const guilds = result.data as DiscordGuild[];
+    logger.debug("Fetched guilds for sync", {
+      totalGuilds: guilds.length,
+      userId: user.id,
+    });
+
+    // Filter guilds where user has MANAGE_GUILD permission or is owner
+    const adminGuilds = guilds.filter(
+      (guild) => guild.owner || (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION
+    );
+
+    logger.info("Syncing admin guilds", {
+      adminGuildCount: adminGuilds.length,
+      userId: user.id,
+    });
+
+    // All imports are now at the top of the file
+
+    let syncedCount = 0;
+    const errors: string[] = [];
+
+    // Sync each guild
+    for (const guild of adminGuilds) {
+      try {
+        logger.debug(`Syncing guild ${guild.id}`, {
+          guildName: guild.name,
+          isOwner: guild.owner,
+          userId: user.id,
+        });
+
+        // Create/update guild record - only set owner if they actually own it
+        const ownerId = guild.owner && user.discordUserId ? user.discordUserId : undefined;
+        await ensureGuild(guild.id, guild.name, ownerId);
+
+        if (guild.owner) {
+          logger.info(`Set ownership for guild ${guild.id}`, {
+            guildName: guild.name,
+            ownerId: user.discordUserId,
+          });
+        }
+
+        // Ensure default roles exist
+        await Team.ensureDefaultRoles(guild.id);
+
+        // Assign appropriate role based on permissions
+        if (guild.owner && user.discordUserId) {
+          // Owner gets admin role
+          const adminRole = await Team.getRoleByName(guild.id, "admin");
+          if (adminRole) {
+            await Team.assignRole(adminRole.id, user.discordUserId);
+            logger.debug(`Assigned admin role to owner in guild ${guild.id}`);
+          }
+        } else if (user.discordUserId) {
+          // Non-owner admin gets viewer role by default
+          const viewerRole = await Team.getRoleByName(guild.id, "viewer");
+          if (viewerRole) {
+            await Team.assignRole(viewerRole.id, user.discordUserId);
+            logger.debug(`Assigned viewer role to admin in guild ${guild.id}`);
+          }
+        }
+
+        // Clear permission cache for this guild
+        if (Redis.isAvailable() && user.discordUserId) {
+          const cacheKey = `perms:${guild.id}:${user.discordUserId}`;
+          await Redis.withRetry(
+            async (client) => client.del(cacheKey),
+            `guildSync.clearCache(${guild.id}:${user.discordUserId})`
+          );
+        }
+
+        syncedCount++;
+      } catch (error) {
+        logger.error(`Failed to sync guild ${guild.id}`, error);
+        errors.push(`Guild ${guild.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    // Cache the admin guilds
+    const adminGuildData = adminGuilds.map((guild) => ({
+      id: guild.id,
+      name: guild.name,
+      icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+      owner: guild.owner || false,
+      permissions: guild.permissions,
+      features: guild.features || [],
+    }));
+    await DiscordCache.setGuilds(user.id, adminGuildData);
+
+    logger.info("Guild sync completed", {
+      syncedCount,
+      errorCount: errors.length,
+      userId: user.id,
+    });
+
+    return c.json({
+      success: true,
+      syncedCount,
+      totalAdminGuilds: adminGuilds.length,
+      errors: errors.length > 0 ? errors : undefined,
+    } satisfies z.infer<typeof _GuildSyncResponse>);
   })
 
   // Get specific guild details with bot status

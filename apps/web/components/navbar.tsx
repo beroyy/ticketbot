@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MdOutlineArrowDropDown } from "react-icons/md";
-import { useSelectServer } from "@/features/user/ui/select-server-provider";
+import { useAuth } from "@/features/auth/auth-provider";
 import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
 
 interface NavItem {
@@ -59,15 +59,12 @@ export function Navbar() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [isClient, setIsClient] = useState(false);
-  const { selectedGuildId } = useSelectServer();
+  const { selectedGuildId } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Hide navbar on invite page
-  if (["/setup", "/login"].includes(router.pathname)) return null;
 
   // Filter nav items based on permissions
   const visibleNavItems = useMemo(() => {
@@ -91,6 +88,9 @@ export function Navbar() {
       return true;
     });
   }, [selectedGuildId, hasPermission, hasAnyPermission]);
+
+  // Hide navbar on auth/setup pages
+  if (["/setup", "/login", "/guilds"].includes(router.pathname)) return null;
 
   return (
     <nav className="z-10 bg-[#06234A] px-11 py-5 text-white">

@@ -1,5 +1,4 @@
 import { redisClient, type RedisHealthCheck } from "./client";
-import { Cache, caches, type CacheOptions, type CacheStats } from "./cache";
 import type { RedisClientType } from "redis";
 
 /**
@@ -62,23 +61,10 @@ export const Redis = {
   async shutdown(): Promise<void> {
     await redisClient.disconnect();
   },
-
-  /**
-   * Pre-configured cache instances
-   */
-  caches,
-
-  /**
-   * Create a custom cache instance
-   */
-  createCache(options: CacheOptions): Cache {
-    return new Cache(options);
-  },
 };
 
 // Re-export types
-export type { RedisHealthCheck, CacheOptions, CacheStats };
-export { Cache };
+export type { RedisHealthCheck };
 
 // Backward compatibility exports
 export function isRedisAvailable(): boolean {

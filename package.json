@@ -14,23 +14,24 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "tsx packages/scripts/src/dev/start-dev.ts",
     "build": "turbo run build",
-    "start": "turbo run start",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
-    "lint:fix": "turbo run lint -- --fix",
-    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules/.cache/turbo",
+    "db:generate": "pnpm --filter @ticketsbot/core db:generate",
+    "db:migrate": "pnpm --filter @ticketsbot/core db:migrate",
+    "db:push": "pnpm --filter @ticketsbot/core db:push",
+    "db:seed": "tsx packages/scripts/src/db/seed.ts",
+    "db:studio": "pnpm --filter @ticketsbot/core db:studio",
+    "deploy:validate:render": "tsx packages/scripts/src/deploy/validate-prod-env.ts render",
+    "deploy:validate:vercel": "tsx packages/scripts/src/deploy/validate-prod-env.ts vercel",
+    "dev": "tsx packages/scripts/src/dev/start-dev.ts",
+    "docker": "docker compose up --build",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
-    "db:push": "pnpm --filter @ticketsbot/core db:push",
-    "db:migrate": "pnpm --filter @ticketsbot/core db:migrate",
-    "db:generate": "pnpm --filter @ticketsbot/core db:generate",
-    "db:studio": "pnpm --filter @ticketsbot/core db:studio",
-    "db:seed": "tsx packages/scripts/src/db/seed.ts",
-    "docker": "docker compose up --build",
-    "deploy:validate:render": "tsx packages/scripts/src/deploy/validate-prod-env.ts render",
-    "deploy:validate:vercel": "tsx packages/scripts/src/deploy/validate-prod-env.ts vercel"
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "start": "turbo run start",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
   },
   "dependencies": {
     "zod": "^4.0.5"

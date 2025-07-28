@@ -23,10 +23,10 @@ export default function Home() {
   } = useRecentActivity(selectedGuildId, 8);
 
   // Extract data for the selected timeframe
-  const timeframeData = ticketStats?.timeframes?.[selectedTimeframe];
+  const timeframeData = (ticketStats as any)?.timeframes?.[selectedTimeframe];
   const chartData = timeframeData?.chartData || [];
   const currentPeriodTickets = timeframeData?.currentPeriod?.totalTickets || 0;
-  const activeTickets = ticketStats?.totals?.activeTickets || 0;
+  const activeTickets = (ticketStats as any)?.totals?.activeTickets || ticketStats?.openTickets || 0;
   const percentageChange = timeframeData?.percentageChange || 0;
   const isPositive = timeframeData?.isPositive ?? true;
 

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { TicketMessage, Ticket } from "@/features/tickets/types";
+import type { Ticket } from "@/features/tickets/types";
 import dayjs from "dayjs";
 
 interface FormattedMessage {
@@ -21,7 +21,7 @@ interface FormattedMessage {
 }
 
 interface TicketMessagesProps {
-  messages: TicketMessage[] | undefined;
+  messages: any[] | undefined;
   ticket: Ticket;
   isLoading: boolean;
   error: Error | null;
@@ -29,7 +29,7 @@ interface TicketMessagesProps {
 
 export function TicketMessages({ messages, ticket, isLoading, error }: TicketMessagesProps) {
   // Helper function to determine message type
-  const getMessageType = (message: TicketMessage) => {
+  const getMessageType = (message: any) => {
     if (message.messageType === "bot_message" || message.messageType === "bot_reply") {
       return "bot";
     }
@@ -42,7 +42,7 @@ export function TicketMessages({ messages, ticket, isLoading, error }: TicketMes
   };
 
   // Helper function to get display name for message author
-  const getAuthorDisplayName = (message: TicketMessage): string => {
+  const getAuthorDisplayName = (message: any): string => {
     const authorMetadata = message.author.metadata as { displayName?: string };
     if (authorMetadata.displayName) {
       return authorMetadata.displayName;
@@ -172,7 +172,7 @@ export function TicketMessages({ messages, ticket, isLoading, error }: TicketMes
 
   // Format real messages for display
   const formattedMessages: FormattedMessage[] = messages
-    ? messages.map((message: TicketMessage) => ({
+    ? messages.map((message: any) => ({
         id: message.id,
         messageId: message.messageId,
         author: getAuthorDisplayName(message),

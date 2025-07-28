@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { Ticket, TicketStats, TicketMessagesResponse } from "./types";
 
@@ -12,8 +12,9 @@ export const ticketQueries = {
     queryKey: ["tickets", "all", guildId],
     queryFn: async (): Promise<Ticket[]> => {
       if (!guildId) return [];
-      const params = new URLSearchParams({ guildId });
-      return apiClient.get<Ticket[]>(`/tickets?${params}`);
+      const res = await api.tickets.$get({ query: { guildId } });
+      if (!res.ok) throw new Error("Failed to fetch tickets");
+      return res.json();
     },
     staleTime: 30 * 1000, // 30 seconds
     enabled: !!guildId,
@@ -24,7 +25,9 @@ export const ticketQueries = {
     queryKey: ["tickets", "detail", ticketId],
     queryFn: async (): Promise<Ticket | null> => {
       if (!guildId || !ticketId) return null;
-      return apiClient.get<Ticket>(`/guilds/${guildId}/tickets/${ticketId}`);
+      const res = await api.tickets[":id"].$get({ param: { id: ticketId } });
+      if (!res.ok) throw new Error("Failed to fetch ticket details");
+      return res.json();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!guildId && !!ticketId,
@@ -32,9 +35,13 @@ export const ticketQueries = {
 
   stats: (guildId: string | null) => ({
     queryKey: ["tickets", "stats", guildId],
-    queryFn: async (): Promise<TicketStats | null> => {
+    queryFn: async () => {
       if (!guildId) return null;
-      return apiClient.get<TicketStats>(`/guilds/${guildId}/tickets/stats`);
+      const res = await api.tickets.statistics[":guildId"].$get({ 
+        param: { guildId } 
+      });
+      if (!res.ok) throw new Error("Failed to fetch ticket stats");
+      return res.json();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!guildId,
@@ -49,31 +56,38 @@ export const ticketQueries = {
   }),
 };
 
-async function fetchTicketMessages(ticketId: string): Promise<TicketMessagesResponse> {
-  return apiClient.get<TicketMessagesResponse>(`/tickets/${encodeURIComponent(ticketId)}/messages`);
+async function fetchTicketMessages(ticketId: string) {
+  const res = await api.tickets[":id"].messages.$get({ param: { id: ticketId } });
+  if (!res.ok) throw new Error("Failed to fetch ticket messages");
+  return res.json();
 }
 
 /**
  * Mutation options for ticket operations
  */
 export const ticketMutations = {
-  claim: (guildId: string, ticketId: string) => ({
-    mutationFn: async (staffId: string): Promise<unknown> => {
-      return apiClient.post(`/guilds/${guildId}/tickets/${ticketId}/claim`, { staffId });
+  claim: (ticketId: string) => ({
+    mutationFn: async (): Promise<unknown> => {
+      const res = await api.tickets[":id"].claim.$post({
+        param: { id: ticketId },
+      });
+      if (!res.ok) throw new Error("Failed to claim ticket");
+      return res.json();
     },
   }),
 
-  close: (guildId: string, ticketId: string) => ({
+  close: (ticketId: string) => ({
     mutationFn: async (reason?: string): Promise<unknown> => {
-      return apiClient.post(`/guilds/${guildId}/tickets/${ticketId}/close`, { reason });
+      const res = await api.tickets[":id"].close.$post({
+        param: { id: ticketId },
+        json: reason ? { reason } : undefined,
+      });
+      if (!res.ok) throw new Error("Failed to close ticket");
+      return res.json();
     },
   }),
 
-  assign: (guildId: string, ticketId: string) => ({
-    mutationFn: async (assigneeId: string): Promise<unknown> => {
-      return apiClient.post(`/guilds/${guildId}/tickets/${ticketId}/assign`, { assigneeId });
-    },
-  }),
+  // Note: Assignment is done through the update endpoint
 };
 
 // Export hooks
@@ -101,12 +115,11 @@ async function fetchRecentActivity(
   guildId: string,
   limit: number = 10
 ): Promise<RecentActivityEntry[]> {
-  const params = new URLSearchParams({
-    guildId,
-    limit: String(limit),
+  const res = await api.tickets["recent-activity"].$get({
+    query: { guildId, limit: limit.toString() },
   });
-
-  return apiClient.get<RecentActivityEntry[]>(`/tickets/recent-activity?${params}`);
+  if (!res.ok) throw new Error("Failed to fetch recent activity");
+  return res.json();
 }
 
 export const activityQueries = {

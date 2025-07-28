@@ -4,6 +4,7 @@ import { Actor } from "@ticketsbot/core/context";
 import { User, Redis } from "@ticketsbot/core";
 import { factory, ApiErrors, parseGuildId } from "../factory";
 import { nanoid } from "nanoid";
+import { logger } from "../utils/logger";
 
 /**
  * Request tracking middleware - adds requestId and timing
@@ -51,24 +52,28 @@ export const corsMiddleware = factory.createMiddleware(async (c, next) => {
  * Authentication middleware - validates session and sets user context
  */
 export const authMiddleware = factory.createMiddleware(async (c, next) => {
-  const sessionId = getCookie(c, "ticketsbot-session");
-
-  if (!sessionId) {
+  // Get the full cookie header for Better Auth
+  const cookieHeader = c.req.raw.headers.get("cookie");
+  
+  if (!cookieHeader) {
+    logger.error("No cookies found in request");
     throw ApiErrors.unauthorized("No session cookie");
   }
 
+  logger.debug("Auth middleware - cookies received:", cookieHeader);
+
+  // Better Auth expects the full cookie header, not individual cookie values
+  // It will look for the 'ticketsbot.session_token' cookie internally
   const headers = new Headers();
-  const cookieHeader = c.req.raw.headers.get("cookie");
-  if (cookieHeader) {
-    headers.set("cookie", cookieHeader);
-  }
+  headers.set("cookie", cookieHeader);
 
   const sessionData = (await auth.api.getSession({
     headers,
   })) as any; // Type assertion needed due to auth library typing
 
   if (!sessionData) {
-    throw ApiErrors.unauthorized("Invalid session");
+    logger.error("Better Auth returned no session data. Cookies:", cookieHeader);
+    throw ApiErrors.unauthorized("Invalid or expired session");
   }
 
   // The session data from better-auth has both session and user properties

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/modal";
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
 interface Guild {
@@ -42,28 +42,25 @@ export function SelectServerModal({ isOpen, onGuildSelect }: SelectServerModalPr
     setError(null);
 
     try {
-      const response = await apiClient.get<{
-        guilds: Guild[];
-        connected: boolean;
-        error: string | null;
-        code: string | null;
-      }>("/discord/guilds");
+      const res = await api.discord.guilds.$get();
+      if (!res.ok) throw new Error("Failed to fetch guilds");
+      const data = await res.json();
 
       // Handle the new response format
-      if (!response.connected || response.error) {
+      if (!data.connected || data.error) {
         setError({
           type: "discord_not_connected",
           message:
-            response.error ||
+            data.error ||
             "Your Discord account is not connected. Please connect your Discord account to continue.",
         });
         setGuilds([]);
         return;
       }
 
-      setGuilds(response.guilds);
-      if (response.guilds.length > 0) {
-        const firstGuild = response.guilds[0];
+      setGuilds(data.guilds);
+      if (data.guilds.length > 0) {
+        const firstGuild = data.guilds[0];
         if (firstGuild) {
           setSelectedGuildId(firstGuild.id);
         }

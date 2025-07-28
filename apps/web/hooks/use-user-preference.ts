@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
 interface PreferenceResponse {
@@ -22,8 +22,12 @@ export function useUserPreference<T = any>(key: string, defaultValue?: T) {
       if (!session?.user) return null;
 
       try {
-        const response = await apiClient.get<PreferenceResponse>(`/user/preferences/${key}`);
-        return response.value ?? defaultValue ?? null;
+        const res = await api.user.preferences[":key"].$get({
+          param: { key },
+        });
+        if (!res.ok) throw new Error("Failed to fetch preference");
+        const data = await res.json();
+        return data.value ?? defaultValue ?? null;
       } catch (error) {
         console.error("Failed to fetch preference:", error);
         return defaultValue ?? null;
@@ -37,7 +41,8 @@ export function useUserPreference<T = any>(key: string, defaultValue?: T) {
   const setMutation = useMutation({
     mutationFn: async (value: T) => {
       const payload: SetPreferenceData = { key, value };
-      await apiClient.post("/user/preferences", payload);
+      const res = await api.user.preferences.$post({ json: payload });
+      if (!res.ok) throw new Error("Failed to set preference");
     },
     onSuccess: (_, value) => {
       // Update the cache immediately
@@ -48,7 +53,8 @@ export function useUserPreference<T = any>(key: string, defaultValue?: T) {
   // Mutation for deleting preference
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.delete(`/user/preferences/${key}`);
+      const res = await api.user.preferences[":key"].$delete({ param: { key } });
+      if (!res.ok) throw new Error("Failed to delete preference");
     },
     onSuccess: () => {
       // Clear from cache

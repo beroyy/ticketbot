@@ -1,25 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
-
-// User profile types
-export interface UserProfile {
-  id: string;
-  discordUserId: string;
-  name: string;
-  email: string | null;
-  image: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { api } from "@/lib/api";
 
 // User profile queries
 export const userQueries = {
   // Get current user profile
   profile: () => ({
     queryKey: ["user", "profile"],
-    queryFn: async (): Promise<UserProfile> => {
-      const response = await apiClient.get<{ user: UserProfile }>("/api/auth/me");
-      return response.user;
+    queryFn: async () => {
+      const res = await api.auth.me.$get();
+      if (!res.ok) throw new Error("Failed to fetch user profile");
+      const data = await res.json();
+      return data.user;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
@@ -28,9 +19,11 @@ export const userQueries = {
   // Get user by Discord ID
   byDiscordId: (discordId: string | null) => ({
     queryKey: ["user", "discord", discordId],
-    queryFn: async (): Promise<UserProfile | null> => {
+    queryFn: async () => {
       if (!discordId) return null;
-      return apiClient.get<UserProfile>(`/users/discord/${discordId}`);
+      // This endpoint doesn't exist in the API, return null for now
+      // TODO: Add this endpoint to the API if needed
+      return null;
     },
     enabled: !!discordId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -56,8 +49,8 @@ export interface Team {
 }
 
 async function fetchTeams(guildId: string): Promise<Team[]> {
-  const params = new URLSearchParams({ guildId });
-  return apiClient.get<Team[]>(`/teams?${params}`);
+  // TODO: Add teams endpoint to the API
+  return [];
 }
 
 export const teamsQueries = {
@@ -72,41 +65,25 @@ export const teamsQueries = {
   }),
 };
 
-export interface DiscordChannel {
-  id: string | null;
-  name: string;
-  type: number | null;
-  position: number;
-  parentId: string | null;
-  typeDescription: string;
-}
-
-export interface DiscordRole {
-  id: string;
-  name: string;
-  color: string;
-  position: number;
-}
-
 async function fetchDiscordChannels(
   guildId: string,
   types?: number[],
   includeNone: boolean = true
-): Promise<DiscordChannel[]> {
-  const params = new URLSearchParams();
-  if (types && types.length > 0) {
-    params.append("types", types.map((t) => String(t)).join(","));
-  }
-  if (!includeNone) {
-    params.append("includeNone", "false");
-  }
-  const queryString = params.toString();
-  const url = `/discord/guild/${guildId}/channels${queryString ? `?${queryString}` : ""}`;
-  return apiClient.get<DiscordChannel[]>(url);
+) {
+  const res = await api.discord.guild[":id"].channels.$get({
+    param: { id: guildId },
+    query: { includeNone: includeNone.toString() },
+  });
+  if (!res.ok) throw new Error("Failed to fetch Discord channels");
+  return res.json();
 }
 
-async function fetchDiscordRoles(guildId: string): Promise<DiscordRole[]> {
-  return apiClient.get<DiscordRole[]>(`/discord/guild/${guildId}/roles`);
+async function fetchDiscordRoles(guildId: string) {
+  const res = await api.discord.guild[":id"].roles.$get({
+    param: { id: guildId },
+  });
+  if (!res.ok) throw new Error("Failed to fetch Discord roles");
+  return res.json();
 }
 
 export const discordQueries = {

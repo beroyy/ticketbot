@@ -1,26 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 
-export interface FormResponse {
-  id: number;
-  name: string;
-  guildId: string;
-  fields: Array<{
-    id: number;
-    formId: number;
-    type: string;
-    label: string;
-    placeholder?: string;
-    required: boolean;
-    orderIndex: number;
-    validationRules?: string;
-    options?: string;
-  }>;
-}
-
-async function fetchForms(guildId: string): Promise<FormResponse[]> {
-  const params = new URLSearchParams({ guildId });
-  return apiClient.get<FormResponse[]>(`/forms?${params}`);
+async function fetchForms(guildId: string) {
+  const res = await api.forms.$get({ query: { guildId } });
+  if (!res.ok) throw new Error("Failed to fetch forms");
+  return res.json();
 }
 
 export const formsQueries = {

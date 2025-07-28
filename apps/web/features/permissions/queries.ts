@@ -1,8 +1,12 @@
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 import type { PermissionsResponse, UserPermissions } from "./types";
 
 async function fetchUserPermissions(guildId: string): Promise<UserPermissions> {
-  const data = await apiClient.get<PermissionsResponse>(`/settings/${guildId}/permissions`);
+  const res = await api.settings[":guildId"].permissions.$get({
+    param: { guildId },
+  });
+  if (!res.ok) throw new Error("Failed to fetch permissions");
+  const data = await res.json() as PermissionsResponse;
 
   // Convert permission strings back to bigint
   return {

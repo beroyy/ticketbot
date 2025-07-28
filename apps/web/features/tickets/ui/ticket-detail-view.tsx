@@ -308,7 +308,7 @@ export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
               <div className="border-t border-gray-200"></div>
             </div>
             <TicketMessages
-              messages={messagesData?.messages}
+              messages={messagesData}
               ticket={ticket}
               isLoading={messagesLoading}
               error={messagesError}

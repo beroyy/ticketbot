@@ -2,18 +2,18 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Calendar } from "lucide-react";
 import type { Ticket } from "@/features/tickets/types";
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 
 interface ActivityLogEntry {
   id: number;
   timestamp: string;
   action: string;
   details?: string | null;
-  performed_by: {
+  performedBy: {
     id: string;
     username: string;
     global_name?: string | null;
-  };
+  } | null;
 }
 
 interface ActivityLogModalProps {
@@ -52,9 +52,12 @@ export function ActivityLogModal({ isOpen, onClose, ticket }: ActivityLogModalPr
     setError(null);
 
     try {
-      // Encode the ticket ID to handle the # symbol
-      const encodedTicketId = encodeURIComponent(ticket.id);
-      const data = await apiClient.get<ActivityLogEntry[]>(`/tickets/${encodedTicketId}/activity`);
+      // Use the activity endpoint
+      const res = await api.tickets[":id"].activity.$get({
+        param: { id: ticket.id },
+      });
+      if (!res.ok) throw new Error("Failed to fetch activity log");
+      const data = await res.json();
       setActivityLog(data);
     } catch (err) {
       setError("Failed to load activity log");
@@ -106,7 +109,9 @@ export function ActivityLogModal({ isOpen, onClose, ticket }: ActivityLogModalPr
           {!loading && !error && activityLog.length > 0 && (
             <div className="divide-y divide-gray-100">
               {activityLog.map((entry, index) => {
-                const displayName = entry.performed_by.global_name || entry.performed_by.username;
+                const displayName = entry.performedBy 
+                  ? (entry.performedBy.global_name || entry.performedBy.username)
+                  : "System";
                 // Clean ticket ID by removing # if present
                 const cleanTicketId = ticket.id.replace("#", "");
                 const actionText = formatAction(entry.action, cleanTicketId, displayName);

@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
+      "@ticketsbot/api": ["../../apps/api/src/index.ts"],
       "@ticketsbot/core": ["../../packages/core/src/index.ts"],
       "@ticketsbot/core/auth": ["../../packages/core/src/auth/index.ts"],
       "@ticketsbot/core/env": ["../../packages/core/src/env/index.ts"],

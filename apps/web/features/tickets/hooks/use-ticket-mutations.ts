@@ -1,34 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { api } from "@/lib/api";
 import { notify } from "@/shared/stores/app-store";
 import type { Ticket } from "@/features/tickets/types";
 
-interface CreateTicketData {
-  subject: string;
-  description: string;
-  type: string;
-  priority: string;
-  category?: string;
-  tags?: string[];
-}
-
-interface UpdateTicketData extends Partial<CreateTicketData> {
-  status?: string;
-  assigneeId?: string;
-}
-
-interface CloseTicketData {
-  reason?: string;
-  resolution?: string;
-}
+// Infer types from the Hono RPC client
+type CreateTicketData = Parameters<typeof api.tickets.$post>[0]["json"];
+type UpdateTicketData = NonNullable<Parameters<typeof api.tickets[":id"]["$put"]>[0]["json"]>;
 
 export function useCreateTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CreateTicketData) => {
-      const response = await apiClient.post<Ticket>("/tickets", data);
-      return response;
+      const res = await api.tickets.$post({ json: data });
+      if (!res.ok) throw new Error("Failed to create ticket");
+      return res.json() as Promise<Ticket>;
     },
     onSuccess: (ticket) => {
       notify.success("Ticket created", `Ticket #${ticket.id} has been created`);
@@ -48,8 +34,12 @@ export function useUpdateTicket() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: UpdateTicketData & { id: string }) => {
-      const response = await apiClient.patch<Ticket>(`/tickets/${id}`, data);
-      return response;
+      const res = await api.tickets[":id"].$put({
+        param: { id },
+        json: data,
+      });
+      if (!res.ok) throw new Error("Failed to update ticket");
+      return res.json() as Promise<Ticket>;
     },
     onSuccess: (ticket) => {
       notify.success("Ticket updated", `Ticket #${ticket.id} has been updated`);
@@ -69,9 +59,13 @@ export function useCloseTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...data }: CloseTicketData & { id: string }) => {
-      const response = await apiClient.post<Ticket>(`/tickets/${id}/close`, data);
-      return response;
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const res = await api.tickets[":id"].close.$post({
+        param: { id },
+        json: reason ? { reason } : undefined,
+      });
+      if (!res.ok) throw new Error("Failed to close ticket");
+      return res.json() as Promise<Ticket>;
     },
     onSuccess: (ticket) => {
       notify.success("Ticket closed", `Ticket #${ticket.id} has been closed`);
@@ -92,8 +86,11 @@ export function useClaimTicket() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.post<Ticket>(`/tickets/${id}/claim`);
-      return response;
+      const res = await api.tickets[":id"].claim.$post({
+        param: { id },
+      });
+      if (!res.ok) throw new Error("Failed to claim ticket");
+      return res.json() as Promise<Ticket>;
     },
     onSuccess: (ticket) => {
       notify.success("Ticket claimed", `You have claimed ticket #${ticket.id}`);
@@ -114,8 +111,11 @@ export function useUnclaimTicket() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.post<Ticket>(`/tickets/${id}/unclaim`);
-      return response;
+      const res = await api.tickets[":id"].unclaim.$post({
+        param: { id },
+      });
+      if (!res.ok) throw new Error("Failed to unclaim ticket");
+      return res.json() as Promise<Ticket>;
     },
     onSuccess: (ticket) => {
       notify.success("Ticket unclaimed", `Ticket #${ticket.id} has been unclaimed`);
@@ -131,35 +131,20 @@ export function useUnclaimTicket() {
   });
 }
 
-export function useAssignTicket() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
-      const response = await apiClient.post<Ticket>(`/tickets/${id}/assign`, { userId });
-      return response;
-    },
-    onSuccess: (ticket) => {
-      notify.success("Ticket assigned", `Ticket #${ticket.id} has been assigned`);
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets", ticket.id] });
-    },
-    onError: (error) => {
-      notify.error(
-        "Failed to assign ticket",
-        error instanceof Error ? error.message : "An error occurred"
-      );
-    },
-  });
-}
+// Note: Ticket assignment is done through the update endpoint
+// by setting the assigneeId field
 
 export function useSendTicketMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, message }: { id: string; message: string }) => {
-      const response = await apiClient.post(`/tickets/${id}/messages`, { content: message });
-      return response;
+      const res = await api.tickets[":id"].messages.$post({
+        param: { id },
+        json: { content: message },
+      });
+      if (!res.ok) throw new Error("Failed to send message");
+      return res.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tickets", variables.id, "messages"] });

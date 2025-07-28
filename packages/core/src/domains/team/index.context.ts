@@ -273,13 +273,15 @@ export namespace Team {
           await Redis.withRetry(
             async (client) => {
               let count = 0;
-              for await (const key of client.scanIterator({
+              for await (const keys of client.scanIterator({
                 MATCH: `perms:${guildId}:*`,
                 COUNT: 100
               })) {
-                if (key) {
-                  await client.del(key);
-                  count++;
+                for (const key of keys) {
+                  if (key && key !== '') {
+                    await client.del(key);
+                    count++;
+                  }
                 }
               }
               return count;

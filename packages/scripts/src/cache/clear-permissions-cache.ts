@@ -21,11 +21,15 @@ async function clearPermissionsCache() {
     
     console.log(`\nScanning for ${pattern}...`);
     
-    for await (const key of client.scanIterator({
+    for await (const keyBatch of client.scanIterator({
       MATCH: pattern,
       COUNT: 100
     })) {
-      keys.push(key);
+      for (const key of keyBatch) {
+        if (key && key !== '') {
+          keys.push(key);
+        }
+      }
     }
     
     console.log(`Found ${keys.length} permission cache keys`);
@@ -40,7 +44,7 @@ async function clearPermissionsCache() {
       
       // Delete all keys
       console.log(`\nDeleting ${keys.length} permission cache keys...`);
-      await (client.del as any).apply(client, keys);
+      await client.del(...keys);
       console.log("✅ All permission cache keys deleted");
     } else {
       console.log("No permission cache keys found");

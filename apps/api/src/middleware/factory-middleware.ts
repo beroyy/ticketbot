@@ -71,10 +71,20 @@ export const authMiddleware = factory.createMiddleware(async (c, next) => {
 
   logger.debug("Auth middleware - cookies received:", cookieHeader);
 
+  // In production, Better Auth sets cookies with __Secure- prefix but expects them without it
+  let transformedCookieHeader = cookieHeader;
+  if (process.env.NODE_ENV === "production") {
+    transformedCookieHeader = cookieHeader
+      .replace(/__Secure-ticketsbot\./g, "ticketsbot.")
+      .replace(/%3D/g, "="); // Also decode any URL-encoded equals signs
+    
+    logger.debug("Transformed cookies for Better Auth:", transformedCookieHeader);
+  }
+
   // Better Auth expects the full cookie header, not individual cookie values
   // It will look for the 'ticketsbot.session_token' cookie internally
   const headers = new Headers();
-  headers.set("cookie", cookieHeader);
+  headers.set("cookie", transformedCookieHeader);
 
   const sessionData = (await auth.api.getSession({
     headers,

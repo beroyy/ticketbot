@@ -172,8 +172,11 @@ See context system implementation in `packages/core/src/context/` for patterns.
 # Install dependencies
 pnpm install
 
-# Start development with Docker
-pnpm docker:dev
+# Start development
+pnpm dev
+
+# Start with Docker
+pnpm docker
 
 # Run type checking
 pnpm typecheck
@@ -181,8 +184,11 @@ pnpm typecheck
 # Run linting
 pnpm lint
 
+# Format code
+pnpm format
+
 # Build everything
-turbo build
+pnpm build
 ```
 
 ## Environment Configuration

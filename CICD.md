@@ -241,7 +241,7 @@ pnpm env:validate
 
    ```bash
    # Run with auto-fix
-   pnpm lint:fix
+   pnpm lint -- --fix
 
    # Check specific files
    pnpm eslint apps/web/pages/tickets.tsx

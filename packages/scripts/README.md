@@ -77,11 +77,9 @@ pnpm dev
 Redis container management:
 
 ```bash
-# Start Redis
-pnpm redis:start
-
-# Stop Redis
-pnpm redis:stop
+# Redis is now managed automatically by pnpm dev
+# If you need manual control:
+tsx packages/scripts/src/dev/start-redis.ts
 ```
 
 #### `validate-env.mjs`
@@ -174,9 +172,7 @@ pnpm db:init           # Initialize schema
 pnpm db:seed           # Seed with test data
 pnpm db:generate       # Generate Prisma client
 
-# Redis
-pnpm redis:start       # Start Redis container
-pnpm redis:stop        # Stop Redis container
+# Redis is managed automatically by pnpm dev
 ```
 
 ### Direct Execution

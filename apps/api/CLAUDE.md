@@ -127,7 +127,7 @@ pnpm test tickets.test.ts
 
 ```bash
 # Generate auth token for testing (from monorepo root)
-pnpm test:token
+tsx packages/scripts/src/test/generate-test-token.ts
 ```
 
 ## Routes

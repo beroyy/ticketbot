@@ -249,20 +249,17 @@ The env-setup script automatically detects port conflicts and adjusts PORT_LEVEL
 # All services (recommended)
 pnpm dev                # API + Bot + Web
 
-# Individual services
-pnpm dev:api           # API server (port 3001)
-pnpm dev:bot           # Discord bot
-pnpm dev:web           # Web dashboard (port 3000)
-pnpm dev:all           # Everything (add DB Studio with pnpm db separately)
+# Individual services (run from package directory)
+cd apps/api && pnpm dev    # API server
+cd apps/bot && pnpm dev    # Discord bot
+cd apps/web && pnpm dev    # Web dashboard
 
 # Docker development
-pnpm docker:dev        # Build and run all services with live reload
-pnpm docker            # Run existing containers
-pnpm docker:build      # Build Docker image
+pnpm docker            # Build and run all services with live reload
 
 # Multi-worktree development (NEW!)
 git worktree add ../feature-branch
-cd ../feature-branch && pnpm docker:dev  # Automatic port assignment!
+cd ../feature-branch && pnpm docker  # Automatic port assignment!
 ```
 
 ## 🔄 Multi-Worktree Development
@@ -320,8 +317,9 @@ pnpm e2e-test -- -t responsive             # Responsive tests
 ```bash
 pnpm build            # Build all packages
 pnpm start            # Start production servers
-pnpm type-check       # TypeScript validation
-pnpm clean            # Clean build outputs
+pnpm typecheck        # TypeScript validation
+pnpm lint             # Check code style
+pnpm format           # Format code with Prettier
 ```
 
 ## 🏗️ Project Structure

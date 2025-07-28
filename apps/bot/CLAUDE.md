@@ -350,7 +350,7 @@ const result = await Ticket.create({
 
 ```bash
 # Use the test token generator
-pnpm test:token
+tsx packages/scripts/src/test/generate-test-token.ts
 
 # Test commands in development
 pnpm dev

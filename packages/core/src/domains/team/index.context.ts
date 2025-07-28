@@ -272,17 +272,15 @@ export namespace Team {
         if (Redis.isAvailable()) {
           await Redis.withRetry(
             async (client) => {
-              const keys = [];
+              let count = 0;
               for await (const key of client.scanIterator({
                 MATCH: `perms:${guildId}:*`,
                 COUNT: 100
               })) {
-                keys.push(key);
+                await client.del(key);
+                count++;
               }
-              if (keys.length > 0) {
-                await client.del(keys as any);
-              }
-              return keys.length;
+              return count;
             },
             `updateRolePermissions.invalidateGuild(${guildId})`
           );

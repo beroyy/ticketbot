@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "../..",
     "outDir": "./dist",
+    "module": "ESNext",
     "paths": {
       "@ticketsbot/core": ["packages/core/src/index.ts"],
       "@ticketsbot/core/auth": ["packages/core/src/auth/index.ts"],

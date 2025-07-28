@@ -27,6 +27,7 @@
     "@prisma/client": "^6.12.0",
     "@ticketsbot/core": "workspace:*",
     "discord.js": "^14.21.0",
+    "dotenv": "^17.2.0",
     "hono": "^4.8.5",
     "nanoid": "^5.0.9"
   },

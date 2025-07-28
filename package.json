@@ -28,7 +28,7 @@
     "db:generate": "pnpm --filter @ticketsbot/core db:generate",
     "db:studio": "pnpm --filter @ticketsbot/core db:studio",
     "db:seed": "tsx packages/scripts/src/db/seed.ts",
-    "docker": "tsx packages/scripts/src/dev/env-setup.ts dev && docker compose up --build",
+    "docker": "docker compose up --build",
     "deploy:validate:render": "tsx packages/scripts/src/deploy/validate-prod-env.ts render",
     "deploy:validate:vercel": "tsx packages/scripts/src/deploy/validate-prod-env.ts vercel"
   },

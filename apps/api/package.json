@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --import ./src/load-env.ts src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsc -b tsconfig.build.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",

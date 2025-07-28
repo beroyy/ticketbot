@@ -21,18 +21,14 @@ import { Redis } from "@ticketsbot/core";
 logger.debug("🔍 Validated Environment Variables:", {
   WEB_URL: env.WEB_URL,
   API_URL: env.API_URL,
-  WEB_PORT: env.WEB_PORT ?? "not set",
   API_PORT: env.API_PORT,
   NEXT_PUBLIC_API_URL: env.NEXT_PUBLIC_API_URL ?? "not set",
 });
 
 const app = new Hono<AppEnv>().onError(errorHandler);
 
-// Parse allowed origins from env
 const webUrl = env.WEB_URL;
-const allowedOrigins = env.ALLOWED_ORIGINS
-  ? env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
-  : [webUrl];
+const allowedOrigins = [webUrl];
 
 logger.debug("🔒 CORS Configuration:", {
   allowedOrigins,
@@ -58,7 +54,7 @@ app.on(["POST", "GET"], "/auth/*", (c) => {
 });
 
 const _routes = app
-  .route("/auth", authRoutes)
+  .route("/api/auth", authRoutes)
   .route("/health", healthRoutes)
   .route("/schemas", schemaRoutes)
   .route("/user", userRoutes)

@@ -14,7 +14,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "tsx packages/scripts/src/dev/start-dev-services.ts",
+    "dev": "tsx packages/scripts/src/dev/start-dev.ts",
     "build": "turbo run build",
     "start": "turbo run start",
     "test": "turbo run test",
@@ -24,9 +24,6 @@
     "clean": "turbo run clean && rm -rf node_modules/.cache/turbo",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
-    "env:setup": "tsx packages/scripts/src/dev/env-setup.ts",
-    "env:validate": "tsx packages/scripts/src/dev/validate-env.mjs",
-    "env:validate:minimal": "tsx packages/scripts/src/dev/validate-env.mjs --minimal",
     "db:push": "pnpm --filter @ticketsbot/core db:push",
     "db:push:force": "pnpm --filter @ticketsbot/core db:push:force",
     "db:migrate": "pnpm --filter @ticketsbot/core db:migrate",
@@ -66,6 +63,7 @@
     "@types/node": "^24.0.14",
     "@vitest/ui": "^3.2.4",
     "concurrently": "^9.2.0",
+    "dotenv-cli": "^9.0.0",
     "eslint": "^9.31.0",
     "neonctl": "^2.12.0",
     "prettier": "^3.6.2",

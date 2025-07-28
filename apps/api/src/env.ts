@@ -25,9 +25,6 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3001),
   API_SECRET: z.string().min(32).optional(),
 
-  // Port configuration (for reference)
-  WEB_PORT: z.coerce.number().int().positive().default(3000),
-
   // Optional services
   REDIS_URL: z.url().optional(),
 
@@ -69,6 +66,8 @@ try {
     LOG_LEVEL: env.LOG_LEVEL || (isDev ? "debug" : "warn"),
     LOG_REQUESTS: env.LOG_REQUESTS ?? isDev,
     RATE_LIMIT_ENABLED: env.RATE_LIMIT_ENABLED ?? !isDev,
+    // Derived values
+    DISCORD_REDIRECT_URI: `${env.API_URL}/auth/callback/discord`,
   };
 
   env = completeEnv as typeof env;

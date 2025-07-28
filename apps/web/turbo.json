@@ -2,7 +2,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "WEB_URL", "API_URL", "WEB_PORT"],
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "WEB_URL", "API_URL"],
       "outputs": [".next/**", "!.next/cache/**"],
       "inputs": [
         "src/**",
@@ -19,11 +19,11 @@
       ]
     },
     "dev": {
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "WEB_PORT"],
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL"],
       "persistent": true
     },
     "start": {
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "WEB_PORT"]
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL"]
     },
     "lint": {
       "inputs": ["src/**", "pages/**", "components/**", "lib/**", ".eslintrc.*", "eslint.config.*"],

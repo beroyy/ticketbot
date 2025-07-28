@@ -23,17 +23,10 @@
         "DISCORD_TOKEN",
         "WEB_URL",
         "API_URL",
-        "WEB_PORT",
-        "API_PORT",
-        "BOT_PORT",
-        "BASE_DOMAIN",
-        "PORT_OFFSET",
         "REDIS_URL",
         "NEXT_PUBLIC_*",
         "NEXT_PHASE",
-        "NEXT_TELEMETRY_DISABLED",
-        "TURBO_ENV",
-        "NEON_BRANCH_NAME"
+        "NEXT_TELEMETRY_DISABLED"
       ]
     },
     "dev": {
@@ -47,16 +40,16 @@
         "BETTER_AUTH_SECRET",
         "DISCORD_*",
         "NEXT_PUBLIC_*",
-        "API_*",
-        "WEB_*",
-        "BOT_*",
+        "API_URL",
+        "API_HOST",
+        "API_SECRET",
+        "WEB_URL",
         "DEV_*",
         "COOKIE_*",
         "RATE_LIMIT_*",
         "LOG_*",
         "*_CACHE_TTL",
-        "TURBO_ENV",
-        "NEON_BRANCH_NAME"
+        "ALLOWED_ORIGINS"
       ]
     },
     "start": {
@@ -70,9 +63,10 @@
         "BETTER_AUTH_SECRET",
         "DISCORD_*",
         "NEXT_PUBLIC_*",
-        "API_*",
-        "WEB_*",
-        "BOT_*",
+        "API_URL",
+        "API_HOST",
+        "API_SECRET",
+        "WEB_URL",
         "COOKIE_*",
         "RATE_LIMIT_*",
         "LOG_*",

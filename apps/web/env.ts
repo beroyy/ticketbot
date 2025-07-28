@@ -22,7 +22,7 @@ const serverSchema = z.object({
   API_URL: z.url(),
 
   // Port for Next.js server
-  WEB_PORT: z.coerce.number().positive(),
+  WEB_PORT: z.coerce.number().positive().default(3000),
 
   // Web-specific (optional)
   NEXT_TELEMETRY_DISABLED: stringbool().optional(),
@@ -85,9 +85,9 @@ const validateEnvironment = () => {
 
       const server: z.infer<typeof serverSchema> = {
         NODE_ENV: (process.env.NODE_ENV as any) || "production",
-        WEB_URL: process.env.WEB_URL || "http://localhost:9000",
-        API_URL: process.env.API_URL || "http://localhost:9001",
-        WEB_PORT: Number(process.env.WEB_PORT) || 9000,
+        WEB_URL: process.env.WEB_URL || "http://localhost:3000",
+        API_URL: process.env.API_URL || "http://localhost:3001",
+        WEB_PORT: Number(process.env.WEB_PORT) || 3000,
         NEXT_TELEMETRY_DISABLED:
           process.env.NEXT_TELEMETRY_DISABLED === "true"
             ? true
@@ -98,7 +98,7 @@ const validateEnvironment = () => {
 
       // For client vars during build, provide defaults
       const clientEnv = {
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001",
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
         NEXT_PUBLIC_DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
         NEXT_PUBLIC_GUILD_ID: process.env.NEXT_PUBLIC_GUILD_ID,
         NEXT_PUBLIC_FEATURE_NEW_TICKET_UI: process.env.NEXT_PUBLIC_FEATURE_NEW_TICKET_UI,
@@ -142,7 +142,7 @@ export const isTest = () => env.server.NODE_ENV === "test";
 export const getApiUrl = () => {
   if (typeof window !== "undefined") {
     // Browser: use public API URL with fallback
-    return env.client.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+    return env.client.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   }
   // Server: use internal API URL
   return env.server.API_URL;

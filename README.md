@@ -4,7 +4,7 @@ A comprehensive Discord bot with web dashboard for managing support tickets. Fea
 
 ## 🚀 Quick Start
 
-Get your TicketsBot AI system running with test data in 5 minutes!
+Get your TicketsBot AI system running in under 5 minutes!
 
 ### Prerequisites
 
@@ -13,72 +13,66 @@ Get your TicketsBot AI system running with test data in 5 minutes!
 - Discord Application (for OAuth)
 - Docker (for Redis) or local Redis installation
 
-### Global Dependencies
-
-Install these globally for simplified development:
+### 1. Setup Environment
 
 ```bash
-# Install global dependencies
-npm install -g dotenv-cli turbo neonctl tsx
+# Copy the example environment file
+cp .env.example .env
 
-# Verify installations
-dotenv --version
-turbo --version
-neonctl --version
-tsx --version
+# Edit .env with your values
+# Required: DATABASE_URL, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_TOKEN, BETTER_AUTH_SECRET
 ```
 
-### 1. Environment Setup
-
-```bash
-# Setup development environment
-pnpm env:dev
-
-# Edit .env.dev with your values (see detailed setup below)
-# At minimum, set DATABASE_URL and Discord credentials
-```
-
-### 2. Database & Dependencies
+### 2. Install & Start
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Setup database
-pnpm db:generate
-pnpm db:push
-pnpm db:seed
-```
-
-### 3. Start Development
-
-```bash
-# Start all services (includes Redis)
+# Start development environment (auto-initializes database and Redis)
 pnpm dev
 
-# Or start without Redis (if you have Redis running separately)
-pnpm dev:no-redis
-
-# Manage Redis separately
-pnpm redis:start  # Start Redis container
-pnpm redis:stop   # Stop Redis container
+# Or with test data
+pnpm dev --seed
 ```
 
-This starts:
-
-- 🌐 Web app on http://localhost:3000
-- 🔌 API server on http://localhost:3001
-- 🤖 Discord bot (if configured)
-- 🔴 Redis on configured port (default: 6379) - Required for session management, caching, and BullMQ job queues
-
-**Note**: Redis is required for session management and caching. The `pnpm dev` command automatically starts Redis using Docker.
-
-### 4. Test Your Setup
+### 3. Available Dev Commands
 
 ```bash
-# Run E2E tests to verify everything works
-pnpm e2e-test -- -t tickets --headed
+# Standard development
+pnpm dev
+
+# Include test data
+pnpm dev --seed
+
+# Skip all checks (fast restart)
+pnpm dev --skip-checks
+
+# Reset database and seed
+pnpm dev --reset --seed
+
+# Without Redis (if running elsewhere)
+pnpm dev --no-redis
+
+# Show all options
+pnpm dev --help
 ```
+
+### What Gets Started
+
+- 🌐 **Web Dashboard** - http://localhost:3000
+- 🔌 **API Server** - http://localhost:3001
+- 🤖 **Discord Bot** - Connects using your token
+- 🐳 **Redis** - Automatically via Docker (port 6379)
+- 📦 **Database** - Initialized automatically if needed
+
+The `pnpm dev` command intelligently:
+
+- ✅ Checks PostgreSQL connection
+- ✅ Initializes database schema if needed
+- ✅ Starts Redis in Docker if not running
+- ✅ Optionally seeds test data with `--seed`
+- ✅ Starts all services in parallel
 
 ## 📋 Detailed Setup
 
@@ -158,6 +152,7 @@ BOT_PORT=4002                      # Bot health check port
 WEB_URL="http://localhost:4000"
 API_URL="http://localhost:4001"
 NEXT_PUBLIC_API_URL="http://localhost:4001"
+DISCORD_REDIRECT_URI="http://localhost:4001/auth/callback/discord"
 
 # Discord (required)
 DISCORD_TOKEN="bot_token"

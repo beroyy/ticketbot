@@ -7,6 +7,7 @@
  * Used by Docker environments and local development setup.
  */
 
+import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
@@ -17,6 +18,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = resolve(__dirname, "../../../..");
 const coreDir = resolve(rootDir, "packages/core");
+
+// Load environment variables from root .env file
+config({ path: resolve(rootDir, ".env") });
 
 const prisma = new PrismaClient();
 

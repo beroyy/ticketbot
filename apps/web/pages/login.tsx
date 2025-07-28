@@ -20,6 +20,7 @@ export default function Login() {
     try {
       await authClient.signIn.social({
         provider: "discord",
+        callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,
       });
     } catch (error) {
       console.error("Error signing in:", error);

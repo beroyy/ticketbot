@@ -54,7 +54,7 @@ app.on(["POST", "GET"], "/auth/*", (c) => {
 });
 
 const _routes = app
-  .route("/api/auth", authRoutes)
+  .route("/auth", authRoutes)
   .route("/health", healthRoutes)
   .route("/schemas", schemaRoutes)
   .route("/user", userRoutes)

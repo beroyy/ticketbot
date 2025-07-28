@@ -423,8 +423,10 @@ export namespace Team {
             MATCH: `perms:${role.guildId}:*`,
             COUNT: 100
           })) {
-            await client.del(key);
-            count++;
+            if (key) {
+              await client.del(key);
+              count++;
+            }
           }
           return count;
         },

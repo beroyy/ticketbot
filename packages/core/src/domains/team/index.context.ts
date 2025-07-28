@@ -277,8 +277,10 @@ export namespace Team {
                 MATCH: `perms:${guildId}:*`,
                 COUNT: 100
               })) {
-                await client.del(key);
-                count++;
+                if (key) {
+                  await client.del(key);
+                  count++;
+                }
               }
               return count;
             },

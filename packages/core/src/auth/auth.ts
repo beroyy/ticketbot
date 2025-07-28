@@ -516,8 +516,10 @@ const createAuthInstance = () => {
                                 MATCH: `perms:${guild.id}:*`,
                                 COUNT: 100
                               })) {
-                                await client.del(key);
-                                count++;
+                                if (key) {
+                                  await client.del(key);
+                                  count++;
+                                }
                               }
                               return count;
                             },

@@ -182,7 +182,7 @@ const createAuthInstance = () => {
     trustedOrigins: [webOrigin, apiOrigin],
     advanced: {
       cookiePrefix: "ticketsbot",
-      useSecureCookies: process.env["NODE_ENV"] === "production",
+      useSecureCookies: false,
       crossSubDomainCookies: {
         enabled: true,
         domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",

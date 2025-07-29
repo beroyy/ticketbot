@@ -11,8 +11,7 @@ services:
     autoDeploy: true
     healthCheckPath: /health
     numInstances: 1
-    dockerCommand: |
-      bash -c "pnpm db:deploy && npx concurrently -n api,bot -c blue,green 'pnpm --filter @ticketsbot/api start' 'pnpm --filter @ticketsbot/bot start'"
+    dockerCommand: pnpm start:production
 
     envVars:
       - fromGroup: ticketsbot-env

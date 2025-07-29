@@ -25,18 +25,10 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN pnpm --filter @ticketsbot/core db:generate
+# Note: Prisma client generation moved to runtime to ensure it matches the database schema
 
 # Expose ports for API and Bot
 EXPOSE ${API_PORT:-3001} ${BOT_PORT:-3002}
 
-# Start API and Bot services
-CMD ["bash", "-c", "\
-  # Run database initialization if needed \
-  echo '🚀 Starting API and Bot services...'; \
-  pnpm db:deploy && \
-  npx concurrently -n api,bot -c blue,green \
-    'pnpm --filter @ticketsbot/api start' \
-    'pnpm --filter @ticketsbot/bot start' \
-"]
+# Start services using production startup script
+CMD ["pnpm", "start:production"]

@@ -35,6 +35,7 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
     "start": "turbo run start",
+    "start:production": "tsx packages/scripts/src/deploy/start-production.ts",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },

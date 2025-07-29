@@ -1,7 +1,7 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
-import { ensure as ensureGuild, User, Team } from "@ticketsbot/core/domains";
+import { ensure as ensureGuild, User, Role } from "@ticketsbot/core/domains";
 import { parseDiscordId, Redis } from "@ticketsbot/core";
 
 export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guild: Guild) => {
@@ -27,13 +27,13 @@ export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guil
     logger.info(`👤 Ensured owner ${owner.user.tag} exists in database`);
 
     // 4. Create default team roles
-    await Team.ensureDefaultRoles(parseDiscordId(guild.id));
+    await Role.ensureDefaultRoles(parseDiscordId(guild.id));
     logger.info(`🎭 Created default team roles for guild ${guild.name}`);
 
     // 5. Assign owner to admin role
-    const adminRole = await Team.getRoleByName(parseDiscordId(guild.id), "admin");
+    const adminRole = await Role.getRoleByName(parseDiscordId(guild.id), "admin");
     if (adminRole) {
-      await Team.assignRole(adminRole.id, parseDiscordId(owner.id));
+      await Role.assignRole(adminRole.id, parseDiscordId(owner.id));
       logger.info(`👑 Assigned admin role to guild owner ${owner.user.tag}`);
     }
 

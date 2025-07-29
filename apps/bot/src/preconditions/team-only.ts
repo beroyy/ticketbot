@@ -4,5 +4,5 @@ import { PermissionFlags } from "@ticketsbot/core";
 export const TeamOnlyPrecondition = createPermissionPrecondition({
   name: "team-only",
   permission: PermissionFlags.TICKET_VIEW_ALL,
-  allowDiscordAdmin: false, // Team members must have explicit permissions
+  allowDiscordAdmin: false, // Role members must have explicit permissions
 });

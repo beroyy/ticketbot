@@ -19,7 +19,7 @@ model Event {
   
   // Denormalized fields for performance
   ticketId         Int?     @map("ticket_id") // For ticket-related events
-  teamRoleId       Int?     @map("team_role_id") // For role-related events
+  guildRoleId       Int?     @map("guild_role_id") // For role-related events
   
   // Optional data
   metadata         Json?    // Additional context
@@ -30,14 +30,14 @@ model Event {
   // Relations
   guild            Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
   actor            DiscordUser  @relation(fields: [actorId], references: [id])
-  teamRole         TeamRole?    @relation(fields: [teamRoleId], references: [id])
+  guildRole         GuildRole?    @relation(fields: [guildRoleId], references: [id])
   ticket           Ticket?      @relation(fields: [ticketId], references: [id])
   
   // Indexes for common queries
   @@index([guildId, createdAt(sort: Desc)])
   @@index([actorId, createdAt(sort: Desc)])
   @@index([ticketId, createdAt(sort: Desc)])
-  @@index([teamRoleId, createdAt(sort: Desc)])
+  @@index([guildRoleId, createdAt(sort: Desc)])
   @@index([targetType, targetId, createdAt(sort: Desc)])
   @@index([expiresAt])
   

@@ -1,6 +1,6 @@
 import type { GuildMember, Guild } from "discord.js";
 import { container } from "@sapphire/framework";
-import type { Team } from "@ticketsbot/core/domains";
+import type { Role } from "@ticketsbot/core/domains";
 
 export const RoleOps = {
   /**
@@ -57,13 +57,13 @@ export const RoleOps = {
    * Sync a team role to Discord for a specific user
    */
   async syncTeamRoleToDiscord(
-    teamRole: Pick<Team.Role, "discordRoleId" | "name">,
+    teamRole: Pick<Role.Role, "discordRoleId" | "name">,
     userId: string,
     guild: Guild,
     action: "add" | "remove"
   ): Promise<boolean> {
     if (!teamRole.discordRoleId) {
-      container.logger.debug(`Team role ${teamRole.name} has no Discord role ID`);
+      container.logger.debug(`Role role ${teamRole.name} has no Discord role ID`);
       return false;
     }
 
@@ -91,7 +91,7 @@ export const RoleOps = {
    * Sync multiple team roles to Discord for a user
    */
   async syncMultipleRolesToDiscord(
-    teamRoles: Array<Pick<Team.Role, "discordRoleId" | "name">>,
+    teamRoles: Array<Pick<Role.Role, "discordRoleId" | "name">>,
     userId: string,
     guild: Guild,
     action: "add" | "remove"

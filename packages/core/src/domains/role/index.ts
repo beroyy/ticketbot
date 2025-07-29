@@ -1,8 +1,8 @@
 import { prisma } from "../../prisma/client";
 import {
-  TeamRoleStatus,
-  type TeamRole,
-  type TeamRoleMember,
+  GuildRoleStatus,
+  type GuildRole,
+  type GuildRoleMember,
   type DiscordUser,
 } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
@@ -11,60 +11,60 @@ import { logger } from "../../utils/logger";
 
 // Export specific schemas
 export {
-  TeamRoleStatusSchema,
-  CreateTeamRoleSchema,
-  UpdateTeamRoleSchema,
+  RoleStatusSchema,
+  CreateRoleSchema,
+  UpdateRoleSchema,
   AssignRoleSchema,
   RemoveRoleSchema,
   SetAdditionalPermissionsSchema,
   PermissionCheckSchema,
   BatchPermissionCheckSchema,
-  TeamRoleQuerySchema,
-  TeamMemberQuerySchema,
-  TeamRoleWithMembersSchema,
+  RoleQuerySchema,
+  RoleMemberQuerySchema,
+  RoleWithMembersSchema,
   UserPermissionsResponseSchema,
-  type CreateTeamRoleInput,
-  type UpdateTeamRoleInput,
+  type CreateRoleInput,
+  type UpdateRoleInput,
   type AssignRoleInput,
   type RemoveRoleInput,
   type SetAdditionalPermissionsInput,
   type PermissionCheckInput,
   type BatchPermissionCheckInput,
-  type TeamRoleQuery,
-  type TeamMemberQuery,
-  type TeamRoleWithMembers,
+  type RoleQuery,
+  type RoleMemberQuery,
+  type RoleWithMembers,
   type UserPermissionsResponse,
 } from "./schemas";
 
-export namespace Team {
+export namespace Role {
   // Re-export Prisma types for domain consumers
-  export type Role = TeamRole;
-  export type RoleMember = TeamRoleMember;
+  export type Role = GuildRole;
+  export type RoleMember = GuildRoleMember;
 
   // Rich domain types
-  export type RoleMemberWithDetails = TeamRoleMember & {
-    teamRole: TeamRole;
+  export type RoleMemberWithDetails = GuildRoleMember & {
+    guildRole: GuildRole;
     discordUser: DiscordUser;
   };
 
   /**
    * Get all roles for a user in a guild
    */
-  export const getUserRoles = async (guildId: string, userId: string): Promise<TeamRole[]> => {
-    const roleMembers = await prisma.teamRoleMember.findMany({
+  export const getUserRoles = async (guildId: string, userId: string): Promise<GuildRole[]> => {
+    const roleMembers = await prisma.guildRoleMember.findMany({
       where: {
         discordId: userId,
-        teamRole: {
+        guildRole: {
           guildId: guildId,
-          status: TeamRoleStatus.ACTIVE,
+          status: GuildRoleStatus.ACTIVE,
         },
       },
       include: {
-        teamRole: true,
+        guildRole: true,
       },
     });
 
-    return roleMembers.map((rm: TeamRoleMember & { teamRole: TeamRole }) => rm.teamRole);
+    return roleMembers.map((rm: GuildRoleMember & { guildRole: GuildRole }) => rm.guildRole);
   };
 
   /**
@@ -91,7 +91,9 @@ export namespace Team {
         logger.debug(`Found cached permissions for ${userId} in guild ${guildId}: ${cached}`);
         return BigInt(cached);
       } else {
-        logger.debug(`No cached permissions found for ${userId} in guild ${guildId}, calculating...`);
+        logger.debug(
+          `No cached permissions found for ${userId} in guild ${guildId}, calculating...`
+        );
       }
     }
 
@@ -111,7 +113,7 @@ export namespace Team {
     if (guild?.ownerDiscordId === userId) {
       logger.debug(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
       const allPerms = ALL_PERMISSIONS;
-      
+
       // Cache the result
       if (Redis.isAvailable()) {
         await Redis.withRetry(
@@ -119,19 +121,19 @@ export namespace Team {
           `getUserPermissions.set(${guildId}:${userId})`
         );
       }
-      
+
       return allPerms;
     }
 
     // Get permissions from all roles
     const roles = await getUserRoles(guildId, userId);
-    const rolePermissions = roles.map((role: TeamRole) => role.permissions);
+    const rolePermissions = roles.map((role: GuildRole) => role.permissions);
 
     // Use BitField to combine role permissions
     const combinedPermissions = PermissionUtils.getCumulativePermissions(rolePermissions);
 
     // Get additional permissions
-    const additionalPerms = await prisma.teamMemberPermission.findUnique({
+    const additionalPerms = await prisma.guildMemberPermission.findUnique({
       where: {
         discordId_guildId: {
           discordId: userId,
@@ -247,7 +249,7 @@ export namespace Team {
    */
   export const ensureDefaultRoles = async (guildId: string): Promise<void> => {
     // Check if admin role exists
-    const adminRole = await prisma.teamRole.findFirst({
+    const adminRole = await prisma.guildRole.findFirst({
       where: {
         guildId: guildId,
         name: "admin",
@@ -256,7 +258,7 @@ export namespace Team {
     });
 
     if (!adminRole) {
-      await prisma.teamRole.create({
+      await prisma.guildRole.create({
         data: {
           guildId: guildId,
           name: "admin",
@@ -269,7 +271,7 @@ export namespace Team {
     }
 
     // Check if support role exists
-    const supportRole = await prisma.teamRole.findFirst({
+    const supportRole = await prisma.guildRole.findFirst({
       where: {
         guildId: guildId,
         name: "support",
@@ -278,7 +280,7 @@ export namespace Team {
     });
 
     if (!supportRole) {
-      await prisma.teamRole.create({
+      await prisma.guildRole.create({
         data: {
           guildId: guildId,
           name: "support",
@@ -291,7 +293,7 @@ export namespace Team {
     }
 
     // Check if viewer role exists
-    const viewerRole = await prisma.teamRole.findFirst({
+    const viewerRole = await prisma.guildRole.findFirst({
       where: {
         guildId: guildId,
         name: "viewer",
@@ -300,7 +302,7 @@ export namespace Team {
     });
 
     if (!viewerRole) {
-      await prisma.teamRole.create({
+      await prisma.guildRole.create({
         data: {
           guildId: guildId,
           name: "viewer",
@@ -320,18 +322,18 @@ export namespace Team {
     roleId: number,
     userId: string,
     assignedById?: string
-  ): Promise<TeamRoleMember> => {
+  ): Promise<GuildRoleMember> => {
     // Get the role to find the guild ID
-    const role = await prisma.teamRole.findUnique({
+    const role = await prisma.guildRole.findUnique({
       where: { id: roleId },
       select: { guildId: true },
     });
 
-    const result = await prisma.teamRoleMember.upsert({
+    const result = await prisma.guildRoleMember.upsert({
       where: {
-        discordId_teamRoleId: {
+        discordId_guildRoleId: {
           discordId: userId,
-          teamRoleId: roleId,
+          guildRoleId: roleId,
         },
       },
       update: {
@@ -339,7 +341,7 @@ export namespace Team {
         assignedById: assignedById ?? null,
       },
       create: {
-        teamRoleId: roleId,
+        guildRoleId: roleId,
         discordId: userId,
         assignedById: assignedById ?? null,
       },
@@ -359,18 +361,18 @@ export namespace Team {
   /**
    * Remove a role from a user
    */
-  export const removeRole = async (roleId: number, userId: string): Promise<TeamRoleMember> => {
+  export const removeRole = async (roleId: number, userId: string): Promise<GuildRoleMember> => {
     // Get the role to find the guild ID
-    const role = await prisma.teamRole.findUnique({
+    const role = await prisma.guildRole.findUnique({
       where: { id: roleId },
       select: { guildId: true },
     });
 
-    const result = await prisma.teamRoleMember.delete({
+    const result = await prisma.guildRoleMember.delete({
       where: {
-        discordId_teamRoleId: {
+        discordId_guildRoleId: {
           discordId: userId,
-          teamRoleId: roleId,
+          guildRoleId: roleId,
         },
       },
     });
@@ -389,8 +391,8 @@ export namespace Team {
   /**
    * Get all team roles for a guild
    */
-  export const getRoles = async (guildId: string): Promise<TeamRole[]> => {
-    return prisma.teamRole.findMany({
+  export const getRoles = async (guildId: string): Promise<GuildRole[]> => {
+    return prisma.guildRole.findMany({
       where: { guildId: guildId },
       orderBy: { position: "desc" },
     });
@@ -402,38 +404,35 @@ export namespace Team {
   export const updateRolePermissions = async (
     roleId: number,
     permissions: bigint
-  ): Promise<TeamRole> => {
+  ): Promise<GuildRole> => {
     // Get the role to find the guild ID
-    const role = await prisma.teamRole.findUnique({
+    const role = await prisma.guildRole.findUnique({
       where: { id: roleId },
       select: { guildId: true },
     });
 
-    const result = await prisma.teamRole.update({
+    const result = await prisma.guildRole.update({
       where: { id: roleId },
       data: { permissions },
     });
 
     // Invalidate all user permission caches for this guild
     if (role && Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => {
-          let count = 0;
-          for await (const keys of client.scanIterator({
-            MATCH: `perms:${role.guildId}:*`,
-            COUNT: 100
-          })) {
-            for (const key of keys) {
-              if (key && key !== '') {
-                await client.del(key);
-                count++;
-              }
+      await Redis.withRetry(async (client) => {
+        let count = 0;
+        for await (const keys of client.scanIterator({
+          MATCH: `perms:${role.guildId}:*`,
+          COUNT: 100,
+        })) {
+          for (const key of keys) {
+            if (key && key !== "") {
+              await client.del(key);
+              count++;
             }
           }
-          return count;
-        },
-        `updateRolePermissions.invalidateGuild(${role.guildId})`
-      );
+        }
+        return count;
+      }, `updateRolePermissions.invalidateGuild(${role.guildId})`);
     }
 
     return result;
@@ -447,7 +446,7 @@ export namespace Team {
     userId: string,
     permissions: bigint
   ) => {
-    const result = await prisma.teamMemberPermission.upsert({
+    const result = await prisma.guildMemberPermission.upsert({
       where: {
         discordId_guildId: {
           discordId: userId,
@@ -478,8 +477,8 @@ export namespace Team {
   /**
    * Get a specific role by name
    */
-  export const getRoleByName = async (guildId: string, name: string): Promise<TeamRole | null> => {
-    return prisma.teamRole.findFirst({
+  export const getRoleByName = async (guildId: string, name: string): Promise<GuildRole | null> => {
+    return prisma.guildRole.findFirst({
       where: {
         guildId,
         name,
@@ -493,8 +492,8 @@ export namespace Team {
   export const updateRoleDiscordId = async (
     roleId: number,
     discordRoleId: string | null
-  ): Promise<TeamRole> => {
-    return prisma.teamRole.update({
+  ): Promise<GuildRole> => {
+    return prisma.guildRole.update({
       where: { id: roleId },
       data: { discordRoleId },
     });
@@ -505,9 +504,9 @@ export namespace Team {
    */
   export const getRoleMembers = async (
     roleId: number
-  ): Promise<(TeamRoleMember & { user: { username: string; avatarUrl: string | null } })[]> => {
-    const members = await prisma.teamRoleMember.findMany({
-      where: { teamRoleId: roleId },
+  ): Promise<(GuildRoleMember & { user: { username: string; avatarUrl: string | null } })[]> => {
+    const members = await prisma.guildRoleMember.findMany({
+      where: { guildRoleId: roleId },
     });
 
     // Get user details separately
@@ -537,15 +536,15 @@ export namespace Team {
    */
   export const removeAllRoles = async (guildId: string, userId: string): Promise<number> => {
     // Get all role IDs for this user in this guild
-    const roleMembers = await prisma.teamRoleMember.findMany({
+    const roleMembers = await prisma.guildRoleMember.findMany({
       where: {
         discordId: userId,
-        teamRole: {
+        guildRole: {
           guildId,
         },
       },
       select: {
-        teamRoleId: true,
+        guildRoleId: true,
       },
     });
 
@@ -554,11 +553,11 @@ export namespace Team {
     }
 
     // Delete all role memberships
-    const result = await prisma.teamRoleMember.deleteMany({
+    const result = await prisma.guildRoleMember.deleteMany({
       where: {
         discordId: userId,
-        teamRoleId: {
-          in: roleMembers.map((rm) => rm.teamRoleId),
+        guildRoleId: {
+          in: roleMembers.map((rm) => rm.guildRoleId),
         },
       },
     });
@@ -579,11 +578,11 @@ export namespace Team {
    * Returns unique team members across all active roles
    */
   export const getActiveMembers = async (guildId: string): Promise<string[]> => {
-    const members = await prisma.teamRoleMember.findMany({
+    const members = await prisma.guildRoleMember.findMany({
       where: {
-        teamRole: {
+        guildRole: {
           guildId,
-          status: TeamRoleStatus.ACTIVE,
+          status: GuildRoleStatus.ACTIVE,
         },
       },
       select: {
@@ -600,15 +599,15 @@ export namespace Team {
    * Returns team members with their Discord user info
    */
   export const getActiveMembersWithDetails = async (guildId: string): Promise<any> => {
-    return prisma.teamRoleMember.findMany({
+    return prisma.guildRoleMember.findMany({
       where: {
-        teamRole: {
+        guildRole: {
           guildId,
-          status: TeamRoleStatus.ACTIVE,
+          status: GuildRoleStatus.ACTIVE,
         },
       },
       include: {
-        teamRole: true,
+        guildRole: true,
         discordUser: true,
       },
       distinct: ["discordId"],

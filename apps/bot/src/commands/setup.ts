@@ -10,7 +10,7 @@ import {
   type Result,
 } from "@bot/lib/discord-utils";
 import {
-  Team,
+  Role,
   User,
   Panel,
   ensure as ensureGuild,
@@ -32,7 +32,7 @@ import {
   type Guild as DiscordGuild,
   type TextChannel,
   type ChatInputCommandInteraction,
-  type Role,
+  type Role as DiscordRole,
   type CategoryChannel,
 } from "discord.js";
 
@@ -58,7 +58,7 @@ const createDefaultRoles = async (guild: DiscordGuild) => {
 };
 
 // Helper to create default categories using ChannelOps
-const createDefaultCategories = async (guild: DiscordGuild, adminRole: Role, supportRole: Role) => {
+const createDefaultCategories = async (guild: DiscordGuild, adminRole: DiscordRole, supportRole: DiscordRole) => {
   const permissions = [
     { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
     {
@@ -87,7 +87,7 @@ const createDefaultCategories = async (guild: DiscordGuild, adminRole: Role, sup
   )) as CategoryChannel;
   const supportCategory = (await ChannelOps.utils.createCategoryIfNeeded(
     guild,
-    "Support Team"
+    "Support Role"
   )) as CategoryChannel;
 
   // Apply permissions to categories
@@ -210,7 +210,7 @@ const handleAutoSetup = async (interaction: ChatInputCommandInteraction): Promis
 
 **Will Create:**
 • Two roles: **Tickets Admin** and **Tickets Support**
-• Two categories: **Tickets** and **Support Team**
+• Two categories: **Tickets** and **Support Role**
 • Transcript channel: **#ticket-transcripts**
 • Default team roles and permissions
 
@@ -304,10 +304,10 @@ Do you want to proceed?`
     });
 
     // Ensure default team roles exist
-    await Team.ensureDefaultRoles(guildId);
+    await Role.ensureDefaultRoles(guildId);
 
     // Assign admin role to invoker
-    const adminTeamRole = await Team.getRoleByName(guildId, "admin");
+    const adminTeamRole = await Role.getRoleByName(guildId, "admin");
     if (adminTeamRole) {
       await User.ensure(
         parseDiscordId(interaction.user.id),
@@ -317,19 +317,19 @@ Do you want to proceed?`
       );
 
       // Assign team role
-      await Team.assignRole(adminTeamRole.id, parseDiscordId(interaction.user.id));
+      await Role.assignRole(adminTeamRole.id, parseDiscordId(interaction.user.id));
 
       // Update team role with Discord role ID
-      await Team.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
+      await Role.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
 
       // Assign Discord role using RoleOps
       await RoleOps.assignDiscordRole(member, adminRole.id);
     }
 
     // Update support role
-    const supportTeamRole = await Team.getRoleByName(guildId, "support");
+    const supportTeamRole = await Role.getRoleByName(guildId, "support");
     if (supportTeamRole) {
-      await Team.updateRoleDiscordId(supportTeamRole.id, parseDiscordId(supportRole.id));
+      await Role.updateRoleDiscordId(supportTeamRole.id, parseDiscordId(supportRole.id));
     }
 
     // Update guild settings

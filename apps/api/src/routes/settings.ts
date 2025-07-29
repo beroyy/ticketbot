@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
 import { UpdateSettingsSchema } from "@ticketsbot/core/domains/guild";
-import { Guild, Team } from "@ticketsbot/core/domains";
+import { Guild, Role } from "@ticketsbot/core/domains";
 import { createRoute, ApiErrors } from "../factory";
 import { compositions, requirePermission } from "../middleware/context";
 
@@ -127,8 +127,8 @@ export const settingsRoutes = createRoute()
 
       // Get user's permissions and roles in parallel
       const [permissions, roles] = await Promise.all([
-        Team.getUserPermissions(guildId, user.discordUserId),
-        Team.getUserRoles(guildId, user.discordUserId),
+        Role.getUserPermissions(guildId, user.discordUserId),
+        Role.getUserRoles(guildId, user.discordUserId),
       ]);
 
       // Format response to match frontend expectations

@@ -38,7 +38,7 @@ export function useUserByDiscordId(discordId: string | null) {
   return useQuery(userQueries.byDiscordId(discordId));
 }
 
-export interface Team {
+export interface Role {
   id: number;
   name: string;
   description: string | null;
@@ -48,7 +48,7 @@ export interface Team {
   updatedAt: string;
 }
 
-async function fetchTeams(_guildId: string): Promise<Team[]> {
+async function fetchTeams(_guildId: string): Promise<Role[]> {
   // TODO: Add teams endpoint to the API
   return [];
 }

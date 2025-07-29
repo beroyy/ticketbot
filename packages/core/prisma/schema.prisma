@@ -38,7 +38,7 @@ enum FormFieldType {
   DATE
 }
 
-enum TeamRoleStatus {
+enum GuildRoleStatus {
   ACTIVE
   INACTIVE
 }

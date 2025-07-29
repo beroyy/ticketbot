@@ -91,11 +91,10 @@ model DiscordUser {
   performedLifecycleEvents    TicketLifecycleEvent[] @relation("LifecyclePerformedBy")
   claimedLifecycleEvents      TicketLifecycleEvent[] @relation("LifecycleClaimer")
   closedLifecycleEvents       TicketLifecycleEvent[] @relation("LifecycleCloser")
-  teamMemberships         TeamMember[]
-  teamRoleMembers         TeamRoleMember[]
-  teamMemberPermissions   TeamMemberPermission[]
-  assignedRoles           TeamRoleMember[]  @relation("RoleAssignments")
-  grantedPermissions      TeamMemberPermission[] @relation("PermissionGrants")
+  guildRoleMembers         GuildRoleMember[]
+  guildMemberPermissions   GuildMemberPermission[]
+  assignedRoles           GuildRoleMember[]  @relation("RoleAssignments")
+  grantedPermissions      GuildMemberPermission[] @relation("PermissionGrants")
   events                  Event[]
   
   @@map("discord_users")

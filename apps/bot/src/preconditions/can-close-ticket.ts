@@ -1,7 +1,7 @@
 import { Precondition } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
-import { Team } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
 
@@ -36,7 +36,7 @@ export const CanCloseTicketPrecondition = class extends Precondition {
     }
 
     // Check if user has permission to close any ticket
-    const hasCloseAnyPermission = await Team.hasPermission(
+    const hasCloseAnyPermission = await Role.hasPermission(
       parseDiscordId(interaction.guild!.id),
       parseDiscordId(interaction.user.id),
       PermissionFlags.TICKET_CLOSE_ANY

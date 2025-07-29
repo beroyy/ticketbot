@@ -8,34 +8,34 @@ import {
 } from "../../schemas/common";
 
 /**
- * Team role status
+ * Role role status
  */
-export const TeamRoleStatusSchema = z.enum(["active", "inactive"]);
+export const RoleStatusSchema = z.enum(["active", "inactive"]);
 
 /**
- * Team role creation schema
+ * Role role creation schema
  */
-export const CreateTeamRoleSchema = z.object({
+export const CreateRoleSchema = z.object({
   guild_id: DiscordGuildIdSchema,
   name: z.string().min(1).max(50),
   color: HexColorSchema.default("#5865F2"),
   position: z.number().int().min(0).default(0),
   permissions: BigIntStringSchema.default("0"),
   is_default: z.boolean().default(false),
-  status: TeamRoleStatusSchema.default("active"),
+  status: RoleStatusSchema.default("active"),
   metadata: JsonMetadataSchema.optional(),
 });
 
 /**
- * Team role update schema
+ * Role role update schema
  */
-export const UpdateTeamRoleSchema = z.object({
+export const UpdateRoleSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   color: HexColorSchema.optional(),
   position: z.number().int().min(0).optional(),
   permissions: BigIntStringSchema.optional(),
   is_default: z.boolean().optional(),
-  status: TeamRoleStatusSchema.optional(),
+  status: RoleStatusSchema.optional(),
   metadata: JsonMetadataSchema.optional(),
 });
 
@@ -85,27 +85,27 @@ export const BatchPermissionCheckSchema = z.object({
 });
 
 /**
- * Team role query schema
+ * Role role query schema
  */
-export const TeamRoleQuerySchema = z.object({
+export const RoleQuerySchema = z.object({
   guild_id: DiscordGuildIdSchema.optional(),
-  status: TeamRoleStatusSchema.optional(),
+  status: RoleStatusSchema.optional(),
   is_default: z.boolean().optional(),
 });
 
 /**
- * Team member query schema
+ * Role member query schema
  */
-export const TeamMemberQuerySchema = z.object({
+export const RoleMemberQuerySchema = z.object({
   guild_id: DiscordGuildIdSchema,
   role_id: z.number().int().positive().optional(),
   discord_id: DiscordUserIdSchema.optional(),
 });
 
 /**
- * Team role with members schema
+ * Role role with members schema
  */
-export const TeamRoleWithMembersSchema = z.object({
+export const RoleWithMembersSchema = z.object({
   id: z.number(),
   guild_id: DiscordGuildIdSchema,
   name: z.string(),
@@ -113,7 +113,7 @@ export const TeamRoleWithMembersSchema = z.object({
   position: z.number(),
   permissions: z.bigint(),
   is_default: z.boolean(),
-  status: TeamRoleStatusSchema,
+  status: RoleStatusSchema,
   metadata: JsonMetadataSchema.nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -152,14 +152,14 @@ export const UserPermissionsResponseSchema = z.object({
 /**
  * Type inference helpers
  */
-export type CreateTeamRoleInput = z.infer<typeof CreateTeamRoleSchema>;
-export type UpdateTeamRoleInput = z.infer<typeof UpdateTeamRoleSchema>;
+export type CreateRoleInput = z.infer<typeof CreateRoleSchema>;
+export type UpdateRoleInput = z.infer<typeof UpdateRoleSchema>;
 export type AssignRoleInput = z.infer<typeof AssignRoleSchema>;
 export type RemoveRoleInput = z.infer<typeof RemoveRoleSchema>;
 export type SetAdditionalPermissionsInput = z.infer<typeof SetAdditionalPermissionsSchema>;
 export type PermissionCheckInput = z.infer<typeof PermissionCheckSchema>;
 export type BatchPermissionCheckInput = z.infer<typeof BatchPermissionCheckSchema>;
-export type TeamRoleQuery = z.infer<typeof TeamRoleQuerySchema>;
-export type TeamMemberQuery = z.infer<typeof TeamMemberQuerySchema>;
-export type TeamRoleWithMembers = z.infer<typeof TeamRoleWithMembersSchema>;
+export type RoleQuery = z.infer<typeof RoleQuerySchema>;
+export type RoleMemberQuery = z.infer<typeof RoleMemberQuerySchema>;
+export type RoleWithMembers = z.infer<typeof RoleWithMembersSchema>;
 export type UserPermissionsResponse = z.infer<typeof UserPermissionsResponseSchema>;

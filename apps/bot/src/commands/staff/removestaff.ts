@@ -1,7 +1,7 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Team, Event } from "@ticketsbot/core/domains";
+import { Role, Event } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
@@ -26,7 +26,7 @@ export const RemoveStaffCommand = createCommand({
 
     try {
       // Get user's current roles
-      const userRoles = await Team.getUserRoles(guildId, userId);
+      const userRoles = await Role.getUserRoles(guildId, userId);
 
       if (userRoles.length === 0) {
         await InteractionResponse.error(
@@ -42,7 +42,7 @@ export const RemoveStaffCommand = createCommand({
       await withTransaction(async () => {
         // Remove all roles within transaction
         for (const role of userRoles) {
-          await Team.removeRole(role.id, userId);
+          await Role.removeRole(role.id, userId);
           removedRoles.push(role.name);
 
           // Create event log
@@ -53,7 +53,7 @@ export const RemoveStaffCommand = createCommand({
             action: "member_role_removed",
             targetType: "USER",
             targetId: targetUser.id,
-            teamRoleId: role.id,
+            guildRoleId: role.id,
             metadata: { roleName: role.name },
           });
         }
@@ -78,7 +78,7 @@ export const RemoveStaffCommand = createCommand({
       });
 
       const embed = Embed.success(
-        "Team Roles Removed",
+        "Role Roles Removed",
         `All team roles have been removed from <@${targetUser.id}>.
 
 **Removed roles:** ${removedRoles.join(", ")}`

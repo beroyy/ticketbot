@@ -1,7 +1,7 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Team, User, Event } from "@ticketsbot/core/domains";
+import { Role, User, Event } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
@@ -23,10 +23,10 @@ export const AddSupportCommand = createCommand({
 
     try {
       // Ensure default roles exist
-      await Team.ensureDefaultRoles(guildId);
+      await Role.ensureDefaultRoles(guildId);
 
       // Check existing roles
-      const userRoles = await Team.getUserRoles(guildId, userId);
+      const userRoles = await Role.getUserRoles(guildId, userId);
 
       if (StaffHelpers.hasRole(userRoles, "support")) {
         await InteractionResponse.error(
@@ -45,7 +45,7 @@ export const AddSupportCommand = createCommand({
       }
 
       // Get support role
-      const supportRole = await Team.getRoleByName(guildId, "support");
+      const supportRole = await Role.getRoleByName(guildId, "support");
       if (!supportRole) {
         await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("support"));
         return err("Support role not found");
@@ -61,7 +61,7 @@ export const AddSupportCommand = createCommand({
         );
 
         // Assign role
-        await Team.assignRole(supportRole.id, userId, parseDiscordId(interaction.user.id));
+        await Role.assignRole(supportRole.id, userId, parseDiscordId(interaction.user.id));
 
         // Create event log
         await Event.create({
@@ -71,7 +71,7 @@ export const AddSupportCommand = createCommand({
           action: "member_role_added",
           targetType: "USER",
           targetId: targetUser.id,
-          teamRoleId: supportRole.id,
+          guildRoleId: supportRole.id,
           metadata: { roleName: "support" },
         });
 

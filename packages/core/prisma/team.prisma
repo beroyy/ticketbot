@@ -1,49 +1,13 @@
 // ====================
-// TEAM MODELS
+// GUILD ROLE MODELS (formerly Role Models)
 // ====================
 
-model Team {
-  id          Int      @id @default(autoincrement())
-  guildId     String   @map("guild_id")
-  name        String   @db.VarChar(100)
-  description String?  @db.VarChar(500)
-  color       String?  @db.VarChar(7)  // Hex color for UI
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at") // Added soft delete
-  
-  // Relations
-  guild         Guild           @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  teamMembers   TeamMember[]
-  
-  @@unique([guildId, name])
-  @@index([guildId])
-  @@index([deletedAt]) // Index for soft delete queries
-  @@map("teams")
-}
-
-model TeamMember {
-  id          Int      @id @default(autoincrement())
-  teamId      Int      @map("team_id")
-  discordId   String   @map("discord_id") // Discord user ID
-  role        String   @db.VarChar(50) // Flexible for custom roles
-  joinedAt    DateTime @default(now()) @map("joined_at")
-  
-  // Relations
-  team         Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  discordUser  DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
-  
-  @@unique([teamId, discordId])
-  @@index([discordId])
-  @@map("team_members")
-}
-
-model TeamRole {
+model GuildRole {
   id                Int      @id @default(autoincrement())
   guildId           String   @map("guild_id")
   name              String   @db.VarChar(100)
   discordRoleId     String?  @map("discord_role_id") // NULL if not yet created in Discord
-  status            TeamRoleStatus @default(ACTIVE) // Now uses enum
+  status            GuildRoleStatus @default(ACTIVE) // Now uses enum
   color             String?  @db.VarChar(7)  // Hex color
   position          Int      @default(0) // For hierarchy
   isDefault         Boolean  @default(false) @map("is_default") // true for admin/support
@@ -54,35 +18,35 @@ model TeamRole {
   
   // Relations
   guild             Guild               @relation("GuildTeamRoles", fields: [guildId], references: [id], onDelete: Cascade)
-  teamRoleMembers   TeamRoleMember[]
-  panelTeamRoles    PanelTeamRole[]
+  guildRoleMembers   GuildRoleMember[]
+  panelGuildRoles    PanelGuildRole[]
   events            Event[]
   
   @@unique([guildId, discordRoleId])
   @@unique([guildId, name])
   @@index([guildId])
-  @@map("team_roles")
+  @@map("guild_roles")
 }
 
-model TeamRoleMember {
+model GuildRoleMember {
   id              Int      @id @default(autoincrement())
   discordId       String   @map("discord_id")
-  teamRoleId      Int      @map("team_role_id")
+  guildRoleId      Int      @map("guild_role_id")
   assignedAt      DateTime @default(now()) @map("assigned_at")
   assignedById    String?  @map("assigned_by_id")
   
   // Relations
   discordUser     DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
-  teamRole        TeamRole     @relation(fields: [teamRoleId], references: [id], onDelete: Cascade)
+  guildRole        GuildRole     @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
   assignedBy      DiscordUser? @relation("RoleAssignments", fields: [assignedById], references: [id])
   
-  @@unique([discordId, teamRoleId])
+  @@unique([discordId, guildRoleId])
   @@index([discordId])
-  @@index([teamRoleId])
-  @@map("team_role_members")
+  @@index([guildRoleId])
+  @@map("guild_role_members")
 }
 
-model TeamMemberPermission {
+model GuildMemberPermission {
   id                     Int      @id @default(autoincrement())
   discordId              String   @map("discord_id")
   guildId                String   @map("guild_id")
@@ -98,7 +62,7 @@ model TeamMemberPermission {
   @@unique([discordId, guildId])
   @@index([discordId])
   @@index([guildId])
-  @@map("team_member_permissions")
+  @@map("guild_member_permissions")
 }
 
 model Permission {

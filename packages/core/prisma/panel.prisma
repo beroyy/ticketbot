@@ -37,7 +37,7 @@ model Panel {
   parentPanel     Panel?        @relation("PanelHierarchy", fields: [parentPanelId], references: [id])
   childPanels     Panel[]       @relation("PanelHierarchy")
   panelOptions    PanelOption[]
-  panelTeamRoles  PanelTeamRole[]
+  panelGuildRoles  PanelGuildRole[]
   tickets         Ticket[]
 
   @@index([deletedAt]) // Index for soft delete queries
@@ -66,17 +66,17 @@ model PanelOption {
   @@map("panel_options")
 }
 
-model PanelTeamRole {
+model PanelGuildRole {
   id            Int      @id @default(autoincrement())
   panelId       Int      @map("panel_id")
-  teamRoleId    Int      @map("team_role_id")
+  guildRoleId    Int      @map("guild_role_id")
   
   // Relations
   panel         Panel    @relation(fields: [panelId], references: [id], onDelete: Cascade)
-  teamRole      TeamRole @relation(fields: [teamRoleId], references: [id], onDelete: Cascade)
+  guildRole      GuildRole @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
   
-  @@unique([panelId, teamRoleId])
+  @@unique([panelId, guildRoleId])
   @@index([panelId])
-  @@index([teamRoleId])
-  @@map("panel_team_roles")
+  @@index([guildRoleId])
+  @@map("panel_guild_roles")
 }

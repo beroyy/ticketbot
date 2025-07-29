@@ -16,7 +16,7 @@ export namespace Event {
     targetType: EventTargetType;
     targetId: string;
     ticketId?: number;
-    teamRoleId?: number;
+    guildRoleId?: number;
     metadata?: unknown;
   }
 
@@ -28,7 +28,7 @@ export namespace Event {
     targetType?: EventTargetType;
     targetId?: string;
     ticketId?: number;
-    teamRoleId?: number;
+    guildRoleId?: number;
     dateRange?: {
       start: Date;
       end: Date;
@@ -60,7 +60,7 @@ export namespace Event {
         targetType: data.targetType,
         targetId: data.targetId,
         ticketId: data.ticketId ?? null,
-        teamRoleId: data.teamRoleId ?? null,
+        guildRoleId: data.guildRoleId ?? null,
         metadata: (data.metadata ?? Prisma.JsonNull) as Prisma.InputJsonValue,
         expiresAt: new Date(Date.now() + 7 * 30 * 24 * 60 * 60 * 1000), // 7 months (210 days)
       },
@@ -85,7 +85,7 @@ export namespace Event {
       ...(query.targetType && { targetType: query.targetType }),
       ...(query.targetId && { targetId: query.targetId }),
       ...(query.ticketId && { ticketId: query.ticketId }),
-      ...(query.teamRoleId && { teamRoleId: query.teamRoleId }),
+      ...(query.guildRoleId && { guildRoleId: query.guildRoleId }),
       ...(query.dateRange && {
         createdAt: {
           gte: query.dateRange.start,
@@ -106,7 +106,7 @@ export namespace Event {
               subject: true,
             },
           },
-          teamRole: {
+          guildRole: {
             select: {
               name: true,
             },

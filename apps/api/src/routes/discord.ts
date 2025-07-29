@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, Redis } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
-import { Account, Team, findById as findGuildById } from "@ticketsbot/core/domains";
+import { Account, Role, findById as findGuildById } from "@ticketsbot/core/domains";
 import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
 import { DiscordCache } from "@ticketsbot/core/auth";
 import { createRoute, ApiErrors } from "../factory";
@@ -231,7 +231,7 @@ export const discordRoutes = createRoute()
     const guildsWithBotStatus = await Promise.all(
       adminGuilds.map(async (guild) => {
         let botInstalled = false;
-        
+
         // Try Redis cache first
         if (Redis.isAvailable()) {
           try {
@@ -254,7 +254,7 @@ export const discordRoutes = createRoute()
           // No Redis, use Discord API
           botInstalled = await Discord.isInGuild(guild.id);
         }
-        
+
         return {
           ...guild,
           botInstalled,
@@ -268,7 +268,7 @@ export const discordRoutes = createRoute()
     logger.info("Successfully fetched Discord guilds", {
       totalGuilds: guilds.length,
       adminGuilds: adminGuilds.length,
-      withBot: guildsWithBotStatus.filter(g => g.botInstalled).length,
+      withBot: guildsWithBotStatus.filter((g) => g.botInstalled).length,
       userId: user.id,
     });
 
@@ -296,12 +296,15 @@ export const discordRoutes = createRoute()
         error: accountResult.error,
         userId: user.id,
       });
-      return c.json({
-        success: false,
-        syncedCount: 0,
-        totalAdminGuilds: 0,
-        errors: [accountResult.error || "Discord account not connected"],
-      } satisfies z.infer<typeof _GuildSyncResponse>, 400);
+      return c.json(
+        {
+          success: false,
+          syncedCount: 0,
+          totalAdminGuilds: 0,
+          errors: [accountResult.error || "Discord account not connected"],
+        } satisfies z.infer<typeof _GuildSyncResponse>,
+        400
+      );
     }
 
     // Fetch guilds from Discord
@@ -311,12 +314,15 @@ export const discordRoutes = createRoute()
         error: result.error,
         userId: user.id,
       });
-      return c.json({
-        success: false,
-        syncedCount: 0,
-        totalAdminGuilds: 0,
-        errors: [result.error || "Failed to fetch guilds from Discord"],
-      } satisfies z.infer<typeof _GuildSyncResponse>, 500);
+      return c.json(
+        {
+          success: false,
+          syncedCount: 0,
+          totalAdminGuilds: 0,
+          errors: [result.error || "Failed to fetch guilds from Discord"],
+        } satisfies z.infer<typeof _GuildSyncResponse>,
+        500
+      );
     }
 
     const guilds = result.data as DiscordGuild[];
@@ -327,7 +333,9 @@ export const discordRoutes = createRoute()
 
     // Filter guilds where user has MANAGE_GUILD permission or is owner
     const adminGuilds = guilds.filter(
-      (guild) => guild.owner || (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION
+      (guild) =>
+        guild.owner ||
+        (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION
     );
 
     logger.info("Syncing admin guilds", {
@@ -361,21 +369,21 @@ export const discordRoutes = createRoute()
         }
 
         // Ensure default roles exist
-        await Team.ensureDefaultRoles(guild.id);
+        await Role.ensureDefaultRoles(guild.id);
 
         // Assign appropriate role based on permissions
         if (guild.owner && user.discordUserId) {
           // Owner gets admin role
-          const adminRole = await Team.getRoleByName(guild.id, "admin");
+          const adminRole = await Role.getRoleByName(guild.id, "admin");
           if (adminRole) {
-            await Team.assignRole(adminRole.id, user.discordUserId);
+            await Role.assignRole(adminRole.id, user.discordUserId);
             logger.debug(`Assigned admin role to owner in guild ${guild.id}`);
           }
         } else if (user.discordUserId) {
           // Non-owner admin gets viewer role by default
-          const viewerRole = await Team.getRoleByName(guild.id, "viewer");
+          const viewerRole = await Role.getRoleByName(guild.id, "viewer");
           if (viewerRole) {
-            await Team.assignRole(viewerRole.id, user.discordUserId);
+            await Role.assignRole(viewerRole.id, user.discordUserId);
             logger.debug(`Assigned viewer role to admin in guild ${guild.id}`);
           }
         }
@@ -392,7 +400,9 @@ export const discordRoutes = createRoute()
         syncedCount++;
       } catch (error) {
         logger.error(`Failed to sync guild ${guild.id}`, error);
-        errors.push(`Guild ${guild.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Guild ${guild.id}: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
       }
     }
 

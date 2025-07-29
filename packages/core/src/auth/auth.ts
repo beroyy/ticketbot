@@ -189,27 +189,27 @@ const createAuthInstance = () => {
       },
       disableCSRFCheck: process.env["NODE_ENV"] === "development",
       cookies: {
-        "session_token": {
+        session_token: {
           name: "session_token",
           attributes: {
             sameSite: "lax",
             secure: true,
             httpOnly: true,
             domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
-            path: "/"
-          }
+            path: "/",
+          },
         },
-        "session_data": {
+        session_data: {
           name: "session_data",
           attributes: {
             sameSite: "lax",
             secure: true,
             httpOnly: true,
             domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
-            path: "/"
-          }
-        }
-      }
+            path: "/",
+          },
+        },
+      },
     },
     account: {
       accountLinking: {
@@ -363,13 +363,13 @@ const createAuthInstance = () => {
             });
 
             if (discordUserResponse.ok) {
-              const discordProfile = await discordUserResponse.json() as {
+              const discordProfile = (await discordUserResponse.json()) as {
                 id: string;
                 username: string;
                 discriminator: string | null;
                 avatar: string | null;
               };
-              
+
               // Calculate avatar URL
               const avatarUrl = getDiscordAvatarUrl(
                 discordProfile.id,
@@ -384,7 +384,7 @@ const createAuthInstance = () => {
                 discordProfile.discriminator || undefined,
                 avatarUrl
               );
-              
+
               logger.debug("Ensured DiscordUser exists", {
                 discordId: account.accountId,
                 username: discordProfile.username,
@@ -424,7 +424,7 @@ const createAuthInstance = () => {
                 // Cache all admin guilds for the user
                 const { DiscordCache } = await import("./services/discord-cache");
                 const MANAGE_GUILD = BigInt(0x20);
-                
+
                 const adminGuilds = guilds
                   .filter((guild) => {
                     if (guild.owner) return true;
@@ -436,7 +436,9 @@ const createAuthInstance = () => {
                   .map((guild) => ({
                     id: guild.id,
                     name: guild.name,
-                    icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+                    icon: guild.icon
+                      ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
+                      : null,
                     owner: guild.owner || false,
                     permissions: guild.permissions || "0",
                     features: guild.features || [],
@@ -453,7 +455,7 @@ const createAuthInstance = () => {
                   );
 
                   const { ensure: ensureGuild } = await import("../domains/guild");
-                  const { Team } = await import("../domains/team");
+                  const { Role } = await import("../domains/role");
 
                   await Promise.all(
                     adminGuilds.map(async (guild) => {
@@ -467,54 +469,59 @@ const createAuthInstance = () => {
                           ownerId,
                         });
                         await ensureGuild(guild.id, guild.name, ownerId);
-                        
+
                         if (guild.owner) {
-                          logger.debug(`Set ownership for guild ${guild.id} (${guild.name}) with Discord ID ${account.accountId}`);
+                          logger.debug(
+                            `Set ownership for guild ${guild.id} (${guild.name}) with Discord ID ${account.accountId}`
+                          );
                         } else {
-                          logger.debug(`Created guild record for ${guild.id} (${guild.name}) where user is admin but not owner`);
+                          logger.debug(
+                            `Created guild record for ${guild.id} (${guild.name}) where user is admin but not owner`
+                          );
                         }
 
                         // Invalidate permission cache for this guild
                         if (Redis.isAvailable()) {
-                          await Redis.withRetry(
-                            async (client) => {
-                              let count = 0;
-                              for await (const keys of client.scanIterator({
-                                MATCH: `perms:${guild.id}:*`,
-                                COUNT: 100
-                              })) {
-                                for (const key of keys) {
-                                  if (key && key !== '') {
-                                    await client.del(key);
-                                    count++;
-                                  }
+                          await Redis.withRetry(async (client) => {
+                            let count = 0;
+                            for await (const keys of client.scanIterator({
+                              MATCH: `perms:${guild.id}:*`,
+                              COUNT: 100,
+                            })) {
+                              for (const key of keys) {
+                                if (key && key !== "") {
+                                  await client.del(key);
+                                  count++;
                                 }
                               }
-                              return count;
-                            },
-                            `auth.invalidateGuild(${guild.id})`
-                          );
+                            }
+                            return count;
+                          }, `auth.invalidateGuild(${guild.id})`);
                           logger.debug(`Invalidated permission cache for guild ${guild.id}`);
                         }
 
                         // Ensure default roles exist
-                        await Team.ensureDefaultRoles(guild.id);
+                        await Role.ensureDefaultRoles(guild.id);
                         logger.debug(`Ensured default roles exist for guild ${guild.id}`);
-                        
+
                         // Assign appropriate role based on permissions
                         if (guild.owner) {
                           // Owner gets admin role
-                          const adminRole = await Team.getRoleByName(guild.id, "admin");
+                          const adminRole = await Role.getRoleByName(guild.id, "admin");
                           if (adminRole) {
-                            await Team.assignRole(adminRole.id, account.accountId);
-                            logger.debug(`Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`);
+                            await Role.assignRole(adminRole.id, account.accountId);
+                            logger.debug(
+                              `Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`
+                            );
                           }
                         } else {
                           // Non-owner admin gets viewer role by default
-                          const viewerRole = await Team.getRoleByName(guild.id, "viewer");
+                          const viewerRole = await Role.getRoleByName(guild.id, "viewer");
                           if (viewerRole) {
-                            await Team.assignRole(viewerRole.id, account.accountId);
-                            logger.debug(`Assigned viewer role to admin user ${account.accountId} in guild ${guild.id}`);
+                            await Role.assignRole(viewerRole.id, account.accountId);
+                            logger.debug(
+                              `Assigned viewer role to admin user ${account.accountId} in guild ${guild.id}`
+                            );
                           }
                         }
                       } catch (error) {

@@ -10,7 +10,7 @@ import type {
   Ticket as PrismaTicket,
   DiscordUser,
   Guild as PrismaGuild,
-  TeamRole as PrismaTeamRole,
+  GuildRole as PrismaGuildRole,
   Blacklist,
 } from "@prisma/client";
 
@@ -44,10 +44,10 @@ export type FormWithFields = PrismaForm & {
 
 // Guild types
 export type GuildSettings = PrismaGuild & {
-  teamRoles: PrismaTeamRole[];
+  teamRoles: PrismaGuildRole[];
   blacklist: Blacklist[];
 };
-export type TeamRole = PrismaTeamRole;
+export type GuildRole = PrismaGuildRole;
 export type BlacklistEntry = Blacklist;
 
 // Generic result types

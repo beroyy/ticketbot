@@ -2,7 +2,7 @@
 export { User } from "./user";
 export { Guild } from "./guild";
 export { Ticket } from "./ticket";
-export { Team } from "./team";
+export { Role } from "./role";
 export { Event } from "./event";
 export { Panel } from "./panel";
 export { Tag } from "./tag";

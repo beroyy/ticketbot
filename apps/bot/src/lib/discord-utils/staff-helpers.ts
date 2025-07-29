@@ -1,4 +1,4 @@
-import type { Team } from "@ticketsbot/core/domains";
+import type { Role } from "@ticketsbot/core/domains";
 
 /**
  * Common validation helpers for staff commands
@@ -7,7 +7,7 @@ export const StaffHelpers = {
   /**
    * Check if user already has a specific role
    */
-  hasRole(userRoles: Team.Role[], roleName: string): boolean {
+  hasRole(userRoles: Role.Role[], roleName: string): boolean {
     return userRoles.some((role) => role.name === roleName && role.isDefault);
   },
 

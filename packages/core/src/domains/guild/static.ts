@@ -124,18 +124,18 @@ export const ensureWithDefaults = async (data: {
   });
 
   // Ensure default team role exists
-  const defaultRole = await prisma.teamRole.findFirst({
+  const defaultRole = await prisma.guildRole.findFirst({
     where: {
       guildId: guild.id,
-      name: "Support Team",
+      name: "Support Role",
     },
   });
 
   if (!defaultRole) {
-    await prisma.teamRole.create({
+    await prisma.guildRole.create({
       data: {
         guildId: guild.id,
-        name: "Support Team",
+        name: "Support Role",
         permissions: BigInt("0x1ffffff"), // Default support permissions
       },
     });

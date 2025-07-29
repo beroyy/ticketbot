@@ -1,5 +1,5 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
-import { Team, getPanelGuildId } from "@ticketsbot/core/domains";
+import { Role, getPanelGuildId } from "@ticketsbot/core/domains";
 import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
 import { env, isDevelopment } from "../env";
@@ -62,7 +62,7 @@ export function requirePermission(
     }
 
     try {
-      await Team.ensureDefaultRoles(guildId);
+      await Role.ensureDefaultRoles(guildId);
 
       const discordId = user.discordUserId;
 
@@ -80,7 +80,7 @@ export function requirePermission(
         );
       }
 
-      const hasPermission = await Team.hasPermission(
+      const hasPermission = await Role.hasPermission(
         guildId,
         effectiveDiscordId ?? "dev-user",
         permission
@@ -141,7 +141,7 @@ export function requirePanelPermission(
     }
 
     try {
-      await Team.ensureDefaultRoles(guildId);
+      await Role.ensureDefaultRoles(guildId);
 
       const discordId = user.discordUserId;
 
@@ -159,7 +159,7 @@ export function requirePanelPermission(
         );
       }
 
-      const hasPermission = await Team.hasPermission(
+      const hasPermission = await Role.hasPermission(
         guildId,
         effectiveDiscordId ?? "dev-user",
         permission
@@ -205,7 +205,7 @@ export function requireAnyPermission(
     }
 
     try {
-      await Team.ensureDefaultRoles(guildId);
+      await Role.ensureDefaultRoles(guildId);
 
       const discordId = user.discordUserId;
 
@@ -223,7 +223,7 @@ export function requireAnyPermission(
         );
       }
 
-      const hasPermission = await Team.hasAnyPermission(
+      const hasPermission = await Role.hasAnyPermission(
         guildId,
         effectiveDiscordId ?? "dev-user",
         ...permissions

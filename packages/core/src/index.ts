@@ -146,30 +146,30 @@ export {
 } from "./domains/analytics/schemas";
 
 export {
-  TeamRoleStatusSchema,
-  CreateTeamRoleSchema,
-  UpdateTeamRoleSchema,
+  RoleStatusSchema,
+  CreateRoleSchema,
+  UpdateRoleSchema,
   AssignRoleSchema,
   RemoveRoleSchema,
   SetAdditionalPermissionsSchema,
   PermissionCheckSchema,
   BatchPermissionCheckSchema,
-  TeamRoleQuerySchema,
-  TeamMemberQuerySchema,
-  TeamRoleWithMembersSchema,
+  RoleQuerySchema,
+  RoleMemberQuerySchema,
+  RoleWithMembersSchema,
   UserPermissionsResponseSchema,
-  type CreateTeamRoleInput,
-  type UpdateTeamRoleInput,
+  type CreateRoleInput,
+  type UpdateRoleInput,
   type AssignRoleInput,
   type RemoveRoleInput,
   type SetAdditionalPermissionsInput,
   type PermissionCheckInput,
   type BatchPermissionCheckInput,
-  type TeamRoleQuery,
-  type TeamMemberQuery,
-  type TeamRoleWithMembers,
+  type RoleQuery,
+  type RoleMemberQuery,
+  type RoleWithMembers,
   type UserPermissionsResponse,
-} from "./domains/team/schemas";
+} from "./domains/role/schemas";
 
 export {
   CreateTagSchema,
@@ -243,7 +243,7 @@ export { isRedisAvailable, getRedisConnection } from "./redis";
 export { User } from "./domains/user";
 export { Guild } from "./domains/guild";
 export { Ticket } from "./domains/ticket";
-export { Team } from "./domains/team";
+export { Role } from "./domains/role";
 export { Event } from "./domains/event";
 export { Panel } from "./domains/panel";
 export { Tag } from "./domains/tag";

@@ -1,7 +1,7 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Team, User, Event } from "@ticketsbot/core/domains";
+import { Role, User, Event } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
@@ -23,10 +23,10 @@ export const AddAdminCommand = createCommand({
 
     try {
       // Ensure default roles exist
-      await Team.ensureDefaultRoles(guildId);
+      await Role.ensureDefaultRoles(guildId);
 
       // Check if already admin
-      const userRoles = await Team.getUserRoles(guildId, userId);
+      const userRoles = await Role.getUserRoles(guildId, userId);
 
       if (StaffHelpers.hasRole(userRoles, "admin")) {
         await InteractionResponse.error(
@@ -37,7 +37,7 @@ export const AddAdminCommand = createCommand({
       }
 
       // Get admin role
-      const adminRole = await Team.getRoleByName(guildId, "admin");
+      const adminRole = await Role.getRoleByName(guildId, "admin");
       if (!adminRole) {
         await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("admin"));
         return err("Admin role not found");
@@ -53,7 +53,7 @@ export const AddAdminCommand = createCommand({
         );
 
         // Assign role
-        await Team.assignRole(adminRole.id, userId, parseDiscordId(interaction.user.id));
+        await Role.assignRole(adminRole.id, userId, parseDiscordId(interaction.user.id));
 
         // Create event log
         await Event.create({
@@ -63,7 +63,7 @@ export const AddAdminCommand = createCommand({
           action: "member_role_added",
           targetType: "USER",
           targetId: targetUser.id,
-          teamRoleId: adminRole.id,
+          guildRoleId: adminRole.id,
           metadata: { roleName: "admin" },
         });
 

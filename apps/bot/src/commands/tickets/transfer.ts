@@ -1,7 +1,7 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
-import { Team, TicketLifecycle, Transcripts } from "@ticketsbot/core/domains";
+import { Role, TicketLifecycle, Transcripts } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { PermissionFlags } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -41,7 +41,7 @@ export class TransferCommand extends TicketCommandBase {
     const targetUser = interaction.options.getUser("user", true);
 
     // Check if target user has permission
-    const targetHasPermission = await Team.hasPermission(
+    const targetHasPermission = await Role.hasPermission(
       parseDiscordId(interaction.guild!.id),
       parseDiscordId(targetUser.id),
       PermissionFlags.TICKET_VIEW_ALL

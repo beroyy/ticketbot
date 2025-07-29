@@ -1,4 +1,4 @@
-import { Team } from "@ticketsbot/core/domains/team";
+import { Role } from "@ticketsbot/core/domains/team";
 import { withTransaction } from "@ticketsbot/core/context";
 import type { SeedConfig, UserWithRole } from "./types";
 import { ProgressLogger } from "./utils";
@@ -18,11 +18,11 @@ export class TeamSeeder {
 
     await withTransaction(async () => {
       // Ensure default roles exist
-      await Team.ensureDefaultRoles(guildId);
+      await Role.ensureDefaultRoles(guildId);
 
       // Get the default roles
-      const adminRole = await Team.getRoleByName(guildId, "admin");
-      const supportRole = await Team.getRoleByName(guildId, "support");
+      const adminRole = await Role.getRoleByName(guildId, "admin");
+      const supportRole = await Role.getRoleByName(guildId, "support");
 
       if (adminRole) {
         roleIds.push(adminRole.id);

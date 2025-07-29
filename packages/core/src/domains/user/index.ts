@@ -65,12 +65,12 @@ export namespace User {
   };
 
   /**
-   * Get user permissions in a guild (convenience method that delegates to Team domain)
+   * Get user permissions in a guild (convenience method that delegates to Role domain)
    */
   export const getPermissions = async (guildId: string, userId: string): Promise<bigint> => {
-    // Import Team domain here to avoid circular dependency
-    const { Team } = await import("../team");
-    return Team.getUserPermissions(guildId, userId);
+    // Import Role domain here to avoid circular dependency
+    const { Role } = await import("../role");
+    return Role.getUserPermissions(guildId, userId);
   };
 
   /**
@@ -123,8 +123,8 @@ export namespace User {
    */
   export const getBetterAuthUser = async (
     userId: string
-  ): Promise<{ 
-    id: string; 
+  ): Promise<{
+    id: string;
     discordUserId: string | null;
     username: string | null;
     discriminator: string | null;
@@ -132,16 +132,16 @@ export namespace User {
   } | null> => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { 
-        id: true, 
+      select: {
+        id: true,
         discordUserId: true,
         discordUser: {
           select: {
             username: true,
             discriminator: true,
             avatarUrl: true,
-          }
-        }
+          },
+        },
       },
     });
 

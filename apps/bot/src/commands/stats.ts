@@ -9,7 +9,7 @@ import {
   StatsHelpers,
   STATS_CONSTANTS,
 } from "@bot/lib/discord-utils";
-import { Team, Ticket, User, Analytics } from "@ticketsbot/core/domains";
+import { Role, Ticket, User, Analytics } from "@ticketsbot/core/domains";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
@@ -71,7 +71,7 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
     }
 
     // Check if user is a team member
-    const hasTeamPermissions = await Team.hasPermission(
+    const hasTeamPermissions = await Role.hasPermission(
       guildId,
       discordUserId,
       PermissionFlags.TICKET_VIEW_ALL
@@ -103,11 +103,11 @@ const displayTeamMemberStats = async (
       guildId,
       staffId: discordUserId,
     }),
-    Team.getUserRoles(guildId, discordUserId),
+    Role.getUserRoles(guildId, discordUserId),
   ]);
 
   const embed = Embed.info(
-    `Team Member Statistics for ${targetUser.tag}`,
+    `Role Member Statistics for ${targetUser.tag}`,
     `Statistics for team member <@${targetUser.id}>`
   ).addFields(
     { name: "🎫 Currently Claimed", value: stats.claimedCount.toString(), inline: true },
@@ -184,7 +184,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
         },
         includeDeleted: false,
       }),
-      Team.getActiveMembers(guildId),
+      Role.getActiveMembers(guildId),
     ]);
 
     // Map to expected format
@@ -213,7 +213,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
           inline: true,
         },
         { name: "📆 Last 30 Days", value: serverStats.closedTickets.toString(), inline: true },
-        { name: "👥 Team Members", value: activeTeamMembers.length.toString(), inline: true },
+        { name: "👥 Role Members", value: activeTeamMembers.length.toString(), inline: true },
         {
           name: "⏱️ Avg Resolution Time",
           value: StatsHelpers.formatDuration(
@@ -252,13 +252,13 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const teamMembers = await Team.getActiveMembersWithDetails(guildId);
+    const teamMembers = await Role.getActiveMembersWithDetails(guildId);
 
     if (teamMembers.length === 0) {
       await InteractionEdit.edit(interaction, {
         embeds: [
           Embed.info(
-            "No Team Members Found",
+            "No Role Members Found",
             "No team members have been configured for this server."
           ),
         ],
@@ -268,13 +268,13 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
 
     // Get stats for all team members
     const staffStats = await Promise.all(
-      teamMembers.map(async (member: Team.RoleMemberWithDetails) => {
+      teamMembers.map(async (member: Role.RoleMemberWithDetails) => {
         const [performanceStats, memberRoles] = await Promise.all([
           Analytics.getStaffPerformance({
             guildId,
             staffId: member.discordId,
           }),
-          Team.getUserRoles(guildId, member.discordId),
+          Role.getUserRoles(guildId, member.discordId),
         ]);
 
         // Extract first staff member stats (since we're querying by specific ID)
@@ -310,10 +310,10 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
     const totalActions = staffStats.reduce((sum, staff) => sum + (staff.actions || 0), 0);
 
     const embed = Embed.primary(
-      "Team Performance Statistics",
+      "Role Performance Statistics",
       `Performance overview for all team members\n\n${staffList}`
     ).addFields(
-      { name: "👥 Total Team Members", value: teamMembers.length.toString(), inline: true },
+      { name: "👥 Total Role Members", value: teamMembers.length.toString(), inline: true },
       { name: "🔒 Total Closed", value: totalClosed.toString(), inline: true },
       { name: "⚡ Total Actions", value: totalActions.toString(), inline: true }
     );

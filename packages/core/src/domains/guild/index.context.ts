@@ -5,7 +5,7 @@ import {
   TicketStatus,
   type Prisma,
   type Guild as _PrismaGuild,
-  type TeamRole as _TeamRole,
+  type GuildRole as _TeamRole,
   type Blacklist as _Blacklist,
 } from "@prisma/client";
 
@@ -175,7 +175,7 @@ export namespace Guild {
   export const getTeamRoles = async (): Promise<FormattedTeamRole[]> => {
     const guildId = Actor.guildId();
 
-    const roles = await prisma.teamRole.findMany({
+    const roles = await prisma.guildRole.findMany({
       where: { guildId },
       orderBy: { createdAt: "asc" },
     });

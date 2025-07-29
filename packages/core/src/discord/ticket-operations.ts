@@ -1,6 +1,6 @@
 /**
- * Ticket-specific Discord operations
- * Bridges Discord events with the new domain structure
+ * Ticket-specific Discord API operations
+ * Provides helper functions for ticket-related Discord operations
  */
 
 import { Discord } from "./index";
@@ -22,87 +22,6 @@ const getTicket = async () => {
   return Ticket;
 };
 
-/**
- * Initialize ticket-related Discord event handlers
- */
-export const initializeTicketHandlers = () => {
-  Discord.registerHandlers({
-    // Handle ticket creation from panels
-    onTicketCreate: async (data) => {
-      try {
-        const TicketLifecycle = await getTicketLifecycle();
-
-        // Create the ticket in the database
-        const ticket = await TicketLifecycle.create({
-          guildId: data.guildId,
-          channelId: data.channelId,
-          openerId: data.openerId,
-          panelId: data.panelId,
-          subject: data.subject,
-        });
-
-        // Send initial message to the channel
-        await Discord.sendMessage(data.guildId, data.channelId, {
-          content: `Welcome <@${data.openerId}>! Your ticket has been created.`,
-          embeds: [
-            {
-              title: `Ticket #${ticket.number}`,
-              description: data.subject || "A support agent will be with you shortly.",
-              color: 0x00ff00,
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        });
-      } catch (error) {
-        console.error("Failed to handle ticket creation:", error);
-      }
-    },
-
-    // Handle messages in ticket channels
-    onMessageCreate: async (data) => {
-      try {
-        const Ticket = await getTicket();
-        const Transcripts = await getTranscripts();
-
-        // Find the ticket by channel ID
-        const ticket = await Ticket.findByChannelId(data.channelId);
-        if (!ticket) return;
-
-        // Store the message in the transcript
-        await Transcripts.storeMessage({
-          ticketId: ticket.id,
-          messageId: data.messageId,
-          authorId: data.authorId,
-          content: data.content,
-          embeds: null,
-          attachments: data.attachments ? JSON.stringify(data.attachments) : null,
-          messageType: "user",
-          referenceId: null,
-        });
-      } catch (error) {
-        console.error("Failed to store ticket message:", error);
-      }
-    },
-
-    // Handle ticket closure
-    onTicketClose: async (data) => {
-      try {
-        const TicketLifecycle = await getTicketLifecycle();
-
-        // Close the ticket in the database
-        await TicketLifecycle.close({
-          ticketId: data.ticketId,
-          closedById: data.closedById,
-          reason: data.reason,
-          deleteChannel: true,
-          notifyOpener: true,
-        });
-      } catch (error) {
-        console.error("Failed to handle ticket closure:", error);
-      }
-    },
-  });
-};
 
 /**
  * Create a ticket from a panel interaction
@@ -141,17 +60,7 @@ export const createTicketFromPanel = async (data: {
     categoryId: data.categoryId,
   });
 
-  // Invoke the ticket create handler if registered
-  const handlers = Discord.getHandlers();
-  if (handlers.onTicketCreate) {
-    await handlers.onTicketCreate({
-      guildId: data.guildId,
-      channelId,
-      openerId: data.userId,
-      panelId: data.panelId,
-      subject: data.subject,
-    });
-  }
+  // Note: The bot application handles post-creation actions like welcome messages
 
   return {
     ticketId: ticket.id,

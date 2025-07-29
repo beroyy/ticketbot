@@ -275,7 +275,6 @@ export namespace Panel {
       if (channelId && updated.messageId) {
         afterTransaction(async () => {
           console.log(`Panel ${panelId} channel changed, re-deployment needed`);
-          // TODO: Trigger Discord re-deployment
         });
       }
 
@@ -316,7 +315,6 @@ export namespace Panel {
       if (panel.messageId) {
         afterTransaction(async () => {
           console.log(`Panel ${panelId} deleted, removing Discord message ${panel.messageId}`);
-          // TODO: Delete Discord message
         });
       }
 
@@ -485,7 +483,6 @@ async function createSinglePanel(
   // Schedule Discord deployment
   afterTransaction(async () => {
     console.log(`Panel ${panel.id} created, ready for deployment`);
-    // TODO: Trigger Discord deployment
   });
 
   return formatPanelForAPI(panel);
@@ -576,7 +573,6 @@ async function createMultiPanel(
   // Schedule Discord deployment
   afterTransaction(async () => {
     console.log(`Multi-panel ${parentPanel.id} created with ${childPanels.length} child panels`);
-    // TODO: Trigger Discord deployment
   });
 
   // Fetch the panel with form included

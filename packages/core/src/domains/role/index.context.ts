@@ -536,4 +536,63 @@ export namespace Role {
       distinct: ["discordId"],
     });
   };
+
+  /**
+   * Remove all roles for a user when they leave the guild
+   * Returns count of roles removed
+   */
+  export const removeAllRoles = async (guildId: string, userId: string): Promise<number> => {
+    // Get all role memberships for this user in this guild
+    const memberships = await prisma.guildRoleMember.findMany({
+      where: {
+        discordId: userId,
+        guildRole: {
+          guildId,
+        },
+      },
+      select: {
+        guildRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (memberships.length === 0) {
+      return 0;
+    }
+
+    // Delete all role memberships
+    const result = await prisma.guildRoleMember.deleteMany({
+      where: {
+        discordId: userId,
+        guildRole: {
+          guildId,
+        },
+      },
+    });
+
+    // Invalidate permission cache
+    if (Redis.isAvailable()) {
+      await Redis.withRetry(
+        async (client) => client.del(`perms:${guildId}:${userId}`),
+        `removeAllRoles.invalidate(${guildId}:${userId})`
+      );
+    }
+
+    // Log the removal
+    logger.info(
+      `Removed ${result.count} roles from user ${userId} in guild ${guildId}`,
+      {
+        removedRoles: memberships.map((m) => ({
+          id: m.guildRole.id,
+          name: m.guildRole.name,
+        })),
+      }
+    );
+
+    return result.count;
+  };
 }

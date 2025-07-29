@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Discord integration provides a functional namespace for interacting with Discord's API and handling ticket-related events. It bridges Discord operations with the new domain structure.
+The Discord integration provides a functional namespace for interacting with Discord's API. It offers pure API operations for panels, channels, messages, and permissions without any event handling.
 
 ## Architecture
 
@@ -25,61 +25,53 @@ The main Discord namespace provides:
    - `getGuildCategories()` - List channel categories
    - `getGuildRoles()` - List available roles
    - `getBotPermissions()` - Check bot permissions
+   - `isValidTextChannel()` - Check if a channel exists and is text-based
 
-4. **Event Handling**
-   - `registerHandlers()` - Register event handlers for ticket operations
-   - Built-in listeners for `messageCreate` and `channelDelete` events
-   - Handler types for ticket lifecycle events
+4. **Channel Operations**
+   - `createTicketChannel()` - Create text channels or threads
+   - `deleteTicketChannel()` - Delete channels
+   - `sendMessage()` - Send messages to channels
 
 ### Ticket Operations (`ticket-operations.ts`)
 
-Provides ticket-specific Discord operations:
+Provides helper functions for ticket-specific Discord operations:
 
-1. **Event Handler Initialization**
-   - `initializeTicketHandlers()` - Sets up all ticket event handlers
-   - Automatically stores messages in transcripts
-   - Handles ticket creation and closure
-
-2. **Ticket Management**
-   - `createTicketFromPanel()` - Create ticket from panel interaction
+1. **Ticket Management**
+   - `createTicketFromPanel()` - Create ticket channel and database record
    - `closeTicket()` - Close ticket and optionally delete channel
-   - `sendTicketMessage()` - Send and store messages in tickets
+   - `sendTicketMessage()` - Send messages to ticket channels
    - `updateTicketPermissions()` - Manage channel permissions
 
-## Event Flow
+2. **Key Features**
+   - Automatic transcript storage for system messages
+   - Dynamic domain imports to avoid circular dependencies
+   - Integration with TicketLifecycle domain for business logic
+
+## Operation Flow
 
 ### Ticket Creation
 
-1. User clicks panel button/selects option
-2. Bot creates Discord channel (text or thread)
+1. API/Bot calls `createTicketFromPanel()`
+2. Function creates Discord channel (text or thread)
 3. `TicketLifecycle.create()` records ticket in database
-4. Welcome message sent to channel
-5. `onTicketCreate` handler triggered
+4. Returns ticket ID and channel ID
+5. Bot sends welcome message (handled in bot listeners)
 
-### Message Handling
+### Message Sending
 
-1. User sends message in ticket channel
-2. `messageCreate` event fires
-3. Handler checks if channel is ticket
-4. Message stored via `Transcripts.storeMessage()`
+1. API/Bot calls `sendTicketMessage()`
+2. Message sent to Discord channel
+3. System messages automatically stored in transcript
+4. Returns message ID
 
 ### Ticket Closure
 
-1. Staff closes ticket or channel deleted
+1. API/Bot calls `closeTicket()`
 2. `TicketLifecycle.close()` updates database
 3. Channel optionally deleted
-4. `onTicketClose` handler triggered
+4. Bot handles notifications (in bot listeners)
 
 ## Usage Examples
-
-### Initialize Handlers
-
-```typescript
-import { initializeTicketHandlers } from "@ticketsbot/core/discord";
-
-// Call during bot startup
-initializeTicketHandlers();
-```
 
 ### Create Ticket from Panel
 
@@ -134,4 +126,4 @@ await sendTicketMessage(ticketId, {
    - Manage Channels (for creation/deletion)
    - Manage Threads (if using threads)
 
-5. **Event Registration**: Must call `initializeTicketHandlers()` during bot startup to enable ticket event handling
+5. **No Event Handling**: All Discord events are handled exclusively in the bot application

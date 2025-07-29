@@ -162,7 +162,6 @@ export namespace Guild {
 
       afterTransaction(async () => {
         console.log(`Guild settings updated for ${guildId}`);
-        // TODO: Emit guild.settings.updated event
       });
 
       return formatGuildSettings(updated);
@@ -248,7 +247,6 @@ export namespace Guild {
 
     afterTransaction(async () => {
       console.log(`Blacklist entry added for ${input.targetId} in guild ${guildId}`);
-      // TODO: Emit guild.blacklist.added event
     });
 
     return {
@@ -282,7 +280,6 @@ export namespace Guild {
 
     afterTransaction(async () => {
       console.log(`Blacklist entry removed for ${targetId} in guild ${guildId}`);
-      // TODO: Emit guild.blacklist.removed event
     });
 
     return { success: true, removed: deleted.count };

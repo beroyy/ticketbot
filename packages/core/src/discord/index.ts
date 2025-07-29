@@ -47,41 +47,13 @@ interface DeploymentResult {
 }
 
 /**
- * Discord service namespace for bot operations
+ * Discord API client namespace
+ * Provides pure Discord API operations without event handling
  */
-// Event handler types
-type TicketCreateHandler = (data: {
-  guildId: string;
-  channelId: string;
-  openerId: string;
-  panelId?: number;
-  subject?: string;
-}) => Promise<void>;
-
-type TicketCloseHandler = (data: {
-  ticketId: number;
-  channelId: string;
-  closedById: string;
-  reason?: string;
-}) => Promise<void>;
-
-type MessageCreateHandler = (data: {
-  channelId: string;
-  messageId: string;
-  authorId: string;
-  content: string;
-  attachments?: any[];
-}) => Promise<void>;
-
 export namespace Discord {
   // Singleton client instance
   let client: Client | null = null;
   let initPromise: Promise<Client> | null = null;
-
-  // Event handlers
-  let onTicketCreate: TicketCreateHandler | null = null;
-  let onTicketClose: TicketCloseHandler | null = null;
-  let onMessageCreate: MessageCreateHandler | null = null;
 
   /**
    * Get or initialize the Discord client
@@ -127,54 +99,8 @@ export namespace Discord {
       console.warn("Discord client warning:", warning);
     });
 
-    // Set up event listeners for ticket operations
-    newClient.on("messageCreate", async (message) => {
-      if (!message.guild || message.author.bot) return;
-
-      // Check if this is a ticket channel
-      const isTicket = await isTicketChannel(message.guild.id, message.channel.id);
-      if (isTicket && onMessageCreate) {
-        try {
-          await onMessageCreate({
-            channelId: message.channel.id,
-            messageId: message.id,
-            authorId: message.author.id,
-            content: message.content,
-            attachments: message.attachments.map((a) => ({
-              id: a.id,
-              url: a.url,
-              name: a.name,
-              size: a.size,
-            })),
-          });
-        } catch (error) {
-          console.error("Error handling message create:", error);
-        }
-      }
-    });
-
-    // Handle channel deletion (ticket close)
-    newClient.on("channelDelete", async (channel) => {
-      // Skip DM channels and non-text channels
-      if (channel.isDMBased() || !channel.isTextBased()) return;
-      if (!("guild" in channel)) return;
-
-      const isTicket = await isTicketChannel(channel.guild.id, channel.id);
-      if (isTicket && onTicketClose) {
-        try {
-          // Note: We'd need to get the ticket ID from somewhere (channel topic, name, etc.)
-          // This is a simplified example
-          await onTicketClose({
-            ticketId: 0, // Would need actual ticket ID
-            channelId: channel.id,
-            closedById: "system", // Channel deletion is system-initiated
-            reason: "Channel deleted",
-          });
-        } catch (error) {
-          console.error("Error handling channel delete:", error);
-        }
-      }
-    });
+    // Note: All Discord event handling is done in the bot application
+    // This client is purely for API operations
 
     // Login with timeout
     await new Promise<void>((resolve, reject) => {
@@ -508,27 +434,6 @@ export namespace Discord {
     return rows;
   };
 
-  /**
-   * Register event handlers
-   */
-  export const registerHandlers = (handlers: {
-    onTicketCreate?: TicketCreateHandler;
-    onTicketClose?: TicketCloseHandler;
-    onMessageCreate?: MessageCreateHandler;
-  }) => {
-    if (handlers.onTicketCreate) onTicketCreate = handlers.onTicketCreate;
-    if (handlers.onTicketClose) onTicketClose = handlers.onTicketClose;
-    if (handlers.onMessageCreate) onMessageCreate = handlers.onMessageCreate;
-  };
-
-  /**
-   * Get registered handlers
-   */
-  export const getHandlers = () => ({
-    onTicketCreate,
-    onTicketClose,
-    onMessageCreate,
-  });
 
   /**
    * Create a ticket channel
@@ -600,20 +505,15 @@ export namespace Discord {
   };
 
   /**
-   * Check if a channel is a ticket channel (implementation specific)
+   * Check if a channel exists and is text-based
    */
-  export const isTicketChannel = async (guildId: string, channelId: string): Promise<boolean> => {
-    // This is a placeholder - actual implementation would check channel name pattern,
-    // database records, or channel topic
+  export const isValidTextChannel = async (guildId: string, channelId: string): Promise<boolean> => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
 
     try {
       const channel = await guild.channels.fetch(channelId);
-      if (!channel || !channel.isTextBased()) return false;
-
-      // Check if channel name follows ticket pattern (e.g., ticket-123)
-      return channel.name.startsWith("ticket-");
+      return channel?.isTextBased() || false;
     } catch {
       return false;
     }
@@ -644,9 +544,6 @@ export namespace Discord {
       client.destroy();
       client = null;
       initPromise = null;
-      onTicketCreate = null;
-      onTicketClose = null;
-      onMessageCreate = null;
     }
   };
 }

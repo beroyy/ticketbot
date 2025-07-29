@@ -56,13 +56,6 @@ export {
   withInfoColor,
 } from "@bot/lib/discord-utils/embed-builder";
 
-export {
-  type EventSchemas,
-  type EventName,
-  type EventData,
-  createDomainEventEmitter,
-} from "@bot/lib/discord-utils/domain-events";
-
 export { StaffHelpers } from "@bot/lib/discord-utils/staff-helpers";
 
 export { StatsHelpers, STATS_CONSTANTS } from "@bot/lib/discord-utils/stats-helpers";

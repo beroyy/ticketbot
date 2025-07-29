@@ -114,3 +114,60 @@ export const hasOpenTickets = async (guildId: string, userId: string): Promise<b
 
   return count > 0;
 };
+
+/**
+ * Remove a user from all ticket participants when they leave the guild
+ * Returns count of affected tickets
+ * Used by guild-member-remove listener
+ */
+export const removeParticipantFromAll = async (
+  guildId: string,
+  userId: string
+): Promise<number> => {
+  // First, find all tickets where the user is a participant
+  const affectedTickets = await prisma.ticketParticipant.findMany({
+    where: {
+      userId,
+      ticket: {
+        guildId,
+        status: {
+          in: ["OPEN", "CLAIMED"],
+        },
+      },
+    },
+    select: {
+      ticketId: true,
+      ticket: {
+        select: {
+          number: true,
+        },
+      },
+    },
+  });
+
+  if (affectedTickets.length === 0) {
+    return 0;
+  }
+
+  // Delete all participant records for this user in this guild
+  const result = await prisma.ticketParticipant.deleteMany({
+    where: {
+      userId,
+      ticket: {
+        guildId,
+      },
+    },
+  });
+
+  // Log removal details for debugging
+  if (result.count > 0) {
+    const ticketNumbers = affectedTickets.map((t) => t.ticket.number);
+    console.log(
+      `Removed user ${userId} from ${result.count} tickets in guild ${guildId}: #${ticketNumbers.join(
+        ", #"
+      )}`
+    );
+  }
+
+  return result.count;
+};

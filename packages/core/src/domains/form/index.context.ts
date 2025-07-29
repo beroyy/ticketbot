@@ -146,7 +146,6 @@ export namespace Form {
 
       afterTransaction(async () => {
         console.log(`Form ${form.id} created in guild ${guildId}`);
-        // TODO: Emit form.created event
       });
 
       return formatFormForAPI(completeForm!);
@@ -243,7 +242,6 @@ export namespace Form {
 
       afterTransaction(async () => {
         console.log(`Form ${formId} updated`);
-        // TODO: Emit form.updated event
       });
 
       return formatFormForAPI(updatedForm!);
@@ -300,7 +298,6 @@ export namespace Form {
 
       afterTransaction(async () => {
         console.log(`Form ${formId} deleted`);
-        // TODO: Emit form.deleted event
       });
 
       return { success: true, deletedId: deleted.id };
@@ -370,7 +367,6 @@ export namespace Form {
 
       afterTransaction(async () => {
         console.log(`Form ${formId} duplicated as ${newForm.id}`);
-        // TODO: Emit form.duplicated event
       });
 
       return formatFormForAPI(completeForm!);

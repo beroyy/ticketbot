@@ -23,4 +23,5 @@ export {
   getByIds,
   getCountByStatus,
   hasOpenTickets,
+  removeParticipantFromAll,
 } from "./static";

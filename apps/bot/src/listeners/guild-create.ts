@@ -2,7 +2,7 @@ import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
 import { ensure as ensureGuild, User, Team } from "@ticketsbot/core/domains";
-import { parseDiscordId } from "@ticketsbot/core";
+import { parseDiscordId, Redis } from "@ticketsbot/core";
 
 export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guild: Guild) => {
   const { logger } = container;
@@ -35,6 +35,19 @@ export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guil
     if (adminRole) {
       await Team.assignRole(adminRole.id, parseDiscordId(owner.id));
       logger.info(`👑 Assigned admin role to guild owner ${owner.user.tag}`);
+    }
+
+    // 6. Add to bot guilds cache if Redis is available
+    if (Redis.isAvailable()) {
+      try {
+        await Redis.withRetry(
+          async (client) => client.sAdd("bot:guilds", guild.id),
+          `guildCreate.addToCache(${guild.id})`
+        );
+        logger.info(`✅ Added guild ${guild.name} to bot guilds cache`);
+      } catch (error) {
+        logger.error(`❌ Failed to add guild to cache:`, error);
+      }
     }
 
     logger.info(

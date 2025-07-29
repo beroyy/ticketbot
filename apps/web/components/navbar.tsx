@@ -13,6 +13,7 @@ import {
 import { MdOutlineArrowDropDown } from "react-icons/md";
 import { useAuth } from "@/features/auth/auth-provider";
 import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
+import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
 
 interface NavItem {
   href: string;
@@ -123,11 +124,13 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           {!isClient || isPending ? (
             <div className="text-sm">Loading...</div>
           ) : session?.user ? (
-            <DropdownMenu>
+            <>
+              {selectedGuildId && <ServerSelectDropdown />}
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="bg-primary-focused flex items-center rounded-full p-1 pr-2 transition-colors hover:bg-blue-700">
                   <div className="mb-[1px] size-8 overflow-hidden rounded-full">
@@ -163,6 +166,7 @@ export function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <button
               onClick={() => {

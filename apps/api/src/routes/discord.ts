@@ -17,6 +17,7 @@ const GuildResponse = z.object({
   owner: z.boolean(),
   permissions: z.string(),
   features: z.array(z.string()),
+  botInstalled: z.boolean().optional(),
 });
 
 const _GuildsListResponse = z.object({
@@ -226,17 +227,53 @@ export const discordRoutes = createRoute()
         features: guild.features || [],
       }));
 
+    // Check bot installation status for each guild
+    const guildsWithBotStatus = await Promise.all(
+      adminGuilds.map(async (guild) => {
+        let botInstalled = false;
+        
+        // Try Redis cache first
+        if (Redis.isAvailable()) {
+          try {
+            const cachedResult = await Redis.withRetry(
+              async (client) => client.sIsMember("bot:guilds", guild.id),
+              `checkBotGuild(${guild.id})`
+            );
+            // If Redis returns null (error), fall back to Discord API
+            if (cachedResult !== null) {
+              botInstalled = Boolean(cachedResult);
+            } else {
+              botInstalled = await Discord.isInGuild(guild.id);
+            }
+          } catch (error) {
+            logger.warn(`Failed to check Redis cache for guild ${guild.id}:`, error);
+            // Fall back to Discord API check
+            botInstalled = await Discord.isInGuild(guild.id);
+          }
+        } else {
+          // No Redis, use Discord API
+          botInstalled = await Discord.isInGuild(guild.id);
+        }
+        
+        return {
+          ...guild,
+          botInstalled,
+        };
+      })
+    );
+
     // Cache the results
-    await DiscordCache.setGuilds(user.id, adminGuilds);
+    await DiscordCache.setGuilds(user.id, guildsWithBotStatus);
 
     logger.info("Successfully fetched Discord guilds", {
       totalGuilds: guilds.length,
       adminGuilds: adminGuilds.length,
+      withBot: guildsWithBotStatus.filter(g => g.botInstalled).length,
       userId: user.id,
     });
 
     return c.json({
-      guilds: adminGuilds,
+      guilds: guildsWithBotStatus,
       connected: true,
       error: null,
       code: null,

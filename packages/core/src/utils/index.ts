@@ -46,18 +46,18 @@ export function createTicketChannelName(
   ticketId: number,
   username: string,
   panelChannelPrefix?: string,
-  namedScheme?: string
+  ticketNameFormat?: string
 ): string {
   if (panelChannelPrefix) {
     return `${panelChannelPrefix}-${username.toLowerCase()}`;
   }
 
-  // Use guild naming scheme setting
-  if (namedScheme === "Ticket - Username") {
+  // Use guild ticket name format setting
+  if (ticketNameFormat === "ticket-{username}") {
     return `ticket-${username.toLowerCase()}`;
   }
 
-  // Default to "Ticket - 1" pattern (ticket-{ticketId})
+  // Default to "ticket-{number}" pattern
   return `ticket-${ticketId.toString()}`;
 }
 

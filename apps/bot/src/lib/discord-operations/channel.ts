@@ -18,7 +18,7 @@ interface TicketInfo {
 
 interface GuildSettings {
   ticketCategoryId?: string | null;
-  namingScheme?: string | null;
+  ticketNameFormat?: string | null;
   archiveMode?: string | null;
   archiveCategoryId?: string | null;
   defaultCategoryId?: string | null;
@@ -40,7 +40,7 @@ export const ChannelOps = {
         ticket.number,
         username,
         undefined, // panelChannelPrefix - could be added if needed
-        settings.namingScheme ?? undefined
+        settings.ticketNameFormat ?? undefined
       );
 
       // Find or create ticket category

@@ -66,12 +66,9 @@ export namespace Guild {
       logChannel?: string | null;
       defaultTicketMessage?: string | null;
       ticketCategories?: string[];
-      autoCloseTime?: number | null;
       supportRoles?: string[];
       ticketNameFormat?: string;
       allowUserClose?: boolean;
-      threadTickets?: boolean;
-      autoThreadArchive?: boolean;
     };
     footer?: {
       text?: string | null;
@@ -118,9 +115,6 @@ export namespace Guild {
         if (input.settings.ticketCategories !== undefined) {
           // This will be handled separately after the main update
         }
-        if (input.settings.autoCloseTime !== undefined) {
-          updateData.autoCloseTime = input.settings.autoCloseTime;
-        }
         // Handle supportRoles through junction table
         if (input.settings.supportRoles !== undefined) {
           // This will be handled separately after the main update
@@ -130,12 +124,6 @@ export namespace Guild {
         }
         if (input.settings.allowUserClose !== undefined) {
           updateData.allowUserClose = input.settings.allowUserClose;
-        }
-        if (input.settings.threadTickets !== undefined) {
-          updateData.threadTickets = input.settings.threadTickets;
-        }
-        if (input.settings.autoThreadArchive !== undefined) {
-          updateData.autoThreadArchive = input.settings.autoThreadArchive;
         }
       }
 
@@ -597,12 +585,9 @@ function formatGuildSettings(guild: any) {
       logChannel: guild.logChannel,
       defaultTicketMessage: guild.defaultTicketMessage,
       ticketCategories: guild.ticketCategories || [],
-      autoCloseTime: guild.autoCloseTime,
       supportRoles: guild.supportRoles || [],
       ticketNameFormat: guild.ticketNameFormat || "ticket-{number}",
       allowUserClose: guild.allowUserClose,
-      threadTickets: guild.threadTickets,
-      autoThreadArchive: guild.autoThreadArchive,
     },
     footer: {
       text: guild.footerText,

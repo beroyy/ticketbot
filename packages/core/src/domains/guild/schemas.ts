@@ -56,7 +56,6 @@ export const GeneralSettingsSchema = z.object({
   language: z.enum(["en", "es", "fr"], {
     error: "Unsupported language",
   }),
-  allowUsersToClose: z.boolean(),
   ticketCloseConfirmation: z.boolean(),
   enableUserFeedback: z.boolean(),
   anonymousDashboard: z.boolean().optional(),

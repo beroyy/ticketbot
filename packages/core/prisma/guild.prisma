@@ -16,14 +16,12 @@ model Guild {
   
   // Additional settings fields for web dashboard
   language                String?  @default("en")
-  allowUsersToClose       Boolean? @default(true) @map("allow_users_to_close")
   ticketCloseConfirmation Boolean? @default(true) @map("ticket_close_confirmation")
   anonymousDashboard      Boolean? @default(false) @map("anonymous_dashboard")
   
   // Open Commands settings
   openCommandsEnabled     Boolean? @default(true) @map("open_commands_enabled")
   channelCategory         String?  @default("Server Stats") @map("channel_category")
-  namingScheme            String?  @default("ticket-{number}") @map("naming_scheme") // Renamed for consistency; updated default
   welcomeMessage          String?  @default("Thank you for contacting support.\nplease describe your issue and await a response.") @map("welcome_message")
   
   // New settings fields for domain logic
@@ -33,12 +31,9 @@ model Guild {
   footerLink              String?  @map("footer_link")
   ticketNameFormat        String?  @default("ticket-{number}") @map("ticket_name_format")
   allowUserClose          Boolean  @default(true) @map("allow_user_close")
-  threadTickets           Boolean  @default(false) @map("thread_tickets")
-  autoThreadArchive       Boolean  @default(false) @map("auto_thread_archive")
   transcriptsChannel      String?  @map("transcripts_channel")
   logChannel              String?  @map("log_channel")
   defaultTicketMessage    String?  @map("default_ticket_message")
-  autoCloseTime           Int?     @map("auto_close_time")
   totalTickets            Int      @default(0) @map("total_tickets")
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")

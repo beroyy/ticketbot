@@ -11,12 +11,9 @@ export const UpdateSettingsSchema = z.object({
       logChannel: DiscordChannelIdSchema.nullable().optional(),
       defaultTicketMessage: z.string().max(1000).nullable().optional(),
       ticketCategories: z.array(DiscordChannelIdSchema).optional(),
-      autoCloseTime: z.number().int().min(0).max(720).nullable().optional(), // hours
       supportRoles: z.array(z.string()).optional(),
       ticketNameFormat: z.string().max(100).optional(),
       allowUserClose: z.boolean().optional(),
-      threadTickets: z.boolean().optional(),
-      autoThreadArchive: z.boolean().optional(),
     })
     .optional(),
   footer: z

@@ -14,12 +14,9 @@ const defaultSettings = (guildId: string) => ({
     logChannel: null,
     defaultTicketMessage: null,
     ticketCategories: [],
-    autoCloseTime: null,
     supportRoles: [],
     ticketNameFormat: "ticket-{number}",
     allowUserClose: true,
-    threadTickets: false,
-    autoThreadArchive: true,
   },
   footer: {
     text: null,

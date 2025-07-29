@@ -74,12 +74,9 @@ export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
       logChannel: guild.logChannel,
       defaultTicketMessage: guild.welcomeMessage,
       ticketCategories: [], // TODO: Load from junction table
-      autoCloseTime: guild.autoCloseTime,
       supportRoles: [], // TODO: Load from junction table
       ticketNameFormat: guild.ticketNameFormat,
       allowUserClose: guild.allowUserClose,
-      threadTickets: guild.threadTickets,
-      autoThreadArchive: guild.autoThreadArchive,
     },
     maxTicketsPerUser: guild.maxTicketsPerUser,
     defaultCategoryId: guild.defaultCategoryId,

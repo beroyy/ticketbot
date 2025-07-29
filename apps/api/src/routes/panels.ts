@@ -46,7 +46,6 @@ const SinglePanelConfigSchema = z
     textSections: z.array(TextSectionSchema).max(5).optional(),
     // Deprecated fields
     form: z.unknown().optional(),
-    namingScheme: z.string().optional(),
     exitSurveyForm: z.unknown().optional(),
     awaitingResponseCategory: z.unknown().optional(),
     accessControl: z

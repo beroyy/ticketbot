@@ -55,11 +55,8 @@ export class GuildSeeder {
             "{number}",
           ]),
           allowUserClose: faker.datatype.boolean(),
-          threadTickets: faker.datatype.boolean(),
-          autoThreadArchive: faker.datatype.boolean(),
           logChannel: this.snowflake.generate(),
           defaultTicketMessage: faker.lorem.sentence(),
-          autoCloseTime: faker.number.int({ min: 24, max: 168 }),
           totalTickets: 0,
         },
       });

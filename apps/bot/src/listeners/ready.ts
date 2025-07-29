@@ -38,7 +38,7 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
           async (redis) => {
             // Clear and repopulate the set
             await redis.del("bot:guilds");
-            await redis.sAdd("bot:guilds", ...guildIds);
+            await redis.sAdd("bot:guilds", guildIds);
           },
           "ready.cacheBotGuilds"
         );

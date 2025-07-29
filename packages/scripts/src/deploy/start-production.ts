@@ -10,21 +10,42 @@ async function startProduction() {
   console.log("🚀 Starting production services...");
 
   try {
-    // Step 1: Run database migrations
-    console.log("📦 Running database migrations...");
-    execSync("pnpm db:deploy", {
-      stdio: "inherit",
-      env: process.env,
-    });
-    console.log("✅ Database migrations completed");
+    // Log environment status
+    console.log("🔍 Environment check:");
+    console.log("  - NODE_ENV:", process.env.NODE_ENV);
+    console.log("  - DATABASE_URL:", process.env.DATABASE_URL ? "✅ Set" : "❌ Not set");
+    console.log("  - Working directory:", process.cwd());
+
+    // Step 1: Sync database schema
+    // Using db:push instead of migrate deploy to avoid migration history issues
+    console.log("📦 Syncing database schema...");
+    try {
+      execSync("pnpm db:push", {
+        stdio: "inherit",
+        env: process.env,
+      });
+      console.log("✅ Database schema synced");
+    } catch (error: any) {
+      console.error("❌ Database sync failed:");
+      console.error("Exit code:", error.status);
+      console.error("Command:", error.cmd);
+      throw error;
+    }
 
     // Step 2: Regenerate Prisma client to match current schema
     console.log("🔧 Regenerating Prisma client...");
-    execSync("pnpm db:generate", {
-      stdio: "inherit",
-      env: process.env,
-    });
-    console.log("✅ Prisma client regenerated");
+    try {
+      execSync("pnpm db:generate", {
+        stdio: "inherit",
+        env: process.env,
+      });
+      console.log("✅ Prisma client regenerated");
+    } catch (error: any) {
+      console.error("❌ Prisma client generation failed:");
+      console.error("Exit code:", error.status);
+      console.error("Command:", error.cmd);
+      throw error;
+    }
 
     // Step 3: Start the services with concurrently
     console.log("🚀 Starting API and Bot services...");

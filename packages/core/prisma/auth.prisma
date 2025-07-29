@@ -11,12 +11,6 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  // Discord-specific fields from Better Auth
-  username      String?
-  discriminator String?
-  avatar_url    String?
-  discordDataFetchedAt DateTime?
-  
   // Optional link to Discord (for users who log into web app)
   discordUserId String?  @unique
   discordUser   DiscordUser? @relation(fields: [discordUserId], references: [id])

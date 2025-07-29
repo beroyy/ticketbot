@@ -3,13 +3,14 @@ export interface User {
   email: string;
   name: string | null;
   image: string | null;
-  username?: string | null;
-  discriminator?: string | null;
-  avatar_url?: string | null;
   discordUserId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   emailVerified: boolean;
+  // Discord data is provided by session enhancement plugin but not stored in DB
+  username?: string | null;
+  discriminator?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface Session {

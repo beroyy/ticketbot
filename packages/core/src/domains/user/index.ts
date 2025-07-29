@@ -119,7 +119,7 @@ export namespace User {
   };
 
   /**
-   * Get Better Auth user by ID
+   * Get Better Auth user by ID with Discord data
    */
   export const getBetterAuthUser = async (
     userId: string
@@ -129,19 +129,31 @@ export namespace User {
     username: string | null;
     discriminator: string | null;
     avatar_url: string | null;
-    discordDataFetchedAt: Date | null;
   } | null> => {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { 
         id: true, 
         discordUserId: true,
-        username: true,
-        discriminator: true,
-        avatar_url: true,
-        discordDataFetchedAt: true,
+        discordUser: {
+          select: {
+            username: true,
+            discriminator: true,
+            avatarUrl: true,
+          }
+        }
       },
     });
+
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      discordUserId: user.discordUserId,
+      username: user.discordUser?.username ?? null,
+      discriminator: user.discordUser?.discriminator ?? null,
+      avatar_url: user.discordUser?.avatarUrl ?? null,
+    };
   };
 
   /**

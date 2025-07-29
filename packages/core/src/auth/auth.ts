@@ -230,20 +230,10 @@ const createAuthInstance = () => {
             hasAvatar: !!profile.avatar,
           });
 
-          // Calculate avatar URL
-          const avatarUrl = getDiscordAvatarUrl(
-            profile.id,
-            profile.avatar,
-            profile.discriminator || "0"
-          );
-
           // Return mapped user data that will be stored
           // Note: discordUserId is NOT set here to avoid foreign key constraint
           // It will be linked after the DiscordUser is created in the callback hook
           return {
-            username: profile.username,
-            discriminator: profile.discriminator || null,
-            avatar_url: avatarUrl,
             name: profile.username, // Update the display name
             email: profile.email || `${profile.id}@discord.local`, // Fallback email
           };
@@ -252,29 +242,8 @@ const createAuthInstance = () => {
     },
     user: {
       additionalFields: {
-        username: {
-          type: "string",
-          required: false,
-          defaultValue: null,
-        },
-        discriminator: {
-          type: "string",
-          required: false,
-          defaultValue: null,
-        },
-        avatar_url: {
-          type: "string",
-          required: false,
-          defaultValue: null,
-        },
         discordUserId: {
           type: "string",
-          required: false,
-          defaultValue: null,
-          input: false,
-        },
-        discordDataFetchedAt: {
-          type: "date",
           required: false,
           defaultValue: null,
           input: false,
@@ -344,10 +313,9 @@ const createAuthInstance = () => {
           user: {
             ...user,
             discordUserId: discordUserId ?? null,
-            username: discordUser?.username ?? fullUser.username ?? null,
-            discriminator: discordUser?.discriminator ?? fullUser.discriminator ?? null,
-            avatar_url: discordUser?.avatarUrl ?? fullUser.avatar_url ?? null,
-            discordDataFetchedAt: new Date(),
+            username: discordUser?.username ?? null,
+            discriminator: discordUser?.discriminator ?? null,
+            avatar_url: discordUser?.avatarUrl ?? null,
           },
         };
       }),
@@ -427,7 +395,6 @@ const createAuthInstance = () => {
             await prisma.user.update({
               where: { id: user.id },
               data: {
-                discordDataFetchedAt: new Date(),
                 discordUserId: account.accountId,
               },
             });

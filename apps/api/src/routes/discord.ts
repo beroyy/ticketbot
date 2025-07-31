@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, Redis } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
-import { Account, Role, findById as findGuildById } from "@ticketsbot/core/domains";
+import { Account, Role, User, findById as findGuildById } from "@ticketsbot/core/domains";
 import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
 import { DiscordCache } from "@ticketsbot/core/auth";
 import { createRoute, ApiErrors } from "../factory";
@@ -195,6 +195,9 @@ export const discordRoutes = createRoute()
       expiresAt: accountResult.account.accessTokenExpiresAt?.toISOString(),
     });
 
+    // Get effective Discord user ID for permission checks
+    const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
+    
     // Fetch guilds from Discord
     const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
     if ("error" in result) {
@@ -266,6 +269,31 @@ export const discordRoutes = createRoute()
       })
     );
 
+    // Ensure Discord user exists if we have the ID
+    if (effectiveDiscordUserId) {
+      try {
+        // Fetch user info from Discord to ensure we have the latest data
+        const userResult = await fetchDiscordAPI("/users/@me", accountResult.account.accessToken!);
+        if (!("error" in userResult)) {
+          const discordUserData = userResult.data as any;
+          await User.ensure(
+            effectiveDiscordUserId,
+            discordUserData.username,
+            discordUserData.discriminator === "0" ? undefined : discordUserData.discriminator,
+            discordUserData.avatar 
+              ? `https://cdn.discordapp.com/avatars/${effectiveDiscordUserId}/${discordUserData.avatar}.png`
+              : undefined
+          );
+          logger.debug("Ensured Discord user exists for permissions", {
+            discordId: effectiveDiscordUserId,
+            username: discordUserData.username,
+          });
+        }
+      } catch (error) {
+        logger.warn("Failed to ensure Discord user exists", { error, discordId: effectiveDiscordUserId });
+      }
+    }
+
     // Cache the results
     await DiscordCache.setGuilds(user.id, guildsWithBotStatus);
 
@@ -274,6 +302,7 @@ export const discordRoutes = createRoute()
       adminGuilds: adminGuilds.length,
       withBot: guildsWithBotStatus.filter((g) => g.botInstalled).length,
       userId: user.id,
+      effectiveDiscordUserId,
     });
 
     return c.json({
@@ -361,14 +390,28 @@ export const discordRoutes = createRoute()
           userId: user.id,
         });
 
-        // Create/update guild record - only set owner if they actually own it
-        const ownerId = guild.owner && user.discordUserId ? user.discordUserId : undefined;
+        // Get the Discord user ID - from Better Auth user or from the account
+        let effectiveDiscordUserId = user.discordUserId;
+        
+        if (!effectiveDiscordUserId && accountResult.account?.accountId) {
+          // Use the Discord ID from the OAuth account if Better Auth doesn't have it yet
+          effectiveDiscordUserId = accountResult.account.accountId;
+          logger.info(`Using Discord ID from OAuth account for guild sync`, {
+            discordId: effectiveDiscordUserId,
+            betterAuthUserId: user.id,
+          });
+        }
+        
+        // Create/update guild record - set owner if they own the guild
+        const ownerId = guild.owner && effectiveDiscordUserId ? effectiveDiscordUserId : undefined;
         await ensureGuild(guild.id, guild.name, ownerId);
 
         if (guild.owner) {
           logger.info(`Set ownership for guild ${guild.id}`, {
             guildName: guild.name,
-            ownerId: user.discordUserId,
+            ownerId: ownerId,
+            hadDiscordUserId: !!user.discordUserId,
+            usedOAuthAccount: !user.discordUserId && !!effectiveDiscordUserId,
           });
         }
 
@@ -376,25 +419,31 @@ export const discordRoutes = createRoute()
         await Role.ensureDefaultRoles(guild.id);
 
         // Assign appropriate role based on permissions
-        if (guild.owner && user.discordUserId) {
-          // Owner gets admin role
-          const adminRole = await Role.getRoleByName(guild.id, "admin");
-          if (adminRole) {
-            await Role.assignRole(adminRole.id, user.discordUserId);
-            logger.debug(`Assigned admin role to owner in guild ${guild.id}`);
-          }
-        } else if (user.discordUserId) {
-          // Non-owner admin gets viewer role by default
-          const viewerRole = await Role.getRoleByName(guild.id, "viewer");
-          if (viewerRole) {
-            await Role.assignRole(viewerRole.id, user.discordUserId);
-            logger.debug(`Assigned viewer role to admin in guild ${guild.id}`);
+        if (effectiveDiscordUserId) {
+          if (guild.owner) {
+            // Owner gets admin role
+            const adminRole = await Role.getRoleByName(guild.id, "admin");
+            if (adminRole) {
+              await Role.assignRole(adminRole.id, effectiveDiscordUserId);
+              logger.debug(`Assigned admin role to owner in guild ${guild.id}`, {
+                discordUserId: effectiveDiscordUserId,
+              });
+            }
+          } else {
+            // Non-owner admin gets viewer role by default
+            const viewerRole = await Role.getRoleByName(guild.id, "viewer");
+            if (viewerRole) {
+              await Role.assignRole(viewerRole.id, effectiveDiscordUserId);
+              logger.debug(`Assigned viewer role to admin in guild ${guild.id}`, {
+                discordUserId: effectiveDiscordUserId,
+              });
+            }
           }
         }
 
         // Clear permission cache for this guild
-        if (Redis.isAvailable() && user.discordUserId) {
-          const cacheKey = `perms:${guild.id}:${user.discordUserId}`;
+        if (Redis.isAvailable() && effectiveDiscordUserId) {
+          const cacheKey = `perms:${guild.id}:${effectiveDiscordUserId}`;
           await Redis.withRetry(
             async (client) => client.del(cacheKey),
             `guildSync.clearCache(${guild.id}:${user.discordUserId})`
@@ -443,6 +492,7 @@ export const discordRoutes = createRoute()
     async (c) => {
       const { id: guildId } = c.req.valid("param");
       const user = c.get("user");
+      const _refresh = c.req.query("refresh") === "true";
 
       // Check Discord account
       const accountResult = await getDiscordAccount(user.id);

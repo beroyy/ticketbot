@@ -5,14 +5,27 @@ import {
   useRecentActivity,
   type RecentActivityEntry,
 } from "@/features/tickets/queries";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RiTicketLine, RiUser3Line } from "react-icons/ri";
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useGuildData } from "@/features/user/hooks/use-guild-data";
 
 export default function Home() {
   const { selectedGuildId } = useAuth();
   const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Refresh guild data on initial load to ensure bot status is current
+  const { refetch: refetchGuilds } = useGuildData({ refresh: !hasInitialLoad });
+  
+  useEffect(() => {
+    if (!hasInitialLoad && selectedGuildId) {
+      setHasInitialLoad(true);
+      // Also trigger a refresh to ensure we have the latest data
+      refetchGuilds();
+    }
+  }, [hasInitialLoad, selectedGuildId, refetchGuilds]);
 
   const { data: ticketStats, isLoading, error } = useTicketStats(selectedGuildId);
 

@@ -19,10 +19,12 @@ interface GuildWithStatus extends Guild {
 }
 
 const guildQueries = {
-  list: () => ({
-    queryKey: ["guilds"],
+  list: (refresh = false) => ({
+    queryKey: ["guilds", { refresh }],
     queryFn: async () => {
-      const res = await api.discord.guilds.$get();
+      const res = await api.discord.guilds.$get({
+        query: refresh ? { refresh: "true" } : undefined,
+      });
       if (!res.ok) throw new Error("Failed to fetch guilds");
       const data = await res.json();
       
@@ -32,16 +34,21 @@ const guildQueries = {
       
       return data.guilds;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: refresh ? 0 : 5 * 60 * 1000, // No cache if refreshing, 5 minutes otherwise
   }),
 };
 
-export function useGuildData() {
+interface UseGuildDataOptions {
+  refresh?: boolean;
+}
+
+export function useGuildData(options?: UseGuildDataOptions) {
+  const { refresh = false } = options || {};
   const { selectedGuildId } = useAuth();
   const { data: session } = authClient.useSession();
 
   const { data: guilds = [], isLoading, error, refetch } = useQuery({
-    ...guildQueries.list(),
+    ...guildQueries.list(refresh),
     enabled: !!session?.user,
   });
 

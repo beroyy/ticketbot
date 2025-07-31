@@ -1,6 +1,7 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { type AuthSession, getSessionFromContext } from "@ticketsbot/core/auth";
 import { User, DiscordGuildIdSchema } from "@ticketsbot/core";
+import { Account } from "@ticketsbot/core/domains";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
 import { env, isDevelopment } from "../env";
 import { logger } from "../utils/logger";
@@ -78,20 +79,36 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
 
   // Calculate permissions
   let permissions = 0n;
+  let effectiveDiscordUserId = session.user.discordUserId;
 
-  if (guildId && session.user.discordUserId) {
-    try {
-      // Check for dev override first
-      const devPermissions = getDevPermissions();
-      if (devPermissions !== undefined) {
-        permissions = devPermissions;
-      } else {
-        permissions = await User.getPermissions(guildId, session.user.discordUserId);
-        logger.debug(`Context middleware - calculated permissions for user ${session.user.discordUserId} in guild ${guildId}: ${permissions.toString()}`);
+  if (guildId) {
+    // If discordUserId not in session, fallback to OAuth account
+    if (!effectiveDiscordUserId) {
+      try {
+        const discordAccount = await Account.getDiscordAccount(session.user.id);
+        if (discordAccount?.accountId) {
+          effectiveDiscordUserId = discordAccount.accountId;
+          logger.debug(`Using Discord ID from OAuth account for user ${session.user.id}: ${effectiveDiscordUserId}`);
+        }
+      } catch (error) {
+        logger.warn("Failed to fetch Discord account as fallback:", error);
       }
-    } catch (error) {
-      logger.error("Failed to get permissions:", error);
-      // Continue with no permissions rather than failing the request
+    }
+
+    if (effectiveDiscordUserId) {
+      try {
+        // Check for dev override first
+        const devPermissions = getDevPermissions();
+        if (devPermissions !== undefined) {
+          permissions = devPermissions;
+        } else {
+          permissions = await User.getPermissions(guildId, effectiveDiscordUserId);
+          logger.debug(`Context middleware - calculated permissions for user ${effectiveDiscordUserId} in guild ${guildId}: ${permissions.toString()}`);
+        }
+      } catch (error) {
+        logger.error("Failed to get permissions:", error);
+        // Continue with no permissions rather than failing the request
+      }
     }
   }
 
@@ -109,7 +126,7 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
       properties: {
         userId: session.user.id,
         email: session.user.email,
-        discordId: session.user.discordUserId ?? undefined,
+        discordId: effectiveDiscordUserId ?? undefined,
         selectedGuildId: guildId,
         permissions,
         session,

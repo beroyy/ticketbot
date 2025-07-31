@@ -12,7 +12,7 @@ export default function Setup() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [hasInvited, setHasInvited] = useState(false);
-  const { hasGuilds, refetchGuilds } = useAuthCheck({ forceRefresh: hasInvited });
+  const { hasGuilds, refetchGuilds } = useAuthCheck();
   const [isChecking, setIsChecking] = useState(false);
 
   // Redirect if not authenticated
@@ -34,7 +34,7 @@ export default function Setup() {
     if (!hasInvited) return;
 
     const interval = setInterval(() => {
-      refetchGuilds(true);
+      refetchGuilds();
     }, 3000);
 
     return () => clearInterval(interval);
@@ -47,7 +47,7 @@ export default function Setup() {
 
   const handleCheckServers = async () => {
     setIsChecking(true);
-    await refetchGuilds(true);
+    await refetchGuilds();
     setIsChecking(false);
   };
 

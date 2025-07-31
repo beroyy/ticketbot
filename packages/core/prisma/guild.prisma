@@ -24,6 +24,9 @@ model Guild {
   channelCategory         String?  @default("Server Stats") @map("channel_category")
   welcomeMessage          String?  @default("Thank you for contacting support.\nplease describe your issue and await a response.") @map("welcome_message")
   
+  // Bot installation status
+  botInstalled            Boolean  @default(false) @map("bot_installed")
+  
   // New settings fields for domain logic
   colorScheme             Json?    @map("color_scheme") // Theme colors (keep as JSON for flexibility)
   branding                Json?    // Name, logo, banner (keep as JSON for flexibility)

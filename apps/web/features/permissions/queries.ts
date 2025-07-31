@@ -2,20 +2,17 @@ import { api } from "@/lib/api";
 import type { PermissionsResponse, UserPermissions } from "./types";
 
 async function fetchUserPermissions(guildId: string): Promise<UserPermissions> {
-  const res = await api.settings[":guildId"].permissions.$get({
+  const res = await api.permissions[":guildId"].$get({
     param: { guildId },
   });
   if (!res.ok) throw new Error("Failed to fetch permissions");
-  const data = await res.json() as PermissionsResponse;
+  const data = await res.json();
 
-  // Convert permission strings back to bigint
+  // Convert permission string to bigint
   return {
     guildId,
     permissions: BigInt(data.permissions),
-    roles: data.roles.map((role) => ({
-      ...role,
-      permissions: BigInt(role.permissions),
-    })),
+    roles: [], // Roles are no longer returned from this endpoint
   };
 }
 
@@ -24,6 +21,6 @@ export const permissionQueries = {
     queryKey: ["permissions", "user", guildId],
     queryFn: () => fetchUserPermissions(guildId!),
     enabled: !!guildId,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 5 * 60 * 1000, // 5 minutes
   }),
 };

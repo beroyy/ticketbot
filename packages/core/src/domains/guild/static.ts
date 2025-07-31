@@ -145,6 +145,26 @@ export const ensureWithDefaults = async (data: {
 };
 
 /**
+ * Sync bot installation status for all guilds
+ * Used on bot startup to ensure database reflects current state
+ */
+export const syncBotInstallStatus = async (currentGuildIds: string[]): Promise<void> => {
+  // First, set all guilds to botInstalled = false
+  await prisma.guild.updateMany({
+    where: {},
+    data: { botInstalled: false }
+  });
+  
+  // Then set current guilds to botInstalled = true
+  if (currentGuildIds.length > 0) {
+    await prisma.guild.updateMany({
+      where: { id: { in: currentGuildIds } },
+      data: { botInstalled: true }
+    });
+  }
+};
+
+/**
  * Static blacklist namespace for bot operations
  */
 export const Blacklist = {

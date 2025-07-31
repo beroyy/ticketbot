@@ -28,6 +28,7 @@ export {
   ensure,
   update,
   findById,
+  syncBotInstallStatus,
   getSettingsUnchecked,
   ensureWithDefaults,
   Blacklist,

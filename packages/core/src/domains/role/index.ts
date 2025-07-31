@@ -6,8 +6,6 @@ import {
   type DiscordUser,
 } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
-import { Redis } from "../../redis";
-import { logger } from "../../utils/logger";
 
 // Export specific schemas
 export {
@@ -80,22 +78,6 @@ export namespace Role {
       return devPerms;
     }
 
-    // Try Redis cache if available
-    const cacheKey = `perms:${guildId}:${userId}`;
-    if (Redis.isAvailable()) {
-      const cached = await Redis.withRetry(
-        async (client) => client.get(cacheKey),
-        `getUserPermissions.get(${guildId}:${userId})`
-      );
-      if (cached) {
-        logger.debug(`Found cached permissions for ${userId} in guild ${guildId}: ${cached}`);
-        return BigInt(cached);
-      } else {
-        logger.debug(
-          `No cached permissions found for ${userId} in guild ${guildId}, calculating...`
-        );
-      }
-    }
 
     // Check if user is guild owner
     const guild = await prisma.guild.findUnique({
@@ -103,25 +85,8 @@ export namespace Role {
       select: { ownerDiscordId: true },
     });
 
-    logger.debug(`Checking guild ownership for getUserPermissions:`, {
-      guildId,
-      userId,
-      guildOwnerDiscordId: guild?.ownerDiscordId,
-      isOwner: guild?.ownerDiscordId === userId,
-    });
-
     if (guild?.ownerDiscordId === userId) {
-      logger.debug(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
       const allPerms = ALL_PERMISSIONS;
-
-      // Cache the result
-      if (Redis.isAvailable()) {
-        await Redis.withRetry(
-          async (client) => client.setEx(cacheKey, 300, allPerms.toString()),
-          `getUserPermissions.set(${guildId}:${userId})`
-        );
-      }
-
       return allPerms;
     }
 
@@ -151,13 +116,6 @@ export namespace Role {
       );
     }
 
-    // Cache the result
-    if (Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.setEx(cacheKey, 300, finalPermissions.toString()),
-        `getUserPermissions.set(${guildId}:${userId})`
-      );
-    }
 
     return finalPermissions;
   };
@@ -323,12 +281,6 @@ export namespace Role {
     userId: string,
     assignedById?: string
   ): Promise<GuildRoleMember> => {
-    // Get the role to find the guild ID
-    const role = await prisma.guildRole.findUnique({
-      where: { id: roleId },
-      select: { guildId: true },
-    });
-
     const result = await prisma.guildRoleMember.upsert({
       where: {
         discordId_guildRoleId: {
@@ -347,14 +299,6 @@ export namespace Role {
       },
     });
 
-    // Invalidate permission cache
-    if (role && Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.del(`perms:${role.guildId}:${userId}`),
-        `assignRole.invalidate(${role.guildId}:${userId})`
-      );
-    }
-
     return result;
   };
 
@@ -362,12 +306,6 @@ export namespace Role {
    * Remove a role from a user
    */
   export const removeRole = async (roleId: number, userId: string): Promise<GuildRoleMember> => {
-    // Get the role to find the guild ID
-    const role = await prisma.guildRole.findUnique({
-      where: { id: roleId },
-      select: { guildId: true },
-    });
-
     const result = await prisma.guildRoleMember.delete({
       where: {
         discordId_guildRoleId: {
@@ -376,14 +314,6 @@ export namespace Role {
         },
       },
     });
-
-    // Invalidate permission cache
-    if (role && Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.del(`perms:${role.guildId}:${userId}`),
-        `assignRole.invalidate(${role.guildId}:${userId})`
-      );
-    }
 
     return result;
   };
@@ -405,35 +335,10 @@ export namespace Role {
     roleId: number,
     permissions: bigint
   ): Promise<GuildRole> => {
-    // Get the role to find the guild ID
-    const role = await prisma.guildRole.findUnique({
-      where: { id: roleId },
-      select: { guildId: true },
-    });
-
     const result = await prisma.guildRole.update({
       where: { id: roleId },
       data: { permissions },
     });
-
-    // Invalidate all user permission caches for this guild
-    if (role && Redis.isAvailable()) {
-      await Redis.withRetry(async (client) => {
-        let count = 0;
-        for await (const keys of client.scanIterator({
-          MATCH: `perms:${role.guildId}:*`,
-          COUNT: 100,
-        })) {
-          for (const key of keys) {
-            if (key && key !== "") {
-              await client.del(key);
-              count++;
-            }
-          }
-        }
-        return count;
-      }, `updateRolePermissions.invalidateGuild(${role.guildId})`);
-    }
 
     return result;
   };
@@ -463,13 +368,6 @@ export namespace Role {
       },
     });
 
-    // Invalidate user permission cache
-    if (Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.del(`perms:${guildId}:${userId}`),
-        `setAdditionalPermissions.invalidate(${guildId}:${userId})`
-      );
-    }
 
     return result;
   };
@@ -562,13 +460,6 @@ export namespace Role {
       },
     });
 
-    // Invalidate permission cache
-    if (Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.del(`perms:${guildId}:${userId}`),
-        `removeAllRoles.invalidate(${guildId}:${userId})`
-      );
-    }
 
     return result.count;
   };

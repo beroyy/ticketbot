@@ -1,8 +1,8 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
-import { ensure as ensureGuild, User, Role } from "@ticketsbot/core/domains";
-import { parseDiscordId, Redis } from "@ticketsbot/core";
+import { ensure as ensureGuild, update as updateGuild, User, Role } from "@ticketsbot/core/domains";
+import { parseDiscordId } from "@ticketsbot/core";
 
 export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guild: Guild) => {
   const { logger } = container;
@@ -11,7 +11,11 @@ export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guil
   try {
     // 1. Create guild record
     await ensureGuild(parseDiscordId(guild.id), guild.name, parseDiscordId(guild.ownerId));
-    logger.info(`✅ Guild ${guild.name} added to database with owner ${guild.ownerId}`);
+    
+    // 2. Update botInstalled status
+    await updateGuild(parseDiscordId(guild.id), { botInstalled: true });
+    
+    logger.info(`✅ Guild ${guild.name} added to database with botInstalled = true`);
 
     // 2. Fetch owner info
     const owner = await guild.fetchOwner();
@@ -35,19 +39,6 @@ export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guil
     if (adminRole) {
       await Role.assignRole(adminRole.id, parseDiscordId(owner.id));
       logger.info(`👑 Assigned admin role to guild owner ${owner.user.tag}`);
-    }
-
-    // 6. Add to bot guilds cache if Redis is available
-    if (Redis.isAvailable()) {
-      try {
-        await Redis.withRetry(
-          async (client) => client.sAdd("bot:guilds", guild.id),
-          `guildCreate.addToCache(${guild.id})`
-        );
-        logger.info(`✅ Added guild ${guild.name} to bot guilds cache`);
-      } catch (error) {
-        logger.error(`❌ Failed to add guild to cache:`, error);
-      }
     }
 
     logger.info(

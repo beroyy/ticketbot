@@ -16,6 +16,7 @@ import { settingsRoutes } from "./routes/settings";
 import { formRoutes } from "./routes/forms";
 import { guildRoutes } from "./routes/guilds";
 import { ticketRoutes } from "./routes/tickets";
+import { permissionRoutes } from "./routes/permissions";
 import { Redis } from "@ticketsbot/core";
 
 logger.debug("🔍 Validated Environment Variables:", {
@@ -85,7 +86,8 @@ const _routes = app
   .route("/settings", settingsRoutes)
   .route("/forms", formRoutes)
   .route("/guilds", guildRoutes)
-  .route("/tickets", ticketRoutes);
+  .route("/tickets", ticketRoutes)
+  .route("/permissions", permissionRoutes);
 
 export type AppType = typeof _routes;
 

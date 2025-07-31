@@ -11,25 +11,18 @@ interface Guild {
   permissions: string;
 }
 
-interface UseAuthCheckOptions {
-  forceRefresh?: boolean;
-}
-
-export function useAuthCheck(options?: UseAuthCheckOptions) {
-  const { forceRefresh = false } = options || {};
+export function useAuthCheck() {
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [isGuildsLoading, setIsGuildsLoading] = useState(false);
   const [hasCheckedGuilds, setHasCheckedGuilds] = useState(false);
 
-  const fetchGuilds = async (refresh = false) => {
+  const fetchGuilds = async () => {
     if (!session?.user) return;
 
     setIsGuildsLoading(true);
     try {
-      const res = await api.discord.guilds.$get({
-        query: refresh ? { refresh: "true" } : undefined,
-      });
+      const res = await api.discord.guilds.$get();
       
       // Log response details for debugging
       logger.debug("Discord guilds API response:", {
@@ -102,14 +95,14 @@ export function useAuthCheck(options?: UseAuthCheckOptions) {
   // Fetch guilds when session is available
   useEffect(() => {
     if (session?.user && !hasCheckedGuilds) {
-      void fetchGuilds(forceRefresh);
+      void fetchGuilds();
     }
-  }, [session?.user, hasCheckedGuilds, forceRefresh]);
+  }, [session?.user, hasCheckedGuilds]);
 
   return {
     isAuthenticated: !!session?.user,
     hasGuilds: guilds.length > 0,
     isLoading: isSessionLoading || (session?.user && !hasCheckedGuilds) || isGuildsLoading,
-    refetchGuilds: (refresh = false) => fetchGuilds(refresh || forceRefresh),
+    refetchGuilds: () => fetchGuilds(),
   };
 }

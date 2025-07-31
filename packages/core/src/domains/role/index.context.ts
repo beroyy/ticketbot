@@ -1,7 +1,6 @@
 import { prisma } from "../../prisma/client";
 import { GuildRoleStatus, type GuildRole, type GuildRoleMember } from "@prisma/client";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
-import { Redis } from "../../redis";
 import { logger } from "../../utils/logger";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
 import { PermissionFlags } from "../../schemas/permissions-constants";
@@ -116,17 +115,6 @@ export namespace Role {
       return devPerms;
     }
 
-    // Try Redis cache if available
-    const cacheKey = `perms:${guildId}:${userId}`;
-    if (Redis.isAvailable()) {
-      const cached = await Redis.withRetry(
-        async (client) => client.get(cacheKey),
-        `getUserPermissions.get(${guildId}:${userId})`
-      );
-      if (cached) {
-        return BigInt(cached);
-      }
-    }
 
     // Check if user is guild owner
     const guild = await prisma.guild.findUnique({
@@ -137,15 +125,6 @@ export namespace Role {
     if (guild?.ownerDiscordId === userId) {
       logger.debug(`👑 User ${userId} is owner of guild ${guildId}, granting all permissions`);
       const allPerms = ALL_PERMISSIONS;
-
-      // Cache the result
-      if (Redis.isAvailable()) {
-        await Redis.withRetry(
-          async (client) => client.setEx(cacheKey, 300, allPerms.toString()),
-          `getUserPermissions.set(${guildId}:${userId})`
-        );
-      }
-
       return allPerms;
     }
 
@@ -175,13 +154,6 @@ export namespace Role {
       );
     }
 
-    // Cache the result
-    if (Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.setEx(cacheKey, 300, finalPermissions.toString()),
-        `getUserPermissions.set(${guildId}:${userId})`
-      );
-    }
 
     return finalPermissions;
   };
@@ -268,24 +240,6 @@ export namespace Role {
       });
 
       afterTransaction(async () => {
-        // Invalidate all user permission caches for this guild
-        if (Redis.isAvailable()) {
-          await Redis.withRetry(async (client) => {
-            let count = 0;
-            for await (const keys of client.scanIterator({
-              MATCH: `perms:${guildId}:*`,
-              COUNT: 100,
-            })) {
-              for (const key of keys) {
-                if (key && key !== "") {
-                  await client.del(key);
-                  count++;
-                }
-              }
-            }
-            return count;
-          }, `updateRolePermissions.invalidateGuild(${guildId})`);
-        }
 
         // TODO: Add event logging when eventLog model is available
         console.log(`Role permissions updated: ${role.name} by ${userId}`);
@@ -339,13 +293,6 @@ export namespace Role {
       });
 
       afterTransaction(async () => {
-        // Invalidate permission cache
-        if (Redis.isAvailable()) {
-          await Redis.withRetry(
-            async (client) => client.del(`perms:${guildId}:${targetUserId}`),
-            `assignRole.invalidate(${guildId}:${targetUserId})`
-          );
-        }
 
         // TODO: Add event logging when eventLog model is available
         console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
@@ -387,13 +334,6 @@ export namespace Role {
       });
 
       afterTransaction(async () => {
-        // Invalidate permission cache
-        if (Redis.isAvailable()) {
-          await Redis.withRetry(
-            async (client) => client.del(`perms:${guildId}:${targetUserId}`),
-            `removeRole.invalidate(${guildId}:${targetUserId})`
-          );
-        }
 
         // TODO: Add event logging when eventLog model is available
         console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
@@ -574,13 +514,6 @@ export namespace Role {
       },
     });
 
-    // Invalidate permission cache
-    if (Redis.isAvailable()) {
-      await Redis.withRetry(
-        async (client) => client.del(`perms:${guildId}:${userId}`),
-        `removeAllRoles.invalidate(${guildId}:${userId})`
-      );
-    }
 
     // Log the removal
     logger.info(

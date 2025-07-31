@@ -5,7 +5,6 @@ import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
 import { prisma } from "../prisma";
 import { User as UserDomain, Account as AccountDomain } from "../domains";
-import { Redis } from "../redis";
 import { getDiscordAvatarUrl } from "./services/discord-api";
 import type { User, Session } from "./types";
 
@@ -61,55 +60,7 @@ const getOrigins = () => {
 };
 getOrigins.logged = false;
 
-let secondaryStorage:
-  | {
-      get: (key: string) => Promise<string | null>;
-      set: (key: string, value: string, ttl?: number) => Promise<void>;
-      delete: (key: string) => Promise<void>;
-    }
-  | undefined = undefined;
-
-if (Redis.isAvailable()) {
-  logger.debug("Configuring Better Auth with Redis secondary storage");
-
-  secondaryStorage = {
-    get: async (key: string) => {
-      try {
-        return await Redis.withRetry(async (client) => {
-          const value = await client.get(key);
-          return value || null;
-        }, "secondaryStorage.get");
-      } catch (error) {
-        logger.warn("Redis get failed, falling back to database:", error);
-        return null; // Let Better Auth handle fallback to database
-      }
-    },
-    set: async (key: string, value: string, ttl?: number) => {
-      try {
-        await Redis.withRetry(async (client) => {
-          if (ttl) {
-            await client.set(key, value, { EX: ttl });
-          } else {
-            await client.set(key, value);
-          }
-        }, "secondaryStorage.set");
-      } catch (error) {
-        logger.warn("Redis set failed, using database only:", error);
-        // Don't throw - allow operation to continue with database
-      }
-    },
-    delete: async (key: string) => {
-      try {
-        await Redis.withRetry(async (client) => {
-          await client.del(key);
-        }, "secondaryStorage.delete");
-      } catch (error) {
-        logger.warn("Redis delete failed:", error);
-        // Non-critical operation - continue without throwing
-      }
-    },
-  };
-}
+// No longer using Redis for secondary storage - database only
 
 const authSecret = getEnvVar("BETTER_AUTH_SECRET");
 if (!authSecret) {
@@ -153,7 +104,6 @@ const createAuthInstance = () => {
       provider: "postgresql",
     }),
     secret: authSecret,
-    ...(secondaryStorage && { secondaryStorage }),
     session: {
       storeSessionInDatabase: true,
       cookieCache: {
@@ -167,7 +117,7 @@ const createAuthInstance = () => {
         process.env["NODE_ENV"] === "production" || process.env["RATE_LIMIT_ENABLED"] === "true",
       window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"),
       max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"),
-      storage: Redis.isAvailable() ? "secondary-storage" : "memory",
+      storage: "memory",
       customRules: {
         "/auth/signin": { window: 300, max: 5 },
         "/auth/signup": { window: 300, max: 3 },
@@ -421,8 +371,7 @@ const createAuthInstance = () => {
                   features?: string[];
                 }>;
 
-                // Cache all admin guilds for the user
-                const { DiscordCache } = await import("./services/discord-cache");
+                // Filter admin guilds (those where user has MANAGE_GUILD permission)
                 const MANAGE_GUILD = BigInt(0x20);
 
                 const adminGuilds = guilds
@@ -444,9 +393,7 @@ const createAuthInstance = () => {
                     features: guild.features || [],
                   }));
 
-                // Cache the guilds immediately
-                await DiscordCache.setGuilds(user.id, adminGuilds);
-                logger.debug(`Cached ${adminGuilds.length} admin guilds for user during OAuth`);
+                logger.debug(`Found ${adminGuilds.length} admin guilds for user during OAuth`);
 
                 // Handle all admin guilds for database setup
                 if (adminGuilds.length > 0) {
@@ -480,25 +427,6 @@ const createAuthInstance = () => {
                           );
                         }
 
-                        // Invalidate permission cache for this guild
-                        if (Redis.isAvailable()) {
-                          await Redis.withRetry(async (client) => {
-                            let count = 0;
-                            for await (const keys of client.scanIterator({
-                              MATCH: `perms:${guild.id}:*`,
-                              COUNT: 100,
-                            })) {
-                              for (const key of keys) {
-                                if (key && key !== "") {
-                                  await client.del(key);
-                                  count++;
-                                }
-                              }
-                            }
-                            return count;
-                          }, `auth.invalidateGuild(${guild.id})`);
-                          logger.debug(`Invalidated permission cache for guild ${guild.id}`);
-                        }
 
                         // Ensure default roles exist
                         await Role.ensureDefaultRoles(guild.id);

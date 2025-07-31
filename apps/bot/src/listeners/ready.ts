@@ -2,8 +2,8 @@ import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Client } from "discord.js";
 import { isDevelopment } from "@bot/config";
-import { ScheduledTask } from "@ticketsbot/core/domains";
-import { Redis } from "@ticketsbot/core";
+import { ScheduledTask, syncBotInstallStatus } from "@ticketsbot/core/domains";
+import { parseDiscordId } from "@ticketsbot/core";
 
 export const ReadyListener = ListenerFactory.once("ready", async (client: Client<true>) => {
   const { logger } = container;
@@ -29,24 +29,13 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
     type: 3, // ActivityType.Watching
   });
 
-  // Cache bot guild list in Redis
-  if (Redis.isAvailable()) {
-    try {
-      const guildIds = client.guilds.cache.map((guild) => guild.id);
-      if (guildIds.length > 0) {
-        await Redis.withRetry(
-          async (redis) => {
-            // Clear and repopulate the set
-            await redis.del("bot:guilds");
-            await redis.sAdd("bot:guilds", guildIds);
-          },
-          "ready.cacheBotGuilds"
-        );
-        logger.info(`✅ Cached ${guildIds.length} guilds in Redis`);
-      }
-    } catch (error) {
-      logger.error("❌ Failed to cache bot guilds:", error);
-    }
+  // Sync bot installation status for all guilds
+  try {
+    const guildIds = client.guilds.cache.map((guild) => parseDiscordId(guild.id));
+    await syncBotInstallStatus(guildIds);
+    logger.info(`✅ Synced bot installation status for ${guildIds.length} guilds`);
+  } catch (error) {
+    logger.error("❌ Failed to sync bot installation status:", error);
   }
 
   if (isDevelopment()) {

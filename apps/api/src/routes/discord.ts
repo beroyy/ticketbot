@@ -1,10 +1,9 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema, Redis } from "@ticketsbot/core";
+import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
 import { Account, Role, User, findById as findGuildById } from "@ticketsbot/core/domains";
 import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
-import { DiscordCache } from "@ticketsbot/core/auth";
 import { createRoute, ApiErrors } from "../factory";
 import { compositions } from "../middleware/context";
 import { logger } from "../utils/logger";
@@ -149,13 +148,11 @@ export const discordRoutes = createRoute()
   // Get user's Discord guilds
   .get("/guilds", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
-    const refresh = c.req.query("refresh") === "true";
 
     logger.debug("Fetching Discord guilds", {
       userId: user.id,
       discordUserId: user.discordUserId,
       email: user.email,
-      refresh,
     });
 
     // Check Discord account
@@ -172,23 +169,6 @@ export const discordRoutes = createRoute()
         error: accountResult.error ?? null,
         code: accountResult.code ?? null,
       } satisfies z.infer<typeof _GuildsListResponse>);
-    }
-
-    // Check cache first (unless refresh is requested)
-    if (!refresh) {
-      const cachedGuilds = await DiscordCache.getGuilds(user.id);
-      if (cachedGuilds) {
-        logger.info("Returning cached guilds", {
-          userId: user.id,
-          count: cachedGuilds.length,
-        });
-        return c.json({
-          guilds: cachedGuilds,
-          connected: true,
-          error: null,
-          code: null,
-        } satisfies z.infer<typeof _GuildsListResponse>);
-      }
     }
 
     logger.debug("Discord account found", {
@@ -238,37 +218,10 @@ export const discordRoutes = createRoute()
     // Check bot installation status and database configuration for each guild
     const guildsWithBotStatus = await Promise.all(
       adminGuilds.map(async (guild) => {
-        let botInstalled = false;
-        let botConfigured = false;
-
-        // Try Redis cache first for bot installation
-        if (Redis.isAvailable()) {
-          try {
-            const cachedResult = await Redis.withRetry(
-              async (client) => client.sIsMember("bot:guilds", guild.id),
-              `checkBotGuild(${guild.id})`
-            );
-            // If Redis returns null (error), fall back to Discord API
-            if (cachedResult !== null) {
-              botInstalled = Boolean(cachedResult);
-            } else {
-              botInstalled = await Discord.isInGuild(guild.id);
-            }
-          } catch (error) {
-            logger.warn(`Failed to check Redis cache for guild ${guild.id}:`, error);
-            // Fall back to Discord API check
-            botInstalled = await Discord.isInGuild(guild.id);
-          }
-        } else {
-          // No Redis, use Discord API
-          botInstalled = await Discord.isInGuild(guild.id);
-        }
-
-        // Check if guild is configured in database
-        if (botInstalled) {
-          const dbGuild = await findGuildById(guild.id);
-          botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
-        }
+        // Check guild status in database
+        const dbGuild = await findGuildById(guild.id);
+        const botInstalled = dbGuild?.botInstalled || false;
+        const botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
 
         return {
           ...guild,
@@ -302,9 +255,6 @@ export const discordRoutes = createRoute()
         logger.warn("Failed to ensure Discord user exists", { error, discordId: effectiveDiscordUserId });
       }
     }
-
-    // Cache the results
-    await DiscordCache.setGuilds(user.id, guildsWithBotStatus);
 
     logger.info("Successfully fetched Discord guilds", {
       totalGuilds: guilds.length,
@@ -450,14 +400,6 @@ export const discordRoutes = createRoute()
           }
         }
 
-        // Clear permission cache for this guild
-        if (Redis.isAvailable() && effectiveDiscordUserId) {
-          const cacheKey = `perms:${guild.id}:${effectiveDiscordUserId}`;
-          await Redis.withRetry(
-            async (client) => client.del(cacheKey),
-            `guildSync.clearCache(${guild.id}:${user.discordUserId})`
-          );
-        }
 
         syncedCount++;
       } catch (error) {
@@ -467,17 +409,6 @@ export const discordRoutes = createRoute()
         );
       }
     }
-
-    // Cache the admin guilds
-    const adminGuildData = adminGuilds.map((guild) => ({
-      id: guild.id,
-      name: guild.name,
-      icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
-      owner: guild.owner || false,
-      permissions: guild.permissions,
-      features: guild.features || [],
-    }));
-    await DiscordCache.setGuilds(user.id, adminGuildData);
 
     logger.info("Guild sync completed", {
       syncedCount,
@@ -501,7 +432,6 @@ export const discordRoutes = createRoute()
     async (c) => {
       const { id: guildId } = c.req.valid("param");
       const user = c.get("user");
-      const _refresh = c.req.query("refresh") === "true";
 
       // Check Discord account
       const accountResult = await getDiscordAccount(user.id);
@@ -520,11 +450,10 @@ export const discordRoutes = createRoute()
 
       const guild = result.data as DiscordGuild;
 
-      // Check bot status in parallel
-      const [dbGuild, botInGuild] = await Promise.all([
-        findGuildById(guildId),
-        Discord.isInGuild(guildId),
-      ]);
+      // Check bot status in database
+      const dbGuild = await findGuildById(guildId);
+      const botInstalled = dbGuild?.botInstalled || false;
+      const botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
 
       return c.json({
         id: guild.id,
@@ -532,8 +461,8 @@ export const discordRoutes = createRoute()
         icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
         description: guild.description,
         features: guild.features || [],
-        botInstalled: botInGuild,
-        botConfigured: !!(dbGuild && dbGuild.defaultCategoryId),
+        botInstalled,
+        botConfigured,
       } satisfies z.infer<typeof _GuildDetailResponse>);
     }
   )

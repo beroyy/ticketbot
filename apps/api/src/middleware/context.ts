@@ -74,6 +74,15 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
     return c.json({ error: "Unauthorized" }, 401);
   }
 
+  // Debug logging for session data
+  logger.debug("Context middleware - session data:", {
+    userId: session.user.id,
+    email: session.user.email,
+    discordUserId: session.user.discordUserId,
+    hasDiscordUserId: !!session.user.discordUserId,
+    sessionKeys: Object.keys(session.user),
+  });
+
   // Extract guild ID from request
   const guildId = extractGuildId(c);
 
@@ -84,14 +93,24 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
   if (guildId) {
     // If discordUserId not in session, fallback to OAuth account
     if (!effectiveDiscordUserId) {
+      logger.debug("No discordUserId in session, checking OAuth account...");
       try {
         const discordAccount = await Account.getDiscordAccount(session.user.id);
+        logger.debug("OAuth account lookup result:", {
+          found: !!discordAccount,
+          accountId: discordAccount?.accountId,
+          providerId: discordAccount?.providerId,
+          hasAccessToken: !!discordAccount?.accessToken,
+        });
+        
         if (discordAccount?.accountId) {
           effectiveDiscordUserId = discordAccount.accountId;
-          logger.debug(`Using Discord ID from OAuth account for user ${session.user.id}: ${effectiveDiscordUserId}`);
+          logger.info(`Using Discord ID from OAuth account for user ${session.user.id}: ${effectiveDiscordUserId}`);
+        } else {
+          logger.warn("No Discord account found for user:", session.user.id);
         }
       } catch (error) {
-        logger.warn("Failed to fetch Discord account as fallback:", error);
+        logger.error("Failed to fetch Discord account as fallback:", error);
       }
     }
 
@@ -103,12 +122,23 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
           permissions = devPermissions;
         } else {
           permissions = await User.getPermissions(guildId, effectiveDiscordUserId);
-          logger.debug(`Context middleware - calculated permissions for user ${effectiveDiscordUserId} in guild ${guildId}: ${permissions.toString()}`);
+          logger.debug(`Context middleware - calculated permissions:`, {
+            guildId,
+            discordUserId: effectiveDiscordUserId,
+            permissions: permissions.toString(),
+            permissionsHex: `0x${permissions.toString(16)}`,
+            hasAnyPermission: permissions > 0n,
+          });
         }
       } catch (error) {
         logger.error("Failed to get permissions:", error);
         // Continue with no permissions rather than failing the request
       }
+    } else {
+      logger.warn("No effective Discord user ID available for permission calculation", {
+        guildId,
+        sessionUserId: session.user.id,
+      });
     }
   }
 
@@ -118,6 +148,17 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
   if (guildId) {
     c.set("guildId", guildId);
   }
+
+  // Log final actor context
+  logger.debug("Creating actor context:", {
+    type: "web_user",
+    userId: session.user.id,
+    email: session.user.email,
+    discordId: effectiveDiscordUserId ?? "undefined",
+    selectedGuildId: guildId ?? "none",
+    permissions: permissions.toString(),
+    permissionsHex: `0x${permissions.toString(16)}`,
+  });
 
   // Provide actor context for the entire request
   return Actor.provide(

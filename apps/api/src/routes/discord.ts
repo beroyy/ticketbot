@@ -18,6 +18,7 @@ const GuildResponse = z.object({
   permissions: z.string(),
   features: z.array(z.string()),
   botInstalled: z.boolean().optional(),
+  botConfigured: z.boolean().optional(),
 });
 
 const _GuildsListResponse = z.object({
@@ -234,12 +235,13 @@ export const discordRoutes = createRoute()
         features: guild.features || [],
       }));
 
-    // Check bot installation status for each guild
+    // Check bot installation status and database configuration for each guild
     const guildsWithBotStatus = await Promise.all(
       adminGuilds.map(async (guild) => {
         let botInstalled = false;
+        let botConfigured = false;
 
-        // Try Redis cache first
+        // Try Redis cache first for bot installation
         if (Redis.isAvailable()) {
           try {
             const cachedResult = await Redis.withRetry(
@@ -262,9 +264,16 @@ export const discordRoutes = createRoute()
           botInstalled = await Discord.isInGuild(guild.id);
         }
 
+        // Check if guild is configured in database
+        if (botInstalled) {
+          const dbGuild = await findGuildById(guild.id);
+          botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
+        }
+
         return {
           ...guild,
           botInstalled,
+          botConfigured,
         };
       })
     );

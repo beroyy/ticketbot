@@ -1,4 +1,4 @@
-import { Role } from "@ticketsbot/core/domains/team";
+import { Role } from "@ticketsbot/core/domains";
 import { withTransaction } from "@ticketsbot/core/context";
 import type { SeedConfig, UserWithRole } from "./types";
 import { ProgressLogger } from "./utils";
@@ -30,9 +30,9 @@ export class TeamSeeder {
         // Assign admin users to admin role
         const adminUsers = users.filter((u) => u.role === "admin");
         for (const user of adminUsers) {
-          await prisma.teamRoleMember.create({
+          await prisma.guildRoleMember.create({
             data: {
-              teamRoleId: adminRole.id,
+              guildRoleId: adminRole.id,
               discordId: user.id,
             },
           });
@@ -46,9 +46,9 @@ export class TeamSeeder {
         // Assign support users to support role
         const supportUsers = users.filter((u) => u.role === "support");
         for (const user of supportUsers) {
-          await prisma.teamRoleMember.create({
+          await prisma.guildRoleMember.create({
             data: {
-              teamRoleId: supportRole.id,
+              guildRoleId: supportRole.id,
               discordId: user.id,
             },
           });
@@ -62,7 +62,7 @@ export class TeamSeeder {
 
       for (let i = 0; i < customRoleCount; i++) {
         const roleName = i === 0 ? "moderator" : "helper";
-        const role = await prisma.teamRole.create({
+        const role = await prisma.guildRole.create({
           data: {
             guildId,
             name: roleName,
@@ -82,9 +82,9 @@ export class TeamSeeder {
         for (let j = 0; j < assignCount; j++) {
           const randomUser = eligibleUsers[Math.floor(Math.random() * eligibleUsers.length)];
           if (randomUser) {
-            await prisma.teamRoleMember.create({
+            await prisma.guildRoleMember.create({
               data: {
-                teamRoleId: role.id,
+                guildRoleId: role.id,
                 discordId: randomUser.id,
               },
             });
@@ -104,8 +104,8 @@ export class TeamSeeder {
       const { prisma } = await import("@ticketsbot/core/prisma/client");
 
       // Clear in correct order
-      await prisma.teamRoleMember.deleteMany({});
-      await prisma.teamRole.deleteMany({});
+      await prisma.guildRoleMember.deleteMany({});
+      await prisma.guildRole.deleteMany({});
     });
 
     this.logger.success("Cleared team data");

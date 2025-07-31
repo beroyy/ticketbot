@@ -10,6 +10,7 @@ interface Guild {
   owner: boolean;
   permissions: string;
   botInstalled?: boolean;
+  botConfigured?: boolean;
 }
 
 interface GuildWithStatus extends Guild {
@@ -57,7 +58,7 @@ export function useGuildData(options?: UseGuildDataOptions) {
     ...guild,
     iconUrl: getGuildIconUrl(guild),
     connected: guild.botInstalled ?? true, // Use botInstalled field, default to true for backward compatibility
-    setupRequired: !guild.botInstalled, // Setup required if bot is not installed
+    setupRequired: !guild.botInstalled || (guild.botInstalled && !guild.botConfigured), // Setup required if bot is not installed OR not configured
   }));
 
   // Find current guild

@@ -508,20 +508,46 @@ const createAuthInstance = () => {
                         if (guild.owner) {
                           // Owner gets admin role
                           const adminRole = await Role.getRoleByName(guild.id, "admin");
+                          logger.debug(`Looking for admin role in guild ${guild.id}:`, {
+                            found: !!adminRole,
+                            roleId: adminRole?.id,
+                            roleName: adminRole?.name,
+                          });
+                          
                           if (adminRole) {
                             await Role.assignRole(adminRole.id, account.accountId);
-                            logger.debug(
-                              `Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`
+                            logger.info(
+                              `Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`,
+                              {
+                                roleId: adminRole.id,
+                                discordUserId: account.accountId,
+                                guildId: guild.id,
+                              }
                             );
+                          } else {
+                            logger.error(`Admin role not found in guild ${guild.id}`);
                           }
                         } else {
                           // Non-owner admin gets viewer role by default
                           const viewerRole = await Role.getRoleByName(guild.id, "viewer");
+                          logger.debug(`Looking for viewer role in guild ${guild.id}:`, {
+                            found: !!viewerRole,
+                            roleId: viewerRole?.id,
+                            roleName: viewerRole?.name,
+                          });
+                          
                           if (viewerRole) {
                             await Role.assignRole(viewerRole.id, account.accountId);
-                            logger.debug(
-                              `Assigned viewer role to admin user ${account.accountId} in guild ${guild.id}`
+                            logger.info(
+                              `Assigned viewer role to admin user ${account.accountId} in guild ${guild.id}`,
+                              {
+                                roleId: viewerRole.id,
+                                discordUserId: account.accountId,
+                                guildId: guild.id,
+                              }
                             );
+                          } else {
+                            logger.error(`Viewer role not found in guild ${guild.id}`);
                           }
                         }
                       } catch (error) {

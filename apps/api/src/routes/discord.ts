@@ -148,11 +148,13 @@ export const discordRoutes = createRoute()
   // Get user's Discord guilds
   .get("/guilds", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
+    const refresh = c.req.query("refresh") === "true";
 
     logger.debug("Fetching Discord guilds", {
       userId: user.id,
       discordUserId: user.discordUserId,
       email: user.email,
+      refresh,
     });
 
     // Check Discord account
@@ -171,19 +173,21 @@ export const discordRoutes = createRoute()
       } satisfies z.infer<typeof _GuildsListResponse>);
     }
 
-    // Check cache first
-    const cachedGuilds = await DiscordCache.getGuilds(user.id);
-    if (cachedGuilds) {
-      logger.info("Returning cached guilds", {
-        userId: user.id,
-        count: cachedGuilds.length,
-      });
-      return c.json({
-        guilds: cachedGuilds,
-        connected: true,
-        error: null,
-        code: null,
-      } satisfies z.infer<typeof _GuildsListResponse>);
+    // Check cache first (unless refresh is requested)
+    if (!refresh) {
+      const cachedGuilds = await DiscordCache.getGuilds(user.id);
+      if (cachedGuilds) {
+        logger.info("Returning cached guilds", {
+          userId: user.id,
+          count: cachedGuilds.length,
+        });
+        return c.json({
+          guilds: cachedGuilds,
+          connected: true,
+          error: null,
+          code: null,
+        } satisfies z.infer<typeof _GuildsListResponse>);
+      }
     }
 
     logger.debug("Discord account found", {

@@ -11,9 +11,9 @@ const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${proce
 export default function Setup() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
-  const { hasGuilds, refetchGuilds } = useAuthCheck();
-  const [isChecking, setIsChecking] = useState(false);
   const [hasInvited, setHasInvited] = useState(false);
+  const { hasGuilds, refetchGuilds } = useAuthCheck({ forceRefresh: hasInvited });
+  const [isChecking, setIsChecking] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function Setup() {
     if (!hasInvited) return;
 
     const interval = setInterval(() => {
-      refetchGuilds();
+      refetchGuilds(true);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -47,7 +47,7 @@ export default function Setup() {
 
   const handleCheckServers = async () => {
     setIsChecking(true);
-    await refetchGuilds();
+    await refetchGuilds(true);
     setIsChecking(false);
   };
 

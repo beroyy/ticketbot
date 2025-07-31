@@ -27,6 +27,7 @@ import { useMemo } from "react";
 import { TicketDetailView } from "@/features/tickets/ui/ticket-detail-view";
 import { FilterDropdown, SortDropdown, ActiveFilters } from "@/features/tickets/ui/ticket-filters";
 import { formatDate } from "@/lib/utils";
+import { useSmartRefetch } from "@/hooks/use-smart-refetch";
 import { RiFilter3Line } from "react-icons/ri";
 import { RiSortDesc } from "react-icons/ri";
 
@@ -131,9 +132,15 @@ function TicketsContent() {
   const selectedTicketId = useSelectedTicket();
   const activeTab = useActiveTab();
   const { setSearch, setActiveTab, selectTicket } = useTicketActions();
+  
+  // Use smart refetch for ticket list
+  const smartInterval = useSmartRefetch("normal");
 
   // Query data
-  const { data: allTickets = [], isLoading, error } = useQuery(ticketQueries.all(selectedGuildId));
+  const { data: allTickets = [], isLoading, error } = useQuery({
+    ...ticketQueries.all(selectedGuildId),
+    refetchInterval: smartInterval,
+  });
 
   // Filter and sort tickets
   const tickets = useMemo(() => {

@@ -47,11 +47,11 @@ export const ticketQueries = {
     enabled: !!guildId,
   }),
 
-  messages: (ticketId: string) => ({
+  messages: (ticketId: string, refetchInterval?: number | false) => ({
     queryKey: ["ticket-messages", ticketId],
     queryFn: () => fetchTicketMessages(ticketId),
     enabled: !!ticketId,
-    refetchInterval: 5000,
+    refetchInterval: refetchInterval ?? 5000,
     staleTime: 2000,
   }),
 };
@@ -95,8 +95,8 @@ export function useTicketStats(guildId: string | null) {
   return useQuery(ticketQueries.stats(guildId));
 }
 
-export function useTicketMessages(ticketId: string) {
-  return useQuery(ticketQueries.messages(ticketId));
+export function useTicketMessages(ticketId: string, refetchInterval?: number | false) {
+  return useQuery(ticketQueries.messages(ticketId, refetchInterval));
 }
 
 export interface RecentActivityEntry {

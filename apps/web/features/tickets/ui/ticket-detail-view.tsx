@@ -23,6 +23,7 @@ import { useTicketMessages } from "@/features/tickets/queries";
 import { ActivityLogModal } from "@/features/tickets/ui/activity-log-modal";
 import { EmojiProgressIcon } from "@/components/emoji-progress-icon";
 import { TicketMessages } from "@/features/tickets/ui/ticket-messages";
+import { useSmartRefetch } from "@/hooks/use-smart-refetch";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { BiSolidArrowFromRight } from "react-icons/bi";
@@ -190,13 +191,16 @@ function UserMetadataContent({ metadata }: { metadata: unknown }): React.JSX.Ele
 export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
   const isCollapsed = false; // Can be added to global store if needed
+  
+  // Use smart refetch for critical message data
+  const smartInterval = useSmartRefetch("critical");
 
   // Fetch real messages for this ticket
   const {
     data: messagesData,
     isLoading: messagesLoading,
     error: messagesError,
-  } = useTicketMessages(ticket.id);
+  } = useTicketMessages(ticket.id, smartInterval);
 
   const mockActions = [
     {

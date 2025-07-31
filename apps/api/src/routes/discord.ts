@@ -179,33 +179,72 @@ export const discordRoutes = createRoute()
     // Get effective Discord user ID for permission checks
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
     
-    // Fetch guilds from Discord
-    const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
-    if ("error" in result) {
-      logger.error("Failed to fetch guilds from Discord API", {
-        error: result.error,
-        code: result.code,
-        userId: user.id,
-      });
-      return c.json({
-        guilds: [],
-        connected: false,
-        error: result.error ?? null,
-        code: result.code ?? null,
-      } satisfies z.infer<typeof _GuildsListResponse>);
+    // Get Discord user to check cached guilds
+    const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
+
+    let allGuilds: any[] = [];
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+    // Check if we have cached guilds that are fresh
+    if (discordUser?.guilds && typeof discordUser.guilds === 'object') {
+      const guildsData = discordUser.guilds as any;
+      const fetchedAt = guildsData.fetchedAt ? new Date(guildsData.fetchedAt) : null;
+      
+      if (fetchedAt && Date.now() - fetchedAt.getTime() < CACHE_TTL) {
+        // Use cached data
+        allGuilds = guildsData.data || [];
+        logger.debug("Using cached guilds", {
+          cachedGuilds: allGuilds.length,
+          cacheAge: Math.round((Date.now() - fetchedAt.getTime()) / 1000) + "s",
+          userId: user.id,
+        });
+      }
     }
 
-    const guilds = result.data as DiscordGuild[];
-    logger.debug("Fetched guilds from Discord", {
-      totalGuilds: guilds.length,
-      userId: user.id,
-    });
+    // If no cache or cache is stale, fetch from Discord
+    if (allGuilds.length === 0) {
+      const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
+      if ("error" in result) {
+        logger.error("Failed to fetch guilds from Discord API", {
+          error: result.error,
+          code: result.code,
+          userId: user.id,
+        });
+        return c.json({
+          guilds: [],
+          connected: false,
+          error: result.error ?? null,
+          code: result.code ?? null,
+        } satisfies z.infer<typeof _GuildsListResponse>);
+      }
 
-    // Filter guilds where user has MANAGE_GUILD permission
-    const adminGuilds = guilds
-      .filter(
-        (guild) => (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION
-      )
+      const guilds = result.data as DiscordGuild[];
+      
+      // Mark which guilds user can administrate
+      allGuilds = guilds.map((guild) => ({
+        id: guild.id,
+        name: guild.name,
+        icon: guild.icon,
+        owner: guild.owner || false,
+        permissions: guild.permissions || "0",
+        features: guild.features || [],
+        isAdmin: guild.owner || 
+                 ((BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION),
+      }));
+
+      // Update cache
+      await User.updateGuildsCache(effectiveDiscordUserId, allGuilds);
+
+      logger.debug("Fetched and cached guilds from Discord", {
+        totalGuilds: guilds.length,
+        adminGuilds: allGuilds.filter(g => g.isAdmin).length,
+        userId: user.id,
+      });
+    }
+
+    // Filter to only admin guilds for backward compatibility
+    const adminGuilds = allGuilds
+      .filter(g => g.isAdmin)
       .map((guild) => ({
         id: guild.id,
         name: guild.name,
@@ -231,33 +270,11 @@ export const discordRoutes = createRoute()
       })
     );
 
-    // Ensure Discord user exists if we have the ID
-    if (effectiveDiscordUserId) {
-      try {
-        // Fetch user info from Discord to ensure we have the latest data
-        const userResult = await fetchDiscordAPI("/users/@me", accountResult.account.accessToken!);
-        if (!("error" in userResult)) {
-          const discordUserData = userResult.data as any;
-          await User.ensure(
-            effectiveDiscordUserId,
-            discordUserData.username,
-            discordUserData.discriminator === "0" ? undefined : discordUserData.discriminator,
-            discordUserData.avatar 
-              ? `https://cdn.discordapp.com/avatars/${effectiveDiscordUserId}/${discordUserData.avatar}.png`
-              : undefined
-          );
-          logger.debug("Ensured Discord user exists for permissions", {
-            discordId: effectiveDiscordUserId,
-            username: discordUserData.username,
-          });
-        }
-      } catch (error) {
-        logger.warn("Failed to ensure Discord user exists", { error, discordId: effectiveDiscordUserId });
-      }
-    }
+    // Discord user should already exist from OAuth callback
+    // No need to fetch user profile again
 
     logger.info("Successfully fetched Discord guilds", {
-      totalGuilds: guilds.length,
+      totalGuilds: allGuilds.length,
       adminGuilds: adminGuilds.length,
       withBot: guildsWithBotStatus.filter((g) => g.botInstalled).length,
       userId: user.id,
@@ -299,36 +316,59 @@ export const discordRoutes = createRoute()
       );
     }
 
-    // Fetch guilds from Discord
-    const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
-    if ("error" in result) {
-      logger.error("Failed to fetch guilds for sync", {
-        error: result.error,
+    // Get effective Discord user ID
+    const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
+    
+    // Try to use cached guilds first
+    const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
+    let allGuilds: any[] = [];
+    
+    if (discordUser?.guilds && typeof discordUser.guilds === 'object') {
+      const guildsData = discordUser.guilds as any;
+      allGuilds = guildsData.data || [];
+      logger.debug("Using cached guilds for sync", {
+        cachedGuilds: allGuilds.length,
         userId: user.id,
       });
-      return c.json(
-        {
-          success: false,
-          syncedCount: 0,
-          totalAdminGuilds: 0,
-          errors: [result.error || "Failed to fetch guilds from Discord"],
-        } satisfies z.infer<typeof _GuildSyncResponse>,
-        500
-      );
+    } else {
+      // Fetch from Discord if no cache
+      const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
+      if ("error" in result) {
+        logger.error("Failed to fetch guilds for sync", {
+          error: result.error,
+          userId: user.id,
+        });
+        return c.json(
+          {
+            success: false,
+            syncedCount: 0,
+            totalAdminGuilds: 0,
+            errors: [result.error || "Failed to fetch guilds from Discord"],
+          } satisfies z.infer<typeof _GuildSyncResponse>,
+          500
+        );
+      }
+
+      const guilds = result.data as DiscordGuild[];
+      
+      // Mark admin status and cache
+      allGuilds = guilds.map((guild) => ({
+        id: guild.id,
+        name: guild.name,
+        icon: guild.icon,
+        owner: guild.owner || false,
+        permissions: guild.permissions || "0",
+        features: guild.features || [],
+        isAdmin: guild.owner || 
+                 ((BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION),
+      }));
+      
+      // Update cache
+      await User.updateGuildsCache(effectiveDiscordUserId, allGuilds);
     }
 
-    const guilds = result.data as DiscordGuild[];
-    logger.debug("Fetched guilds for sync", {
-      totalGuilds: guilds.length,
-      userId: user.id,
-    });
-
-    // Filter guilds where user has MANAGE_GUILD permission or is owner
-    const adminGuilds = guilds.filter(
-      (guild) =>
-        guild.owner ||
-        (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION
-    );
+    // Filter to admin guilds
+    const adminGuilds = allGuilds.filter(g => g.isAdmin);
 
     logger.info("Syncing admin guilds", {
       adminGuildCount: adminGuilds.length,
@@ -340,37 +380,32 @@ export const discordRoutes = createRoute()
     let syncedCount = 0;
     const errors: string[] = [];
 
-    // Sync each guild
+    // Sync each guild - but only those where bot is installed
     for (const guild of adminGuilds) {
       try {
+        // Check if bot is installed in this guild
+        const dbGuild = await findGuildById(guild.id);
+        
+        if (!dbGuild?.botInstalled) {
+          logger.debug(`Skipping guild ${guild.id} - bot not installed`, {
+            guildName: guild.name,
+            userId: user.id,
+          });
+          continue;
+        }
+
         logger.debug(`Syncing guild ${guild.id}`, {
           guildName: guild.name,
           isOwner: guild.owner,
           userId: user.id,
         });
-
-        // Get the Discord user ID - from Better Auth user or from the account
-        let effectiveDiscordUserId = user.discordUserId;
         
-        if (!effectiveDiscordUserId && accountResult.account?.accountId) {
-          // Use the Discord ID from the OAuth account if Better Auth doesn't have it yet
-          effectiveDiscordUserId = accountResult.account.accountId;
-          logger.info(`Using Discord ID from OAuth account for guild sync`, {
-            discordId: effectiveDiscordUserId,
-            betterAuthUserId: user.id,
-          });
-        }
-        
-        // Create/update guild record - set owner if they own the guild
-        const ownerId = guild.owner && effectiveDiscordUserId ? effectiveDiscordUserId : undefined;
-        await ensureGuild(guild.id, guild.name, ownerId);
-
-        if (guild.owner) {
-          logger.info(`Set ownership for guild ${guild.id}`, {
+        // Update ownership if they own the guild
+        if (guild.owner && effectiveDiscordUserId && dbGuild.ownerDiscordId !== effectiveDiscordUserId) {
+          await ensureGuild(guild.id, guild.name, effectiveDiscordUserId);
+          logger.info(`Updated ownership for guild ${guild.id}`, {
             guildName: guild.name,
-            ownerId: ownerId,
-            hadDiscordUserId: !!user.discordUserId,
-            usedOAuthAccount: !user.discordUserId && !!effectiveDiscordUserId,
+            ownerId: effectiveDiscordUserId,
           });
         }
 
@@ -399,7 +434,6 @@ export const discordRoutes = createRoute()
             }
           }
         }
-
 
         syncedCount++;
       } catch (error) {

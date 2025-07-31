@@ -168,4 +168,30 @@ export namespace User {
       data: { discordUserId },
     });
   };
+
+  /**
+   * Update Discord user's cached guilds
+   */
+  export const updateGuildsCache = async (
+    discordId: string,
+    guilds: Array<{
+      id: string;
+      name: string;
+      icon: string | null;
+      owner: boolean;
+      permissions: string;
+      features: string[];
+      isAdmin: boolean;
+    }>
+  ): Promise<void> => {
+    await prisma.discordUser.update({
+      where: { id: discordId },
+      data: {
+        guilds: {
+          data: guilds,
+          fetchedAt: new Date().toISOString(),
+        } as Prisma.InputJsonValue,
+      },
+    });
+  };
 }

@@ -352,7 +352,7 @@ const createAuthInstance = () => {
             logger.debug("Linked Discord account to user");
 
             try {
-              logger.debug("Fetching user guilds to set ownership...");
+              logger.debug("Fetching user guilds to cache...");
 
               const guildsResponse = await fetch("https://discord.com/api/v10/users/@me/guilds", {
                 headers: {
@@ -371,128 +371,86 @@ const createAuthInstance = () => {
                   features?: string[];
                 }>;
 
-                // Filter admin guilds (those where user has MANAGE_GUILD permission)
+                // Mark which guilds user can administrate
                 const MANAGE_GUILD = BigInt(0x20);
 
-                const adminGuilds = guilds
-                  .filter((guild) => {
-                    if (guild.owner) return true;
-                    if (guild.permissions) {
-                      return (BigInt(guild.permissions) & MANAGE_GUILD) === MANAGE_GUILD;
-                    }
-                    return false;
-                  })
-                  .map((guild) => ({
-                    id: guild.id,
-                    name: guild.name,
-                    icon: guild.icon
-                      ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
-                      : null,
-                    owner: guild.owner || false,
-                    permissions: guild.permissions || "0",
-                    features: guild.features || [],
-                  }));
+                const guildsWithAdminStatus = guilds.map((guild) => ({
+                  id: guild.id,
+                  name: guild.name,
+                  icon: guild.icon,
+                  owner: guild.owner || false,
+                  permissions: guild.permissions || "0",
+                  features: guild.features || [],
+                  isAdmin: guild.owner || 
+                           (guild.permissions ? 
+                            (BigInt(guild.permissions) & MANAGE_GUILD) === MANAGE_GUILD : 
+                            false),
+                }));
 
-                logger.debug(`Found ${adminGuilds.length} admin guilds for user during OAuth`);
+                // Cache all guilds in DiscordUser
+                await prisma.discordUser.update({
+                  where: { id: account.accountId },
+                  data: {
+                    guilds: {
+                      data: guildsWithAdminStatus,
+                      fetchedAt: new Date().toISOString(),
+                    },
+                  },
+                });
 
-                // Handle all admin guilds for database setup
-                if (adminGuilds.length > 0) {
-                  logger.debug(
-                    `Found ${adminGuilds.length} admin guilds for user ${account.accountId}`
-                  );
+                logger.debug(`Cached ${guilds.length} guilds for user during OAuth`, {
+                  totalGuilds: guilds.length,
+                  adminGuilds: guildsWithAdminStatus.filter(g => g.isAdmin).length,
+                  discordUserId: account.accountId,
+                });
 
-                  const { ensure: ensureGuild } = await import("../domains/guild");
-                  const { Role } = await import("../domains/role");
+                // Only set up ownership and roles for guilds where bot is installed
+                const { findById as findGuildById, ensure: ensureGuild } = await import("../domains/guild");
+                const { Role } = await import("../domains/role");
 
-                  await Promise.all(
-                    adminGuilds.map(async (guild) => {
-                      try {
-                        // Create guild record - only set owner if they actually own it
-                        const ownerId = guild.owner ? account.accountId : undefined;
-                        logger.debug(`Processing guild ${guild.id}:`, {
-                          guildName: guild.name,
-                          isOwner: guild.owner,
-                          accountId: account.accountId,
-                          ownerId,
-                        });
-                        await ensureGuild(guild.id, guild.name, ownerId);
-
-                        if (guild.owner) {
-                          logger.debug(
-                            `Set ownership for guild ${guild.id} (${guild.name}) with Discord ID ${account.accountId}`
-                          );
-                        } else {
-                          logger.debug(
-                            `Created guild record for ${guild.id} (${guild.name}) where user is admin but not owner`
-                          );
-                        }
-
-
-                        // Ensure default roles exist
-                        await Role.ensureDefaultRoles(guild.id);
-                        logger.debug(`Ensured default roles exist for guild ${guild.id}`);
-
-                        // Assign appropriate role based on permissions
-                        if (guild.owner) {
-                          // Owner gets admin role
-                          const adminRole = await Role.getRoleByName(guild.id, "admin");
-                          logger.debug(`Looking for admin role in guild ${guild.id}:`, {
-                            found: !!adminRole,
-                            roleId: adminRole?.id,
-                            roleName: adminRole?.name,
-                          });
-                          
-                          if (adminRole) {
-                            await Role.assignRole(adminRole.id, account.accountId);
-                            logger.info(
-                              `Assigned admin role to guild owner ${account.accountId} in guild ${guild.id}`,
-                              {
-                                roleId: adminRole.id,
-                                discordUserId: account.accountId,
-                                guildId: guild.id,
-                              }
-                            );
-                          } else {
-                            logger.error(`Admin role not found in guild ${guild.id}`);
-                          }
-                        } else {
-                          // Non-owner admin gets viewer role by default
-                          const viewerRole = await Role.getRoleByName(guild.id, "viewer");
-                          logger.debug(`Looking for viewer role in guild ${guild.id}:`, {
-                            found: !!viewerRole,
-                            roleId: viewerRole?.id,
-                            roleName: viewerRole?.name,
-                          });
-                          
-                          if (viewerRole) {
-                            await Role.assignRole(viewerRole.id, account.accountId);
-                            logger.info(
-                              `Assigned viewer role to admin user ${account.accountId} in guild ${guild.id}`,
-                              {
-                                roleId: viewerRole.id,
-                                discordUserId: account.accountId,
-                                guildId: guild.id,
-                              }
-                            );
-                          } else {
-                            logger.error(`Viewer role not found in guild ${guild.id}`);
-                          }
-                        }
-                      } catch (error) {
-                        logger.error(`Failed to setup guild ${guild.id}:`, error);
+                const adminGuilds = guildsWithAdminStatus.filter(g => g.isAdmin);
+                
+                for (const guild of adminGuilds) {
+                  try {
+                    // Check if bot is in this guild
+                    const dbGuild = await findGuildById(guild.id);
+                    
+                    if (dbGuild?.botInstalled) {
+                      logger.debug(`Bot is installed in guild ${guild.id}, setting up ownership and roles`);
+                      
+                      // Update ownership if they own it
+                      if (guild.owner && dbGuild.ownerDiscordId !== account.accountId) {
+                        await ensureGuild(guild.id, guild.name, account.accountId);
+                        logger.debug(`Updated ownership for guild ${guild.id}`);
                       }
-                    })
-                  );
-
-                  logger.debug("Guild setup completed for all admin guilds");
-                } else {
-                  logger.debug("No admin guilds found for user");
+                      
+                      // Ensure default roles exist
+                      await Role.ensureDefaultRoles(guild.id);
+                      
+                      // Assign appropriate role
+                      if (guild.owner) {
+                        const adminRole = await Role.getRoleByName(guild.id, "admin");
+                        if (adminRole) {
+                          await Role.assignRole(adminRole.id, account.accountId);
+                          logger.info(`Assigned admin role to guild owner in guild ${guild.id}`);
+                        }
+                      } else {
+                        const viewerRole = await Role.getRoleByName(guild.id, "viewer");
+                        if (viewerRole) {
+                          await Role.assignRole(viewerRole.id, account.accountId);
+                          logger.info(`Assigned viewer role to admin user in guild ${guild.id}`);
+                        }
+                      }
+                    }
+                  } catch (error) {
+                    logger.error(`Failed to setup guild ${guild.id}:`, error);
+                  }
                 }
               } else {
                 logger.warn("Failed to fetch user guilds during auth:", guildsResponse.status);
               }
             } catch (error) {
-              logger.error("Error setting up guild ownership during auth:", error);
+              logger.error("Error caching guilds during auth:", error);
             }
           } catch (error) {
             logger.error("Error linking Discord account:", error);

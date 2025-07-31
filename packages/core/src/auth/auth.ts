@@ -405,8 +405,11 @@ const createAuthInstance = () => {
                 });
 
                 // Only set up ownership and roles for guilds where bot is installed
-                const { findById as findGuildById, ensure: ensureGuild } = await import("../domains/guild");
-                const { Role } = await import("../domains/role");
+                const guildModule = await import("../domains/guild");
+                const findGuildById = guildModule.findById;
+                const ensureGuild = guildModule.ensure;
+                const roleModule = await import("../domains/role");
+                const Role = roleModule.Role;
 
                 const adminGuilds = guildsWithAdminStatus.filter(g => g.isAdmin);
                 

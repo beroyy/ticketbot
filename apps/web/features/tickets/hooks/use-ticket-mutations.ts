@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { notify } from "@/shared/stores/app-store";
+import { ticketKeys } from "@/features/tickets/queries/query-keys";
 import type { Ticket } from "@/features/tickets/types";
 
-// Infer types from the Hono RPC client
 type CreateTicketData = Parameters<typeof api.tickets.$post>[0]["json"];
-type UpdateTicketData = NonNullable<Parameters<typeof api.tickets[":id"]["$put"]>[0]["json"]>;
+type UpdateTicketData = NonNullable<Parameters<(typeof api.tickets)[":id"]["$put"]>[0]["json"]>;
 
-export function useCreateTicket() {
+function useCreateTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -18,7 +18,7 @@ export function useCreateTicket() {
     },
     onSuccess: (ticket) => {
       notify.success("Ticket created", `Ticket #${ticket.id} has been created`);
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.all });
     },
     onError: (error) => {
       notify.error(
@@ -29,7 +29,7 @@ export function useCreateTicket() {
   });
 }
 
-export function useUpdateTicket() {
+function useUpdateTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -43,8 +43,8 @@ export function useUpdateTicket() {
     },
     onSuccess: (ticket) => {
       notify.success("Ticket updated", `Ticket #${ticket.id} has been updated`);
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets", ticket.id] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.all });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticket.id) });
     },
     onError: (error) => {
       notify.error(
@@ -55,7 +55,7 @@ export function useUpdateTicket() {
   });
 }
 
-export function useCloseTicket() {
+function useCloseTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -69,8 +69,8 @@ export function useCloseTicket() {
     },
     onSuccess: (ticket) => {
       notify.success("Ticket closed", `Ticket #${ticket.id} has been closed`);
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets", ticket.id] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.all });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticket.id) });
     },
     onError: (error) => {
       notify.error(
@@ -81,7 +81,7 @@ export function useCloseTicket() {
   });
 }
 
-export function useClaimTicket() {
+function useClaimTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -94,8 +94,8 @@ export function useClaimTicket() {
     },
     onSuccess: (ticket) => {
       notify.success("Ticket claimed", `You have claimed ticket #${ticket.id}`);
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets", ticket.id] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.all });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticket.id) });
     },
     onError: (error) => {
       notify.error(
@@ -106,7 +106,7 @@ export function useClaimTicket() {
   });
 }
 
-export function useUnclaimTicket() {
+function useUnclaimTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -119,8 +119,8 @@ export function useUnclaimTicket() {
     },
     onSuccess: (ticket) => {
       notify.success("Ticket unclaimed", `Ticket #${ticket.id} has been unclaimed`);
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets", ticket.id] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.all });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticket.id) });
     },
     onError: (error) => {
       notify.error(
@@ -131,10 +131,7 @@ export function useUnclaimTicket() {
   });
 }
 
-// Note: Ticket assignment is done through the update endpoint
-// by setting the assigneeId field
-
-export function useSendTicketMessage() {
+function useSendTicketMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -147,8 +144,8 @@ export function useSendTicketMessage() {
       return res.json();
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["tickets", variables.id, "messages"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.messages(variables.id, null) });
+      queryClient.invalidateQueries({ queryKey: ticketKeys.detail(variables.id) });
     },
     onError: (error) => {
       notify.error(
@@ -158,3 +155,12 @@ export function useSendTicketMessage() {
     },
   });
 }
+
+export {
+  useCreateTicket,
+  useUpdateTicket,
+  useCloseTicket,
+  useClaimTicket,
+  useUnclaimTicket,
+  useSendTicketMessage,
+};

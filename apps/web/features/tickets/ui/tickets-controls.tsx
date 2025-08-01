@@ -4,7 +4,11 @@ import { RiFilter3Line, RiSortDesc } from "react-icons/ri";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useTicketFilters, useTicketSort, useTicketUIActions } from "@/features/tickets/stores/tickets-ui-store";
+import {
+  useTicketFilters,
+  useTicketSort,
+  useTicketUIActions,
+} from "@/features/tickets/stores/tickets-ui-store";
 import type { FilterState } from "@/features/tickets/ui/active-filters";
 
 type TicketsControlsProps = {

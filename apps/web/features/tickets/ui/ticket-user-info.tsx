@@ -73,7 +73,6 @@ function UserMetadataPopover({ children, metadata }: UserMetadataPopoverProps) {
 function UserMetadataContent({ metadata }: { metadata: unknown }): React.JSX.Element {
   if (!metadata) return <div className="p-4 text-sm text-gray-500">No metadata available</div>;
 
-  // Type guard for metadata
   const isObjectWithProp = (obj: unknown, prop: string): obj is Record<string, unknown> => {
     return obj !== null && typeof obj === "object" && prop in obj;
   };
@@ -84,7 +83,6 @@ function UserMetadataContent({ metadata }: { metadata: unknown }): React.JSX.Ele
 
   const metadataObj = metadata;
 
-  // Get the guild data for the current guild (assuming first guild for demo)
   const guildData =
     isObjectWithProp(metadata, "guilds") && metadata["guilds"]
       ? (Object.values(metadata["guilds"])[0] as Record<string, unknown>)

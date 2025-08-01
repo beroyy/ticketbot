@@ -31,7 +31,6 @@ interface FormDraft {
 }
 
 
-type PanelViewState = "list" | "create" | "edit" | "preview";
 
 // Store slices
 interface NotificationSlice {
@@ -63,53 +62,14 @@ interface FormSlice {
 }
 
 
-interface PanelsSlice {
-  panels: {
-    currentView: PanelViewState;
-    selectedPanelId: string | null;
-    isDeleteModalOpen: boolean;
-    deletingPanelId: string | null;
-    searchQuery: string;
-    sortBy: "name" | "created" | "updated";
-    sortDirection: "asc" | "desc";
-  };
-  setPanelView: (view: PanelViewState) => void;
-  selectPanel: (id: string | null) => void;
-  openDeleteModal: (panelId: string) => void;
-  closeDeleteModal: () => void;
-  setPanelSearch: (query: string) => void;
-  setPanelSort: (sortBy: "name" | "created" | "updated", direction?: "asc" | "desc") => void;
-  resetPanelState: () => void;
-}
-
-interface SettingsSlice {
-  settings: {
-    teamSearchQuery: string;
-    selectedMemberId: string | null;
-  };
-  setTeamSearch: (query: string) => void;
-  selectMember: (id: string | null) => void;
-}
 
 // Complete store interface
 interface AppStore
   extends NotificationSlice,
     ModalSlice,
-    FormSlice,
-    PanelsSlice,
-    SettingsSlice {}
+    FormSlice {}
 
 // Default states
-
-const defaultPanelState = {
-  currentView: "list" as PanelViewState,
-  selectedPanelId: null,
-  isDeleteModalOpen: false,
-  deletingPanelId: null,
-  searchQuery: "",
-  sortBy: "created" as const,
-  sortDirection: "desc" as const,
-};
 
 // Store implementation
 export const useAppStore = create<AppStore>()(
@@ -179,53 +139,6 @@ export const useAppStore = create<AppStore>()(
             return { drafts: rest };
           }),
         clearAllDrafts: () => set({ drafts: {} }),
-
-        // Panels slice
-        panels: defaultPanelState,
-        setPanelView: (view) =>
-          set((state) => ({ panels: { ...state.panels, currentView: view } })),
-        selectPanel: (id) => set((state) => ({ panels: { ...state.panels, selectedPanelId: id } })),
-        openDeleteModal: (panelId) =>
-          set((state) => ({
-            panels: {
-              ...state.panels,
-              isDeleteModalOpen: true,
-              deletingPanelId: panelId,
-            },
-          })),
-        closeDeleteModal: () =>
-          set((state) => ({
-            panels: {
-              ...state.panels,
-              isDeleteModalOpen: false,
-              deletingPanelId: null,
-            },
-          })),
-        setPanelSearch: (query) =>
-          set((state) => ({ panels: { ...state.panels, searchQuery: query } })),
-        setPanelSort: (sortBy, direction) =>
-          set((state) => ({
-            panels: {
-              ...state.panels,
-              sortBy,
-              sortDirection: direction || state.panels.sortDirection,
-            },
-          })),
-        resetPanelState: () => set({ panels: defaultPanelState }),
-
-        // Settings slice
-        settings: {
-          teamSearchQuery: "",
-          selectedMemberId: null,
-        },
-        setTeamSearch: (query) =>
-          set((state) => ({
-            settings: { ...state.settings, teamSearchQuery: query },
-          })),
-        selectMember: (id) =>
-          set((state) => ({
-            settings: { ...state.settings, selectedMemberId: id },
-          })),
       }),
       {
         name: "app-storage",
@@ -261,40 +174,6 @@ export const useFormActions = () => {
 };
 
 
-export const usePanelView = () => useAppStore((s) => s.panels.currentView);
-export const useSelectedPanel = () => useAppStore((s) => s.panels.selectedPanelId);
-export const usePanelSearch = () => useAppStore((s) => s.panels.searchQuery);
-export const usePanelActions = () => {
-  const setView = useAppStore((s) => s.setPanelView);
-  const selectPanel = useAppStore((s) => s.selectPanel);
-  const setSearch = useAppStore((s) => s.setPanelSearch);
-  const setSort = useAppStore((s) => s.setPanelSort);
-  const openDeleteModal = useAppStore((s) => s.openDeleteModal);
-  const closeDeleteModal = useAppStore((s) => s.closeDeleteModal);
-  const reset = useAppStore((s) => s.resetPanelState);
-
-  return {
-    setView,
-    selectPanel,
-    setSearch,
-    setSort,
-    openDeleteModal,
-    closeDeleteModal,
-    reset,
-  };
-};
-
-export const useTeamSearch = () => useAppStore((s) => s.settings.teamSearchQuery);
-export const useSettingsActions = () => {
-  const setTeamSearch = useAppStore((s) => s.setTeamSearch);
-  const selectMember = useAppStore((s) => s.selectMember);
-
-  return {
-    setTeamSearch,
-    selectMember,
-  };
-};
-
 // Convenience notification methods
 export const notify = {
   success: (title: string, message?: string) => {
@@ -324,14 +203,6 @@ export function useFormDraft(formId: string) {
 export function useFormStep(formId: string) {
   const draft = useAppStore((s) => s.drafts[formId]);
   return draft?.step || 0;
-}
-
-export function useDeletePanelModal() {
-  const isOpen = useAppStore((s) => s.panels.isDeleteModalOpen);
-  const panelId = useAppStore((s) => s.panels.deletingPanelId);
-  const { openDeleteModal, closeDeleteModal } = usePanelActions();
-
-  return { isOpen, panelId, open: openDeleteModal, close: closeDeleteModal };
 }
 
 // Typed modal hooks for backwards compatibility

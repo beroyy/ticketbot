@@ -16,7 +16,6 @@ export function TicketsLayout({
   return (
     <main className="bg-background relative z-0 size-full">
       <div className={isRightPanelOpen ? "flex h-full overflow-scroll px-10" : "p-10"}>
-        {/* Left Panel */}
         <div
           className={
             isRightPanelOpen
@@ -29,7 +28,6 @@ export function TicketsLayout({
           {leftPanel}
         </div>
 
-        {/* Right Panel */}
         {isRightPanelOpen && rightPanel}
       </div>
     </main>

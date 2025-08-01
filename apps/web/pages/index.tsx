@@ -1,10 +1,8 @@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/features/auth/auth-provider";
-import {
-  useTicketStats,
-  useRecentActivity,
-  type RecentActivityEntry,
-} from "@/features/tickets/queries";
+import { useTicketStats } from "@/features/tickets/hooks/use-ticket-stats";
+import { useRecentActivity } from "@/features/tickets/hooks/use-recent-activity";
+import type { RecentActivityEntry } from "@/features/tickets/queries/activity-queries";
 import { useState, useEffect } from "react";
 import { RiTicketLine, RiUser3Line } from "react-icons/ri";
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-react";

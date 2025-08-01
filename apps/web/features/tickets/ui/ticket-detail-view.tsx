@@ -1,6 +1,6 @@
 import React from "react";
 import type { Ticket } from "@/features/tickets/types";
-import { useTicketMessages } from "@/features/tickets/queries";
+import { useTicketMessages } from "@/features/tickets/hooks";
 import { Transcripts } from "@/features/tickets/ui/transcripts";
 import { useSmartRefetch } from "@/hooks/use-smart-refetch";
 import { useAuth } from "@/features/auth/auth-provider";
@@ -16,13 +16,10 @@ type TicketDetailViewProps = {
 };
 
 export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
-  const isCollapsed = false; // Can be added to global store if needed
+  const isCollapsed = false;
   const { selectedGuildId } = useAuth();
-
-  // Use smart refetch for critical message data
   const smartInterval = useSmartRefetch("critical");
 
-  // Fetch real messages for this ticket
   const {
     data: messagesData,
     isLoading: messagesLoading,
@@ -37,9 +34,7 @@ export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
       <div className="flex h-full flex-col bg-white pb-[74px]">
         <TicketDetailHeader onClose={onClose} />
 
-        {/* Content */}
         <div className="flex flex-1 gap-6 px-6 py-4">
-          {/* Main Chat Area - Rounded Container */}
           <div className="nice-gray-border flex flex-1 flex-col rounded-2xl border bg-white">
             <TicketUserInfo ticket={ticket} />
             <Transcripts

@@ -1,14 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { ticketQueries } from "../queries";
+import { ticketQueries } from "../queries/ticket-queries";
 import { useCallback } from "react";
 import type { Ticket } from "../types";
 
-/**
- * Hook that provides ticket counts using a single query
- * Uses select option for performance optimization
- */
 export function useTicketSummary(guildId: string | null) {
-  // Memoize selector to only recalculate when tickets change
   const selectCounts = useCallback((tickets: Ticket[]) => {
     const all = tickets || [];
     return {

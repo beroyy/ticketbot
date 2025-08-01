@@ -5,6 +5,7 @@ import { InteractionResponse, InteractionEdit } from "@bot/lib/discord-utils/res
 import { findByChannelId, User } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
+import { EPHEMERAL_FLAG } from "../discord-utils/constants";
 
 /**
  * Base class for ticket-related commands with common functionality
@@ -17,7 +18,9 @@ export abstract class TicketCommandBase extends BaseCommand {
   public override async chatInputRunWithContext(interaction: ChatInputCommandInteraction) {
     // Handle deferral if needed
     if (this.shouldDefer(interaction)) {
-      await interaction.deferReply({ ephemeral: this.deferEphemeral(interaction) });
+      await interaction.deferReply({
+        flags: this.deferEphemeral(interaction) ? EPHEMERAL_FLAG : undefined,
+      });
     }
 
     // For non-ticket channel commands, execute directly

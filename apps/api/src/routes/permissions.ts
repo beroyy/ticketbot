@@ -54,6 +54,6 @@ export const permissionRoutes = createRoute()
         permissions: permissions.toString(),
         guildId,
         userId: discordUserId,
-      } satisfies z.infer<typeof PermissionsResponse>);
+      } satisfies PermissionsResponse);
     }
   );

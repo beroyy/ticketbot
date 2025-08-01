@@ -132,12 +132,16 @@ function TicketsContent() {
   const selectedTicketId = useSelectedTicket();
   const activeTab = useActiveTab();
   const { setSearch, setActiveTab, selectTicket } = useTicketActions();
-  
+
   // Use smart refetch for ticket list
   const smartInterval = useSmartRefetch("normal");
 
   // Query data
-  const { data: allTickets = [], isLoading, error } = useQuery({
+  const {
+    data: allTickets = [],
+    isLoading,
+    error,
+  } = useQuery({
     ...ticketQueries.all(selectedGuildId),
     refetchInterval: smartInterval,
   });
@@ -177,7 +181,7 @@ function TicketsContent() {
   }, []);
 
   return (
-    <div className="bg-background h-[94dvh] overflow-hidden">
+    <div className="bg-background size-full">
       <div className={selectedTicket ? "flex h-screen px-10 py-6" : "p-10"}>
         {/* Left Panel - Ticket List */}
         <div

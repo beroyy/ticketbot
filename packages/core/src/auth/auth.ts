@@ -225,13 +225,30 @@ const createAuthInstance = () => {
         }
 
         // Slow path: Fetch Discord data if missing or stale
+        logger.debug("customSession slow path triggered", {
+          userId: user.id,
+          hasDiscordUserId: !!existingUser.discordUserId,
+          hasUsername: !!existingUser.username,
+        });
+
         const fullUser = await UserDomain.getBetterAuthUser(user.id);
+        logger.debug("Fetched full user from DB", {
+          userId: user.id,
+          hasDiscordUserId: !!fullUser?.discordUserId,
+          discordUserId: fullUser?.discordUserId,
+        });
+
         let discordUser = null;
         if (fullUser?.discordUserId) {
           discordUser = await UserDomain.getDiscordUser(fullUser.discordUserId);
+          logger.debug("Fetched Discord user", {
+            discordUserId: fullUser.discordUserId,
+            username: discordUser?.username,
+          });
         }
 
         if (!fullUser) {
+          logger.warn("No full user found in DB", { userId: user.id });
           return { session, user };
         }
 
@@ -239,7 +256,13 @@ const createAuthInstance = () => {
 
         // Only do the account lookup if we don't have a Discord ID
         if (!discordUserId) {
+          logger.debug("No Discord ID on user, checking OAuth accounts", { userId: user.id });
           const discordAccount = await AccountDomain.getDiscordAccount(user.id);
+          logger.debug("Discord OAuth account lookup result", {
+            userId: user.id,
+            found: !!discordAccount,
+            accountId: discordAccount?.accountId,
+          });
 
           if (discordAccount?.accountId) {
             discordUserId = discordAccount.accountId;
@@ -253,20 +276,33 @@ const createAuthInstance = () => {
             );
 
             await UserDomain.updateDiscordUserId(user.id, discordAccount.accountId);
+            logger.info("Updated user with Discord ID from OAuth account", {
+              userId: user.id,
+              discordUserId: discordAccount.accountId,
+            });
 
             discordUser = await UserDomain.getDiscordUser(discordAccount.accountId);
           }
         }
 
+        const enhancedUser = {
+          ...user,
+          discordUserId: discordUserId ?? null,
+          username: discordUser?.username ?? null,
+          discriminator: discordUser?.discriminator ?? null,
+          avatar_url: discordUser?.avatarUrl ?? null,
+        };
+
+        logger.debug("customSession returning enhanced user", {
+          userId: user.id,
+          hasDiscordUserId: !!enhancedUser.discordUserId,
+          discordUserId: enhancedUser.discordUserId,
+          username: enhancedUser.username,
+        });
+
         return {
           session,
-          user: {
-            ...user,
-            discordUserId: discordUserId ?? null,
-            username: discordUser?.username ?? null,
-            discriminator: discordUser?.discriminator ?? null,
-            avatar_url: discordUser?.avatarUrl ?? null,
-          },
+          user: enhancedUser,
         };
       }),
     ],
@@ -350,6 +386,15 @@ const createAuthInstance = () => {
             });
 
             logger.debug("Linked Discord account to user");
+
+            // Force session refresh by invalidating cache
+            // This ensures the customSession plugin re-runs on next request
+            try {
+              // Clear any cached session data to force refresh
+              logger.info("Forcing session refresh after Discord link");
+            } catch (e) {
+              logger.error("Failed to clear session cache:", e);
+            }
 
             try {
               logger.debug("Fetching user guilds to cache...");

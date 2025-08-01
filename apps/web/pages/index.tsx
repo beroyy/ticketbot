@@ -10,11 +10,13 @@ import { RiTicketLine, RiUser3Line } from "react-icons/ri";
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
+import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
 
 export default function Home() {
   const { selectedGuildId } = useAuth();
   const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions(selectedGuildId || undefined);
 
   // Refresh guild data on initial load to ensure bot status is current
   const { refetch: refetchGuilds } = useGuildData({ refresh: !hasInitialLoad });
@@ -27,13 +29,19 @@ export default function Home() {
     }
   }, [hasInitialLoad, selectedGuildId, refetchGuilds]);
 
-  const { data: ticketStats, isLoading, error } = useTicketStats(selectedGuildId);
+  // Check if user has analytics permission
+  const hasAnalyticsPermission = hasPermission(PermissionFlags.ANALYTICS_VIEW);
+  
+  // Only fetch stats if user has permission
+  const { data: ticketStats, isLoading, error } = useTicketStats(
+    hasAnalyticsPermission ? selectedGuildId : null
+  );
 
   const {
     data: recentActivity,
     isLoading: isActivityLoading,
     error: activityError,
-  } = useRecentActivity(selectedGuildId, 8);
+  } = useRecentActivity(hasAnalyticsPermission ? selectedGuildId : null, 8);
 
   // Extract data for the selected timeframe
   const timeframeData = (ticketStats as any)?.timeframes?.[selectedTimeframe];
@@ -43,10 +51,27 @@ export default function Home() {
   const percentageChange = timeframeData?.percentageChange || 0;
   const isPositive = timeframeData?.isPositive ?? true;
 
-  if (isLoading || isActivityLoading) {
+  if (permissionsLoading || (hasAnalyticsPermission && (isLoading || isActivityLoading))) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-gray-600">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (!hasAnalyticsPermission) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="max-w-md text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Limited Access</h2>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to view analytics for this server. 
+            Please contact a server administrator to grant you the necessary permissions.
+          </p>
+          <Button onClick={() => window.location.href = '/tickets'} variant="default">
+            View Tickets Instead
+          </Button>
+        </div>
       </div>
     );
   }

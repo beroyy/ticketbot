@@ -83,6 +83,7 @@ model DiscordUser {
   
   // Discord-specific relations
   openedTickets           Ticket[]          @relation("TicketOpener")
+  claimedTickets          Ticket[]          @relation("TicketClaimer")
   ticketParticipants      TicketParticipant[]
   ticketHistory           TicketHistory[]
   ticketMessages          TicketMessage[]

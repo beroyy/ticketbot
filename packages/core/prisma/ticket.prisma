@@ -9,6 +9,7 @@ model Ticket {
   panelId                 Int?      @map("panel_id")
   panelOptionId           Int?      @map("panel_option_id")
   openerId                String    @map("opener_id") // References DiscordUser.id
+  claimedById             String?   @map("claimed_by_id") // References DiscordUser.id
   channelId               String    @map("channel_id")
   categoryId              String?   @map("category_id") // Channel category ID
   subject                 String?   @db.VarChar(100)
@@ -24,6 +25,7 @@ model Ticket {
   panel                   Panel?                  @relation(fields: [panelId], references: [id])
   panelOption             PanelOption?            @relation(fields: [panelOptionId], references: [id])
   opener                  DiscordUser             @relation("TicketOpener", fields: [openerId], references: [id])
+  claimedBy               DiscordUser?            @relation("TicketClaimer", fields: [claimedById], references: [id])
   
   // Relations to new models
   lifecycleEvents         TicketLifecycleEvent[]

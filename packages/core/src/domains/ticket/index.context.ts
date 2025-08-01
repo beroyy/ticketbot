@@ -103,6 +103,11 @@ export namespace Ticket {
       skip,
       take,
       orderBy: { createdAt: "desc" },
+      include: {
+        opener: true,
+        panel: true,
+        claimedBy: true,
+      },
     });
   };
 

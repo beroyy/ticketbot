@@ -210,11 +210,12 @@ export namespace TicketLifecycle {
         },
       });
 
-      // Update ticket status
+      // Update ticket status and claimedById
       const updated = await tx.ticket.update({
         where: { id: parsed.ticketId },
         data: {
           status: TicketStatus.CLAIMED,
+          claimedById: claimerId,
           updatedAt: new Date(),
         },
       });
@@ -289,11 +290,12 @@ export namespace TicketLifecycle {
         },
       });
 
-      // Update ticket status back to open
+      // Update ticket status back to open and clear claimedById
       const updated = await tx.ticket.update({
         where: { id: parsed.ticketId },
         data: {
           status: TicketStatus.OPEN,
+          claimedById: null,
           updatedAt: new Date(),
         },
       });

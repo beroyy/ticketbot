@@ -136,129 +136,142 @@ export default function Home() {
                   {/* Count and percentage */}
                   <div className="flex items-center gap-3">
                     <div className="text-3xl font-bold text-gray-900">{currentPeriodTickets}</div>
-                    <div
-                      className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium ${
-                        isPositive ? "bg-[#E0FAEC] text-[#1FC16B]" : "bg-[#FFEAEA] text-[#E53E3E]"
-                      }`}
-                    >
-                      {isPositive ? (
-                        <ArrowUpRight className="h-3 w-3" />
-                      ) : (
-                        <ArrowDownRight className="h-3 w-3" />
-                      )}
-                      {isPositive ? "+" : ""}
-                      {String(percentageChange)}%
-                    </div>
+
+                    {currentPeriodTickets !== 0 && (
+                      <div
+                        className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium ${
+                          isPositive ? "bg-[#E0FAEC] text-[#1FC16B]" : "bg-[#FFEAEA] text-[#E53E3E]"
+                        }`}
+                      >
+                        {isPositive ? (
+                          <ArrowUpRight className="h-3 w-3" />
+                        ) : (
+                          <ArrowDownRight className="h-3 w-3" />
+                        )}
+                        {isPositive ? "+" : ""}
+                        {String(percentageChange)}%
+                      </div>
+                    )}
                   </div>
 
                   {/* Chart inside the card */}
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={chartData}
-                        // margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                      >
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: "#9CA3AF", fontSize: 11 }}
-                          axisLine={false}
-                          tickLine={false}
-                          tickMargin={8}
-                          minTickGap={32}
-                          tickFormatter={(value: string | number | Date) => {
-                            const date = new Date(value);
-                            if (selectedTimeframe === "1D") {
-                              // For 1 day view, show hour
-                              return date.toLocaleTimeString("en-US", {
-                                hour: "numeric",
-                                hour12: true,
-                              });
-                            } else if (selectedTimeframe === "3M") {
-                              // For 3 month view, show month and day for weekly periods
-                              return date.toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              });
-                            } else {
-                              // For other views, show month and day
-                              return date.toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              });
-                            }
-                          }}
-                        />
-                        <YAxis
-                          width={20}
-                          tick={{ fill: "#9CA3AF", fontSize: 11 }}
-                          axisLine={false}
-                          tickLine={false}
-                          domain={[0, "dataMax + 1"]}
-                        />
-                        <Tooltip
-                          content={({ active = false, payload, label }) => {
-                            if (active && payload && payload.length) {
-                              const date = new Date(String(label));
-                              let formattedDate: string;
 
+                  <div className="h-64">
+                    {currentPeriodTickets === 0 ? (
+                      <div className="flex h-[65%] flex-col items-center justify-center text-center">
+                        <div className="text-sub-gray text-sm">No data available</div>
+                        <div className="text-sub-gray mt-1 text-xs">
+                          Trends will appear here once tickets are created
+                        </div>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={chartData}
+                          // margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                        >
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickMargin={8}
+                            minTickGap={32}
+                            tickFormatter={(value: string | number | Date) => {
+                              const date = new Date(value);
                               if (selectedTimeframe === "1D") {
-                                // For hourly view, show date and time
-                                formattedDate = date.toLocaleString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
+                                // For 1 day view, show hour
+                                return date.toLocaleTimeString("en-US", {
                                   hour: "numeric",
-                                  minute: "numeric",
                                   hour12: true,
                                 });
                               } else if (selectedTimeframe === "3M") {
-                                // For weekly periods, show date range
-                                const endDate = new Date(date);
-                                endDate.setDate(endDate.getDate() + 6);
-                                formattedDate = `${date.toLocaleDateString("en-US", {
+                                // For 3 month view, show month and day for weekly periods
+                                return date.toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
-                                })} - ${endDate.toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })}`;
+                                });
                               } else {
-                                formattedDate = date.toLocaleDateString("en-US", {
+                                // For other views, show month and day
+                                return date.toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
-                                  year: "numeric",
                                 });
                               }
+                            }}
+                          />
+                          <YAxis
+                            width={20}
+                            tick={{ fill: "#9CA3AF", fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                            domain={[0, "dataMax + 1"]}
+                          />
+                          <Tooltip
+                            content={({ active = false, payload, label }) => {
+                              if (active && payload && payload.length) {
+                                const date = new Date(String(label));
+                                let formattedDate: string;
 
-                              return (
-                                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {formattedDate}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    Tickets: {String(payload[0]?.value ?? 0)}
-                                  </p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="tickets"
-                          stroke="#335CFF"
-                          strokeWidth={2}
-                          dot={false}
-                          activeDot={{
-                            r: 4,
-                            stroke: "#3B82F6",
-                            strokeWidth: 1,
-                            fill: "#3B82F6",
-                          }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                                if (selectedTimeframe === "1D") {
+                                  // For hourly view, show date and time
+                                  formattedDate = date.toLocaleString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "numeric",
+                                    hour12: true,
+                                  });
+                                } else if (selectedTimeframe === "3M") {
+                                  // For weekly periods, show date range
+                                  const endDate = new Date(date);
+                                  endDate.setDate(endDate.getDate() + 6);
+                                  formattedDate = `${date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })} - ${endDate.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}`;
+                                } else {
+                                  formattedDate = date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  });
+                                }
+
+                                return (
+                                  <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {formattedDate}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      Tickets: {String(payload[0]?.value ?? 0)}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="tickets"
+                            stroke="#335CFF"
+                            strokeWidth={2}
+                            dot={false}
+                            activeDot={{
+                              r: 4,
+                              stroke: "#3B82F6",
+                              strokeWidth: 1,
+                              fill: "#3B82F6",
+                            }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </div>
 
@@ -340,11 +353,11 @@ export default function Home() {
                   </div>
                 ))
               ) : (
-                <div className="flex h-32 items-center justify-center text-gray-500">
+                <div className="flex h-[65%] items-center justify-center text-gray-500">
                   <div className="text-center">
                     <div className="text-sm">No recent activity</div>
                     <div className="mt-1 text-xs">
-                      Activity will appear here as tickets are created and managed
+                      Activity will appear here once you start managing tickets
                     </div>
                   </div>
                 </div>

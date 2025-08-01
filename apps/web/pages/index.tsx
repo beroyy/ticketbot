@@ -341,7 +341,3 @@ export default function Home() {
     </div>
   );
 }
-// Disable static generation for this page
-export async function getServerSideProps() {
-  return { props: {} };
-}

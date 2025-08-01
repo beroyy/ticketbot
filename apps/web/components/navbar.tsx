@@ -71,7 +71,7 @@ export function Navbar() {
   if (["/setup", "/login", "/guilds"].includes(router.pathname)) return null;
 
   return (
-    <nav className="z-10 bg-[#06234A] px-9 py-3.5 text-white">
+    <nav className="z-50 bg-[#06234A] px-9 py-3.5 text-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-8">
           <Image src="/logo.svg" alt="Logo" width={200} height={64} className="aspect-auto" />

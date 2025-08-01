@@ -25,7 +25,7 @@ export const ticketQueries = {
     queryKey: ["tickets", "detail", ticketId],
     queryFn: async (): Promise<Ticket | null> => {
       if (!guildId || !ticketId) return null;
-      const res = await api.tickets[":id"].$get({ param: { id: ticketId } });
+      const res = await api.tickets[":id"].$get({ param: { id: encodeURIComponent(ticketId) } });
       if (!res.ok) throw new Error("Failed to fetch ticket details");
       return res.json();
     },
@@ -47,17 +47,23 @@ export const ticketQueries = {
     enabled: !!guildId,
   }),
 
-  messages: (ticketId: string, refetchInterval?: number | false) => ({
-    queryKey: ["ticket-messages", ticketId],
-    queryFn: () => fetchTicketMessages(ticketId),
-    enabled: !!ticketId,
+  messages: (ticketId: string, guildId: string | null, refetchInterval?: number | false) => ({
+    queryKey: ["ticket-messages", ticketId, guildId],
+    queryFn: () => fetchTicketMessages(ticketId, guildId),
+    enabled: !!ticketId && !!guildId,
     refetchInterval: refetchInterval ?? 5000,
     staleTime: 2000,
   }),
 };
 
-async function fetchTicketMessages(ticketId: string) {
-  const res = await api.tickets[":id"].messages.$get({ param: { id: ticketId } });
+async function fetchTicketMessages(ticketId: string, guildId: string | null) {
+  if (!guildId) throw new Error("Guild ID is required");
+  // Encode the ticket ID to handle special characters like "#"
+  const encodedId = encodeURIComponent(ticketId);
+  const res = await api.tickets[":id"].messages.$get({ 
+    param: { id: encodedId },
+    query: { guildId }
+  });
   if (!res.ok) throw new Error("Failed to fetch ticket messages");
   return res.json();
 }
@@ -69,7 +75,7 @@ export const ticketMutations = {
   claim: (ticketId: string) => ({
     mutationFn: async (): Promise<unknown> => {
       const res = await api.tickets[":id"].claim.$post({
-        param: { id: ticketId },
+        param: { id: encodeURIComponent(ticketId) },
       });
       if (!res.ok) throw new Error("Failed to claim ticket");
       return res.json();
@@ -79,7 +85,7 @@ export const ticketMutations = {
   close: (ticketId: string) => ({
     mutationFn: async (reason?: string): Promise<unknown> => {
       const res = await api.tickets[":id"].close.$post({
-        param: { id: ticketId },
+        param: { id: encodeURIComponent(ticketId) },
         json: reason ? { reason } : undefined,
       });
       if (!res.ok) throw new Error("Failed to close ticket");
@@ -95,8 +101,8 @@ export function useTicketStats(guildId: string | null) {
   return useQuery(ticketQueries.stats(guildId));
 }
 
-export function useTicketMessages(ticketId: string, refetchInterval?: number | false) {
-  return useQuery(ticketQueries.messages(ticketId, refetchInterval));
+export function useTicketMessages(ticketId: string, guildId: string | null, refetchInterval?: number | false) {
+  return useQuery(ticketQueries.messages(ticketId, guildId, refetchInterval));
 }
 
 export interface RecentActivityEntry {

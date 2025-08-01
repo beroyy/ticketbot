@@ -95,3 +95,15 @@ export interface TicketMessage {
 export interface TicketMessagesResponse {
   messages: TicketMessage[];
 }
+
+export interface ActivityLogEntry {
+  id: number;
+  timestamp: string;
+  action: string;
+  details?: any | null;
+  performedBy: {
+    id: string;
+    username: string;
+    global_name?: string | null;
+  } | null;
+}

@@ -454,6 +454,7 @@ export const ticketRoutes = createRoute()
     "/:id/activity",
     ...compositions.authenticated,
     zValidator("param", z.object({ id: z.string() })),
+    zValidator("query", z.object({ guildId: z.string().optional() })),
     async (c) => {
       const { id } = c.req.valid("param");
       const ticketId = parseTicketId(id);
@@ -513,6 +514,7 @@ export const ticketRoutes = createRoute()
     "/:id/messages",
     ...compositions.authenticated,
     zValidator("param", z.object({ id: z.string() })),
+    zValidator("query", z.object({ guildId: z.string().optional() })),
     async (c) => {
       const { id } = c.req.valid("param");
       const ticketId = parseTicketId(id);
@@ -531,6 +533,7 @@ export const ticketRoutes = createRoute()
                     id: user.id.toString(),
                     username: user.username || "Unknown User",
                     avatarUrl: user.avatarUrl,
+                    metadata: user.metadata || null,
                   };
                 }
               } catch {
@@ -538,6 +541,7 @@ export const ticketRoutes = createRoute()
                   id: message.authorId,
                   username: "Unknown User",
                   avatarUrl: null,
+                  metadata: null,
                 };
               }
             }

@@ -35,7 +35,7 @@ export function useUpdateTicket() {
   return useMutation({
     mutationFn: async ({ id, ...data }: UpdateTicketData & { id: string }) => {
       const res = await api.tickets[":id"].$put({
-        param: { id },
+        param: { id: encodeURIComponent(id) },
         json: data,
       });
       if (!res.ok) throw new Error("Failed to update ticket");
@@ -61,7 +61,7 @@ export function useCloseTicket() {
   return useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
       const res = await api.tickets[":id"].close.$post({
-        param: { id },
+        param: { id: encodeURIComponent(id) },
         json: reason ? { reason } : undefined,
       });
       if (!res.ok) throw new Error("Failed to close ticket");
@@ -87,7 +87,7 @@ export function useClaimTicket() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await api.tickets[":id"].claim.$post({
-        param: { id },
+        param: { id: encodeURIComponent(id) },
       });
       if (!res.ok) throw new Error("Failed to claim ticket");
       return res.json() as Promise<Ticket>;
@@ -112,7 +112,7 @@ export function useUnclaimTicket() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await api.tickets[":id"].unclaim.$post({
-        param: { id },
+        param: { id: encodeURIComponent(id) },
       });
       if (!res.ok) throw new Error("Failed to unclaim ticket");
       return res.json() as Promise<Ticket>;
@@ -140,7 +140,7 @@ export function useSendTicketMessage() {
   return useMutation({
     mutationFn: async ({ id, message }: { id: string; message: string }) => {
       const res = await api.tickets[":id"].messages.$post({
-        param: { id },
+        param: { id: encodeURIComponent(id) },
         json: { content: message },
       });
       if (!res.ok) throw new Error("Failed to send message");

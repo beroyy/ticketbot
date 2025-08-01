@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TicketCard } from "./ticket-card";
 import type { Ticket } from "@/features/tickets/types";
 
-interface TicketsListProps {
+type TicketsListProps = {
   tickets: Ticket[];
   selectedTicketId?: string | null;
   onTicketSelect: (ticketId: string) => void;
@@ -11,7 +11,7 @@ interface TicketsListProps {
   error: Error | null;
   activeTab: "active" | "closed";
   isCompact?: boolean;
-}
+};
 
 export function TicketsList({
   tickets,
@@ -36,11 +36,7 @@ export function TicketsList({
 
   return (
     <div
-      className={
-        isCompact
-          ? "space-y-3"
-          : "grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
-      }
+      className={isCompact ? "space-y-3" : "grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"}
     >
       {tickets.map((ticket, index) => (
         <TicketCard

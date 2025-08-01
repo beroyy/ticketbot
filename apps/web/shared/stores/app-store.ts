@@ -30,20 +30,6 @@ interface FormDraft {
   lastSaved: number;
 }
 
-interface FilterState {
-  status: string[];
-  type: string[];
-  assignee: string[];
-  dateRange: {
-    from: string | null;
-    to: string | null;
-  };
-}
-
-interface SortState {
-  field: "createdAt" | "status" | "progress" | "lastMessage";
-  direction: "asc" | "desc";
-}
 
 type PanelViewState = "list" | "create" | "edit" | "preview";
 
@@ -76,23 +62,6 @@ interface FormSlice {
   clearAllDrafts: () => void;
 }
 
-interface TicketsSlice {
-  tickets: {
-    searchQuery: string;
-    activeTab: "active" | "closed";
-    selectedTicketId: string | null;
-    isCollapsed: boolean;
-    filters: FilterState;
-    sort: SortState;
-  };
-  setTicketSearch: (query: string) => void;
-  setActiveTab: (tab: "active" | "closed") => void;
-  selectTicket: (id: string | null) => void;
-  toggleCollapsed: () => void;
-  updateFilters: (filters: Partial<FilterState>) => void;
-  resetFilters: () => void;
-  updateSort: (sort: Partial<SortState>) => void;
-}
 
 interface PanelsSlice {
   panels: {
@@ -127,22 +96,10 @@ interface AppStore
   extends NotificationSlice,
     ModalSlice,
     FormSlice,
-    TicketsSlice,
     PanelsSlice,
     SettingsSlice {}
 
 // Default states
-const defaultTicketFilters: FilterState = {
-  status: [],
-  type: [],
-  assignee: [],
-  dateRange: { from: null, to: null },
-};
-
-const defaultTicketSort: SortState = {
-  field: "createdAt",
-  direction: "desc",
-};
 
 const defaultPanelState = {
   currentView: "list" as PanelViewState,
@@ -222,40 +179,6 @@ export const useAppStore = create<AppStore>()(
             return { drafts: rest };
           }),
         clearAllDrafts: () => set({ drafts: {} }),
-
-        // Tickets slice
-        tickets: {
-          searchQuery: "",
-          activeTab: "active",
-          selectedTicketId: null,
-          isCollapsed: false,
-          filters: defaultTicketFilters,
-          sort: defaultTicketSort,
-        },
-        setTicketSearch: (query) =>
-          set((state) => ({ tickets: { ...state.tickets, searchQuery: query } })),
-        setActiveTab: (tab) => set((state) => ({ tickets: { ...state.tickets, activeTab: tab } })),
-        selectTicket: (id) =>
-          set((state) => ({ tickets: { ...state.tickets, selectedTicketId: id } })),
-        toggleCollapsed: () =>
-          set((state) => ({
-            tickets: { ...state.tickets, isCollapsed: !state.tickets.isCollapsed },
-          })),
-        updateFilters: (filters) =>
-          set((state) => ({
-            tickets: {
-              ...state.tickets,
-              filters: { ...state.tickets.filters, ...filters },
-            },
-          })),
-        resetFilters: () =>
-          set((state) => ({
-            tickets: { ...state.tickets, filters: defaultTicketFilters },
-          })),
-        updateSort: (sort) =>
-          set((state) => ({
-            tickets: { ...state.tickets, sort: { ...state.tickets.sort, ...sort } },
-          })),
 
         // Panels slice
         panels: defaultPanelState,
@@ -337,28 +260,6 @@ export const useFormActions = () => {
   };
 };
 
-export const useTicketFilters = () => useAppStore((s) => s.tickets.filters);
-export const useTicketSort = () => useAppStore((s) => s.tickets.sort);
-export const useTicketSearch = () => useAppStore((s) => s.tickets.searchQuery);
-export const useSelectedTicket = () => useAppStore((s) => s.tickets.selectedTicketId);
-export const useActiveTab = () => useAppStore((s) => s.tickets.activeTab);
-export const useTicketActions = () => {
-  const setSearch = useAppStore((s) => s.setTicketSearch);
-  const setActiveTab = useAppStore((s) => s.setActiveTab);
-  const selectTicket = useAppStore((s) => s.selectTicket);
-  const updateFilters = useAppStore((s) => s.updateFilters);
-  const resetFilters = useAppStore((s) => s.resetFilters);
-  const updateSort = useAppStore((s) => s.updateSort);
-
-  return {
-    setSearch,
-    setActiveTab,
-    selectTicket,
-    updateFilters,
-    resetFilters,
-    updateSort,
-  };
-};
 
 export const usePanelView = () => useAppStore((s) => s.panels.currentView);
 export const useSelectedPanel = () => useAppStore((s) => s.panels.selectedPanelId);

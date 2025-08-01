@@ -1,15 +1,35 @@
 import { Calendar } from "lucide-react";
-import type { ActivityLogEntry } from "@/features/tickets/types";
-import { formatAction } from "@/features/tickets/utils/activity-log";
+import type { ActivityLogEntry, Ticket } from "@/features/tickets/types";
+import { useActivityLog } from "@/features/tickets/hooks/use-activity-log";
 
-interface ActivityLogListProps {
+type ActivityLogProps = {
+  ticket: Ticket;
+  className?: string;
+};
+
+export function ActivityLog({ ticket, className }: ActivityLogProps) {
+  const { activityLog, isLoading, error } = useActivityLog(ticket.id);
+
+  return (
+    <div className={className}>
+      <ActivityLogList
+        entries={activityLog}
+        isLoading={isLoading}
+        error={error}
+        ticketId={ticket.id}
+      />
+    </div>
+  );
+}
+
+type ActivityLogListProps = {
   entries: ActivityLogEntry[];
   isLoading: boolean;
   error: string | null;
   ticketId: string;
-}
+};
 
-export function ActivityLogList({ entries, isLoading, error, ticketId }: ActivityLogListProps) {
+function ActivityLogList({ entries, isLoading, error, ticketId }: ActivityLogListProps) {
   // Clean ticket ID by removing # if present
   const cleanTicketId = ticketId.replace("#", "");
 
@@ -90,3 +110,22 @@ export function ActivityLogList({ entries, isLoading, error, ticketId }: Activit
     </div>
   );
 }
+
+const formatAction = (action: string, ticketId: string, performedBy: string): string => {
+  switch (action) {
+    case "opened":
+      return `${performedBy} opened ticket #${ticketId}`;
+    case "claimed":
+      return `${performedBy} claimed ticket #${ticketId}`;
+    case "closed":
+      return `${performedBy} closed ticket #${ticketId}`;
+    case "close_request_denied":
+      return `${performedBy} denied close request for ticket #${ticketId}`;
+    case "auto_closed":
+      return `Ticket #${ticketId} was automatically closed`;
+    case "transferred":
+      return `${performedBy} transferred ticket #${ticketId}`;
+    default:
+      return `${performedBy} performed action: ${action}`;
+  }
+};

@@ -4,25 +4,12 @@ import {
   useSelectedTicket,
   useTicketFilters,
   useTicketSort,
-  useTicketActions,
-} from "@/shared/stores/app-store";
+  useTicketUIActions,
+  useTicketCollapsed,
+} from "@/features/tickets/stores/tickets-ui-store";
+import type { FilterState, SortState } from "@/features/tickets/stores/tickets-ui-store";
 
-type FilterState = {
-  status: string[];
-  type: string[];
-  assignee: string[];
-  dateRange: {
-    from: string | null;
-    to: string | null;
-  };
-};
-
-type SortState = {
-  field: "createdAt" | "status" | "progress" | "lastMessage";
-  direction: "asc" | "desc";
-};
-
-interface TicketUIStateResult {
+type TicketUIStateResult = {
   ui: {
     search: string;
     activeTab: "active" | "closed";
@@ -40,33 +27,34 @@ interface TicketUIStateResult {
     updateSort: (sort: Partial<SortState>) => void;
     resetFilters: () => void;
   };
-}
+};
 
 export function useTicketUIState(): TicketUIStateResult {
   const search = useTicketSearch();
   const activeTab = useActiveTab();
   const selectedTicketId = useSelectedTicket();
+  const isCollapsed = useTicketCollapsed();
   const filters = useTicketFilters();
   const sort = useTicketSort();
-  const actions = useTicketActions();
+  const actions = useTicketUIActions();
 
   return {
     ui: {
       search,
       activeTab,
       selectedTicketId,
-      isCollapsed: false, // This can be added to store if needed
+      isCollapsed,
       filters,
       sort,
     },
     actions: {
-      setSearch: actions.setSearch,
+      setSearch: actions.setSearchQuery,
       setActiveTab: actions.setActiveTab,
-      selectTicket: actions.selectTicket,
-      setCollapsed: () => {}, // Placeholder - can be implemented if needed
-      updateFilters: actions.updateFilters,
-      updateSort: actions.updateSort,
-      resetFilters: actions.resetFilters,
+      selectTicket: actions.setSelectedTicketId,
+      setCollapsed: actions.setCollapsed,
+      updateFilters: actions.setFilters,
+      updateSort: actions.setSort,
+      resetFilters: actions.clearFilters,
     },
   };
 }

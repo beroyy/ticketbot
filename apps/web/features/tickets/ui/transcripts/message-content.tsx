@@ -2,10 +2,10 @@ import React from "react";
 import Image from "next/image";
 import type { Ticket } from "@/features/tickets/types";
 
-interface MessageContentProps {
+type MessageContentProps = {
   content: string;
   ticket: Ticket;
-}
+};
 
 export function MessageContent({ content, ticket }: MessageContentProps) {
   if (!content) return null;

@@ -11,7 +11,7 @@ export function useActivityLog(ticketId: string) {
 
   const fetchActivityLog = useCallback(async () => {
     if (!ticketId || !selectedGuildId) return;
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -20,9 +20,9 @@ export function useActivityLog(ticketId: string) {
         param: { id: encodeURIComponent(ticketId) },
         query: { guildId: selectedGuildId },
       });
-      
+
       if (!res.ok) throw new Error("Failed to fetch activity log");
-      
+
       const data = await res.json();
       setActivityLog(data);
     } catch (err) {
@@ -37,10 +37,10 @@ export function useActivityLog(ticketId: string) {
     void fetchActivityLog();
   }, [fetchActivityLog]);
 
-  return { 
-    activityLog, 
-    isLoading, 
+  return {
+    activityLog,
+    isLoading,
     error,
-    refetch: fetchActivityLog
+    refetch: fetchActivityLog,
   };
 }

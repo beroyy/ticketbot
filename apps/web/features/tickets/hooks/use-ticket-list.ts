@@ -7,7 +7,7 @@ import {
   useTicketSearch,
   useSelectedTicket,
   useActiveTab,
-} from "@/shared/stores/app-store";
+} from "@/features/tickets/stores/tickets-ui-store";
 import { filterAndSortTickets } from "@/features/tickets/utils/ticket-filters";
 import { useSmartRefetch } from "@/hooks/use-smart-refetch";
 import type { Ticket } from "@/features/tickets/types";

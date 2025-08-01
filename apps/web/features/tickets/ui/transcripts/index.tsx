@@ -6,19 +6,18 @@ import {
   formatMessages,
   createFallbackMessage,
   type FormattedMessage,
-} from "@/features/tickets/utils/message-formatters";
+} from "@/features/tickets/ui/transcripts/utils";
 
 dayjs.extend(customParseFormat);
 
-interface TicketMessagesProps {
+type TranscriptsProps = {
   messages: any[] | undefined;
   ticket: Ticket;
   isLoading: boolean;
   error: Error | null;
-}
+};
 
-export function TicketMessages({ messages, ticket, isLoading, error }: TicketMessagesProps) {
-
+export function Transcripts({ messages, ticket, isLoading, error }: TranscriptsProps) {
   // Parse ticket creation date with dayjs
   let ticketDate = dayjs(
     ticket.createdAt,
@@ -30,15 +29,12 @@ export function TicketMessages({ messages, ticket, isLoading, error }: TicketMes
     ticketDate = dayjs();
   }
 
-
   // Format real messages for display
   const formattedMessages: FormattedMessage[] = formatMessages(messages || [], ticket);
 
   // If no messages loaded yet, show fallback
   const displayMessages: FormattedMessage[] =
-    formattedMessages.length > 0
-      ? formattedMessages
-      : [createFallbackMessage(ticket, ticketDate)];
+    formattedMessages.length > 0 ? formattedMessages : [createFallbackMessage(ticket, ticketDate)];
 
   return (
     <div className="flex-1 space-y-4 overflow-auto px-6 pb-4">

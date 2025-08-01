@@ -16,11 +16,13 @@ export default function Home() {
   const { selectedGuildId } = useAuth();
   const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  const { hasPermission, isLoading: permissionsLoading } = usePermissions(selectedGuildId || undefined);
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions(
+    selectedGuildId || undefined
+  );
 
   // Refresh guild data on initial load to ensure bot status is current
   const { refetch: refetchGuilds } = useGuildData({ refresh: !hasInitialLoad });
-  
+
   useEffect(() => {
     if (!hasInitialLoad && selectedGuildId) {
       setHasInitialLoad(true);
@@ -31,11 +33,13 @@ export default function Home() {
 
   // Check if user has analytics permission
   const hasAnalyticsPermission = hasPermission(PermissionFlags.ANALYTICS_VIEW);
-  
+
   // Only fetch stats if user has permission
-  const { data: ticketStats, isLoading, error } = useTicketStats(
-    hasAnalyticsPermission ? selectedGuildId : null
-  );
+  const {
+    data: ticketStats,
+    isLoading,
+    error,
+  } = useTicketStats(hasAnalyticsPermission ? selectedGuildId : null);
 
   const {
     data: recentActivity,
@@ -47,7 +51,8 @@ export default function Home() {
   const timeframeData = (ticketStats as any)?.timeframes?.[selectedTimeframe];
   const chartData = timeframeData?.chartData || [];
   const currentPeriodTickets = timeframeData?.currentPeriod?.totalTickets || 0;
-  const activeTickets = (ticketStats as any)?.totals?.activeTickets || ticketStats?.openTickets || 0;
+  const activeTickets =
+    (ticketStats as any)?.totals?.activeTickets || ticketStats?.openTickets || 0;
   const percentageChange = timeframeData?.percentageChange || 0;
   const isPositive = timeframeData?.isPositive ?? true;
 
@@ -63,12 +68,12 @@ export default function Home() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="max-w-md text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Limited Access</h2>
-          <p className="text-gray-600 mb-6">
-            You don't have permission to view analytics for this server. 
-            Please contact a server administrator to grant you the necessary permissions.
+          <h2 className="mb-4 text-2xl font-semibold text-gray-900">Limited Access</h2>
+          <p className="mb-6 text-gray-600">
+            You don't have permission to view analytics for this server. Please contact a server
+            administrator to grant you the necessary permissions.
           </p>
-          <Button onClick={() => window.location.href = '/tickets'} variant="default">
+          <Button onClick={() => (window.location.href = "/tickets")} variant="default">
             View Tickets Instead
           </Button>
         </div>
@@ -85,28 +90,32 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-8">
-      <div className="mx-auto max-w-7xl p-6">
-        <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
+    <div className="size-full bg-white px-8">
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3">
           {/* Left Column - Overview */}
           <div className="lg:col-span-2">
-            <div className="p-6">
-              <h2 className="mb-2 text-3xl font-semibold text-gray-900">Overview</h2>
-              <p className="mb-8 text-sm text-gray-600">
+            <div className="px-6 pt-4">
+              <h2 className="text-strong-blue mb-1.5 text-[22px] font-medium tracking-tight">
+                Overview
+              </h2>
+              <p className="text-sub-gray mb-7 text-sm">
                 Monitor your Discord server&apos;s ticket activity and support team performance.
               </p>
 
               {/* Cards Grid */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-5">
                 {/* Left Column - Tickets created card (spans 2 rows) */}
                 <div className="nice-gray-border row-span-2 rounded-2xl p-4">
-                  <div className="mb-8 flex items-center gap-2">
-                    <RiTicketLine className="h-6 w-6 text-[#3F40E3]" />
-                    <span className="text-xl font-medium text-gray-800">Tickets Created</span>
+                  <div className="mb-6 flex items-center gap-3">
+                    <RiTicketLine className="text-bold-blue size-5" />
+                    <span className="text-strong-black font-medium tracking-tight">
+                      Tickets Created
+                    </span>
                   </div>
 
                   {/* Tabs - full width */}
-                  <div className="mb-6 flex overflow-hidden rounded-lg border border-gray-200 bg-white">
+                  <div className="mb-4 flex overflow-hidden rounded-lg border border-gray-200 bg-white">
                     {(["1D", "1W", "1M", "3M"] as const).map((timeframe) => (
                       <button
                         key={timeframe}
@@ -125,7 +134,7 @@ export default function Home() {
                   </div>
 
                   {/* Count and percentage */}
-                  <div className="mb-8 flex items-center gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="text-3xl font-bold text-gray-900">{currentPeriodTickets}</div>
                     <div
                       className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium ${
@@ -255,18 +264,21 @@ export default function Home() {
 
                 {/* Right Column Top - Members Count card */}
                 <div className="nice-gray-border flex flex-col justify-between rounded-2xl p-4">
-                  <div className="">
+                  <div className="gap-1">
                     <div className="flex items-center justify-between">
-                      <div className="mb-4 flex items-center gap-2">
-                        <RiUser3Line className="h-6 w-6 text-[#3F40E3]" />
-                        <span className="text-xl font-medium text-gray-800">Members Count</span>
+                      <div className="mb-4 flex items-center gap-1.5">
+                        <RiUser3Line className="text-bold-blue size-5" />
+                        <span className="text-sub-gray tracking-tight">Members Count</span>
                       </div>
                     </div>
                     <div className="text-3xl font-bold text-gray-900">286K</div>
                   </div>
 
-                  <Button variant="outline" className="w-full rounded-xl">
-                    View all <ChevronRight className="size-4" />
+                  <Button
+                    variant="outline"
+                    className="text-sub-gray w-full rounded-xl font-medium tracking-tight"
+                  >
+                    View All <ChevronRight className="size-4" />
                   </Button>
                 </div>
 
@@ -274,13 +286,16 @@ export default function Home() {
                 <div className="nice-gray-border flex flex-col justify-between rounded-2xl p-4">
                   <div className="gap-1">
                     <div className="mb-4 flex items-center gap-2">
-                      <div className="outline-3 size-3 rounded-full bg-green-400 outline outline-green-100"></div>
-                      <span className="text-xl font-medium text-gray-800">Active Tickets</span>
+                      <div className="bg-bold-green outline-light-green mx-1 size-2 rounded-full outline-4"></div>
+                      <span className="text-sub-gray tracking-tight">Active Tickets</span>
                     </div>
                     <div className="text-3xl font-bold text-gray-900">{activeTickets}</div>
                   </div>
-                  <Button variant="outline" className="w-full rounded-xl">
-                    View all <ChevronRight className="h-4 w-4" />
+                  <Button
+                    variant="outline"
+                    className="text-sub-gray w-full rounded-xl font-medium tracking-tight"
+                  >
+                    View All <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -288,9 +303,9 @@ export default function Home() {
           </div>
 
           {/* Right Column - Member Activity Log */}
-          <div className="nice-gray-border flex h-[600px] flex-col rounded-2xl px-4 py-6">
+          <div className="nice-gray-border flex flex-col rounded-2xl px-4 py-6">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Member Activity Log</h2>
+              <h2 className="text-strong-blue font-medium tracking-tight">Member Activity Log</h2>
               <Button variant="outline" size="sm">
                 View All
               </Button>

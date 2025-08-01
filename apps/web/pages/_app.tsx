@@ -11,6 +11,7 @@ import { AppStoreProvider } from "@/shared/stores/app-store-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useState } from "react";
+import { Inter } from "next/font/google";
 
 // Dynamically import Navbar with SSR disabled to avoid router issues during build
 const Navbar = dynamic(
@@ -20,23 +21,27 @@ const Navbar = dynamic(
   }
 );
 
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => createQueryClient());
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <UserProvider>
-          <AuthProvider>
-            <AppStoreProvider>
-              <Navbar />
-              <Component {...pageProps} />
-              <Toaster />
-            </AppStoreProvider>
-          </AuthProvider>
-        </UserProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <div className={`${inter.className} antialiased`}>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <UserProvider>
+            <AuthProvider>
+              <AppStoreProvider>
+                <Navbar />
+                <Component {...pageProps} />
+                <Toaster />
+              </AppStoreProvider>
+            </AuthProvider>
+          </UserProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </div>
   );
 }

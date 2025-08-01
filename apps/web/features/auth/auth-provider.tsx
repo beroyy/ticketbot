@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { authClient } from "@/lib/auth-client";
 import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
 import { useUserPreference } from "@/hooks/use-user-preference";
-import { SelectServerModal } from "@/features/user/ui/select-server-modal";
 import { LoadingSpinner } from "@/components/loading-spinner";
 
 interface AuthContextType {
@@ -46,7 +45,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // Guild selection state
   const [selectedGuildId, setSelectedGuildIdState] = useState<string | null>(null);
-  const [showSelectServerModal, setShowSelectServerModal] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
   // Use Redis-backed preference for selected guild
@@ -94,11 +92,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [isAuthenticated, hasGuilds, hasGuildsWithBot, selectedGuildId, isAuthLoading, isSessionLoading, isLoadingPreference, hasInitialized, router]);
 
-  const handleGuildSelect = (guildId: string) => {
-    setSelectedGuildIdState(guildId);
-    setShowSelectServerModal(false);
-    saveGuildId(guildId);
-  };
 
   const setSelectedGuildId = (guildId: string) => {
     setSelectedGuildIdState(guildId);
@@ -143,7 +136,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }}
     >
       {children}
-      <SelectServerModal isOpen={showSelectServerModal} onGuildSelect={handleGuildSelect} />
     </AuthContext.Provider>
   );
 }

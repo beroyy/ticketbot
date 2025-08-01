@@ -1,56 +1,28 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
+import { useGuildData } from "@/features/user/hooks/use-guild-data";
+import { SelectServerModal } from "@/features/user/ui/select-server-modal";
 
 const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${process.env.NODE_ENV === "production" ? "1397412199869186090" : "1397414095753318522"}`;
 
 export default function Setup() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
-  const [hasInvited, setHasInvited] = useState(false);
-  const { hasGuilds, hasGuildsWithBot, refetchGuilds } = useAuthCheck();
-  const { hasGuilds: hasGuildsFromAuth, hasGuildsWithBot: hasGuildsWithBotFromAuth } = useAuth();
-  const [isChecking, setIsChecking] = useState(false);
+  const { setSelectedGuildId } = useAuth();
+  const [selectedGuildId, setSelectedGuildIdLocal] = useState<string | null>(null);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!session?.user) {
-      router.push("/login");
-    }
-  }, [session, router]);
+  // Fetch guild data at page level
+  const { guilds, isLoading } = useGuildData();
 
-  // Redirect if guilds with bot are found
-  useEffect(() => {
-    if (hasGuildsWithBot || hasGuildsWithBotFromAuth) {
-      router.push("/");
-    }
-  }, [hasGuildsWithBot, hasGuildsWithBotFromAuth, router]);
-
-  // Auto-check for guilds every 3 seconds after invite
-  useEffect(() => {
-    if (!hasInvited) return;
-
-    const interval = setInterval(() => {
-      refetchGuilds();
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [hasInvited, refetchGuilds]);
-
-  const handleInviteBot = () => {
-    setHasInvited(true);
-    window.open(discordInviteUrl, "_blank");
+  const handleGuildSelect = (guildId: string) => {
+    setSelectedGuildIdLocal(guildId);
+    setSelectedGuildId(guildId);
+    router.push("/");
   };
 
-  const handleCheckServers = async () => {
-    setIsChecking(true);
-    await refetchGuilds();
-    setIsChecking(false);
+  const handleInviteBot = () => {
+    window.open(discordInviteUrl, "_blank");
   };
 
   return (
@@ -65,56 +37,15 @@ export default function Setup() {
         className="absolute inset-0 h-full w-full"
       />
 
-      <div className="md:min-w-2xl fixed rounded-2xl border bg-white p-6 shadow-lg">
-        <div className="flex flex-col items-center space-y-4 text-center">
-          <Image src="/shiny-icon.png" alt="shiny-icon" width={70} height={70} className="mr-2" />
-
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {hasInvited 
-                ? "Almost there!" 
-                : hasGuilds 
-                  ? "Add Ticketsbot to your server"
-                  : "Invite Ticketsbot to your server"}
-            </h2>
-            <p className="text-gray-600">
-              {hasInvited
-                ? "Once you've added the bot to your server, we'll automatically detect it"
-                : hasGuilds
-                  ? "We found your Discord servers, but Ticketsbot isn't installed yet. You'll need Admin access to add it."
-                  : "You'll need Admin access to complete this step"}
-            </p>
-          </div>
-
-          {!hasInvited ? (
-            <Button
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-3 font-medium text-white hover:bg-indigo-700"
-              onClick={handleInviteBot}
-            >
-              {hasGuilds ? "Add Bot to Server" : "Invite the Bot"}
-            </Button>
-          ) : (
-            <div className="w-full space-y-3">
-              <Button
-                className="flex w-full items-center justify-center gap-2 rounded-md bg-gray-100 px-4 py-3 font-medium text-gray-700 hover:bg-gray-200"
-                onClick={handleCheckServers}
-                disabled={isChecking}
-              >
-                {isChecking ? (
-                  <>
-                    <LoadingSpinner className="h-4 w-4" />
-                    Checking...
-                  </>
-                ) : (
-                  "Check for Servers"
-                )}
-              </Button>
-
-              <p className="text-xs text-gray-500">Checking automatically every few seconds...</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <SelectServerModal
+        isOpen={true}
+        onOpenChange={() => {}}
+        guilds={guilds}
+        isLoading={isLoading}
+        selectedGuildId={selectedGuildId}
+        onGuildSelect={handleGuildSelect}
+        onInviteBot={handleInviteBot}
+      />
     </div>
   );
 }

@@ -127,7 +127,7 @@ export const ensureWithDefaults = async (data: {
   const defaultRole = await prisma.guildRole.findFirst({
     where: {
       guildId: guild.id,
-      name: "Support Role",
+      name: "Support",
     },
   });
 
@@ -135,7 +135,7 @@ export const ensureWithDefaults = async (data: {
     await prisma.guildRole.create({
       data: {
         guildId: guild.id,
-        name: "Support Role",
+        name: "Support",
         permissions: BigInt("0x1ffffff"), // Default support permissions
       },
     });
@@ -152,14 +152,14 @@ export const syncBotInstallStatus = async (currentGuildIds: string[]): Promise<v
   // First, set all guilds to botInstalled = false
   await prisma.guild.updateMany({
     where: {},
-    data: { botInstalled: false }
+    data: { botInstalled: false },
   });
-  
+
   // Then set current guilds to botInstalled = true
   if (currentGuildIds.length > 0) {
     await prisma.guild.updateMany({
       where: { id: { in: currentGuildIds } },
-      data: { botInstalled: true }
+      data: { botInstalled: true },
     });
   }
 };

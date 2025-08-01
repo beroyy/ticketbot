@@ -48,22 +48,42 @@ const shouldLog = (level: string): boolean => {
 let logger: ContextLogger = {
   debug: (message: string, metadata?: any) => {
     if (shouldLog("debug")) {
-      console.debug(`[Context] ${message}`, metadata);
+      if (metadata) {
+        console.debug(`[Context] ${message}`, metadata);
+      } else {
+        console.debug(`[Context] ${message}`);
+      }
     }
   },
   info: (message: string, metadata?: any) => {
     if (shouldLog("info")) {
-      console.info(`[Context] ${message}`, metadata);
+      if (metadata) {
+        console.info(`[Context] ${message}`, metadata);
+      } else {
+        console.info(`[Context] ${message}`);
+      }
     }
   },
   warn: (message: string, metadata?: any) => {
     if (shouldLog("warn")) {
-      console.warn(`[Context] ${message}`, metadata);
+      if (metadata) {
+        console.warn(`[Context] ${message}`, metadata);
+      } else {
+        console.warn(`[Context] ${message}`);
+      }
     }
   },
   error: (message: string, error?: Error, metadata?: any) => {
     if (shouldLog("error")) {
-      console.error(`[Context] ${message}`, error, metadata);
+      if (error && metadata) {
+        console.error(`[Context] ${message}`, error, metadata);
+      } else if (error) {
+        console.error(`[Context] ${message}`, error);
+      } else if (metadata) {
+        console.error(`[Context] ${message}`, metadata);
+      } else {
+        console.error(`[Context] ${message}`);
+      }
     }
   },
 };
@@ -97,10 +117,18 @@ export const ContextMonitoring = {
    * Record performance metrics
    */
   recordMetric(metrics: PerformanceMetrics): void {
-    // Log slow operations (only in development)
-    if (metrics.duration > 100 && process.env.NODE_ENV !== 'production') {
+    // Always log operation duration at debug level (only in development)
+    if (process.env.NODE_ENV !== "production") {
+      logger.debug(`Context operation: ${metrics.operation}`, {
+        duration: `${metrics.duration.toFixed(1)}ms`,
+        ...metrics.metadata,
+      });
+    }
+
+    // Warn for truly slow operations (only in development)
+    if (metrics.duration > 500 && process.env.NODE_ENV !== "production") {
       logger.warn(`Slow context operation: ${metrics.operation}`, {
-        duration: `${metrics.duration}ms`,
+        duration: `${metrics.duration.toFixed(1)}ms`,
         ...metrics.metadata,
       });
     }

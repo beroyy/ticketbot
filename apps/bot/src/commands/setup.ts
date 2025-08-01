@@ -92,7 +92,7 @@ const createDefaultCategories = async (
   )) as CategoryChannel;
   const supportCategory = (await ChannelOps.utils.createCategoryIfNeeded(
     guild,
-    "Support Role"
+    "Support"
   )) as CategoryChannel;
 
   // Apply permissions to categories
@@ -215,7 +215,7 @@ const handleAutoSetup = async (interaction: ChatInputCommandInteraction): Promis
 
 **Will Create:**
 • Two roles: **Tickets Admin** and **Tickets Support**
-• Two categories: **Tickets** and **Support Role**
+• Two categories: **Tickets** and **Support**
 • Transcript channel: **#ticket-transcripts**
 • Default team roles and permissions
 

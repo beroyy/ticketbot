@@ -26,7 +26,8 @@
         "REDIS_URL",
         "NEXT_PUBLIC_*",
         "NEXT_PHASE",
-        "NEXT_TELEMETRY_DISABLED"
+        "NEXT_TELEMETRY_DISABLED",
+        "POSTHOG_API_KEY"
       ]
     },
     "dev": {
@@ -50,7 +51,8 @@
         "RATE_LIMIT_*",
         "LOG_*",
         "*_CACHE_TTL",
-        "ALLOWED_ORIGINS"
+        "ALLOWED_ORIGINS",
+        "POSTHOG_API_KEY"
       ]
     },
     "start": {
@@ -72,14 +74,15 @@
         "COOKIE_*",
         "RATE_LIMIT_*",
         "LOG_*",
-        "*_CACHE_TTL"
+        "*_CACHE_TTL",
+        "POSTHOG_API_KEY"
       ]
     },
     "lint": {
       "dependsOn": ["^lint"],
       "inputs": ["src/**", "eslint.config.*", ".eslintrc.*"],
       "outputs": [],
-      "env": ["NEXT_PHASE", "NEXT_TELEMETRY_DISABLED"]
+      "env": ["NEXT_PHASE", "NEXT_TELEMETRY_DISABLED", "POSTHOG_API_KEY"]
     },
     "typecheck": {
       "dependsOn": ["^build", "@ticketsbot/core#db:generate"],

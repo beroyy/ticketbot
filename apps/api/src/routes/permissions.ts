@@ -7,11 +7,13 @@ import { compositions } from "../middleware/context";
 import { logger } from "../utils/logger";
 
 // Response schemas
-const PermissionsResponse = z.object({
+const PermissionsResponseSchema = z.object({
   permissions: z.string(), // BigInt as string
   guildId: z.string(),
   userId: z.string().nullable(),
 });
+
+type PermissionsResponse = z.infer<typeof PermissionsResponseSchema>;
 
 export const permissionRoutes = createRoute()
   // Get user permissions for a guild
@@ -36,7 +38,7 @@ export const permissionRoutes = createRoute()
           permissions: "0",
           guildId,
           userId: null,
-        } satisfies z.infer<typeof PermissionsResponse>);
+        } satisfies PermissionsResponse);
       }
 
       // Calculate permissions fresh (no caching)

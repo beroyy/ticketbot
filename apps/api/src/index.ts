@@ -72,8 +72,19 @@ app.use(
   })
 );
 
-app.on(["POST", "GET"], "/auth/*", (c) => {
-  return auth.handler(c.req.raw);
+app.on(["POST", "GET"], "/auth/*", async (c) => {
+  const response = await auth.handler(c.req.raw);
+  
+  // Add CORS headers to auth response
+  const origin = c.req.header("origin");
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+  
+  return response;
 });
 
 const _routes = app

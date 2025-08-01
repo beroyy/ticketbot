@@ -2,7 +2,13 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import type { ButtonInteraction } from "discord.js";
 import { User as UserDomain, Transcripts } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
-import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
+import {
+  err,
+  ok,
+  createButtonErrorHandler,
+  ErrorResponses,
+  EPHEMERAL_FLAG,
+} from "@bot/lib/discord-utils";
 import { MessageOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
@@ -53,7 +59,7 @@ const feedbackHandler = createButtonHandler({
       if (errorMessage.includes("already submitted")) {
         await interaction.reply({
           content: "❌ You have already submitted feedback for this ticket.",
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
       } else {
         await interaction.reply(ErrorResponses.genericError());

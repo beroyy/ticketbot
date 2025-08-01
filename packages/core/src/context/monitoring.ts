@@ -97,8 +97,8 @@ export const ContextMonitoring = {
    * Record performance metrics
    */
   recordMetric(metrics: PerformanceMetrics): void {
-    // Log slow operations
-    if (metrics.duration > 100) {
+    // Log slow operations (only in development)
+    if (metrics.duration > 100 && process.env.NODE_ENV !== 'production') {
       logger.warn(`Slow context operation: ${metrics.operation}`, {
         duration: `${metrics.duration}ms`,
         ...metrics.metadata,

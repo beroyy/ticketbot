@@ -1,5 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
-import { Embed, InteractionResponse, ok } from "@bot/lib/discord-utils";
+import { Embed, InteractionResponse, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 
 const aboutEmbed = Embed.info(
   "🎫 About ticketsbot.ai",
@@ -23,7 +23,7 @@ export const AboutCommand = createCommand({
   execute: async (interaction) => {
     await InteractionResponse.reply(interaction, {
       embeds: [aboutEmbed],
-      ephemeral: true,
+      flags: EPHEMERAL_FLAG,
     });
     return ok(undefined);
   },

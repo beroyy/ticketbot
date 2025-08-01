@@ -1,5 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
-import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
+import { Embed, InteractionResponse, err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { Tag } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -171,7 +171,7 @@ const handleListTags = async (interaction: ChatInputCommandInteraction) => {
         "No Tags Found",
         "No tags have been created yet.\n\nUse `/managetags add` to create your first tag."
       );
-      await InteractionResponse.reply(interaction, { embeds: [embed], ephemeral: true });
+      await InteractionResponse.reply(interaction, { embeds: [embed], flags: EPHEMERAL_FLAG });
       return ok(undefined);
     }
 
@@ -193,7 +193,7 @@ const handleListTags = async (interaction: ChatInputCommandInteraction) => {
       text: `Showing ${displayTags.length} of ${tags.length} tag(s) • Use /tag <id> to send a tag`,
     });
 
-    await InteractionResponse.reply(interaction, { embeds: [embed], ephemeral: true });
+    await InteractionResponse.reply(interaction, { embeds: [embed], flags: EPHEMERAL_FLAG });
     return ok(undefined);
   } catch (error) {
     container.logger.error("Error listing tags:", error);

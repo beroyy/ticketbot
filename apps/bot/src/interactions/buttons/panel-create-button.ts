@@ -1,5 +1,5 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
-import { err, ok } from "@bot/lib/discord-utils";
+import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
 import { Panel, Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
@@ -28,7 +28,7 @@ const panelCreateHandler = createButtonHandler({
     if (!panel) {
       await interaction.reply({
         content: "❌ Panel not found.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
       return err("Panel not found");
     }
@@ -41,7 +41,7 @@ const panelCreateHandler = createButtonHandler({
     }
 
     // No form - create ticket directly
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
     const guild = interaction.guild;
     const userId = interaction.user.id;
@@ -139,7 +139,7 @@ const panelCreateHandler = createButtonHandler({
     if ("reply" in interaction) {
       await interaction.reply({
         content: "❌ An error occurred while processing your request.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
     }
   },

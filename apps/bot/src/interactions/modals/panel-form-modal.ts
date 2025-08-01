@@ -1,4 +1,4 @@
-import { err, ok, createModalErrorHandler } from "@bot/lib/discord-utils";
+import { err, ok, createModalErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction } from "discord.js";
 import { Panel } from "@ticketsbot/core/domains";
@@ -20,7 +20,7 @@ const panelFormModalHandler = createModalHandler({
     if (!interaction.guild) return err("No guild");
 
     // Defer immediately
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
     container.logger.debug(`Handling form submission for panel ${panelId}`);
 

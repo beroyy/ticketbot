@@ -1,8 +1,14 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { container } from "@sapphire/framework";
-import { ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
-import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
+import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
+import {
+  InteractionResponse,
+  type Result,
+  ok,
+  err,
+  TicketValidation,
+} from "@bot/lib/discord-utils";
 import { Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
 import { captureEvent } from "@ticketsbot/core/analytics";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
@@ -63,65 +69,88 @@ export class OpenCommand extends TicketCommandBase {
     let ticket: any;
     let channel: any;
 
-    await withTransaction(async () => {
-      // Create ticket using lifecycle domain
-      ticket = await TicketLifecycle.create({
-        guildId: guild.id,
-        channelId: "", // Will be updated after channel creation
-        openerId: userId,
-        subject: subjectResult.value ?? undefined,
-        metadata: {
-          createdVia: "discord",
-          username,
-        },
-      });
+    // Get guild settings first
+    const settings = await getSettingsUnchecked(guild.id);
 
-      // Get guild settings
-      const settings = await getSettingsUnchecked(guild.id);
+    // Create a temporary ticket data for channel creation
+    const tempTicketData = {
+      id: 0, // Will be replaced with actual ID
+      number: 0, // Will be replaced with actual number
+      openerId: userId,
+      subject: subjectResult.value ?? null,
+    };
 
-      // Schedule Discord operations after transaction
-      afterTransaction(async () => {
+    try {
+      // Create Discord channel first (outside transaction to avoid holding DB locks)
+      channel = await ChannelOps.ticket.createWithPermissions(guild, tempTicketData);
+    } catch (error) {
+      container.logger.error("Failed to create ticket channel:", error);
+      return err("Failed to create ticket channel. Please try again.");
+    }
+
+    try {
+      await withTransaction(async () => {
+        // Create ticket using lifecycle domain with actual channel ID
+        ticket = await TicketLifecycle.create({
+          guildId: guild.id,
+          channelId: channel.id,
+          openerId: userId,
+          subject: subjectResult.value ?? undefined,
+          metadata: {
+            createdVia: "discord",
+            username,
+          },
+        });
+
+        // Update channel name with actual ticket number
         try {
-          // Create Discord channel
-          channel = await ChannelOps.ticket.createWithPermissions(guild, {
-            id: ticket.id,
-            number: ticket.number,
-            openerId: ticket.openerId,
-            subject: ticket.subject,
-          });
-
-          // Update ticket with channel ID
-          await Ticket.updateChannelId(ticket.id, channel.id);
-
-          // Get ticket with form responses
-          const ticketWithDetails = await Ticket.getById(ticket.id);
-
-          // Send welcome message
-          const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);
-          const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
-
-          const welcomeMessage = await channel.send({
-            embeds: [welcomeEmbed],
-            components: [actionButtons.toJSON()],
-          });
-
-          // Store welcome message in transcript
-          await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
-
-          // Track event
-          await captureEvent("ticket_created", {
-            ticketId: ticket.id,
-            ticketNumber: ticket.number,
-            guildId: guild.id,
-            userId,
-            hasSubject: !!subjectResult.value,
-            channelCreated: true,
-          });
+          await channel.setName(`ticket-${ticket.number}`);
         } catch (error) {
-          container.logger.error("Error in Discord operations:", error);
+          container.logger.warn("Failed to update channel name:", error);
+          // Non-critical error, continue
         }
+
+        // Schedule Discord operations after transaction
+        afterTransaction(async () => {
+          try {
+            // Get ticket with form responses
+            const ticketWithDetails = await Ticket.getById(ticket.id);
+
+            // Send welcome message
+            const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);
+            const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
+
+            await channel.send({
+              embeds: [welcomeEmbed],
+              components: [actionButtons.toJSON()],
+            });
+
+            // Track event
+            await captureEvent("ticket_created", {
+              ticketId: ticket.id,
+              ticketNumber: ticket.number,
+              guildId: guild.id,
+              userId,
+              hasSubject: !!subjectResult.value,
+              channelCreated: true,
+            });
+          } catch (error) {
+            container.logger.error("Error in Discord operations:", error);
+          }
+        });
       });
-    });
+    } catch (error) {
+      // If ticket creation fails, try to clean up the channel
+      try {
+        await channel.delete("Ticket creation failed");
+      } catch (deleteError) {
+        container.logger.error(
+          "Failed to clean up channel after ticket creation failure:",
+          deleteError
+        );
+      }
+      throw error;
+    }
 
     await InteractionResponse.success(
       interaction,

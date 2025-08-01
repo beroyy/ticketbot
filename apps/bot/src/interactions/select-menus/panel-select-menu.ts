@@ -1,5 +1,5 @@
 import { createSelectHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
-import { err, ok, createSelectErrorHandler } from "@bot/lib/discord-utils";
+import { err, ok, createSelectErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { StringSelectMenuInteraction } from "discord.js";
 import { Panel } from "@ticketsbot/core/domains";
 import { PanelOps, TicketOps } from "@bot/lib/discord-operations";
@@ -22,7 +22,7 @@ const panelSelectHandler = createSelectHandler({
     if (!panel) {
       await interaction.reply({
         content: "❌ Panel not found.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
       return err("Panel not found");
     }
@@ -35,7 +35,7 @@ const panelSelectHandler = createSelectHandler({
     }
 
     // No form, create ticket directly
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
     try {
       // Use shared ticket creation logic

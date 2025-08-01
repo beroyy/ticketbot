@@ -1,5 +1,6 @@
 import type { Interaction } from "discord.js";
 import { container } from "@sapphire/framework";
+import { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
 
 /**
  * Checks if an error is due to a Discord channel being deleted
@@ -49,7 +50,7 @@ export const createButtonErrorHandler = (handlerName: string) => {
       try {
         await interaction.reply({
           content: "❌ There was an error processing your request.",
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
       } catch (replyError) {
         container.logger.error(`Failed to send error response in ${handlerName}:`, replyError);
@@ -77,7 +78,7 @@ export const createModalErrorHandler = (handlerName: string) => {
       try {
         await interaction.reply({
           content: "❌ There was an error processing your submission.",
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
       } catch (replyError) {
         container.logger.error(`Failed to send error response in ${handlerName}:`, replyError);
@@ -105,7 +106,7 @@ export const createSelectErrorHandler = (handlerName: string) => {
       try {
         await interaction.reply({
           content: "❌ There was an error processing your selection.",
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
       } catch (replyError) {
         container.logger.error(`Failed to send error response in ${handlerName}:`, replyError);
@@ -120,32 +121,32 @@ export const createSelectErrorHandler = (handlerName: string) => {
 export const ErrorResponses = {
   notTicketChannel: () => ({
     content: "❌ This is not an active ticket channel.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   ticketAlreadyClaimed: (claimedById: string) => ({
     content: `❌ This ticket is already claimed by <@${claimedById}>.`,
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   invalidCloseRequest: () => ({
     content: "❌ This close request is no longer valid.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   notTicketOpener: (action: string) => ({
     content: `❌ Only the ticket opener can ${action} closure.`,
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   invalidRating: () => ({
     content: "❌ Invalid rating value.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   genericError: () => ({
     content: "❌ There was an error processing your request.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 } as const;
 

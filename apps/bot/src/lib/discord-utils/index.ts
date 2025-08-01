@@ -70,3 +70,5 @@ export {
 } from "@bot/lib/discord-utils/error-handlers";
 
 export { SuccessResponses, InfoResponses } from "@bot/lib/discord-utils/success-responses";
+
+export { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";

@@ -8,6 +8,7 @@ import {
   ok,
   match,
   type Result,
+  EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import {
   Role,
@@ -58,7 +59,11 @@ const createDefaultRoles = async (guild: DiscordGuild) => {
 };
 
 // Helper to create default categories using ChannelOps
-const createDefaultCategories = async (guild: DiscordGuild, adminRole: DiscordRole, supportRole: DiscordRole) => {
+const createDefaultCategories = async (
+  guild: DiscordGuild,
+  adminRole: DiscordRole,
+  supportRole: DiscordRole
+) => {
   const permissions = [
     { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
     {
@@ -241,7 +246,7 @@ Do you want to proceed?`
   await InteractionResponse.reply(interaction, {
     embeds: [confirmEmbed],
     components: [row],
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   });
 
   // Wait for confirmation
@@ -346,23 +351,22 @@ Do you want to proceed?`
       const { Redis } = await import("@ticketsbot/core");
       try {
         // Clear all user guild caches (we don't know which users need refresh)
-        await Redis.withRetry(
-          async (client) => {
-            const keys = await client.keys("discord:guilds:*");
-            if (keys.length > 0) {
-              // Delete keys one by one to avoid spread operator issues
-              for (const key of keys) {
-                await client.del(key);
-              }
+        await Redis.withRetry(async (client) => {
+          const keys = await client.keys("discord:guilds:*");
+          if (keys.length > 0) {
+            // Delete keys one by one to avoid spread operator issues
+            for (const key of keys) {
+              await client.del(key);
             }
-            
-            // Also clear permission cache for the guild owner
-            const permKey = `perms:${guildId}:${parseDiscordId(interaction.user.id)}`;
-            await client.del(permKey);
-          },
-          "setup.clearCaches"
+          }
+
+          // Also clear permission cache for the guild owner
+          const permKey = `perms:${guildId}:${parseDiscordId(interaction.user.id)}`;
+          await client.del(permKey);
+        }, "setup.clearCaches");
+        container.logger.info(
+          `Cleared guild and permission caches after setup for guild ${guildId}`
         );
-        container.logger.info(`Cleared guild and permission caches after setup for guild ${guildId}`);
       } catch (error) {
         container.logger.warn("Failed to clear caches after setup:", error);
       }
@@ -540,7 +544,7 @@ const handlePanelsSetup = async (
     await InteractionResponse.reply(interaction, {
       embeds: [embed],
       components: [row],
-      ephemeral: true,
+      flags: EPHEMERAL_FLAG,
     });
     return ok(undefined);
   } catch (error) {
@@ -577,7 +581,7 @@ const handleFeedbackSetup = async (
       inline: false,
     });
 
-    await InteractionResponse.reply(interaction, { embeds: [embed], ephemeral: true });
+    await InteractionResponse.reply(interaction, { embeds: [embed], flags: EPHEMERAL_FLAG });
     return ok(undefined);
   } catch (error) {
     container.logger.error("Error updating feedback settings:", error);

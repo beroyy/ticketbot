@@ -1,5 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Event, Ticket } from "@ticketsbot/core/domains";
+import { Event } from "@ticketsbot/core/domains";
+import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
@@ -13,15 +14,16 @@ export const MessageCreateListener = ListenerFactory.on(
     if (message.system || !message.guild) return;
 
     try {
-      // Check if this is a ticket channel
-      const ticket = await Ticket.findByChannelId(message.channelId);
+      // Check if this is a ticket channel using static method (no context needed)
+      const ticket = await findByChannelId(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
+      // Create actor context for the message author (not the bot)
       const actor: DiscordActor = {
         type: "discord_user",
         properties: {
-          userId: message.client.user.id,
-          username: message.client.user.username,
+          userId: message.author.id,
+          username: message.author.username,
           guildId: message.guildId!,
           permissions: 0n,
         },
@@ -38,8 +40,11 @@ export const MessageCreateListener = ListenerFactory.on(
         // Log non-bot messages as events for activity tracking
         if (!message.author.bot) {
           // Determine message type
-          const member = message.member || await message.guild!.members.fetch(message.author.id).catch(() => null);
-          const hasTicketRole = member?.roles.cache.some(role => role.name.startsWith(ROLE_PREFIX)) ?? false;
+          const member =
+            message.member ||
+            (await message.guild!.members.fetch(message.author.id).catch(() => null));
+          const hasTicketRole =
+            member?.roles.cache.some((role) => role.name.startsWith(ROLE_PREFIX)) ?? false;
           const messageType = hasTicketRole ? "staff" : "customer";
 
           await Event.create({
@@ -55,7 +60,7 @@ export const MessageCreateListener = ListenerFactory.on(
               ticketNumber: ticket.number,
               messageLength: message.content.length,
               hasAttachments: message.attachments.size > 0,
-            }
+            },
           });
         }
       });

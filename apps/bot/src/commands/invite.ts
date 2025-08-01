@@ -1,5 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
-import { Embed, COLORS, InteractionResponse, ok } from "@bot/lib/discord-utils";
+import { Embed, COLORS, InteractionResponse, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { botConfig } from "@bot/config";
 
 export const InviteCommand = createCommand({
@@ -23,7 +23,7 @@ After inviting, use \`/setup auto\` to get up-and-running in seconds ⚡`
 
     await InteractionResponse.reply(interaction, {
       embeds: [embed],
-      ephemeral: true,
+      flags: EPHEMERAL_FLAG,
     });
 
     return ok(undefined);

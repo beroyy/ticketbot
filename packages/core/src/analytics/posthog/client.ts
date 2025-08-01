@@ -6,7 +6,8 @@ let client: PostHog | null = null;
 export const initializePostHog = (config: AnalyticsConfig): PostHog => {
   if (config.disabled) {
     // PostHog disabled by configuration
-    return createNoopClient();
+    client = createNoopClient();
+    return client;
   }
 
   if (client) {
@@ -26,7 +27,9 @@ export const initializePostHog = (config: AnalyticsConfig): PostHog => {
 
 export const getPostHogClient = (): PostHog => {
   if (!client) {
-    throw new Error("PostHog client not initialized. Call initializePostHog first.");
+    // Return no-op client if not initialized (e.g., in development)
+    console.warn("[Analytics] PostHog client not initialized, using no-op client");
+    client = createNoopClient();
   }
   return client;
 };

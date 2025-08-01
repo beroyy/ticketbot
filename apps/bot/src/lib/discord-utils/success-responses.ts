@@ -1,40 +1,42 @@
+import { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
+
 /**
  * Standard success responses for common scenarios
  */
 export const SuccessResponses = {
   ticketCreated: (ticketNumber: number, channelId: string) => ({
     content: `✅ Your ticket #${ticketNumber} has been created in <#${channelId}>.`,
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   ticketClosed: (reason?: string) => ({
     content: reason ? `✅ Ticket closed with reason: ${reason}` : "✅ Ticket closed successfully.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   formSubmitted: () => ({
     content: "✅ Your form has been submitted successfully.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   selectionProcessed: () => ({
     content: "✅ Your selection has been processed.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   panelCreated: (panelName: string) => ({
     content: `✅ Panel "${panelName}" has been created successfully.`,
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   settingsUpdated: () => ({
     content: "✅ Settings have been updated successfully.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   actionCompleted: (action: string) => ({
     content: `✅ ${action} completed successfully.`,
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 } as const;
 
@@ -44,16 +46,16 @@ export const SuccessResponses = {
 export const InfoResponses = {
   processing: () => ({
     content: "⏳ Processing your request...",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   pleaseWait: () => ({
     content: "⏳ Please wait while I process your request.",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 
   checkingPermissions: () => ({
     content: "🔍 Checking permissions...",
-    ephemeral: true,
+    flags: EPHEMERAL_FLAG,
   }),
 } as const;

@@ -7,6 +7,7 @@ import type {
   InteractionEditReplyOptions,
 } from "discord.js";
 import { Embed } from "@bot/lib/discord-utils/embed-helpers";
+import { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
 
 type Interaction =
   | ChatInputCommandInteraction
@@ -30,21 +31,33 @@ export const InteractionResponse = {
     replyOrFollowUp(interaction, options),
 
   error: (interaction: Interaction, message: string, ephemeral = true) =>
-    replyOrFollowUp(interaction, { embeds: [Embed.error("❌ Error", message)], ephemeral }),
+    replyOrFollowUp(interaction, {
+      embeds: [Embed.error("❌ Error", message)],
+      flags: ephemeral ? EPHEMERAL_FLAG : undefined,
+    }),
 
   success: (interaction: Interaction, message: string, ephemeral = false) =>
-    replyOrFollowUp(interaction, { embeds: [Embed.success("✅ Success", message)], ephemeral }),
+    replyOrFollowUp(interaction, {
+      embeds: [Embed.success("✅ Success", message)],
+      flags: ephemeral ? EPHEMERAL_FLAG : undefined,
+    }),
 
   info: (interaction: Interaction, message: string, ephemeral = false) =>
-    replyOrFollowUp(interaction, { embeds: [Embed.info("ℹ️ Information", message)], ephemeral }),
+    replyOrFollowUp(interaction, {
+      embeds: [Embed.info("ℹ️ Information", message)],
+      flags: ephemeral ? EPHEMERAL_FLAG : undefined,
+    }),
 
   warning: (interaction: Interaction, message: string, ephemeral = true) =>
-    replyOrFollowUp(interaction, { embeds: [Embed.warning("⚠️ Warning", message)], ephemeral }),
+    replyOrFollowUp(interaction, {
+      embeds: [Embed.warning("⚠️ Warning", message)],
+      flags: ephemeral ? EPHEMERAL_FLAG : undefined,
+    }),
 
   processing: (interaction: Interaction, action = "Processing") =>
     replyOrFollowUp(interaction, {
       embeds: [Embed.info("⏳ Please wait", `${action}...`)],
-      ephemeral: true,
+      flags: EPHEMERAL_FLAG,
     }),
 
   permissionDenied: (interaction: Interaction, requiredPermission?: string) => {

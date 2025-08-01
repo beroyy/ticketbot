@@ -1,5 +1,12 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
-import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
+import {
+  Embed,
+  InteractionResponse,
+  err,
+  ok,
+  StaffHelpers,
+  EPHEMERAL_FLAG,
+} from "@bot/lib/discord-utils";
 import { Role } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -21,7 +28,7 @@ export const ViewStaffCommand = createCommand({
           "Role Members",
           "No team roles have been configured yet.\n\nUse `/addadmin` and `/addsupport` to add team members."
         );
-        await InteractionResponse.reply(interaction, { embeds: [embed], ephemeral: true });
+        await InteractionResponse.reply(interaction, { embeds: [embed], flags: EPHEMERAL_FLAG });
         return ok(undefined);
       }
 
@@ -49,7 +56,7 @@ export const ViewStaffCommand = createCommand({
         text: "Use /roleinfo <role> to see permissions • /addadmin, /addsupport, /removestaff to manage",
       });
 
-      await InteractionResponse.reply(interaction, { embeds: [embed], ephemeral: true });
+      await InteractionResponse.reply(interaction, { embeds: [embed], flags: EPHEMERAL_FLAG });
       return ok(undefined);
     } catch (error) {
       container.logger.error("Error viewing staff:", error);

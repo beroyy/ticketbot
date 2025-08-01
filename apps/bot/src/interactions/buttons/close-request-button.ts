@@ -1,6 +1,12 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
-import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
+import {
+  err,
+  ok,
+  createButtonErrorHandler,
+  ErrorResponses,
+  EPHEMERAL_FLAG,
+} from "@bot/lib/discord-utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
 import {
   Ticket,
@@ -44,7 +50,7 @@ const closeRequestHandler = createButtonHandler({
     if (requestId && ticket.closeRequestId !== requestId) {
       await interaction.reply({
         content: "❌ This close request is no longer valid.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
       return err("Invalid close request");
     }
@@ -135,7 +141,7 @@ const closeRequestHandler = createButtonHandler({
         container.logger.error("Failed to cancel close request:", error);
         await interaction.reply({
           content: "❌ Failed to cancel the close request.",
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
         return err("Failed to cancel close request");
       }

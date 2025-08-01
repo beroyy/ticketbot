@@ -9,7 +9,7 @@ import {
 } from "discord.js";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { parseDiscordId } from "@ticketsbot/core";
-import { err, ok } from "@bot/lib/discord-utils";
+import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { container } from "@sapphire/framework";
 
 const closeWithReasonHandler = createButtonHandler({
@@ -22,7 +22,7 @@ const closeWithReasonHandler = createButtonHandler({
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
       return err("Not a ticket channel");
     }
@@ -50,7 +50,7 @@ const closeWithReasonHandler = createButtonHandler({
     if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content: "There was an error processing your request.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
     }
   },

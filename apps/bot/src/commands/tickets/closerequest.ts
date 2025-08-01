@@ -1,6 +1,13 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
-import { Embed, InteractionResponse, type Result, err, ok } from "@bot/lib/discord-utils";
+import {
+  Embed,
+  InteractionResponse,
+  type Result,
+  err,
+  ok,
+  EPHEMERAL_FLAG,
+} from "@bot/lib/discord-utils";
 import { User, Transcripts, TicketLifecycle } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
@@ -118,7 +125,7 @@ export class CloseRequestCommand extends TicketCommandBase {
       const errorMessage = error instanceof Error ? error.message : "An error occurred";
       await InteractionResponse.reply(interaction, {
         embeds: [Embed.error("Error", errorMessage)],
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
 
       return err(errorMessage);

@@ -1,6 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
-import { err, ok } from "@bot/lib/discord-utils";
+import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import {
   User as UserDomain,
@@ -23,7 +23,7 @@ const closeConfirmHandler = createButtonHandler({
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
       return err("Not a ticket channel");
     }
@@ -97,7 +97,7 @@ const closeConfirmHandler = createButtonHandler({
     if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
       await interaction.followUp({
         content: `❌ ${error}`,
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
     }
   },

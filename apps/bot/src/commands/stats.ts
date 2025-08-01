@@ -8,6 +8,7 @@ import {
   ok,
   StatsHelpers,
   STATS_CONSTANTS,
+  EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import { Role, Ticket, User, Analytics } from "@ticketsbot/core/domains";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
@@ -60,7 +61,7 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
   const guildId = parseDiscordId(guild.id);
   const discordUserId = parseDiscordId(targetUser.id);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
   try {
     // Check if user exists
@@ -164,7 +165,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
   const guild = interaction.guild!;
   const guildId = parseDiscordId(guild.id);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
   try {
     const [monthStats, weekStats, activeTeamMembers] = await Promise.all([
@@ -249,7 +250,7 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
   const guild = interaction.guild!;
   const guildId = parseDiscordId(guild.id);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
   try {
     const teamMembers = await Role.getActiveMembersWithDetails(guildId);

@@ -1,6 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { MessageOps } from "@bot/lib/discord-operations";
-import { err, ok } from "@bot/lib/discord-utils";
+import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -16,7 +16,7 @@ const ticketCloseHandler = createButtonHandler({
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",
-        ephemeral: true,
+        flags: EPHEMERAL_FLAG,
       });
       return err("Not a ticket channel");
     }
@@ -28,7 +28,7 @@ const ticketCloseHandler = createButtonHandler({
     await interaction.reply({
       embeds: [embed],
       components: [button.toJSON()],
-      ephemeral: true,
+      flags: EPHEMERAL_FLAG,
     });
 
     return ok(undefined);
@@ -52,7 +52,7 @@ const ticketCloseHandler = createButtonHandler({
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: "There was an error processing your request.",
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
       }
     }

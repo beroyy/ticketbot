@@ -1,6 +1,13 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
-import { Embed, InteractionResponse, type Result, ok, err } from "@bot/lib/discord-utils";
+import {
+  Embed,
+  InteractionResponse,
+  type Result,
+  ok,
+  err,
+  EPHEMERAL_FLAG,
+} from "@bot/lib/discord-utils";
 import { User, Ticket, ScheduledTask, Transcripts } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -93,7 +100,7 @@ export class AutoCloseCommand extends TicketCommandBase {
         container.logger.error("Failed to update auto-close exclusion:", error);
         await InteractionResponse.reply(interaction, {
           embeds: [Embed.error("Error", "Failed to update auto-close settings")],
-          ephemeral: true,
+          flags: EPHEMERAL_FLAG,
         });
         return err("Failed to update auto-close exclusion");
       }

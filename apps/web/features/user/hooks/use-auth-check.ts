@@ -9,6 +9,8 @@ interface Guild {
   icon?: string | null;
   owner: boolean;
   permissions: string;
+  botInstalled?: boolean;
+  botConfigured?: boolean;
 }
 
 export function useAuthCheck() {
@@ -102,7 +104,9 @@ export function useAuthCheck() {
   return {
     isAuthenticated: !!session?.user,
     hasGuilds: guilds.length > 0,
+    hasGuildsWithBot: guilds.some(g => g.botInstalled === true),
     isLoading: isSessionLoading || (session?.user && !hasCheckedGuilds) || isGuildsLoading,
     refetchGuilds: () => fetchGuilds(),
+    guilds, // Expose guilds for debugging
   };
 }

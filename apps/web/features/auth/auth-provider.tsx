@@ -11,6 +11,7 @@ interface AuthContextType {
   // Auth state
   isAuthenticated: boolean;
   hasGuilds: boolean;
+  hasGuildsWithBot: boolean;
   isLoading: boolean;
   
   // Guild selection
@@ -41,7 +42,7 @@ const publicRoutes = ["/login", "/setup", "/guilds"];
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
-  const { isAuthenticated, hasGuilds, isLoading: isAuthLoading, refetchGuilds } = useAuthCheck();
+  const { isAuthenticated, hasGuilds, hasGuildsWithBot, isLoading: isAuthLoading, refetchGuilds } = useAuthCheck();
   
   // Guild selection state
   const [selectedGuildId, setSelectedGuildIdState] = useState<string | null>(null);
@@ -84,13 +85,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Redirect based on auth state
     if (!isAuthenticated) {
       router.push("/login");
-    } else if (!hasGuilds) {
+    } else if (!hasGuilds || !hasGuildsWithBot) {
+      // No guilds at all, or has guilds but bot not installed in any
       router.push("/setup");
     } else if (!selectedGuildId) {
-      // User has guilds but hasn't selected one
+      // User has guilds with bot but hasn't selected one
       router.push("/guilds");
     }
-  }, [isAuthenticated, hasGuilds, selectedGuildId, isAuthLoading, isSessionLoading, isLoadingPreference, hasInitialized, router]);
+  }, [isAuthenticated, hasGuilds, hasGuildsWithBot, selectedGuildId, isAuthLoading, isSessionLoading, isLoadingPreference, hasInitialized, router]);
 
   const handleGuildSelect = (guildId: string) => {
     setSelectedGuildIdState(guildId);
@@ -132,6 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       value={{
         isAuthenticated,
         hasGuilds,
+        hasGuildsWithBot,
         isLoading: isLoadingAny,
         selectedGuildId,
         setSelectedGuildId,

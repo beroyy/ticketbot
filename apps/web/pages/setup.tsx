@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { useAuth } from "@/features/auth/auth-provider";
 
 const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${process.env.NODE_ENV === "production" ? "1397412199869186090" : "1397414095753318522"}`;
 
@@ -12,7 +13,8 @@ export default function Setup() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [hasInvited, setHasInvited] = useState(false);
-  const { hasGuilds, refetchGuilds } = useAuthCheck();
+  const { hasGuilds, hasGuildsWithBot, refetchGuilds } = useAuthCheck();
+  const { hasGuilds: hasGuildsFromAuth, hasGuildsWithBot: hasGuildsWithBotFromAuth } = useAuth();
   const [isChecking, setIsChecking] = useState(false);
 
   // Redirect if not authenticated
@@ -22,12 +24,12 @@ export default function Setup() {
     }
   }, [session, router]);
 
-  // Redirect if guilds are found
+  // Redirect if guilds with bot are found
   useEffect(() => {
-    if (hasGuilds) {
+    if (hasGuildsWithBot || hasGuildsWithBotFromAuth) {
       router.push("/");
     }
-  }, [hasGuilds, router]);
+  }, [hasGuildsWithBot, hasGuildsWithBotFromAuth, router]);
 
   // Auto-check for guilds every 3 seconds after invite
   useEffect(() => {
@@ -69,12 +71,18 @@ export default function Setup() {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold text-gray-900">
-              {hasInvited ? "Almost there!" : "Invite Ticketsbot to your server"}
+              {hasInvited 
+                ? "Almost there!" 
+                : hasGuilds 
+                  ? "Add Ticketsbot to your server"
+                  : "Invite Ticketsbot to your server"}
             </h2>
             <p className="text-gray-600">
               {hasInvited
                 ? "Once you've added the bot to your server, we'll automatically detect it"
-                : "You'll need Admin access to complete this step"}
+                : hasGuilds
+                  ? "We found your Discord servers, but Ticketsbot isn't installed yet. You'll need Admin access to add it."
+                  : "You'll need Admin access to complete this step"}
             </p>
           </div>
 
@@ -83,7 +91,7 @@ export default function Setup() {
               className="flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-3 font-medium text-white hover:bg-indigo-700"
               onClick={handleInviteBot}
             >
-              Invite the Bot
+              {hasGuilds ? "Add Bot to Server" : "Invite the Bot"}
             </Button>
           ) : (
             <div className="w-full space-y-3">

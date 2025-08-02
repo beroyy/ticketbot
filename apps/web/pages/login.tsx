@@ -58,7 +58,7 @@ export default function Login() {
         draggable={false}
         className="absolute inset-0 h-full w-full"
       />
-      <div className="fixed w-80 rounded-2xl border bg-white p-6 shadow-lg">
+      <div className="fixed w-96 rounded-2xl border bg-white p-6 shadow-lg">
         <div className="flex flex-col items-center space-y-4 text-center">
           <Image src="/shiny-icon.png" alt="shiny-icon" width={70} height={70} className="mr-2" />
           <div className="space-y-2">

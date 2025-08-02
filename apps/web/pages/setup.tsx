@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
-import { SelectServerModal } from "@/features/user/ui/select-server-modal";
+import { ServerSetupDialog } from "@/features/user/ui/server-setup-dialog";
 import { Inter_Tight } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,7 @@ export default function Setup() {
         className="absolute inset-0 h-full w-full"
       />
 
-      <SelectServerModal
+      <ServerSetupDialog
         isOpen={true}
         onOpenChange={() => {}}
         guilds={guilds}

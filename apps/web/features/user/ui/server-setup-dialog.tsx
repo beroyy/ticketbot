@@ -18,16 +18,16 @@ import { FaDiscord } from "react-icons/fa6";
 import { InlineCode } from "@/components/ui/typography";
 import { useInitialSetupComplete } from "@/shared/stores/helpers";
 
-interface Guild {
+type Guild = {
   id: string;
   name: string;
   iconUrl?: string | null;
   owner: boolean;
   connected: boolean;
   setupRequired?: boolean;
-}
+};
 
-interface SelectServerModalProps {
+type SelectServerModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   guilds: Guild[];
@@ -35,9 +35,9 @@ interface SelectServerModalProps {
   selectedGuildId: string | null;
   onGuildSelect: (guildId: string) => void;
   onInviteBot: () => void;
-}
+};
 
-export const SelectServerModal = ({
+export const ServerSetupDialog = ({
   isOpen,
   onOpenChange,
   guilds,
@@ -53,25 +53,19 @@ export const SelectServerModal = ({
   const setupRequired = hasAnyBotInstalled && guilds.some(({ setupRequired }) => setupRequired);
   const hasConfiguredGuild = guilds.some((g) => g.connected && !g.setupRequired);
 
-  // Set initial setup complete when we have a configured guild
   useEffect(() => {
     if (hasConfiguredGuild && !initialSetupComplete) {
       useInitialSetupComplete.setState(true, true);
     }
   }, [hasConfiguredGuild, initialSetupComplete]);
 
-  // Show setup complete UI when we have a configured guild but were in setup flow
   const showSetupComplete = initialSetupComplete && hasConfiguredGuild && !setupRequired;
 
   const handleGoToDashboard = () => {
-    // Find the configured guild
     const configuredGuild = guilds.find((g) => !g.setupRequired && g.connected);
     if (configuredGuild) {
-      // Select the guild (this will trigger navigation via AuthProvider)
       onGuildSelect(configuredGuild.id);
     }
-
-    // Clear the initial setup complete state
     useInitialSetupComplete.setState(false, true);
   };
 

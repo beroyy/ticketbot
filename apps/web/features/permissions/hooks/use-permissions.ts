@@ -9,17 +9,17 @@ interface UsePermissionsReturn {
   permissions: bigint;
   roles: Array<{ id: number; name: string; permissions: bigint }>;
   guildId?: string;
-  
+
   // Query states
   isLoading: boolean;
   error: unknown;
-  
+
   // Helper functions
   hasPermission: (permission: bigint) => boolean;
   hasAnyPermission: (...permissions: bigint[]) => boolean;
   hasAllPermissions: (...permissions: bigint[]) => boolean;
   getPermissionNames: () => string[];
-  
+
   // Actions
   refetch: () => void;
 }

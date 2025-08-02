@@ -1,26 +1,25 @@
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
-import type { ReactNode } from "react";
+import { createContext, useContext, useMemo, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/router";
 import { authClient } from "@/lib/auth-client";
-import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { useInitialSetupComplete, useSetupState } from "@/stores/helpers";
 import { useGlobalStore } from "@/stores/global";
 import { useHydratedStore } from "@/hooks/use-hydrated-store";
+import { getAuthRedirect, isRouteAllowed } from "@/lib/routes";
+import { AuthLoading } from "@/components/auth-loading";
 
-type AuthContextType = {
+type AuthState = "loading" | "unauthenticated" | "no-guild" | "authenticated";
+
+type AuthContextValue = {
   isAuthenticated: boolean;
-  hasGuilds: boolean;
-  hasGuildsWithBot: boolean;
+  hasGuildSelected: boolean;
   isLoading: boolean;
   selectedGuildId: string | null;
-  setSelectedGuildId: (guildId: string) => void;
-  isLoadingGuildSelection: boolean;
+  setSelectedGuildId: (guildId: string | null) => void;
+  authState: AuthState;
   refetchGuilds: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -34,142 +33,85 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-const publicRoutes = ["/login"];
-const authOnlyRoutes = ["/setup"];
-
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
-  const { data: _session, isPending: isSessionLoading } = authClient.useSession();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuthCheck();
-  const { guilds, isLoading: isGuildsLoading, refetch: refetchGuilds } = useGuildData();
-  const initialSetupComplete = useInitialSetupComplete();
-  const setupState = useSetupState();
-
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const { guilds, isLoading: guildsLoading, refetch: refetchGuilds } = useGuildData();
 
   const selectedGuildId = useHydratedStore(useGlobalStore, (state) => state.selectedGuildId);
-  const setSelectedGuildIdGlobal = useGlobalStore((state) => state.setSelectedGuildId);
+  const setSelectedGuildIdStore = useGlobalStore((state) => state.setSelectedGuildId);
 
-  const hasGuilds = guilds.length > 0;
-  const hasGuildsWithBot = guilds.some((g) => g.connected === true);
+  const authState: AuthState = useMemo(() => {
+    if (sessionLoading) return "loading";
+    if (!session?.user) return "unauthenticated";
+    if (guildsLoading) return "loading";
+    if (selectedGuildId === undefined) return "loading";
 
-  useEffect(() => {
-    if (hasInitialized) return;
+    const hasValidGuild =
+      selectedGuildId && guilds.some((g) => g.id === selectedGuildId && g.connected);
+    if (!hasValidGuild) return "no-guild";
 
-    setHasInitialized(true);
-  }, [hasInitialized]);
-
-  const targetRoute = useMemo(() => {
-    const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || !hasInitialized;
-    if (isLoadingAny) return null;
-
-    if (publicRoutes.includes(router.pathname)) return null;
-    if (authOnlyRoutes.includes(router.pathname)) return null;
-    if (initialSetupComplete && router.pathname === "/setup") return null;
-    if (router.pathname === "/setup" && setupState === "ready") {
-      useSetupState.setState("selecting");
-      return "/";
-    }
-    if (!isAuthenticated) return "/login";
-    if (!hasGuilds || !hasGuildsWithBot || !selectedGuildId) return "/setup";
-    return null;
-  }, [
-    isAuthLoading,
-    isSessionLoading,
-    isGuildsLoading,
-    hasInitialized,
-    isAuthenticated,
-    hasGuilds,
-    hasGuildsWithBot,
-    selectedGuildId,
-    router.pathname,
-    initialSetupComplete,
-    setupState,
-  ]);
+    return "authenticated";
+  }, [sessionLoading, session, guildsLoading, selectedGuildId, guilds]);
 
   useEffect(() => {
-    if (targetRoute && router.pathname !== targetRoute) {
-      router.replace(targetRoute);
-    }
-  }, [targetRoute, router.pathname]);
+    if (authState === "loading") return;
 
-  const setSelectedGuildId = (guildId: string) => {
-    setSelectedGuildIdGlobal(guildId);
+    const pathname = router.pathname;
+    // const routeType = getRouteType(pathname);
+
+    if (pathname === "/") {
+      return;
+    }
+
+    const allowed = isRouteAllowed(pathname, authState);
+
+    if (!allowed) {
+      const redirect = getAuthRedirect(authState);
+      if (redirect && pathname !== redirect) {
+        console.log(
+          `[Auth] Redirecting from ${pathname} to ${redirect} (auth state: ${authState})`
+        );
+        router.replace(redirect);
+      }
+    }
+  }, [authState, router.pathname, router]);
+
+  const setSelectedGuildId = (guildId: string | null) => {
+    if (guildId) {
+      if (guildsLoading || guilds.length === 0) {
+        setSelectedGuildIdStore(guildId);
+        return;
+      }
+
+      const guild = guilds.find((g) => g.id === guildId);
+      if (guild && guild.connected) {
+        setSelectedGuildIdStore(guildId);
+      } else {
+        console.warn(`[Auth] Attempted to select invalid guild: ${guildId}`);
+        setSelectedGuildIdStore(null);
+      }
+    } else {
+      setSelectedGuildIdStore(null);
+    }
   };
 
-  const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || !hasInitialized;
+  const contextValue: AuthContextValue = {
+    isAuthenticated: !!session?.user,
+    hasGuildSelected:
+      !!selectedGuildId && guilds.some((g) => g.id === selectedGuildId && g.connected),
+    isLoading: authState === "loading",
+    selectedGuildId: selectedGuildId ?? null,
+    setSelectedGuildId,
+    authState,
+    refetchGuilds: async () => {
+      await refetchGuilds();
+    },
+  };
 
-  useEffect(() => {
-    if (isLoadingAny && process.env.NODE_ENV !== "production") {
-      console.log("AuthProvider loading states:", {
-        isAuthLoading,
-        isSessionLoading,
-        isGuildsLoading,
-        hasInitialized,
-        selectedGuildId,
-        pathname: router.pathname,
-      });
-    }
-  }, [
-    isLoadingAny,
-    isAuthLoading,
-    isSessionLoading,
-    isGuildsLoading,
-    hasInitialized,
-    selectedGuildId,
-    router.pathname,
-  ]);
-
-  if (isLoadingAny) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+  if (authState === "loading" && router.pathname !== "/login") {
+    return <AuthLoading />;
   }
 
-  const isPublicRoute = publicRoutes.includes(router.pathname);
-  const isAuthOnlyRoute = authOnlyRoutes.includes(router.pathname);
-  const needsGuild = !isPublicRoute && !isAuthOnlyRoute;
-
-  const hasAccess =
-    isPublicRoute ||
-    (isAuthenticated && isAuthOnlyRoute) ||
-    (isAuthenticated && hasGuilds && selectedGuildId && needsGuild);
-
-  if (!hasAccess) {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("AuthProvider access denied:", {
-        isPublicRoute,
-        isAuthenticated,
-        hasGuilds,
-        selectedGuildId,
-        pathname: router.pathname,
-      });
-    }
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        hasGuilds,
-        hasGuildsWithBot,
-        isLoading: isLoadingAny,
-        selectedGuildId: selectedGuildId ?? null,
-        setSelectedGuildId,
-        isLoadingGuildSelection: !hasInitialized,
-        refetchGuilds: async () => {
-          await refetchGuilds();
-        },
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }

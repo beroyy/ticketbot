@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
 export function Navbar() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const { selectedGuildId } = useAuth();
+  const { selectedGuildId, setSelectedGuildId } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
 
   const visibleNavItems = useMemo(() => {
@@ -59,7 +59,7 @@ export function Navbar() {
     });
   }, [selectedGuildId, hasPermission, hasAnyPermission]);
 
-  if (["/setup", "/login"].includes(router.pathname)) return null;
+  if (["/setup", "/setup-v2", "/login"].includes(router.pathname)) return null;
 
   return (
     <nav className="z-50 bg-[#06234A] px-9 py-3.5 text-white">
@@ -134,6 +134,8 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem
                     onClick={() => {
+                      // Clear guild selection before signing out
+                      setSelectedGuildId(null);
                       authClient.signOut();
                     }}
                   >

@@ -34,7 +34,11 @@ export function TicketDetailView({ ticket, onClose, onCollapseToggle }: TicketDe
         <div className="z-10 ml-6 h-[150%] -translate-y-1/4 border-l border-gray-200"></div>
       )}
       <div className="flex h-full flex-1 flex-col bg-white pb-[74px] transition-all duration-300 ease-in-out">
-        <TicketDetailHeader onClose={onClose} onCollapseToggle={onCollapseToggle} isCollapsed={isCollapsed} />
+        <TicketDetailHeader
+          onClose={onClose}
+          onCollapseToggle={onCollapseToggle}
+          isCollapsed={isCollapsed}
+        />
 
         <div className="flex flex-1 gap-6 px-6 py-4">
           <div className="nice-gray-border flex flex-1 flex-col rounded-2xl border bg-white">
@@ -71,15 +75,11 @@ function TicketDetailHeader({ onClose, onCollapseToggle, isCollapsed }: TicketDe
   return (
     <div className="mt-1 bg-white px-6">
       <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          className="p-1.5"
-          onClick={onCollapseToggle}
-        >
-          <BiSolidArrowFromRight 
+        <Button variant="outline" className="p-1.5" onClick={onCollapseToggle}>
+          <BiSolidArrowFromRight
             className={`size-5 transition-transform duration-200 ${
               isCollapsed ? "rotate-180" : ""
-            }`} 
+            }`}
           />
         </Button>
         <Button

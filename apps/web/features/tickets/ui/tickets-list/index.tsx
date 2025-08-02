@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TicketCard } from "./ticket-card";
+import { TicketsSkeleton } from "../tickets-skeleton";
 import type { Ticket } from "@/features/tickets/types";
 
 type TicketsListProps = {
@@ -23,7 +23,7 @@ export function TicketsList({
   isCompact = false,
 }: TicketsListProps) {
   if (isLoading) {
-    return <LoadingState />;
+    return <TicketsSkeleton isCompact={isCompact} />;
   }
 
   if (error) {
@@ -50,15 +50,6 @@ export function TicketsList({
   );
 }
 
-function LoadingState() {
-  return (
-    <div className="space-y-4 p-4">
-      {[...Array(5)].map((_, i) => (
-        <Skeleton key={i} className="h-32 w-full rounded-2xl" />
-      ))}
-    </div>
-  );
-}
 
 function ErrorState({ error }: { error: Error | null }) {
   return (

@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { useState } from "react";
 import { Inter } from "next/font/google";
 import { NavbarSkeleton } from "@/components/navbar-skeleton";
+import { reportWebVitals as reportWebVitalsToAnalytics } from "@/lib/web-vitals";
 
 // Dynamically import Navbar with SSR disabled to avoid router issues during build
 const Navbar = dynamic(
@@ -53,3 +54,5 @@ export default function App({ Component, pageProps }: AppProps) {
     </div>
   );
 }
+
+export { reportWebVitalsToAnalytics as reportWebVitals };

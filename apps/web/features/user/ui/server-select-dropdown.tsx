@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RiExpandUpDownLine } from "react-icons/ri";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useGuildData } from "../hooks/use-guild-data";
 import { cn } from "@/lib/utils";
+import { StableAvatar } from "@/components/stable-avatar";
 
 export function ServerSelectDropdown() {
   const { selectedGuildId, setSelectedGuildId } = useAuth();
@@ -16,8 +16,7 @@ export function ServerSelectDropdown() {
     setIsOpen(false);
   };
 
-  // Calculate current guild from the guilds list
-  const currentGuild = guilds.find(g => g.id === selectedGuildId);
+  const currentGuild = guilds.find((g) => g.id === selectedGuildId);
 
   if (!selectedGuildId || !currentGuild) return null;
 
@@ -28,12 +27,12 @@ export function ServerSelectDropdown() {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <button className="bg-primary-focused ring-ring-primary flex items-center gap-2 rounded-full border-[#1A4B8E] p-1.5 pr-3 ring-1 transition-colors hover:bg-white/20">
-          <Avatar className="size-7">
-            <AvatarImage src={currentGuild.iconUrl || undefined} alt={currentGuild.name} />
-            <AvatarFallback className="bg-gray-600 text-xs font-medium text-white">
-              {currentGuild.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <StableAvatar
+            src={currentGuild.iconUrl}
+            alt={currentGuild.name}
+            size={28}
+            fallbackClassName="bg-gray-600"
+          />
           <span className="max-w-[120px] truncate text-sm font-medium text-white">
             {currentGuild.name}
           </span>
@@ -126,12 +125,12 @@ function ServerItem({ guild, isSelected, onSelect }: ServerItemProps) {
         isSelected ? "bg-gray-100" : "hover:bg-gray-50"
       )}
     >
-      <Avatar className="size-8">
-        <AvatarImage src={guild.iconUrl || undefined} alt={guild.name} />
-        <AvatarFallback className="bg-gray-400 text-xs font-medium text-white">
-          {guild.name.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <StableAvatar
+        src={guild.iconUrl}
+        alt={guild.name}
+        size={32}
+        fallbackClassName="bg-gray-400"
+      />
       <div className="flex-1 overflow-hidden">
         <p className="truncate text-sm font-medium text-gray-900">{guild.name}</p>
       </div>

@@ -15,6 +15,7 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
 import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StableAvatar } from "@/components/stable-avatar";
 
 type NavItem = {
   href: string;
@@ -65,9 +66,9 @@ export function Navbar() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-8">
           <div className="relative h-16 w-[200px]">
-            <Image 
-              src="/logo.svg" 
-              alt="Logo" 
+            <Image
+              src="/logo.svg"
+              alt="Logo"
               fill
               priority
               sizes="200px"
@@ -75,7 +76,7 @@ export function Navbar() {
             />
           </div>
 
-          <div className="flex space-x-6 min-w-[160px]">
+          <div className="flex min-w-[160px] space-x-6">
             {navItems.map((item) => {
               const isVisible = visibleNavItems.includes(item);
               return (
@@ -84,7 +85,7 @@ export function Navbar() {
                   href={item.href}
                   className={cn(
                     "rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                    !isVisible && "opacity-0 pointer-events-none",
+                    !isVisible && "pointer-events-none opacity-0",
                     router.pathname === item.href
                       ? "bg-primary-focused text-white"
                       : "text-muted-text hover:bg-white/10 hover:text-white"
@@ -112,28 +113,18 @@ export function Navbar() {
               <Skeleton className="h-10 w-40 rounded-full bg-white/10" />
             </div>
           ) : session?.user ? (
-            <div className="flex items-center gap-4 animate-fade-in">
+            <div className="animate-fade-in flex items-center gap-4">
               {selectedGuildId && <ServerSelectDropdown />}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="bg-primary-focused ring-ring-primary flex h-10 min-w-[120px] max-w-[200px] items-center rounded-full p-1.5 pr-3 ring-1 transition-colors hover:bg-white/20">
-                    <div className="mb-[1px] size-7 shrink-0 overflow-hidden rounded-full">
-                      {session.user.image ? (
-                        <Image
-                          src={session.user.image}
-                          alt={session.user.name || "User"}
-                          className="size-full object-cover"
-                          width={28}
-                          height={28}
-                        />
-                      ) : (
-                        <div className="flex size-full items-center justify-center bg-orange-500">
-                          <span className="text-xs font-medium text-white">
-                            {((session.user.name || "U")[0] || "U").toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  <button className="bg-primary-focused ring-ring-primary stable-hover flex h-10 min-w-[120px] max-w-[200px] items-center rounded-full p-1.5 pr-3 ring-1 transition-colors hover:bg-white/20">
+                    <StableAvatar
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      size={28}
+                      className="mb-[1px]"
+                      fallbackClassName="bg-orange-500"
+                    />
                     <span className="ml-2 mr-1 max-w-[120px] truncate text-sm tracking-wide text-white">
                       {session.user.name}
                     </span>
@@ -159,7 +150,7 @@ export function Navbar() {
                   callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,
                 });
               }}
-              className="flex h-10 min-w-[160px] items-center justify-center rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30 animate-fade-in"
+              className="animate-fade-in flex h-10 min-w-[160px] items-center justify-center rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30"
             >
               Sign in with Discord
             </button>

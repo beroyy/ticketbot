@@ -9,27 +9,12 @@ import { TicketsList } from "@/features/tickets/ui/tickets-list";
 import { useTicketList } from "@/features/tickets/hooks/use-ticket-list";
 import { TicketsLayout } from "@/features/tickets/ui/tickets-layout";
 
-function TicketsHeader({ isDetailView }: { isDetailView?: boolean }) {
-  if (isDetailView) return null;
-
-  return (
-    <div className="mb-4 border-b pb-4">
-      <h1 className="mb-1 text-2xl font-semibold text-gray-900">Tickets</h1>
-      <p className="text-base text-gray-500">
-        See all the ticket history, status, progress and chat
-      </p>
-    </div>
-  );
-}
-
 export default function TicketsPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
 
-  // Guild context
   const { selectedGuildId } = useAuth();
 
-  // Use the ticket list hook
   const {
     tickets,
     selectedTicket,
@@ -45,7 +30,6 @@ export default function TicketsPage() {
   const { setSearchQuery, setActiveTab, setSelectedTicketId, setCollapsed } = useTicketUIActions();
   const isCollapsed = useTicketCollapsed();
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -67,8 +51,8 @@ export default function TicketsPage() {
       isLeftPanelCollapsed={isCollapsed}
       rightPanel={
         selectedTicket ? (
-          <TicketDetailView 
-            ticket={selectedTicket} 
+          <TicketDetailView
+            ticket={selectedTicket}
             onClose={() => setSelectedTicketId(null)}
             onCollapseToggle={() => setCollapsed(!isCollapsed)}
           />
@@ -76,9 +60,15 @@ export default function TicketsPage() {
       }
       leftPanel={
         <>
-          {/* Left Panel Header */}
           <div className="bg-white pb-6">
-            <TicketsHeader isDetailView={!!selectedTicket} />
+            {!selectedTicket && (
+              <div className="mb-4 border-b pb-4">
+                <h1 className="mb-1 text-2xl font-semibold text-gray-900">Tickets</h1>
+                <p className="text-base text-gray-500">
+                  See all the ticket history, status, progress and chat
+                </p>
+              </div>
+            )}
             <Tabs
               value={activeTab}
               onValueChange={(value) => {
@@ -103,7 +93,6 @@ export default function TicketsPage() {
                 </TabsList>
               </div>
 
-              {/* Search, Filter, Sort */}
               <TicketsControls
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -125,7 +114,6 @@ export default function TicketsPage() {
             </Tabs>
           </div>
 
-          {/* Ticket List Content */}
           <div className="flex-1 overflow-auto">
             <TicketsList
               tickets={tickets}

@@ -83,7 +83,6 @@ export default function Home() {
     <div className="size-full bg-white px-8">
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3">
-          {/* Left Column - Overview */}
           <div className="lg:col-span-2">
             <div className="px-6 pt-4">
               <h2 className="text-strong-blue mb-1.5 text-[22px] font-medium tracking-tight">
@@ -93,9 +92,7 @@ export default function Home() {
                 Monitor your Discord server&apos;s ticket activity and support team performance.
               </p>
 
-              {/* Cards Grid */}
               <div className="grid grid-cols-2 gap-5">
-                {/* Left Column - Tickets created card (spans 2 rows) */}
                 <div className="nice-gray-border row-span-2 rounded-2xl p-4">
                   <div className="mb-6 flex items-center gap-3">
                     <RiTicketLine className="text-bold-blue size-5" />
@@ -104,7 +101,6 @@ export default function Home() {
                     </span>
                   </div>
 
-                  {/* Tabs - full width */}
                   <div className="mb-4 flex overflow-hidden rounded-lg border border-gray-200 bg-white">
                     {(["1D", "1W", "1M", "3M"] as const).map((timeframe) => (
                       <button
@@ -123,10 +119,8 @@ export default function Home() {
                     ))}
                   </div>
 
-                  {/* Count and percentage */}
                   <div className="flex items-center gap-3">
                     <div className="text-3xl font-bold text-gray-900">{currentPeriodTickets}</div>
-
                     {currentPeriodTickets !== 0 && (
                       <div
                         className={`flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium ${
@@ -144,7 +138,6 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Chart inside the card */}
                   <div className="h-64">
                     {currentPeriodTickets === 0 ? (
                       <div className="flex h-[65%] flex-col items-center justify-center text-center">
@@ -264,7 +257,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Right Column Top - Members Count card */}
                 <div className="nice-gray-border flex flex-col justify-between rounded-2xl p-4">
                   <div className="gap-1">
                     <div className="flex items-center justify-between">
@@ -284,7 +276,6 @@ export default function Home() {
                   </Button>
                 </div>
 
-                {/* Right Column Bottom - Active Tickets card */}
                 <div className="nice-gray-border flex flex-col justify-between rounded-2xl p-4">
                   <div className="gap-1">
                     <div className="mb-4 flex items-center gap-2">
@@ -304,7 +295,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column - Member Activity Log */}
           <div className="nice-gray-border flex flex-col rounded-2xl px-4 py-6">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-strong-blue font-medium tracking-tight">Member Activity Log</h2>
@@ -313,7 +303,7 @@ export default function Home() {
               </Button>
             </div>
 
-            <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2">
+            <div className="custom-scrollbar scrollbar-reserve flex-1 space-y-4 overflow-y-auto pr-2">
               {recentActivity && recentActivity.length > 0 ? (
                 recentActivity.map((activity: RecentActivityEntry, index: number) => (
                   <div

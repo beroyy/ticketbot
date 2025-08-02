@@ -19,7 +19,12 @@ export default function Login() {
 
   const handleSignUp = async () => {
     try {
-      setIsRedirecting(true);
+      const button = document.querySelector("[data-signin-button]") as HTMLButtonElement;
+      if (button) {
+        button.disabled = true;
+        button.style.pointerEvents = "none";
+        button.style.opacity = "0.8";
+      }
 
       await authClient.signIn.social({
         provider: "discord",
@@ -27,7 +32,14 @@ export default function Login() {
       });
     } catch (error) {
       console.error("Error signing in:", error);
-      setIsRedirecting(false);
+      setIsRedirecting(true);
+
+      const button = document.querySelector("[data-signin-button]") as HTMLButtonElement;
+      if (button) {
+        button.disabled = false;
+        button.style.pointerEvents = "auto";
+        button.style.opacity = "1";
+      }
     }
   };
 
@@ -70,9 +82,10 @@ export default function Login() {
             </p>
           </div>
           <Button
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-3 font-medium text-white hover:bg-[#4752C4]"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-3 font-medium text-white transition-opacity duration-75 hover:bg-[#4752C4]"
             onClick={handleSignUp}
             disabled={isRedirecting}
+            data-signin-button
           >
             {isRedirecting ? (
               <LoadingSpinner className="h-5 w-5" />

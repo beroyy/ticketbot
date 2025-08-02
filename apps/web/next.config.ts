@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@ticketsbot/core/auth", "@ticketsbot/core"],
+  productionBrowserSourceMaps: false,
   images: {
     remotePatterns: [
       {
@@ -17,6 +18,17 @@ const nextConfig = {
         hostname: "media.giphy.com",
       },
     ],
+    formats: ["image/webp", "image/avif"],
+  },
+  webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
+    if (!dev && !isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "react-dom$": "react-dom/profiling",
+        "scheduler/tracing": "scheduler/tracing-profiling",
+      };
+    }
+    return config;
   },
   eslint: {
     ignoreDuringBuilds: true,

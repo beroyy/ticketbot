@@ -9,6 +9,7 @@ import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
 import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
+import { DashboardSkeleton } from "@/features/dashboard/ui/dashboard-skeleton";
 
 export default function Home() {
   const { selectedGuildId } = useAuth();
@@ -50,11 +51,7 @@ export default function Home() {
   const isPositive = timeframeData?.isPositive ?? true;
 
   if (permissionsLoading || (hasAnalyticsPermission && (isLoading || isActivityLoading))) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Loading dashboard...</div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!hasAnalyticsPermission) {

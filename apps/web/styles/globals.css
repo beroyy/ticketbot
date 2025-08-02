@@ -174,3 +174,59 @@ body {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+
+/* Layout Stabilizers */
+.layout-stable {
+  contain: layout style;
+}
+
+/* Fixed heights for common components */
+.navbar-height {
+  height: 76px;
+}
+
+.dashboard-card-small {
+  height: 197px;
+}
+
+.dashboard-card-large {
+  height: 420px;
+}
+
+/* Minimum heights for content areas */
+.min-h-content {
+  min-height: calc(100vh - 76px); /* viewport - navbar */
+}
+
+/* Aspect ratios for images */
+.logo-aspect {
+  aspect-ratio: 3.125; /* 200/64 */
+}
+
+/* Grid stabilizers */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  min-height: 440px;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 200ms ease-in-out;
+}

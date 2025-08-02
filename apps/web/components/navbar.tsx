@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,14 +14,15 @@ import { MdOutlineArrowDropDown } from "react-icons/md";
 import { useAuth } from "@/features/auth/auth-provider";
 import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
 import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface NavItem {
+type NavItem = {
   href: string;
   label: string;
   permission?: bigint;
   permissions?: bigint[];
   requiresGuild?: boolean;
-}
+};
 
 const navItems: NavItem[] = [
   { href: "/", label: "Home" },
@@ -36,13 +37,8 @@ const navItems: NavItem[] = [
 export function Navbar() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const [isClient, setIsClient] = useState(false);
   const { selectedGuildId } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const visibleNavItems = useMemo(() => {
     return navItems.filter((item) => {
@@ -68,23 +64,38 @@ export function Navbar() {
     <nav className="z-50 bg-[#06234A] px-9 py-3.5 text-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-8">
-          <Image src="/logo.svg" alt="Logo" width={200} height={64} className="aspect-auto" />
+          <div className="relative h-16 w-[200px]">
+            <Image 
+              src="/logo.svg" 
+              alt="Logo" 
+              fill
+              priority
+              sizes="200px"
+              className="object-contain object-left"
+            />
+          </div>
 
-          <div className="flex space-x-6">
-            {visibleNavItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  router.pathname === item.href
-                    ? "bg-primary-focused text-white"
-                    : "text-muted-text hover:bg-white/10 hover:text-white"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <div className="flex space-x-6 min-w-[160px]">
+            {navItems.map((item) => {
+              const isVisible = visibleNavItems.includes(item);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                    !isVisible && "opacity-0 pointer-events-none",
+                    router.pathname === item.href
+                      ? "bg-primary-focused text-white"
+                      : "text-muted-text hover:bg-white/10 hover:text-white"
+                  )}
+                  tabIndex={isVisible ? 0 : -1}
+                  aria-hidden={!isVisible}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             {session?.user && visibleNavItems.length <= 1 && (
               <span className="text-muted-text px-3 py-2 text-sm">
                 {!selectedGuildId
@@ -95,16 +106,18 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          {!isClient || isPending ? (
-            <div className="text-sm">Loading...</div>
+        <div className="flex h-10 min-w-[200px] items-center gap-4">
+          {isPending ? (
+            <div className="flex w-full items-center justify-end gap-4">
+              <Skeleton className="h-10 w-40 rounded-full bg-white/10" />
+            </div>
           ) : session?.user ? (
-            <>
+            <div className="flex items-center gap-4 animate-fade-in">
               {selectedGuildId && <ServerSelectDropdown />}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="bg-primary-focused ring-ring-primary flex items-center rounded-full p-1.5 pr-3 ring-1 transition-colors hover:bg-white/20">
-                    <div className="mb-[1px] size-7 overflow-hidden rounded-full">
+                  <button className="bg-primary-focused ring-ring-primary flex h-10 min-w-[120px] max-w-[200px] items-center rounded-full p-1.5 pr-3 ring-1 transition-colors hover:bg-white/20">
+                    <div className="mb-[1px] size-7 shrink-0 overflow-hidden rounded-full">
                       {session.user.image ? (
                         <Image
                           src={session.user.image}
@@ -121,7 +134,7 @@ export function Navbar() {
                         </div>
                       )}
                     </div>
-                    <span className="ml-2 mr-1 text-sm tracking-wide text-white">
+                    <span className="ml-2 mr-1 max-w-[120px] truncate text-sm tracking-wide text-white">
                       {session.user.name}
                     </span>
                     <MdOutlineArrowDropDown className="mt-[1px] size-5 text-[#CFCFCF]" />
@@ -137,7 +150,7 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
+            </div>
           ) : (
             <button
               onClick={() => {
@@ -146,7 +159,7 @@ export function Navbar() {
                   callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,
                 });
               }}
-              className="rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30"
+              className="flex h-10 min-w-[160px] items-center justify-center rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30 animate-fade-in"
             >
               Sign in with Discord
             </button>

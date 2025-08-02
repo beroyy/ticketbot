@@ -15,14 +15,12 @@ export default function Setup() {
   const router = useRouter();
   const { setSelectedGuildId } = useAuth();
   const [selectedGuildId, setSelectedGuildIdLocal] = useState<string | null>(null);
-
-  // Fetch guild data at page level with polling enabled
   const { guilds, isLoading } = useGuildData({ enablePolling: true });
 
   const handleGuildSelect = (guildId: string) => {
     setSelectedGuildIdLocal(guildId);
     setSelectedGuildId(guildId);
-    // When a guild is selected and setup is complete, navigate to dashboard
+
     const selectedGuild = guilds.find((g) => g.id === guildId);
     if (selectedGuild && !selectedGuild.setupRequired) {
       router.push("/");
@@ -42,16 +40,13 @@ export default function Setup() {
       <Image
         src="/blurred-lp-bg.png"
         alt="blurred-bg"
+        className="absolute inset-0 size-full"
         width={1440}
         height={900}
         priority
         draggable={false}
-        className="absolute inset-0 h-full w-full"
       />
-
       <ServerSetupDialog
-        isOpen={true}
-        onOpenChange={() => {}}
         guilds={guilds}
         isLoading={isLoading}
         selectedGuildId={selectedGuildId}

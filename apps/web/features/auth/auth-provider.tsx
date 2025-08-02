@@ -57,14 +57,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const hasGuildsWithBot = guilds.some((g) => g.connected === true);
 
   useEffect(() => {
-    if (hasInitialized || isSessionLoading) return;
+    if (hasInitialized) return;
 
     if (storedGuildId) {
       setSelectedGuildIdState(storedGuildId);
     }
 
     setHasInitialized(true);
-  }, [hasInitialized, isSessionLoading, storedGuildId]);
+  }, [hasInitialized, storedGuildId]);
 
   useEffect(() => {
     if (!isLoadingPreference) {
@@ -73,9 +73,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     const timeout = setTimeout(() => {
-      console.warn("Preference loading timed out after 5 seconds");
+      console.warn("Preference loading timed out after 2 seconds");
       setPreferenceTimedOut(true);
-    }, 5000);
+    }, 2000);
 
     return () => clearTimeout(timeout);
   }, [isLoadingPreference]);

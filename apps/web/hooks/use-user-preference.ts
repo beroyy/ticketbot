@@ -11,11 +11,10 @@ export function useUserPreference<T = any>(key: string, defaultValue?: T) {
   const { data: session } = authClient.useSession();
   const queryClient = useQueryClient();
 
-  // Query for getting preference
   const { data, isLoading } = useQuery({
     queryKey: ["user", "preference", key],
     queryFn: async (): Promise<T | null> => {
-      if (!session?.user) return null;
+      if (!session?.user) return defaultValue ?? null;
 
       try {
         const res = await api.user.preferences[":key"].$get({
@@ -30,10 +29,10 @@ export function useUserPreference<T = any>(key: string, defaultValue?: T) {
       }
     },
     enabled: !!session?.user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    initialData: !session?.user ? (defaultValue ?? null) : undefined,
   });
 
-  // Mutation for setting preference
   const setMutation = useMutation({
     mutationFn: async (value: T) => {
       const payload: SetPreferenceData = { key, value };
@@ -41,26 +40,23 @@ export function useUserPreference<T = any>(key: string, defaultValue?: T) {
       if (!res.ok) throw new Error("Failed to set preference");
     },
     onSuccess: (_, value) => {
-      // Update the cache immediately
       queryClient.setQueryData(["user", "preference", key], value);
     },
   });
 
-  // Mutation for deleting preference
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const res = await api.user.preferences[":key"].$delete({ param: { key } });
       if (!res.ok) throw new Error("Failed to delete preference");
     },
     onSuccess: () => {
-      // Clear from cache
       queryClient.setQueryData(["user", "preference", key], null);
     },
   });
 
   return {
     value: data ?? defaultValue,
-    isLoading,
+    isLoading: session?.user ? isLoading : false,
     setValue: setMutation.mutate,
     deleteValue: deleteMutation.mutate,
     isSettingValue: setMutation.isPending,

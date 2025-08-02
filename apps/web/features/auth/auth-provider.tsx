@@ -35,7 +35,7 @@ type AuthProviderProps = {
 };
 
 const publicRoutes = ["/login"];
-const authOnlyRoutes = ["/setup"]; // Routes that need auth but not guild selection
+const authOnlyRoutes = ["/setup"];
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();

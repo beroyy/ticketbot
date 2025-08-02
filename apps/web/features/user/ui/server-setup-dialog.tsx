@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
-import {
-  useInitialSetupComplete,
-  useSetupState as useSetupStateStore,
-} from "@/stores/helpers";
+import { useInitialSetupComplete, useSetupState as useSetupStateStore } from "@/stores/helpers";
 import { useSetupState } from "../hooks/use-setup-state";
 import { SetupInvite, SetupRequired, SetupComplete, GuildList } from "./setup-states";
 import { SetupDialogHeader, SetupDialogFooter } from "./setup-dialog-parts";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { DefaultRolePermissions } from "@ticketsbot/core/client";
+import { VisuallyHidden } from "radix-ui";
 
 type Guild = {
   id: string;
@@ -68,13 +66,16 @@ export function ServerSetupDialog({
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
+      <VisuallyHidden.Root>
+        <DialogTitle>Setup Server</DialogTitle>
+      </VisuallyHidden.Root>
       <DialogContent
         showCloseButton={false}
         showOverlay={false}
+        aria-describedby={undefined}
         className="fixed mx-auto w-full max-w-md rounded-3xl border border-none bg-white p-0 shadow-lg md:min-w-fit"
       >
         <SetupDialogHeader state={state} />
-
         <main className="max-h-[400px] space-y-6 overflow-y-auto px-8 py-8">
           {isLoading ? (
             <div className="flex justify-center py-8">
@@ -101,7 +102,6 @@ export function ServerSetupDialog({
             </div>
           )}
         </main>
-
         <SetupDialogFooter
           state={state}
           onInvite={onInviteBot}

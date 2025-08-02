@@ -37,7 +37,7 @@ const publicRoutes = ["/login"];
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
-  const { data: session, isPending: isSessionLoading } = authClient.useSession();
+  const { data: _session, isPending: isSessionLoading } = authClient.useSession();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuthCheck();
   const { guilds, isLoading: isGuildsLoading, refetch: refetchGuilds } = useGuildData();
   const initialSetupComplete = useInitialSetupComplete();
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const [selectedGuildId, setSelectedGuildIdState] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [preferenceTimedOut, setPreferenceTimedOut] = useState(false);
 
   const {
     value: storedGuildId,
@@ -56,19 +57,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const hasGuildsWithBot = guilds.some((g) => g.connected === true);
 
   useEffect(() => {
-    if (hasInitialized || isSessionLoading || isLoadingPreference) return;
+    if (hasInitialized || isSessionLoading) return;
+
     if (storedGuildId) {
       setSelectedGuildIdState(storedGuildId);
     }
+
     setHasInitialized(true);
-  }, [session, isSessionLoading, hasInitialized, storedGuildId, isLoadingPreference]);
+  }, [hasInitialized, isSessionLoading, storedGuildId]);
+
+  useEffect(() => {
+    if (!isLoadingPreference) {
+      setPreferenceTimedOut(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      console.warn("Preference loading timed out after 5 seconds");
+      setPreferenceTimedOut(true);
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoadingPreference]);
 
   const targetRoute = useMemo(() => {
     const isLoadingAny =
       isAuthLoading ||
       isSessionLoading ||
       isGuildsLoading ||
-      isLoadingPreference ||
+      (isLoadingPreference && !preferenceTimedOut) ||
       !hasInitialized;
     if (isLoadingAny) return null;
 
@@ -86,6 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isSessionLoading,
     isGuildsLoading,
     isLoadingPreference,
+    preferenceTimedOut,
     hasInitialized,
     isAuthenticated,
     hasGuilds,
@@ -108,7 +126,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const isLoadingAny =
-    isAuthLoading || isSessionLoading || isGuildsLoading || isLoadingPreference || !hasInitialized;
+    isAuthLoading ||
+    isSessionLoading ||
+    isGuildsLoading ||
+    (isLoadingPreference && !preferenceTimedOut) ||
+    !hasInitialized;
+
+  useEffect(() => {
+    if (isLoadingAny && process.env.NODE_ENV !== "production") {
+      console.log("AuthProvider loading states:", {
+        isAuthLoading,
+        isSessionLoading,
+        isGuildsLoading,
+        isLoadingPreference,
+        preferenceTimedOut,
+        hasInitialized,
+        pathname: router.pathname,
+      });
+    }
+  }, [
+    isLoadingAny,
+    isAuthLoading,
+    isSessionLoading,
+    isGuildsLoading,
+    isLoadingPreference,
+    preferenceTimedOut,
+    hasInitialized,
+    router.pathname,
+  ]);
 
   if (isLoadingAny) {
     return (
@@ -122,6 +167,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const hasFullAccess = isPublicRoute || (isAuthenticated && hasGuilds && selectedGuildId);
 
   if (!hasFullAccess && !isPublicRoute) {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("AuthProvider access denied:", {
+        isPublicRoute,
+        isAuthenticated,
+        hasGuilds,
+        selectedGuildId,
+        pathname: router.pathname,
+      });
+    }
     return (
       <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner />
@@ -138,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: isLoadingAny,
         selectedGuildId,
         setSelectedGuildId,
-        isLoadingGuildSelection: isLoadingPreference || !hasInitialized,
+        isLoadingGuildSelection: (isLoadingPreference && !preferenceTimedOut) || !hasInitialized,
         refetchGuilds: async () => {
           await refetchGuilds();
         },

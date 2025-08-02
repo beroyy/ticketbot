@@ -62,10 +62,12 @@ export default function Login() {
         <div className="flex flex-col items-center space-y-4 text-center">
           <Image src="/shiny-icon.png" alt="shiny-icon" width={70} height={70} className="mr-2" />
           <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-gray-900">
+            <h2 className="text-strong-black text-pretty text-2xl font-semibold tracking-tight">
               Sign in with Discord to get started
             </h2>
-            <p className="text-gray-600">Connect your Discord account to manage support tickets</p>
+            <p className="text-sub-gray text-pretty tracking-tight">
+              Connect your Discord account to manage support tickets
+            </p>
           </div>
           <Button
             className="flex w-full items-center justify-center gap-2 rounded-md bg-[#5865F2] px-4 py-3 font-medium text-white hover:bg-[#4752C4]"

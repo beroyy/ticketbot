@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { useInitialSetupComplete } from "@/shared/stores/helpers";
 import { useSetupState } from "../hooks/use-setup-state";
 import { SetupInvite, SetupRequired, SetupComplete, GuildList } from "./setup-states";
 import { SetupDialogHeader, SetupDialogFooter } from "./setup-dialog-parts";
+import { api } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { DefaultRolePermissions } from "@ticketsbot/core/client";
 
 type Guild = {
   id: string;
@@ -30,11 +34,30 @@ export const ServerSetupDialog = ({
   onInviteBot,
 }: ServerSetupDialogProps) => {
   const state = useSetupState(guilds);
+  const queryClient = useQueryClient();
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleGoToDashboard = () => {
+  const handleGoToDashboard = async () => {
     const configuredGuild = guilds.find((g) => !g.setupRequired && g.connected);
     if (configuredGuild) {
-      onGuildSelect(configuredGuild.id);
+      setIsSyncing(true);
+
+      try {
+        await api.discord.guilds.sync.$post();
+
+        await queryClient.setQueryData(["permissions", "user", configuredGuild.id], {
+          guildId: configuredGuild.id,
+          permissions: DefaultRolePermissions.admin,
+          roles: [],
+        });
+
+        onGuildSelect(configuredGuild.id);
+      } catch (error) {
+        console.error("Failed to sync guilds:", error);
+        onGuildSelect(configuredGuild.id);
+      } finally {
+        setIsSyncing(false);
+      }
     }
     useInitialSetupComplete.setState(false, true);
   };
@@ -79,6 +102,7 @@ export const ServerSetupDialog = ({
           state={state}
           onInvite={onInviteBot}
           onGoToDashboard={handleGoToDashboard}
+          isSyncing={isSyncing}
         />
       </DialogContent>
     </Dialog>

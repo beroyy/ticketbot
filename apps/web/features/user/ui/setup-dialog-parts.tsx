@@ -63,17 +63,33 @@ type SetupDialogFooterProps = {
   state: SetupState;
   onInvite: () => void;
   onGoToDashboard: () => void;
+  isSyncing?: boolean;
 };
 
-export const SetupDialogFooter = ({ state, onInvite, onGoToDashboard }: SetupDialogFooterProps) => (
+export const SetupDialogFooter = ({
+  state,
+  onInvite,
+  onGoToDashboard,
+  isSyncing = false,
+}: SetupDialogFooterProps) => (
   <DialogFooter className="flex flex-col gap-3 rounded-2xl px-7 pb-[30px] sm:flex-row">
     {state.type === "setup-complete" && (
       <Button
         className="bg-dark-faded-blue hover:bg-dark-faded-blue/90 flex flex-1 items-center justify-center gap-2 rounded-xl py-5 text-sm font-medium text-white"
         onClick={onGoToDashboard}
+        disabled={isSyncing}
       >
-        <p>Go to Dashboard</p>
-        <ChevronRight className="size-3.5" strokeWidth={2.5} />
+        {isSyncing ? (
+          <>
+            <Loader className="size-4 animate-spin" />
+            <p>Setting up dashboard...</p>
+          </>
+        ) : (
+          <>
+            <p>Go to Dashboard</p>
+            <ChevronRight className="size-3.5" strokeWidth={2.5} />
+          </>
+        )}
       </Button>
     )}
     {state.type === "setup-required" && (

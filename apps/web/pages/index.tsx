@@ -18,21 +18,17 @@ export default function Home() {
     selectedGuildId || undefined
   );
 
-  // Refresh guild data on initial load to ensure bot status is current
   const { refetch: refetchGuilds } = useGuildData({ refresh: !hasInitialLoad });
 
   useEffect(() => {
     if (!hasInitialLoad && selectedGuildId) {
       setHasInitialLoad(true);
-      // Also trigger a refresh to ensure we have the latest data
       refetchGuilds();
     }
   }, [hasInitialLoad, selectedGuildId, refetchGuilds]);
 
-  // Check if user has analytics permission
   const hasAnalyticsPermission = hasPermission(PermissionFlags.ANALYTICS_VIEW);
 
-  // Only fetch stats if user has permission
   const {
     data: ticketStats,
     isLoading,
@@ -45,7 +41,6 @@ export default function Home() {
     error: activityError,
   } = useRecentActivity(hasAnalyticsPermission ? selectedGuildId : null, 8);
 
-  // Extract data for the selected timeframe
   const timeframeData = (ticketStats as any)?.timeframes?.[selectedTimeframe];
   const chartData = timeframeData?.chartData || [];
   const currentPeriodTickets = timeframeData?.currentPeriod?.totalTickets || 0;
@@ -64,8 +59,8 @@ export default function Home() {
 
   if (!hasAnalyticsPermission) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="max-w-md text-center">
+      <div className="w-2xl mx-auto flex min-h-screen items-center justify-center">
+        <div className="w-full text-center">
           <h2 className="mb-4 text-2xl font-semibold text-gray-900">Limited Access</h2>
           <p className="mb-6 text-gray-600">
             You don't have permission to view analytics for this server. Please contact a server
@@ -153,7 +148,6 @@ export default function Home() {
                   </div>
 
                   {/* Chart inside the card */}
-
                   <div className="h-64">
                     {currentPeriodTickets === 0 ? (
                       <div className="flex h-[65%] flex-col items-center justify-center text-center">

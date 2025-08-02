@@ -472,6 +472,22 @@ The system is production-ready with:
 - ✅ Docker configuration available
 - ✅ Comprehensive testing suite
 
+## 🚀 Deployment Optimizations
+
+### Render.com Build Optimizations
+
+- **Build Filters** - Skip unnecessary builds when only docs/tests change
+  - Reduces build frequency by 30-50%
+  - See [Render Monorepo Docs](https://render.com/docs/monorepo-support)
+- **Turborepo Environment Variables** - Optimize build performance
+  - Disables telemetry for faster builds
+  - Configures consistent cache directory
+  - See [Turborepo Environment Variables](https://turbo.build/repo/docs/crafting-your-repository/using-environment-variables)
+- **Multi-Stage Docker Builds** - Better layer caching
+  - Separates dependency installation from source copying
+  - Reduces rebuild time when only source changes
+  - See [Docker Best Practices for Turborepo](https://turbo.build/repo/docs/guides/tools/docker)
+
 ## 📖 Development
 
 ### Creating Custom Panels

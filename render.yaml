@@ -13,15 +13,53 @@ services:
     numInstances: 1
     dockerCommand: pnpm start:production
 
+    buildFilter:
+      paths:
+        - apps/api/**
+        - apps/bot/**
+        - packages/core/**
+        - packages/scripts/**
+
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - turbo.json
+        - Dockerfile
+        - render.yaml
+        - .nvmrc
+
+      ignoredPaths:
+        - apps/web/**
+
+        - "**/*.md"
+        - docs/**
+
+        - "**/*.test.ts"
+        - "**/*.spec.ts"
+        - "**/tests/**"
+        - "**/__tests__/**"
+
+        - .github/**
+        - packages/eslint-config/**
+        - packages/tsconfig/**
+        - packages/vitest-config/**
+        - .vscode/**
+        - "**/.eslintrc*"
+
     envVars:
       - fromGroup: ticketsbot-env
       - key: NODE_ENV
         value: production
+      - key: TURBO_TELEMETRY_DISABLED
+        value: "1"
+      - key: TURBO_CACHE_DIR
+        value: .turbo
+      - key: TURBO_LOG_ORDER
+        value: stream
 
 envVarGroups:
   - name: ticketsbot-env
     envVars:
-      # Core secrets (fill these in Render dashboard)
       - key: DATABASE_URL
         value: ""
       - key: BETTER_AUTH_SECRET
@@ -32,17 +70,11 @@ envVarGroups:
         value: ""
       - key: DISCORD_CLIENT_SECRET
         value: ""
-
-      # Service URLs (update these with your actual URLs)
       - key: WEB_URL
         value: ""
       - key: API_URL
         value: ""
-
-      # CORS configuration
       - key: ALLOWED_ORIGINS
         value: ""
-
-      # Optional services
       - key: REDIS_URL
         value: ""

@@ -165,6 +165,9 @@ See context system implementation in `packages/core/src/context/` for patterns.
 - **Scripts package**: Centralized development, database, and utility scripts in `@ticketsbot/scripts`
 - **BullMQ job queues**: Redis-backed scheduled tasks for auto-close and future background jobs
 - **Multi-schema validation**: API uses route-specific schemas for type safety
+- **Render.com build filters**: Configured to skip builds for non-production file changes
+- **Turborepo optimization**: Environment variables configured for optimal caching
+- **Multi-stage Docker builds**: Implemented for efficient layer caching and faster deployments
 
 ## Development Workflow
 
@@ -633,6 +636,29 @@ app.get("/tickets", validateRequest(ticketSchemas.list), async (c) => {
   // Type-safe access to validated data
 });
 ```
+
+## Deployment Optimizations
+
+### Render.com Integration
+
+- **Build Filters** (`render.yaml`)
+  - Only triggers builds when production code changes
+  - Ignores: `apps/web/**`, `**/*.md`, `**/*.test.ts`, `.github/**`
+  - Monitors: `apps/api/**`, `apps/bot/**`, `packages/core/**`, config files
+
+- **Turborepo Performance**
+  - `TURBO_TELEMETRY_DISABLED=1` - No external calls during builds
+  - `TURBO_CACHE_DIR=.turbo` - Consistent cache location
+  - `TURBO_LOG_ORDER=stream` - Better build logs in Render dashboard
+
+- **Docker Optimization**
+  - Multi-stage builds separate deps from source
+  - Better caching when only source files change
+  - Maintains zero-downtime deployment capability
+
+See implementation details:
+- [Turborepo Docker Guide](https://turbo.build/repo/docs/guides/tools/docker)
+- [Render Monorepo Support](https://render.com/docs/monorepo-support)
 
 ## For AI Agents
 

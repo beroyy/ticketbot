@@ -38,7 +38,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const publicRoutes = ["/login", "/setup", "/guilds"];
+const publicRoutes = ["/login"];
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();

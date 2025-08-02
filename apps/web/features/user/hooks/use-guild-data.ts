@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { useAuth } from "@/features/auth/auth-provider";
 import { authClient } from "@/lib/auth-client";
 
 interface Guild {
@@ -41,16 +40,36 @@ const guildQueries = {
 
 interface UseGuildDataOptions {
   refresh?: boolean;
+  enablePolling?: boolean;
 }
 
 export function useGuildData(options?: UseGuildDataOptions) {
-  const { refresh = false } = options || {};
-  const { selectedGuildId } = useAuth();
+  const { refresh = false, enablePolling = false } = options || {};
   const { data: session } = authClient.useSession();
 
   const { data: guilds = [], isLoading, error, refetch } = useQuery({
     ...guildQueries.list(refresh),
     enabled: !!session?.user,
+    // Poll every 2 seconds if polling is enabled and either:
+    // 1. No guilds have bot installed (invite state)
+    // 2. Any guild has setup required
+    refetchInterval: (query) => {
+      if (!enablePolling) return false;
+      
+      const guilds = query.state.data || [];
+      
+      // Check if NO guilds have bot installed (invite state)
+      const noBotInstalled = guilds.length === 0 || 
+        guilds.every((guild: Guild) => !guild.botInstalled);
+      
+      // Check if any guild has setupRequired
+      const hasSetupRequired = guilds.some((guild: Guild) => 
+        guild.botInstalled && !guild.botConfigured
+      );
+      
+      // Poll if either condition is true
+      return (noBotInstalled || hasSetupRequired) ? 2000 : false;
+    },
   });
 
   // Transform guilds to include icon URLs and status
@@ -61,9 +80,6 @@ export function useGuildData(options?: UseGuildDataOptions) {
     setupRequired: !guild.botInstalled || (guild.botInstalled && !guild.botConfigured), // Setup required if bot is not installed OR not configured
   }));
 
-  // Find current guild
-  const currentGuild = transformedGuilds.find(g => g.id === selectedGuildId);
-
   // Prefetch guild data on hover
   const prefetchGuild = (_guildId: string) => {
     // In the future, we could prefetch guild-specific data here
@@ -71,7 +87,6 @@ export function useGuildData(options?: UseGuildDataOptions) {
 
   return {
     guilds: transformedGuilds,
-    currentGuild,
     isLoading,
     error,
     refetch,

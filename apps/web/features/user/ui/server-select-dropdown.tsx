@@ -9,12 +9,15 @@ import { cn } from "@/lib/utils";
 export function ServerSelectDropdown() {
   const { selectedGuildId, setSelectedGuildId } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const { guilds, currentGuild } = useGuildData();
+  const { guilds } = useGuildData();
 
   const handleGuildSelect = (guildId: string) => {
     setSelectedGuildId(guildId);
     setIsOpen(false);
   };
+
+  // Calculate current guild from the guilds list
+  const currentGuild = guilds.find(g => g.id === selectedGuildId);
 
   if (!selectedGuildId || !currentGuild) return null;
 

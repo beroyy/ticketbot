@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
 import { SelectServerModal } from "@/features/user/ui/select-server-modal";
+import { Inter_Tight } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const interTight = Inter_Tight({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${process.env.NODE_ENV === "production" ? "1397412199869186090" : "1397414095753318522"}`;
 
@@ -12,13 +16,17 @@ export default function Setup() {
   const { setSelectedGuildId } = useAuth();
   const [selectedGuildId, setSelectedGuildIdLocal] = useState<string | null>(null);
 
-  // Fetch guild data at page level
-  const { guilds, isLoading } = useGuildData();
+  // Fetch guild data at page level with polling enabled
+  const { guilds, isLoading } = useGuildData({ enablePolling: true });
 
   const handleGuildSelect = (guildId: string) => {
     setSelectedGuildIdLocal(guildId);
     setSelectedGuildId(guildId);
-    router.push("/");
+    // When a guild is selected and setup is complete, navigate to dashboard
+    const selectedGuild = guilds.find((g) => g.id === guildId);
+    if (selectedGuild && !selectedGuild.setupRequired) {
+      router.push("/");
+    }
   };
 
   const handleInviteBot = () => {
@@ -26,7 +34,11 @@ export default function Setup() {
   };
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center">
+    <div
+      className={cn(
+        `${interTight.className} relative flex h-screen w-full items-center justify-center`
+      )}
+    >
       <Image
         src="/blurred-lp-bg.png"
         alt="blurred-bg"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTicketUIActions } from "@/features/tickets/stores/tickets-ui-store";
+import { useTicketUIActions, useTicketCollapsed } from "@/features/tickets/stores/tickets-ui-store";
 import { useAuth } from "@/features/auth/auth-provider";
 import { TicketDetailView } from "@/features/tickets/ui/ticket-detail-view";
 import { ActiveFilters } from "@/features/tickets/ui/active-filters";
@@ -42,10 +42,8 @@ export default function TicketsPage() {
     activeTab,
   } = useTicketList(selectedGuildId);
 
-  const { setSearchQuery, setActiveTab, setSelectedTicketId } = useTicketUIActions();
-
-  // TODO: Remove when we add collapsible functionality
-  const isCollapsed = false;
+  const { setSearchQuery, setActiveTab, setSelectedTicketId, setCollapsed } = useTicketUIActions();
+  const isCollapsed = useTicketCollapsed();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -69,7 +67,11 @@ export default function TicketsPage() {
       isLeftPanelCollapsed={isCollapsed}
       rightPanel={
         selectedTicket ? (
-          <TicketDetailView ticket={selectedTicket} onClose={() => setSelectedTicketId(null)} />
+          <TicketDetailView 
+            ticket={selectedTicket} 
+            onClose={() => setSelectedTicketId(null)}
+            onCollapseToggle={() => setCollapsed(!isCollapsed)}
+          />
         ) : undefined
       }
       leftPanel={

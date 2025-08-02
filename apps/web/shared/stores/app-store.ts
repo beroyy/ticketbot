@@ -61,8 +61,6 @@ interface FormSlice {
   clearAllDrafts: () => void;
 }
 
-
-
 // Complete store interface
 interface AppStore
   extends NotificationSlice,
@@ -139,6 +137,7 @@ export const useAppStore = create<AppStore>()(
             return { drafts: rest };
           }),
         clearAllDrafts: () => set({ drafts: {} }),
+
       }),
       {
         name: "app-storage",
@@ -156,6 +155,7 @@ export const useRemoveNotification = () => useAppStore((s) => s.removeNotificati
 export const useModal = () => useAppStore((s) => s.modal);
 export const useModalActions = () =>
   useAppStore((s) => ({ openModal: s.openModal, closeModal: s.closeModal }));
+
 
 export const useDrafts = () => useAppStore((s) => s.drafts);
 export const useCurrentFormId = () => useAppStore((s) => s.currentFormId);

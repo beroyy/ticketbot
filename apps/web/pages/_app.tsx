@@ -22,6 +22,7 @@ const Navbar = dynamic(
 );
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+// const interTight = Inter_Tight({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => createQueryClient());

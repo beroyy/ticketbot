@@ -129,6 +129,7 @@ CLAUDE.local.md
 /transcripts
 /context
 .artifacts
+.bugs
 
 # Playwright
 playwright-report/

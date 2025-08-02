@@ -9,14 +9,16 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { BiSolidArrowFromRight } from "react-icons/bi";
 import { TicketUserInfo } from "./ticket-user-info";
+import { useTicketCollapsed } from "@/features/tickets/stores/tickets-ui-store";
 
 type TicketDetailViewProps = {
   ticket: Ticket;
   onClose: () => void;
+  onCollapseToggle?: () => void;
 };
 
-export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
-  const isCollapsed = false;
+export function TicketDetailView({ ticket, onClose, onCollapseToggle }: TicketDetailViewProps) {
+  const isCollapsed = useTicketCollapsed();
   const { selectedGuildId } = useAuth();
   const smartInterval = useSmartRefetch("critical");
 
@@ -31,8 +33,8 @@ export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
       {!isCollapsed && (
         <div className="z-10 ml-6 h-[150%] -translate-y-1/4 border-l border-gray-200"></div>
       )}
-      <div className="flex h-full flex-col bg-white pb-[74px]">
-        <TicketDetailHeader onClose={onClose} />
+      <div className="flex h-full flex-1 flex-col bg-white pb-[74px] transition-all duration-300 ease-in-out">
+        <TicketDetailHeader onClose={onClose} onCollapseToggle={onCollapseToggle} isCollapsed={isCollapsed} />
 
         <div className="flex flex-1 gap-6 px-6 py-4">
           <div className="nice-gray-border flex flex-1 flex-col rounded-2xl border bg-white">
@@ -62,21 +64,23 @@ export function TicketDetailView({ ticket, onClose }: TicketDetailViewProps) {
 type TicketDetailHeaderProps = {
   onClose: () => void;
   onCollapseToggle?: () => void;
+  isCollapsed?: boolean;
 };
 
-function TicketDetailHeader({ onClose, onCollapseToggle }: TicketDetailHeaderProps) {
+function TicketDetailHeader({ onClose, onCollapseToggle, isCollapsed }: TicketDetailHeaderProps) {
   return (
     <div className="mt-1 bg-white px-6">
       <div className="flex items-center justify-between">
         <Button
           variant="outline"
           className="p-1.5"
-          onClick={() => {
-            onCollapseToggle?.();
-            console.log("Collapse toggle clicked");
-          }}
+          onClick={onCollapseToggle}
         >
-          <BiSolidArrowFromRight className="size-5" />
+          <BiSolidArrowFromRight 
+            className={`size-5 transition-transform duration-200 ${
+              isCollapsed ? "rotate-180" : ""
+            }`} 
+          />
         </Button>
         <Button
           variant="outline"

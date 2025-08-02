@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/router";
 import { authClient } from "@/lib/auth-client";
 import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
+import { useGuildData } from "@/features/user/hooks/use-guild-data";
 import { useUserPreference } from "@/hooks/use-user-preference";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { useInitialSetupComplete } from "@/shared/stores/helpers";
 
 interface AuthContextType {
   // Auth state
@@ -41,7 +43,9 @@ const publicRoutes = ["/login", "/setup", "/guilds"];
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
-  const { isAuthenticated, hasGuilds, hasGuildsWithBot, isLoading: isAuthLoading, refetchGuilds } = useAuthCheck();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuthCheck();
+  const { guilds, isLoading: isGuildsLoading, refetch: refetchGuilds } = useGuildData();
+  const initialSetupComplete = useInitialSetupComplete();
   
   // Guild selection state
   const [selectedGuildId, setSelectedGuildIdState] = useState<string | null>(null);
@@ -53,6 +57,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setValue: saveGuildId,
     isLoading: isLoadingPreference,
   } = useUserPreference<string>("selectedGuildId");
+
+  // Calculate guild states from guild data
+  const hasGuilds = guilds.length > 0;
+  const hasGuildsWithBot = guilds.some(g => g.connected === true);
 
   // Combined initialization effect
   useEffect(() => {
@@ -70,13 +78,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Navigation effect
   useEffect(() => {
     // Wait for all loading to complete
-    const isLoadingAny = isAuthLoading || isSessionLoading || isLoadingPreference || !hasInitialized;
+    const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || isLoadingPreference || !hasInitialized;
     if (isLoadingAny) return;
 
     const currentPath = router.pathname;
 
     // Allow access to public routes
     if (publicRoutes.includes(currentPath)) {
+      return;
+    }
+
+    // If showing setup complete dialog, stay on setup page
+    if (initialSetupComplete && currentPath === "/setup") {
       return;
     }
 
@@ -90,7 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // User has guilds with bot but hasn't selected one
       router.push("/guilds");
     }
-  }, [isAuthenticated, hasGuilds, hasGuildsWithBot, selectedGuildId, isAuthLoading, isSessionLoading, isLoadingPreference, hasInitialized, router]);
+  }, [isAuthenticated, hasGuilds, hasGuildsWithBot, selectedGuildId, isAuthLoading, isSessionLoading, isGuildsLoading, isLoadingPreference, hasInitialized, router, initialSetupComplete]);
 
 
   const setSelectedGuildId = (guildId: string) => {
@@ -99,7 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Show loading state while checking auth or guild selection
-  const isLoadingAny = isAuthLoading || isSessionLoading || isLoadingPreference || !hasInitialized;
+  const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || isLoadingPreference || !hasInitialized;
   
   if (isLoadingAny) {
     return (
@@ -132,7 +145,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         selectedGuildId,
         setSelectedGuildId,
         isLoadingGuildSelection: isLoadingPreference || !hasInitialized,
-        refetchGuilds,
+        refetchGuilds: async () => {
+        await refetchGuilds();
+      },
       }}
     >
       {children}

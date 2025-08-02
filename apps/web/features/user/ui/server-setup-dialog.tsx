@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/loading-spinner";
-import { useInitialSetupComplete } from "@/shared/stores/helpers";
+import {
+  useInitialSetupComplete,
+  useSetupState as useSetupStateStore,
+} from "@/shared/stores/helpers";
 import { useSetupState } from "../hooks/use-setup-state";
 import { SetupInvite, SetupRequired, SetupComplete, GuildList } from "./setup-states";
 import { SetupDialogHeader, SetupDialogFooter } from "./setup-dialog-parts";
@@ -26,13 +29,13 @@ type ServerSetupDialogProps = {
   onInviteBot: () => void;
 };
 
-export const ServerSetupDialog = ({
+export function ServerSetupDialog({
   guilds,
   isLoading,
   selectedGuildId,
   onGuildSelect,
   onInviteBot,
-}: ServerSetupDialogProps) => {
+}: ServerSetupDialogProps) {
   const state = useSetupState(guilds);
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
@@ -60,6 +63,7 @@ export const ServerSetupDialog = ({
       }
     }
     useInitialSetupComplete.setState(false, true);
+    useSetupStateStore.setState("ready");
   };
 
   return (
@@ -107,4 +111,4 @@ export const ServerSetupDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+}

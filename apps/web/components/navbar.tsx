@@ -19,7 +19,7 @@ interface NavItem {
   href: string;
   label: string;
   permission?: bigint;
-  permissions?: bigint[]; // For checking multiple permissions (OR condition)
+  permissions?: bigint[];
   requiresGuild?: boolean;
 }
 
@@ -44,21 +44,16 @@ export function Navbar() {
     setIsClient(true);
   }, []);
 
-  // Filter nav items based on permissions
   const visibleNavItems = useMemo(() => {
     return navItems.filter((item) => {
-      // Always show items that don't require permissions
       if (!item.permission && !item.permissions) return true;
 
-      // If item requires a guild but none is selected, hide it
       if (item.requiresGuild && !selectedGuildId) return false;
 
-      // Check single permission
       if (item.permission) {
         return hasPermission(item.permission);
       }
 
-      // Check multiple permissions (OR condition - user needs at least one)
       if (item.permissions) {
         return hasAnyPermission(...item.permissions);
       }
@@ -67,8 +62,7 @@ export function Navbar() {
     });
   }, [selectedGuildId, hasPermission, hasAnyPermission]);
 
-  // Hide navbar on auth/setup pages
-  if (["/setup", "/login", "/guilds"].includes(router.pathname)) return null;
+  if (["/setup", "/login"].includes(router.pathname)) return null;
 
   return (
     <nav className="z-50 bg-[#06234A] px-9 py-3.5 text-white">

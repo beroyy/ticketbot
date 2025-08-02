@@ -1,18 +1,17 @@
 import Image from "next/image";
-import { useRouter } from "next/router";
 import { useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
 import { ServerSetupDialog } from "@/features/user/ui/server-setup-dialog";
 import { Inter_Tight } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { useSetupState } from "@/shared/stores/helpers";
 
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${process.env.NODE_ENV === "production" ? "1397412199869186090" : "1397414095753318522"}`;
 
 export default function Setup() {
-  const router = useRouter();
   const { setSelectedGuildId } = useAuth();
   const [selectedGuildId, setSelectedGuildIdLocal] = useState<string | null>(null);
   const { guilds, isLoading } = useGuildData({ enablePolling: true });
@@ -23,7 +22,9 @@ export default function Setup() {
 
     const selectedGuild = guilds.find((g) => g.id === guildId);
     if (selectedGuild && !selectedGuild.setupRequired) {
-      router.push("/");
+      useSetupState.setState("complete");
+    } else if (selectedGuild?.setupRequired) {
+      useSetupState.setState("configuring");
     }
   };
 

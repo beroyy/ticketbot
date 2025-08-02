@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/router";
 import { authClient } from "@/lib/auth-client";
@@ -75,35 +75,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setHasInitialized(true);
   }, [session, isSessionLoading, hasInitialized, storedGuildId, isLoadingPreference]);
 
-  // Navigation effect
-  useEffect(() => {
-    // Wait for all loading to complete
+  // Calculate target route declaratively
+  const targetRoute = useMemo(() => {
+    // Skip calculation while loading
     const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || isLoadingPreference || !hasInitialized;
-    if (isLoadingAny) return;
+    if (isLoadingAny) return null;
 
-    const currentPath = router.pathname;
+    // Allow public routes
+    if (publicRoutes.includes(router.pathname)) return null;
 
-    // Allow access to public routes
-    if (publicRoutes.includes(currentPath)) {
-      return;
+    // Stay on setup page if showing completion dialog
+    if (initialSetupComplete && router.pathname === "/setup") return null;
+
+    // Determine required route based on auth state
+    if (!isAuthenticated) return '/login';
+    if (!hasGuilds || !hasGuildsWithBot) return '/setup';
+    if (!selectedGuildId) return '/guilds';
+    
+    return null; // No redirect needed
+  }, [isAuthLoading, isSessionLoading, isGuildsLoading, isLoadingPreference, hasInitialized, isAuthenticated, hasGuilds, hasGuildsWithBot, selectedGuildId, router.pathname, initialSetupComplete]);
+
+  // Simple navigation effect with minimal dependencies
+  useEffect(() => {
+    if (targetRoute && router.pathname !== targetRoute) {
+      router.replace(targetRoute);
     }
-
-    // If showing setup complete dialog, stay on setup page
-    if (initialSetupComplete && currentPath === "/setup") {
-      return;
-    }
-
-    // Redirect based on auth state
-    if (!isAuthenticated) {
-      router.push("/login");
-    } else if (!hasGuilds || !hasGuildsWithBot) {
-      // No guilds at all, or has guilds but bot not installed in any
-      router.push("/setup");
-    } else if (!selectedGuildId) {
-      // User has guilds with bot but hasn't selected one
-      router.push("/guilds");
-    }
-  }, [isAuthenticated, hasGuilds, hasGuildsWithBot, selectedGuildId, isAuthLoading, isSessionLoading, isGuildsLoading, isLoadingPreference, hasInitialized, router, initialSetupComplete]);
+  }, [targetRoute, router.pathname]);
 
 
   const setSelectedGuildId = (guildId: string) => {

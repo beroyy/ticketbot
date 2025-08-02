@@ -12,7 +12,7 @@ export default function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     if (session?.user) {
-      router.push("/");
+      router.replace("/");
     }
   }, [session, router]);
 

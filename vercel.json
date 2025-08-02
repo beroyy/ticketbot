@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- apps/web packages/core",
   "framework": "nextjs",
   "buildCommand": "pnpm turbo build --filter=@ticketsbot/web",
   "installCommand": "pnpm install --frozen-lockfile",

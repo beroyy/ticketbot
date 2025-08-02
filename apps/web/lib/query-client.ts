@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { notify } from "@/shared/stores/app-store";
+import { notify } from "@/stores/global";
 
 /**
  * Custom error handler that extracts meaningful error messages

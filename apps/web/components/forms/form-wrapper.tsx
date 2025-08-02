@@ -3,7 +3,7 @@ import { type UseFormReturn, useForm, type FieldValues, type DefaultValues } fro
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form } from "@/components/ui/form";
-import { useFormDraft, useFormActions } from "@/shared/stores/app-store";
+import { useFormDraft, useFormActions } from "@/stores/global";
 import { toast } from "sonner";
 import { formatZodError } from "@/lib/zod-config";
 
@@ -11,10 +11,10 @@ interface FormWrapperProps<TFieldValues extends FieldValues = FieldValues> {
   schema: z.ZodSchema<TFieldValues>;
   defaultValues?: DefaultValues<TFieldValues>;
   onSubmit: (data: TFieldValues) => Promise<void>;
-  formId?: string; // For draft persistence
+  formId?: string;
   children: (form: UseFormReturn<TFieldValues>) => ReactNode;
   className?: string;
-  onValidationError?: (errors: any) => void; // Optional error handler
+  onValidationError?: (errors: any) => void;
 }
 
 /**

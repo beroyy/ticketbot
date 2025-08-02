@@ -4,9 +4,10 @@ import { useRouter } from "next/router";
 import { authClient } from "@/lib/auth-client";
 import { useAuthCheck } from "@/features/user/hooks/use-auth-check";
 import { useGuildData } from "@/features/user/hooks/use-guild-data";
-import { useUserPreference } from "@/hooks/use-user-preference";
 import { LoadingSpinner } from "@/components/loading-spinner";
-import { useInitialSetupComplete, useSetupState } from "@/shared/stores/helpers";
+import { useInitialSetupComplete, useSetupState } from "@/stores/helpers";
+import { useGlobalStore } from "@/stores/global";
+import { useHydratedStore } from "@/hooks/use-hydrated-store";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -43,15 +44,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const initialSetupComplete = useInitialSetupComplete();
   const setupState = useSetupState();
 
-  const [selectedGuildId, setSelectedGuildIdState] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const [preferenceTimedOut, setPreferenceTimedOut] = useState(false);
 
-  const {
-    value: storedGuildId,
-    setValue: saveGuildId,
-    isLoading: isLoadingPreference,
-  } = useUserPreference<string>("selectedGuildId");
+  const selectedGuildId = useHydratedStore(useGlobalStore, (state) => state.selectedGuildId);
+  const setSelectedGuildIdGlobal = useGlobalStore((state) => state.setSelectedGuildId);
 
   const hasGuilds = guilds.length > 0;
   const hasGuildsWithBot = guilds.some((g) => g.connected === true);
@@ -59,34 +55,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (hasInitialized) return;
 
-    if (storedGuildId) {
-      setSelectedGuildIdState(storedGuildId);
-    }
-
     setHasInitialized(true);
-  }, [hasInitialized, storedGuildId]);
-
-  useEffect(() => {
-    if (!isLoadingPreference) {
-      setPreferenceTimedOut(false);
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      console.warn("Preference loading timed out after 2 seconds");
-      setPreferenceTimedOut(true);
-    }, 2000);
-
-    return () => clearTimeout(timeout);
-  }, [isLoadingPreference]);
+  }, [hasInitialized]);
 
   const targetRoute = useMemo(() => {
     const isLoadingAny =
       isAuthLoading ||
       isSessionLoading ||
       isGuildsLoading ||
-      (isLoadingPreference && !preferenceTimedOut) ||
-      !hasInitialized;
+      !hasInitialized ||
+      selectedGuildId === undefined;
     if (isLoadingAny) return null;
 
     if (publicRoutes.includes(router.pathname)) return null;
@@ -102,8 +80,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthLoading,
     isSessionLoading,
     isGuildsLoading,
-    isLoadingPreference,
-    preferenceTimedOut,
     hasInitialized,
     isAuthenticated,
     hasGuilds,
@@ -121,16 +97,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [targetRoute, router.pathname]);
 
   const setSelectedGuildId = (guildId: string) => {
-    setSelectedGuildIdState(guildId);
-    saveGuildId(guildId);
+    setSelectedGuildIdGlobal(guildId);
   };
 
   const isLoadingAny =
     isAuthLoading ||
     isSessionLoading ||
     isGuildsLoading ||
-    (isLoadingPreference && !preferenceTimedOut) ||
-    !hasInitialized;
+    !hasInitialized ||
+    selectedGuildId === undefined;
 
   useEffect(() => {
     if (isLoadingAny && process.env.NODE_ENV !== "production") {
@@ -138,9 +113,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthLoading,
         isSessionLoading,
         isGuildsLoading,
-        isLoadingPreference,
-        preferenceTimedOut,
         hasInitialized,
+        selectedGuildId,
         pathname: router.pathname,
       });
     }
@@ -149,9 +123,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthLoading,
     isSessionLoading,
     isGuildsLoading,
-    isLoadingPreference,
-    preferenceTimedOut,
     hasInitialized,
+    selectedGuildId,
     router.pathname,
   ]);
 
@@ -192,7 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading: isLoadingAny,
         selectedGuildId,
         setSelectedGuildId,
-        isLoadingGuildSelection: (isLoadingPreference && !preferenceTimedOut) || !hasInitialized,
+        isLoadingGuildSelection: !hasInitialized || selectedGuildId === undefined,
         refetchGuilds: async () => {
           await refetchGuilds();
         },

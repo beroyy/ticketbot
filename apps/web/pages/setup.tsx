@@ -5,7 +5,7 @@ import { useGuildData } from "@/features/user/hooks/use-guild-data";
 import { ServerSetupDialog } from "@/features/user/ui/server-setup-dialog";
 import { Inter_Tight } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { useSetupState } from "@/shared/stores/helpers";
+import { useSetupState } from "@/stores/helpers";
 
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 

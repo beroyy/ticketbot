@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from "react";
-import { useInitialSetupComplete } from "@/shared/stores/helpers";
+import { useInitialSetupComplete } from "@/stores/helpers";
 
 type Guild = {
   id: string;

@@ -4,7 +4,7 @@ import { LoadingSpinner } from "@/components/loading-spinner";
 import {
   useInitialSetupComplete,
   useSetupState as useSetupStateStore,
-} from "@/shared/stores/helpers";
+} from "@/stores/helpers";
 import { useSetupState } from "../hooks/use-setup-state";
 import { SetupInvite, SetupRequired, SetupComplete, GuildList } from "./setup-states";
 import { SetupDialogHeader, SetupDialogFooter } from "./setup-dialog-parts";

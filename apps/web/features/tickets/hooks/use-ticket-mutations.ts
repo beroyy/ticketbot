@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { notify } from "@/shared/stores/app-store";
+import { notify } from "@/stores/global";
 import { ticketKeys } from "@/features/tickets/queries/query-keys";
 import type { Ticket } from "@/features/tickets/types";
 

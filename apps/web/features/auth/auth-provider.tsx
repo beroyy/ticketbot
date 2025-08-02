@@ -35,6 +35,7 @@ type AuthProviderProps = {
 };
 
 const publicRoutes = ["/login"];
+const authOnlyRoutes = ["/setup"]; // Routes that need auth but not guild selection
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
@@ -59,15 +60,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [hasInitialized]);
 
   const targetRoute = useMemo(() => {
-    const isLoadingAny =
-      isAuthLoading ||
-      isSessionLoading ||
-      isGuildsLoading ||
-      !hasInitialized ||
-      selectedGuildId === undefined;
+    const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || !hasInitialized;
     if (isLoadingAny) return null;
 
     if (publicRoutes.includes(router.pathname)) return null;
+    if (authOnlyRoutes.includes(router.pathname)) return null;
     if (initialSetupComplete && router.pathname === "/setup") return null;
     if (router.pathname === "/setup" && setupState === "ready") {
       useSetupState.setState("selecting");
@@ -100,12 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSelectedGuildIdGlobal(guildId);
   };
 
-  const isLoadingAny =
-    isAuthLoading ||
-    isSessionLoading ||
-    isGuildsLoading ||
-    !hasInitialized ||
-    selectedGuildId === undefined;
+  const isLoadingAny = isAuthLoading || isSessionLoading || isGuildsLoading || !hasInitialized;
 
   useEffect(() => {
     if (isLoadingAny && process.env.NODE_ENV !== "production") {
@@ -137,9 +129,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const isPublicRoute = publicRoutes.includes(router.pathname);
-  const hasFullAccess = isPublicRoute || (isAuthenticated && hasGuilds && selectedGuildId);
+  const isAuthOnlyRoute = authOnlyRoutes.includes(router.pathname);
+  const needsGuild = !isPublicRoute && !isAuthOnlyRoute;
 
-  if (!hasFullAccess && !isPublicRoute) {
+  const hasAccess =
+    isPublicRoute ||
+    (isAuthenticated && isAuthOnlyRoute) ||
+    (isAuthenticated && hasGuilds && selectedGuildId && needsGuild);
+
+  if (!hasAccess) {
     if (process.env.NODE_ENV !== "production") {
       console.log("AuthProvider access denied:", {
         isPublicRoute,
@@ -163,9 +161,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         hasGuilds,
         hasGuildsWithBot,
         isLoading: isLoadingAny,
-        selectedGuildId,
+        selectedGuildId: selectedGuildId ?? null,
         setSelectedGuildId,
-        isLoadingGuildSelection: !hasInitialized || selectedGuildId === undefined,
+        isLoadingGuildSelection: !hasInitialized,
         refetchGuilds: async () => {
           await refetchGuilds();
         },

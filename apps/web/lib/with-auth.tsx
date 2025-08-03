@@ -24,7 +24,7 @@ export function withPublicRoute(): GetServerSideProps<BaseAuthProps> {
       const selectedGuildId = getSelectedGuildFromCookie(cookies);
       
       // Redirect to appropriate page
-      const destination = selectedGuildId ? "/" : "/setup";
+      const destination = selectedGuildId ? "/dashboard" : "/setup";
       
       return {
         redirect: {
@@ -70,7 +70,7 @@ export function withAuthRoute<P extends Record<string, any> = Record<string, any
     if (authState === "authenticated") {
       return {
         redirect: {
-          destination: "/",
+          destination: "/dashboard",
           permanent: false,
         },
       };

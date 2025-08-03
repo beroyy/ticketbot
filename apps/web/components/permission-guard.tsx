@@ -30,7 +30,7 @@ export function PermissionGuard({
         <p className="mb-6 text-gray-600">Please select a server to access this feature.</p>
         <button
           onClick={() => {
-            void router.push("/");
+            void router.push("/dashboard");
           }}
           className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
@@ -74,7 +74,7 @@ export function PermissionGuard({
         </p>
         <button
           onClick={() => {
-            void router.push("/");
+            void router.push("/dashboard");
           }}
           className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >

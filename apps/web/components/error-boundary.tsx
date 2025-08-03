@@ -113,7 +113,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               )}
 
               <Button
-                onClick={() => (window.location.href = "/")}
+                onClick={() => (window.location.href = "/dashboard")}
                 variant="outline"
                 className="w-full gap-2"
               >

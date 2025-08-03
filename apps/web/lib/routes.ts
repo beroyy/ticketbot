@@ -3,6 +3,6 @@
 export const routeConfig = {
   public: ["/login", "/api", "/_next", "/favicon.ico"],
   authOnly: ["/setup", "/setup-v2", "/user/settings"],
-  requiresGuild: ["/tickets"],
+  requiresGuild: ["/tickets", "/dashboard"],
   home: "/",
 } as const;

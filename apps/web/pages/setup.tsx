@@ -53,7 +53,7 @@ export default function SetupPageV2({ guilds }: PageProps) {
       document.cookie = `ticketsbot-selected-guild=${guildId}; path=/; max-age=604800`;
 
       setTimeout(() => {
-        router.push("/");
+        router.push("/dashboard");
       }, 500);
     }
   };
@@ -67,7 +67,7 @@ export default function SetupPageV2({ guilds }: PageProps) {
       document.cookie = `ticketsbot-selected-guild=${selectedGuild}; path=/; max-age=604800`;
 
       setTimeout(() => {
-        router.push("/");
+        router.push("/dashboard");
       }, 500);
     }
   };

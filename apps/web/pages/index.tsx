@@ -1,44 +1,85 @@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { useAuth } from "@/features/auth/auth-provider";
 import { useTicketStats } from "@/features/tickets/hooks/use-ticket-stats";
 import { useRecentActivity } from "@/features/tickets/hooks/use-recent-activity";
 import type { RecentActivityEntry } from "@/features/tickets/queries/activity-queries";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { RiTicketLine, RiUser3Line } from "react-icons/ri";
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGuildData } from "@/features/user/hooks/use-guild-data";
-import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
-import { DashboardSkeleton } from "@/features/dashboard/ui/dashboard-skeleton";
+import { withGuildRoute } from "@/lib/with-auth";
+import { createServerApiClient } from "@/lib/api-server";
+import type { InferGetServerSidePropsType } from "next";
+import { User } from "@ticketsbot/core/domains";
+import { PermissionFlags } from "@ticketsbot/core";
 
-export default function Home() {
-  const { selectedGuildId } = useAuth();
-  const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
-  const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  const { hasPermission, isLoading: permissionsLoading } = usePermissions(
-    selectedGuildId || undefined
-  );
+export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
+  const api = createServerApiClient(context.req);
+  let hasAnalyticsPermission = false;
+  let initialTicketStats: any = null;
+  let initialRecentActivity: any[] = [];
 
-  const { refetch: refetchGuilds } = useGuildData({ refresh: !hasInitialLoad });
-
-  useEffect(() => {
-    if (!hasInitialLoad && selectedGuildId) {
-      setHasInitialLoad(true);
-      refetchGuilds();
+  try {
+    // Check permissions first
+    if (session.user.discordUserId) {
+      const permissions = await User.getPermissions(guildId, session.user.discordUserId);
+      hasAnalyticsPermission = (permissions & PermissionFlags.ANALYTICS_VIEW) === PermissionFlags.ANALYTICS_VIEW;
     }
-  }, [hasInitialLoad, selectedGuildId, refetchGuilds]);
 
-  const hasAnalyticsPermission = hasPermission(PermissionFlags.ANALYTICS_VIEW);
+    if (hasAnalyticsPermission) {
+      // Fetch ticket stats
+      const statsResponse = await api.tickets.statistics[":guildId"].$get({
+        param: { guildId }
+      });
+      
+      if (statsResponse.ok) {
+        initialTicketStats = await statsResponse.json();
+      }
+
+      // Fetch recent activity - using ticket list endpoint for now
+      const ticketsResponse = await api.tickets.$get({
+        query: { guildId, page: "1", pageSize: "8", status: "all" }
+      });
+      
+      if (ticketsResponse.ok) {
+        const tickets = await ticketsResponse.json() as any[];
+        // Transform tickets into activity format
+        initialRecentActivity = (tickets || []).slice(0, 8).map((ticket: any) => ({
+          id: ticket.id,
+          event: `Ticket #${ticket.id} - ${ticket.status}`,
+          timestamp: new Date(ticket.createdAt).toLocaleString(),
+        }));
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch dashboard data:", error);
+  }
+
+  return {
+    props: {
+      hasAnalyticsPermission,
+      initialTicketStats,
+      initialRecentActivity,
+    },
+  };
+});
+
+type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
+
+export default function Home({ 
+  selectedGuildId, 
+  hasAnalyticsPermission,
+  initialTicketStats,
+  initialRecentActivity 
+}: PageProps) {
+  const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
 
   const {
-    data: ticketStats,
-    isLoading,
+    data: ticketStats = initialTicketStats,
     error,
   } = useTicketStats(hasAnalyticsPermission ? selectedGuildId : null);
 
   const {
-    data: recentActivity,
-    isLoading: isActivityLoading,
+    data: recentActivity = initialRecentActivity,
     error: activityError,
   } = useRecentActivity(hasAnalyticsPermission ? selectedGuildId : null, 8);
 
@@ -49,10 +90,6 @@ export default function Home() {
     (ticketStats as any)?.totals?.activeTickets || ticketStats?.openTickets || 0;
   const percentageChange = timeframeData?.percentageChange || 0;
   const isPositive = timeframeData?.isPositive ?? true;
-
-  if (permissionsLoading || (hasAnalyticsPermission && (isLoading || isActivityLoading))) {
-    return <DashboardSkeleton />;
-  }
 
   if (!hasAnalyticsPermission) {
     return (

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useRouter } from "next/router";
-import { useAuth } from "@/features/auth/auth-provider";
+import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { usePermissions } from "@/features/permissions/hooks/use-permissions";
 
 interface PermissionGuardProps {

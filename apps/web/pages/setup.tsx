@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { Inter_Tight } from "next/font/google";
-import { useAuth } from "@/features/auth/auth-provider";
-import { useGuildData } from "@/features/user/hooks/use-guild-data";
+import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { cn } from "@/lib/utils";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, ExternalLink, Settings } from "lucide-react";
+import { withAuthRoute } from "@/lib/with-auth";
+import { fetchUserGuilds } from "@/lib/api-server";
+import type { InferGetServerSidePropsType } from "next";
 
 const interTight = Inter_Tight({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
@@ -18,17 +20,22 @@ const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${
 
 type SetupStep = "select-guild" | "configure-guild" | "complete";
 
-export default function SetupPageV2() {
+export const getServerSideProps = withAuthRoute(async (context, _session) => {
+  const guilds = await fetchUserGuilds(context.req);
+  return {
+    props: {
+      guilds,
+    },
+  };
+});
+
+type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
+
+export default function SetupPageV2({ guilds }: PageProps) {
   const router = useRouter();
-  const { setSelectedGuildId, authState } = useAuth();
-  const { guilds, isLoading: guildsLoading } = useGuildData({ enablePolling: true });
+  const { setSelectedGuildId } = useAuth();
   const [currentStep, setCurrentStep] = useState<SetupStep>("select-guild");
   const [selectedGuild, setSelectedGuild] = useState<string | null>(null);
-
-  if (authState === "authenticated") {
-    router.replace("/dashboard");
-    return null;
-  }
 
   const handleGuildSelect = async (guildId: string) => {
     const guild = guilds.find((g) => g.id === guildId);
@@ -41,9 +48,12 @@ export default function SetupPageV2() {
     } else {
       setSelectedGuildId(guildId);
       setCurrentStep("complete");
+      
+      // Set cookie for server-side auth
+      document.cookie = `ticketsbot-selected-guild=${guildId}; path=/; max-age=604800`;
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/");
       }, 500);
     }
   };
@@ -52,9 +62,12 @@ export default function SetupPageV2() {
     if (selectedGuild) {
       setSelectedGuildId(selectedGuild);
       setCurrentStep("complete");
+      
+      // Set cookie for server-side auth
+      document.cookie = `ticketsbot-selected-guild=${selectedGuild}; path=/; max-age=604800`;
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/");
       }, 500);
     }
   };
@@ -62,14 +75,6 @@ export default function SetupPageV2() {
   const handleInviteBot = () => {
     window.open(discordInviteUrl, "_blank");
   };
-
-  if (guildsLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   const connectedGuilds = guilds.filter((g) => g.connected);
   const ownedGuilds = guilds.filter((g) => g.owner);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { useAuth } from "@/features/auth/auth-provider";
+import { useAuth } from "@/features/auth/auth-provider-ssr";
 import type { ActivityLogEntry } from "@/features/tickets/types";
 
 export function useActivityLog(ticketId: string) {

@@ -3,7 +3,7 @@ import type { Ticket } from "@/features/tickets/types";
 import { useTicketMessages } from "@/features/tickets/hooks";
 import { Transcripts } from "@/features/tickets/ui/transcripts";
 import { useSmartRefetch } from "@/hooks/use-smart-refetch";
-import { useAuth } from "@/features/auth/auth-provider";
+import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { ActivityLog } from "./activity-log";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";

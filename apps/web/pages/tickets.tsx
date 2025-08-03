@@ -1,19 +1,56 @@
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTicketUIActions, useTicketCollapsed } from "@/features/tickets/stores/tickets-ui-store";
-import { useAuth } from "@/features/auth/auth-provider";
 import { TicketDetailView } from "@/features/tickets/ui/ticket-detail-view";
 import { ActiveFilters } from "@/features/tickets/ui/active-filters";
 import { TicketsControls } from "@/features/tickets/ui/tickets-controls";
 import { TicketsList } from "@/features/tickets/ui/tickets-list";
 import { useTicketList } from "@/features/tickets/hooks/use-ticket-list";
 import { TicketsLayout } from "@/features/tickets/ui/tickets-layout";
+import { withGuildRoute } from "@/lib/with-auth";
+import { createServerApiClient } from "@/lib/api-server";
+import type { InferGetServerSidePropsType } from "next";
 
-export default function TicketsPage() {
+export const getServerSideProps = withGuildRoute(async (context, _session, guildId, _guilds) => {
+  const api = createServerApiClient(context.req);
+  
+  try {
+    // Fetch initial tickets data
+    const response = await api.tickets.$get({
+      query: { 
+        guildId,
+        status: "active",
+        page: "1",
+        pageSize: "50"
+      }
+    });
+    
+    if (response.ok) {
+      const tickets = await response.json() as any[];
+      return {
+        props: {
+          initialTickets: tickets || [],
+          totalCount: tickets?.length || 0,
+        },
+      };
+    }
+  } catch (error) {
+    console.error("Failed to fetch initial tickets:", error);
+  }
+  
+  return {
+    props: {
+      initialTickets: [],
+      totalCount: 0,
+    },
+  };
+});
+
+type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
+
+export default function TicketsPage({ selectedGuildId }: PageProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-
-  const { selectedGuildId } = useAuth();
 
   const {
     tickets,
@@ -25,7 +62,7 @@ export default function TicketsPage() {
     searchQuery,
     selectedTicketId,
     activeTab,
-  } = useTicketList(selectedGuildId);
+  } = useTicketList(selectedGuildId!);
 
   const { setSearchQuery, setActiveTab, setSelectedTicketId, setCollapsed } = useTicketUIActions();
   const isCollapsed = useTicketCollapsed();

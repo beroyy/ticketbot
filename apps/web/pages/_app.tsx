@@ -5,9 +5,8 @@ import dynamic from "next/dynamic";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query-client";
 import { UserProvider } from "@/features/user/ui/user-provider";
-// Using v2 auth provider for testing - switch back to original if issues
-import { AuthProvider } from "@/features/auth/auth-provider";
-// import { AuthProvider } from "@/features/auth/auth-provider";
+// Using SSR auth provider
+import { AuthProvider } from "@/features/auth/auth-provider-ssr";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthErrorBoundary } from "@/components/auth-error-boundary";
@@ -53,6 +52,9 @@ export default function App({ Component, pageProps }: AppProps) {
       startPerformanceMonitoring();
     }
   }, []);
+  
+  // Extract auth props from pageProps
+  const { session, authState, selectedGuildId, guilds, ...restProps } = pageProps;
 
   return (
     <div className={`${inter.className} antialiased`}>
@@ -60,9 +62,14 @@ export default function App({ Component, pageProps }: AppProps) {
         <QueryClientProvider client={queryClient}>
           <UserProvider>
             <AuthErrorBoundary>
-              <AuthProvider>
+              <AuthProvider
+                initialSession={session}
+                initialAuthState={authState}
+                initialGuildId={selectedGuildId}
+                initialGuilds={guilds}
+              >
                 <Navbar />
-                <Component {...pageProps} />
+                <Component {...restProps} />
                 <Toaster />
               </AuthProvider>
             </AuthErrorBoundary>

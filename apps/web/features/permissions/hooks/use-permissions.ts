@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { PermissionUtils } from "@ticketsbot/core/client";
-import { useAuth } from "@/features/auth/auth-provider";
+import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { permissionQueries } from "../queries";
 
 interface UsePermissionsReturn {

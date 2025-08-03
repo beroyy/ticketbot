@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RiExpandUpDownLine } from "react-icons/ri";
-import { useAuth } from "@/features/auth/auth-provider";
+import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { useGuildData } from "../hooks/use-guild-data";
 import { cn } from "@/lib/utils";
 import { StableAvatar } from "@/components/stable-avatar";

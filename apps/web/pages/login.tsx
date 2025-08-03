@@ -1,63 +1,32 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaDiscord } from "react-icons/fa6";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { withPublicRoute } from "@/lib/with-auth";
+import type { InferGetServerSidePropsType } from "next";
 
-export default function Login() {
-  const router = useRouter();
-  const { data: session, isPending: isSessionLoading } = authClient.useSession();
+export const getServerSideProps = withPublicRoute();
+
+type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
+
+export default function Login(_props: PageProps) {
   const [isRedirecting, setIsRedirecting] = useState(false);
-
-  useEffect(() => {
-    if (session?.user && !isRedirecting && !isSessionLoading) {
-      router.replace("/");
-    }
-  }, [session, router, isRedirecting, isSessionLoading]);
 
   const handleSignUp = async () => {
     try {
-      const button = document.querySelector("[data-signin-button]") as HTMLButtonElement;
-      if (button) {
-        button.disabled = true;
-        button.style.pointerEvents = "none";
-        button.style.opacity = "0.8";
-      }
-
+      setIsRedirecting(true);
+      
       await authClient.signIn.social({
         provider: "discord",
         callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,
       });
     } catch (error) {
       console.error("Error signing in:", error);
-      setIsRedirecting(true);
-
-      const button = document.querySelector("[data-signin-button]") as HTMLButtonElement;
-      if (button) {
-        button.disabled = false;
-        button.style.pointerEvents = "auto";
-        button.style.opacity = "1";
-      }
+      setIsRedirecting(false);
     }
   };
-
-  if (isSessionLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (session?.user) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   return (
     <div className="relative flex h-screen w-full items-center justify-center">

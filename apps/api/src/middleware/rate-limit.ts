@@ -1,6 +1,6 @@
 import type { Context as _Context, Next as _Next, MiddlewareHandler } from "hono";
 import { Redis } from "@ticketsbot/core";
-import { env, isProduction } from "../env";
+import { env } from "../env";
 
 interface RateLimitConfig {
   window: number;
@@ -12,7 +12,7 @@ export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
   const { window, max, keyPrefix = "api" } = config;
 
   return async (c, next) => {
-    if (!isProduction() && !env.RATE_LIMIT_ENABLED) {
+    if (!env.isProd()) {
       return next();
     }
 

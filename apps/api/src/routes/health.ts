@@ -3,7 +3,7 @@ import { Redis } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/core/prisma";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
-import { env, isProduction } from "../env";
+import { env } from "../env";
 
 // Response schemas for type safety and documentation
 const _BasicHealthResponse = z.object({
@@ -107,7 +107,7 @@ export const healthRoutes = createRoute()
     }
 
     // Add rate limit status
-    const rateLimitEnabled = isProduction() || env.RATE_LIMIT_ENABLED === true;
+    const rateLimitEnabled = env.isProd();
     result.services.rateLimit = {
       enabled: rateLimitEnabled,
       storage:

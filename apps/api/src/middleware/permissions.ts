@@ -2,7 +2,6 @@ import type { Context, Next, MiddlewareHandler } from "hono";
 import { Role, getPanelGuildId } from "@ticketsbot/core/domains";
 import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
-import { env, isDevelopment } from "../env";
 import { logger } from "../utils/logger";
 
 type Variables = {
@@ -66,11 +65,7 @@ export function requirePermission(
 
       const discordId = user.discordUserId;
 
-      let effectiveDiscordId = discordId;
-      if (!discordId && isDevelopment() && env.DEV_PERMISSIONS_HEX) {
-        logger.debug("DEV MODE: Using dummy Discord ID for permission check");
-        effectiveDiscordId = "dev-user";
-      } else if (!discordId) {
+      if (!discordId) {
         return c.json(
           {
             error: "Please link your Discord account to access guild settings",
@@ -79,6 +74,8 @@ export function requirePermission(
           403
         );
       }
+
+      const effectiveDiscordId = discordId;
 
       const hasPermission = await Role.hasPermission(
         guildId,
@@ -145,11 +142,7 @@ export function requirePanelPermission(
 
       const discordId = user.discordUserId;
 
-      let effectiveDiscordId = discordId;
-      if (!discordId && isDevelopment() && env.DEV_PERMISSIONS_HEX) {
-        logger.debug("DEV MODE: Using dummy Discord ID for permission check");
-        effectiveDiscordId = "dev-user";
-      } else if (!discordId) {
+      if (!discordId) {
         return c.json(
           {
             error: "Please link your Discord account to access guild settings",
@@ -158,6 +151,8 @@ export function requirePanelPermission(
           403
         );
       }
+
+      const effectiveDiscordId = discordId;
 
       const hasPermission = await Role.hasPermission(
         guildId,
@@ -209,11 +204,7 @@ export function requireAnyPermission(
 
       const discordId = user.discordUserId;
 
-      let effectiveDiscordId = discordId;
-      if (!discordId && isDevelopment() && env.DEV_PERMISSIONS_HEX) {
-        logger.debug("DEV MODE: Using dummy Discord ID for permission check");
-        effectiveDiscordId = "dev-user";
-      } else if (!discordId) {
+      if (!discordId) {
         return c.json(
           {
             error: "Please link your Discord account to access guild settings",
@@ -222,6 +213,8 @@ export function requireAnyPermission(
           403
         );
       }
+
+      const effectiveDiscordId = discordId;
 
       const hasPermission = await Role.hasAnyPermission(
         guildId,

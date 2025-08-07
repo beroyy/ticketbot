@@ -19,13 +19,6 @@ import { ticketRoutes } from "./routes/tickets";
 import { permissionRoutes } from "./routes/permissions";
 import { Redis } from "@ticketsbot/core";
 
-logger.debug("🔍 Validated Environment Variables:", {
-  WEB_URL: env.WEB_URL,
-  API_URL: env.API_URL,
-  API_PORT: env.API_PORT,
-  NEXT_PUBLIC_API_URL: env.NEXT_PUBLIC_API_URL ?? "not set",
-});
-
 const app = new Hono<AppEnv>().onError(errorHandler);
 
 const webUrl = env.WEB_URL;
@@ -99,7 +92,7 @@ const _routes = app
 
 export type AppType = typeof _routes;
 
-const port = process.env.PORT ? parseInt(process.env.PORT) : env.API_PORT;
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const host = env.API_HOST;
 
 Redis.initialize()

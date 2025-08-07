@@ -3,7 +3,7 @@ import { type AuthSession, getSessionFromContext } from "@ticketsbot/core/auth";
 import { User, DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
-import { env, isDevelopment } from "../env";
+import { env } from "../env";
 import { logger } from "../utils/logger";
 import { nanoid } from "nanoid";
 
@@ -48,21 +48,6 @@ const extractGuildId = (c: Context): string | undefined => {
   return undefined;
 };
 
-/**
- * Development mode permission override
- */
-const getDevPermissions = (): bigint | undefined => {
-  if (isDevelopment() && env.DEV_PERMISSIONS_HEX) {
-    try {
-      const permissions = BigInt(env.DEV_PERMISSIONS_HEX);
-      logger.debug("🔧 DEV MODE: Using permission override", permissions.toString(16));
-      return permissions;
-    } catch (e) {
-      logger.error("Invalid DEV_PERMISSIONS_HEX value:", e);
-    }
-  }
-  return undefined;
-};
 
 /**
  * Context middleware that provides actor context for the entire request
@@ -116,20 +101,14 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
 
     if (effectiveDiscordUserId) {
       try {
-        // Check for dev override first
-        const devPermissions = getDevPermissions();
-        if (devPermissions !== undefined) {
-          permissions = devPermissions;
-        } else {
-          permissions = await User.getPermissions(guildId, effectiveDiscordUserId);
-          logger.debug(`Context middleware - calculated permissions:`, {
-            guildId,
-            discordUserId: effectiveDiscordUserId,
-            permissions: permissions.toString(),
-            permissionsHex: `0x${permissions.toString(16)}`,
-            hasAnyPermission: permissions > 0n,
-          });
-        }
+        permissions = await User.getPermissions(guildId, effectiveDiscordUserId);
+        logger.debug(`Context middleware - calculated permissions:`, {
+          guildId,
+          discordUserId: effectiveDiscordUserId,
+          permissions: permissions.toString(),
+          permissionsHex: `0x${permissions.toString(16)}`,
+          hasAnyPermission: permissions > 0n,
+        });
       } catch (error) {
         logger.error("Failed to get permissions:", error);
         // Continue with no permissions rather than failing the request
@@ -201,7 +180,7 @@ export const requirePermission = (permission: bigint) => {
         Actor.requirePermission(permission);
 
         // Log successful permission check in dev
-        if (isDevelopment()) {
+        if (env.isDev()) {
           const actor = Actor.use();
           logger.debug("Permission check passed", {
             required: permission.toString(16),
@@ -214,7 +193,7 @@ export const requirePermission = (permission: bigint) => {
       } catch (error) {
         if (error instanceof VisibleError) {
           // Enhanced error response with permission details in dev
-          const response = isDevelopment()
+          const response = env.isDev()
             ? {
                 error: error.message,
                 code: error.code,

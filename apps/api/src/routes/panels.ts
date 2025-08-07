@@ -11,7 +11,6 @@ import {
 import { createRoute } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions, requirePermission } from "../middleware/context";
-import { transformApiPanelToDomain } from "../utils/schema-transforms";
 import { patterns } from "../utils/validation";
 
 const PanelQuestionSchema = z
@@ -151,6 +150,43 @@ const UpdatePanelApiSchema = UpdatePanelSchema.omit({ id: true }).extend({
     .optional(),
   category: z.string().optional(),
 });
+
+const transformApiPanelToDomain = (apiPanel: any) => {
+  const basePanel = apiPanel.singlePanel || apiPanel.multiPanel || apiPanel;
+
+  return {
+    type: apiPanel.type || "SINGLE",
+    title: basePanel.title || apiPanel.title,
+    content: basePanel.description || basePanel.content || null,
+    guildId: apiPanel.guildId,
+    channelId: basePanel.channelId || apiPanel.channelId,
+    categoryId: basePanel.categoryId || apiPanel.categoryId || null,
+    formId: basePanel.formId || null,
+    emoji: basePanel.emoji || null,
+    buttonText: basePanel.buttonText || "Create Ticket",
+    color: basePanel.buttonColor || basePanel.color || null,
+    welcomeMessage: basePanel.welcomeMessage || null,
+    introTitle: basePanel.introTitle || null,
+    introDescription: basePanel.introDescription || null,
+    channelPrefix: basePanel.channelPrefix || null,
+    mentionRoles: basePanel.mentionRoles || null,
+    hideMentions: basePanel.hideMentions || false,
+    parentPanelId: apiPanel.parentPanelId || null,
+    orderIndex: apiPanel.orderIndex || 0,
+    enabled: apiPanel.enabled ?? true,
+    permissions: basePanel.permissions || null,
+    imageUrl: basePanel.largeImageUrl || basePanel.imageUrl || null,
+    thumbnailUrl: basePanel.smallImageUrl || basePanel.thumbnailUrl || null,
+    textSections: basePanel.textSections
+      ? Array.isArray(basePanel.textSections)
+        ? basePanel.textSections.reduce((acc: any, section: any) => {
+            acc[section.name] = section.value;
+            return acc;
+          }, {})
+        : basePanel.textSections
+      : null,
+  };
+};
 
 const transformUpdateData = (input: z.infer<typeof UpdatePanelApiSchema>) => {
   const updateData: Record<string, any> = {};

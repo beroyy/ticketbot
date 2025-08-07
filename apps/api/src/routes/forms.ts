@@ -1,10 +1,21 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Form } from "@ticketsbot/core/domains";
+import type { DomainFormFieldType } from "@ticketsbot/core";
 import { createRoute } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
-import { API_TO_DOMAIN_FIELD_TYPE } from "../utils/schema-transforms";
+
+const API_TO_DOMAIN_FIELD_TYPE: Record<string, DomainFormFieldType> = {
+  SHORT_TEXT: "TEXT",
+  PARAGRAPH: "TEXT_AREA",
+  SELECT: "SELECT",
+  EMAIL: "EMAIL",
+  NUMBER: "NUMBER",
+  CHECKBOX: "CHECKBOX",
+  RADIO: "RADIO",
+  DATE: "DATE",
+};
 
 const ApiFormFieldSchema = z.object({
   type: z
@@ -84,7 +95,7 @@ const DuplicateFormSchema = z.object({
 
 const transformFieldsToDomain = (fields: z.infer<typeof ApiFormFieldSchema>[]) => {
   return fields.map((field) => ({
-    type: API_TO_DOMAIN_FIELD_TYPE[field.type] || field.type,
+    type: API_TO_DOMAIN_FIELD_TYPE[field.type] || (field.type as DomainFormFieldType),
     label: field.label,
     placeholder: field.placeholder,
     required: field.required ?? false,

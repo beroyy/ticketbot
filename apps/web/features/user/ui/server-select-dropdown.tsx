@@ -2,14 +2,12 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RiExpandUpDownLine } from "react-icons/ri";
 import { useAuth } from "@/features/auth/auth-provider-ssr";
-import { useGuildData } from "../hooks/use-guild-data";
 import { cn } from "@/lib/utils";
 import { StableAvatar } from "@/components/stable-avatar";
 
 export function ServerSelectDropdown() {
-  const { selectedGuildId, setSelectedGuildId } = useAuth();
+  const { selectedGuildId, setSelectedGuildId, guilds } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const { guilds } = useGuildData();
 
   const handleGuildSelect = (guildId: string) => {
     setSelectedGuildId(guildId);

@@ -53,12 +53,10 @@ app.use(
         isAllowed: !origin || allowedOrigins.includes(origin),
       });
 
-      // Allow requests with no origin (e.g., Postman, server-side requests)
       if (!origin) {
         return undefined;
       }
 
-      // Check if origin is in allowed list
       if (allowedOrigins.includes(origin)) {
         return origin;
       } else {
@@ -74,8 +72,7 @@ app.use(
 
 app.on(["POST", "GET"], "/auth/*", async (c) => {
   const response = await auth.handler(c.req.raw);
-  
-  // Add CORS headers to auth response
+
   const origin = c.req.header("origin");
   if (origin && allowedOrigins.includes(origin)) {
     response.headers.set("Access-Control-Allow-Origin", origin);
@@ -83,7 +80,7 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
     response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
   }
-  
+
   return response;
 });
 

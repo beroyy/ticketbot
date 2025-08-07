@@ -8,22 +8,16 @@ import {
   ContextNotFoundError,
   PermissionDeniedError,
 } from "@ticketsbot/core/context";
-import { isDevelopment } from "../env";
+import { env } from "../env";
 import { formatZodError } from "./validation";
 
-/**
- * Standardized error response format
- */
-interface ErrorResponse {
+type ErrorResponse = {
   error: string;
   code?: string;
   details?: unknown;
   requestId?: string;
-}
+};
 
-/**
- * Get appropriate HTTP status code for an error
- */
 const getStatusCode = (error: unknown) => {
   if (error instanceof HTTPException) return error.status as any;
   if (error instanceof ZodError) return 400 as const;
@@ -31,7 +25,6 @@ const getStatusCode = (error: unknown) => {
   if (error instanceof ContextNotFoundError) return 500 as const;
   if (error instanceof TransactionError) return 500 as const;
   if (error instanceof VisibleError) {
-    // Map error codes to status codes
     switch (error.code) {
       case "not_found":
         return 404 as const;
@@ -52,22 +45,16 @@ const getStatusCode = (error: unknown) => {
   return 500 as const;
 };
 
-/**
- * Format error for response
- */
 const formatError = async (error: unknown): Promise<ErrorResponse> => {
-  // Get request ID from context if available
   const actor = Actor.maybeUse();
   const requestId =
     actor && actor.type === "web_user" ? actor.properties.session.session.id : undefined;
 
-  // Handle HTTPException (includes ApiError)
   if (error instanceof HTTPException) {
-    // Try to parse the response body if it's JSON
     const response = error.getResponse();
     if (response instanceof Response) {
       try {
-        const body = await response.clone().json() as any;
+        const body = (await response.clone().json()) as any;
         return {
           error: body.error || error.message,
           code: body.code || "http_error",
@@ -75,7 +62,6 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
           requestId,
         };
       } catch {
-        // If not JSON, use the message
         return {
           error: error.message,
           code: "http_error",
@@ -90,13 +76,12 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
     };
   }
 
-  // Handle ZodError with prettified output
   if (error instanceof ZodError) {
     const formatted = formatZodError(error);
     return {
       error: formatted.error,
       code: formatted.code,
-      details: isDevelopment() ? formatted.details : formatted.formatted,
+      details: env.isDev() ? formatted.details : formatted.formatted,
       requestId,
     };
   }
@@ -111,8 +96,7 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
   }
 
   if (error instanceof Error) {
-    // In development, show full error details
-    if (isDevelopment()) {
+    if (env.isDev()) {
       return {
         error: error.message,
         code: "internal_error",
@@ -124,7 +108,6 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
       };
     }
 
-    // In production, hide internal error details
     console.error("Internal error:", error);
     return {
       error: "An internal error occurred",
@@ -133,7 +116,6 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
     };
   }
 
-  // Unknown error type
   console.error("Unknown error type:", error);
   return {
     error: "An unknown error occurred",
@@ -142,9 +124,6 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
   };
 };
 
-/**
- * Global error handler for Hono
- */
 export const errorHandler: ErrorHandler = async (err, c) => {
   const status = getStatusCode(err);
   const response = await formatError(err);
@@ -152,9 +131,6 @@ export const errorHandler: ErrorHandler = async (err, c) => {
   return c.json(response, status);
 };
 
-/**
- * Wrap an async handler to catch and format errors
- */
 export const catchErrors = <T extends unknown[], R>(handler: (...args: T) => Promise<R>) => {
   return async (...args: T): Promise<R | Response> => {
     try {
@@ -168,14 +144,8 @@ export const catchErrors = <T extends unknown[], R>(handler: (...args: T) => Pro
   };
 };
 
-/**
- * Result type for functional error handling
- */
 export type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
 
-/**
- * Convert a promise to a Result
- */
 export const toResult = async <T>(promise: Promise<T>): Promise<Result<T>> => {
   try {
     const value = await promise;
@@ -185,10 +155,11 @@ export const toResult = async <T>(promise: Promise<T>): Promise<Result<T>> => {
   }
 };
 
-/**
- * Handle a Result type in a route handler
- */
-export const handleResult = async <T>(c: Context, result: Result<T>, successStatus = 200): Promise<Response> => {
+export const handleResult = async <T>(
+  c: Context,
+  result: Result<T>,
+  successStatus = 200
+): Promise<Response> => {
   if (result.ok) {
     return c.json(result.value as any, successStatus as any);
   }

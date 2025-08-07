@@ -1,7 +1,3 @@
-/**
- * Centralized logger for the API with environment-based log levels
- */
-
 export type LogLevel = "error" | "warn" | "info" | "debug";
 
 const logLevels: Record<LogLevel, number> = {
@@ -16,7 +12,6 @@ class Logger {
   private requestLogging: boolean;
 
   constructor() {
-    // Default to 'info' in production, 'debug' in development
     const defaultLevel = process.env.NODE_ENV === "production" ? "info" : "debug";
     this.level = (process.env.LOG_LEVEL as LogLevel) || defaultLevel;
     this.requestLogging = process.env.LOG_REQUESTS === "true";
@@ -65,9 +60,6 @@ class Logger {
     }
   }
 
-  /**
-   * Special method for request logging that respects LOG_REQUESTS env var
-   */
   request(method: string, path: string, origin?: string | null): void {
     if (this.requestLogging) {
       console.log(`[REQUEST] ${method} ${path} - Origin: ${origin || "no-origin"}`);

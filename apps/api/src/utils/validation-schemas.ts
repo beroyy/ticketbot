@@ -8,11 +8,6 @@ import {
   TicketStatusSchema,
 } from "@ticketsbot/core";
 
-/**
- * Common API validation schemas that build on core schemas
- */
-
-// Reusable enum schema for schema names
 export const SchemaNameSchema = z.enum([
   "discord-guild-id",
   "discord-channel-id",
@@ -24,7 +19,6 @@ export const SchemaNameSchema = z.enum([
   "update-form",
 ]);
 
-// Query parameter schemas
 export const IdParamSchema = z.object({
   id: PositiveIntSchema,
 });
@@ -45,7 +39,6 @@ export const UserIdParamSchema = z.object({
   userId: DiscordUserIdSchema,
 });
 
-// Common query string schemas
 export const PaginationQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(20),
@@ -58,7 +51,6 @@ export const TicketQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(50),
 });
 
-// Preference key validation (based on current implementation patterns)
 export const PreferenceKeySchema = z
   .string()
   .min(1)
@@ -72,7 +64,6 @@ export const PreferenceParamSchema = z.object({
   key: PreferenceKeySchema,
 });
 
-// Type exports
 export type SchemaName = z.infer<typeof SchemaNameSchema>;
 export type IdParam = z.infer<typeof IdParamSchema>;
 export type DiscordIdParam = z.infer<typeof DiscordIdParamSchema>;

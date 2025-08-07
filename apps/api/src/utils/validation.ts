@@ -1,20 +1,10 @@
-/**
- * Shared validation utilities leveraging Zod v4 features
- */
 import { z, type ZodError, type ZodTypeAny, type ZodRawShape } from "zod";
 import { logger } from "./logger";
 
-/**
- * Format ZodError into user-friendly string
- * Uses Zod v4's prettifyError for better error messages
- */
 export const prettifyZodError = (error: ZodError): string => {
   return z.prettifyError(error);
 };
 
-/**
- * Format ZodError into structured format for API responses
- */
 export const formatZodError = (error: ZodError) => {
   return {
     error: "Validation failed",
@@ -28,25 +18,14 @@ export const formatZodError = (error: ZodError) => {
   };
 };
 
-/**
- * Strict extension helper - ensures API schemas don't accept unknown fields
- * Use .passthrough() variant when extra fields should be allowed
- */
 export const strictExtend = <T extends z.ZodObject<any>>(base: T, extension: ZodRawShape) => {
   return base.extend(extension).strict();
 };
 
-/**
- * Passthrough extension helper - allows extra fields while extending
- */
 export const passthroughExtend = <T extends z.ZodObject<any>>(base: T, extension: ZodRawShape) => {
   return base.extend(extension).passthrough();
 };
 
-/**
- * Async refinement wrapper for database validations
- * Helps avoid N+1 queries by batching checks where possible
- */
 export const asyncRefine = <T>(
   schema: z.ZodType<T>,
   check: (val: T) => Promise<boolean>,
@@ -76,17 +55,10 @@ export const asyncRefine = <T>(
   });
 };
 
-/**
- * Create a schema registry for documentation
- * Useful for generating API docs and JSON schemas
- */
 export const createSchemaRegistry = () => {
   const registry = z.registry();
 
   return {
-    /**
-     * Add a schema with metadata
-     */
     add: <T extends ZodTypeAny>(
       schema: T,
       metadata: {
@@ -100,48 +72,28 @@ export const createSchemaRegistry = () => {
       return schema;
     },
 
-    /**
-     * Get all registered schemas
-     */
     getAll: () => registry,
 
-    /**
-     * Generate JSON Schema for all registered schemas
-     */
     toJSONSchema: () => {
       const schemas: Record<string, any> = {};
-      // Note: This would need to iterate through registry
-      // but Zod's registry API might not expose iteration
       return schemas;
     },
   };
 };
 
-/**
- * Common validation patterns using Zod v4 features
- */
 export const patterns = {
-  /**
-   * Discord ID validation with proper error message
-   */
   discordId: () =>
     z
       .string()
       .regex(/^[0-9]+$/, "Must be a valid Discord ID")
       .describe("Discord snowflake ID"),
 
-  /**
-   * Hex color validation
-   */
   hexColor: () =>
     z
       .string()
       .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color (e.g., #5865F2)")
       .describe("Hex color code"),
 
-  /**
-   * Channel name validation
-   */
   channelName: (prefix?: string) => {
     if (prefix) {
       return z
@@ -154,14 +106,8 @@ export const patterns = {
     return z.string().regex(/^[a-z0-9-]+$/, "Must be lowercase with hyphens only");
   },
 
-  /**
-   * Boolean string coercion
-   */
   booleanString: () => z.stringbool(),
 
-  /**
-   * Pagination parameters
-   */
   pagination: () =>
     z.object({
       page: z.coerce.number().int().min(1).default(1),
@@ -169,21 +115,14 @@ export const patterns = {
     }),
 };
 
-/**
- * Create validated environment variable schema
- */
 export const createEnvSchema = <T extends ZodRawShape>(shape: T) => {
   return z.object(shape).transform((env) => {
-    // Log which env vars are set (without values)
     const keys = Object.keys(env);
     logger.info(`Loaded ${keys.length} environment variables`);
     return env;
   });
 };
 
-/**
- * Batch validation helper for multiple async checks
- */
 export const batchAsyncValidation = async <T>(
   items: T[],
   validator: (item: T) => Promise<boolean>,
@@ -196,7 +135,6 @@ export const batchAsyncValidation = async <T>(
   const valid: T[] = [];
   const invalid: T[] = [];
 
-  // Process in batches to avoid overwhelming the database
   for (let i = 0; i < items.length; i += maxConcurrent) {
     const batch = items.slice(i, i + maxConcurrent);
     const results = await Promise.all(
@@ -221,7 +159,4 @@ export const batchAsyncValidation = async <T>(
   return { valid, invalid };
 };
 
-/**
- * Global schema registry instance
- */
 export const globalRegistry = createSchemaRegistry();

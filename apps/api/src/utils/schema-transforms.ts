@@ -1,12 +1,5 @@
-/**
- * Schema transformation utilities for converting between API and domain schemas
- */
-
 import type { DomainFormFieldType, DomainPanelType } from "@ticketsbot/core";
 
-/**
- * Map API form field types to domain field types
- */
 export const API_TO_DOMAIN_FIELD_TYPE: Record<string, DomainFormFieldType> = {
   SHORT_TEXT: "TEXT",
   PARAGRAPH: "TEXT_AREA",
@@ -18,28 +11,21 @@ export const API_TO_DOMAIN_FIELD_TYPE: Record<string, DomainFormFieldType> = {
   DATE: "DATE",
 };
 
-/**
- * Map domain field types to API field types (for responses)
- */
 export const DOMAIN_TO_API_FIELD_TYPE: Record<DomainFormFieldType, string> = {
   TEXT: "SHORT_TEXT",
   TEXT_AREA: "PARAGRAPH",
   SELECT: "SELECT",
-  MULTI_SELECT: "SELECT", // API doesn't distinguish multi-select
+  MULTI_SELECT: "SELECT",
   EMAIL: "EMAIL",
   URL: "URL",
   NUMBER: "NUMBER",
   CHECKBOX: "CHECKBOX",
   RADIO: "RADIO",
   DATE: "DATE",
-  TIME: "DATE", // API uses DATE for all time types
+  TIME: "DATE",
   DATETIME: "DATE",
 };
 
-/**
- * Map common schemas field types to domain field types
- * The common schemas use lowercase with underscores
- */
 export const COMMON_TO_DOMAIN_FIELD_TYPE: Record<string, DomainFormFieldType> = {
   short_text: "TEXT",
   paragraph: "TEXT_AREA",
@@ -47,23 +33,16 @@ export const COMMON_TO_DOMAIN_FIELD_TYPE: Record<string, DomainFormFieldType> = 
   email: "EMAIL",
   number: "NUMBER",
   url: "URL",
-  phone: "TEXT", // Domain doesn't have phone type
+  phone: "TEXT",
   date: "DATE",
   checkbox: "CHECKBOX",
   radio: "RADIO",
 };
 
-/**
- * Transform API panel type to domain panel type
- */
 export const transformPanelType = (apiType: string): DomainPanelType => {
-  // Both API and domain use "SINGLE" and "MULTI"
   return apiType as DomainPanelType;
 };
 
-/**
- * Transform API form field to domain format
- */
 export const transformApiFieldToDomain = (apiField: any) => {
   const fieldType = API_TO_DOMAIN_FIELD_TYPE[apiField.type] || apiField.type;
 
@@ -86,9 +65,6 @@ export const transformApiFieldToDomain = (apiField: any) => {
   };
 };
 
-/**
- * Transform domain form field to API format
- */
 export const transformDomainFieldToApi = (domainField: any) => {
   const apiType =
     DOMAIN_TO_API_FIELD_TYPE[domainField.field_type as DomainFormFieldType] ||
@@ -114,11 +90,7 @@ export const transformDomainFieldToApi = (domainField: any) => {
   };
 };
 
-/**
- * Transform API panel creation input to domain format
- */
 export const transformApiPanelToDomain = (apiPanel: any) => {
-  // Handle nested structure from API
   const basePanel = apiPanel.singlePanel || apiPanel.multiPanel || apiPanel;
 
   return {
@@ -155,9 +127,6 @@ export const transformApiPanelToDomain = (apiPanel: any) => {
   };
 };
 
-/**
- * Transform domain panel to API response format
- */
 export const transformDomainPanelToApi = (domainPanel: any) => {
   return {
     id: domainPanel.id,
@@ -186,7 +155,6 @@ export const transformDomainPanelToApi = (domainPanel: any) => {
     textSections: domainPanel.textSections,
     createdAt: domainPanel.createdAt,
     updatedAt: domainPanel.updatedAt,
-    // Include relations if present
     form: domainPanel.form,
     parentPanel: domainPanel.parentPanel,
     childPanels: domainPanel.childPanels,

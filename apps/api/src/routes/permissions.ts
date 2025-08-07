@@ -7,13 +7,13 @@ import { compositions } from "../middleware/context";
 import { logger } from "../utils/logger";
 
 // Response schemas
-const PermissionsResponseSchema = z.object({
+const _PermissionsResponseSchema = z.object({
   permissions: z.string(), // BigInt as string
   guildId: z.string(),
   userId: z.string().nullable(),
 });
 
-type PermissionsResponse = z.infer<typeof PermissionsResponseSchema>;
+type PermissionsResponse = z.infer<typeof _PermissionsResponseSchema>;
 
 export const permissionRoutes = createRoute()
   // Get user permissions for a guild

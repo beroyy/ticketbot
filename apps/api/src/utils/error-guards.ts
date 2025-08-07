@@ -1,6 +1,3 @@
-/**
- * Type guard to check if an error has a code property
- */
 export function isErrorWithCode(error: unknown): error is { code: string; message?: string } {
   return (
     error !== null &&
@@ -10,9 +7,6 @@ export function isErrorWithCode(error: unknown): error is { code: string; messag
   );
 }
 
-/**
- * Type guard to check if an error has a message property
- */
 export function isErrorWithMessage(error: unknown): error is { message: string } {
   return (
     error !== null &&
@@ -22,9 +16,6 @@ export function isErrorWithMessage(error: unknown): error is { message: string }
   );
 }
 
-/**
- * Get error message safely
- */
 export function getErrorMessage(error: unknown): string {
   if (isErrorWithMessage(error)) {
     return error.message;

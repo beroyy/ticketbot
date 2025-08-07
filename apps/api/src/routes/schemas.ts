@@ -9,11 +9,11 @@ import {
   UpdateFormSchema,
   TicketStatusSchema,
 } from "@ticketsbot/core";
-import { createRoute, ApiErrors } from "../factory";
+import { createRoute } from "../factory";
+import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
 import { globalRegistry } from "../utils/validation";
 
-// Register core schemas with metadata
 globalRegistry.add(DiscordGuildIdSchema, {
   title: "Discord Guild ID",
   description: "A Discord server (guild) snowflake ID",
@@ -38,7 +38,6 @@ globalRegistry.add(TicketStatusSchema, {
   examples: ["OPEN", "CLAIMED", "CLOSED", "PENDING"],
 });
 
-// Map of available schemas
 const schemaMap = {
   "discord-guild-id": DiscordGuildIdSchema,
   "discord-channel-id": DiscordChannelIdSchema,
@@ -50,7 +49,6 @@ const schemaMap = {
   "update-form": UpdateFormSchema,
 } as const;
 
-// Examples for each schema
 const schemaExamples: Record<string, any[]> = {
   "discord-guild-id": ["123456789012345678"],
   "discord-channel-id": ["987654321098765432"],
@@ -84,7 +82,6 @@ const schemaExamples: Record<string, any[]> = {
   ],
 };
 
-// Response types
 interface SchemaListResponse {
   description: string;
   version: string;
@@ -101,24 +98,18 @@ interface _SchemaDetailResponse {
   examples: any[];
 }
 
-// Create schema routes using method chaining
 export const schemaRoutes = createRoute()
-  // List all available schemas
   .get("/", ...compositions.public, async (c) => {
-    // Generate JSON Schema for all registered schemas
     const jsonSchemas: Record<string, any> = {};
 
-    // Core schemas
     jsonSchemas["DiscordGuildId"] = z.toJSONSchema(DiscordGuildIdSchema);
     jsonSchemas["DiscordChannelId"] = z.toJSONSchema(DiscordChannelIdSchema);
     jsonSchemas["DiscordUserId"] = z.toJSONSchema(DiscordUserIdSchema);
     jsonSchemas["TicketStatus"] = z.toJSONSchema(TicketStatusSchema);
 
-    // Panel schemas
     jsonSchemas["CreatePanel"] = z.toJSONSchema(CreatePanelSchema);
     jsonSchemas["UpdatePanel"] = z.toJSONSchema(UpdatePanelSchema);
 
-    // Form schemas
     jsonSchemas["CreateForm"] = z.toJSONSchema(CreateFormSchema);
     jsonSchemas["UpdateForm"] = z.toJSONSchema(UpdateFormSchema);
 
@@ -135,7 +126,6 @@ export const schemaRoutes = createRoute()
     return c.json(response);
   })
 
-  // Get a specific schema by name
   .get("/:name<[a-z0-9-]+>", ...compositions.public, async (c) => {
     const name = c.req.param("name") as string;
 

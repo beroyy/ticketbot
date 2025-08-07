@@ -3,10 +3,10 @@ import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
 import { UpdateSettingsSchema } from "@ticketsbot/core/domains/guild";
 import { Guild, Role } from "@ticketsbot/core/domains";
-import { createRoute, ApiErrors } from "../factory";
+import { createRoute } from "../factory";
+import { ApiErrors } from "../utils/error-handler";
 import { compositions, requirePermission } from "../middleware/context";
 
-// Default settings for unconfigured guilds
 const defaultSettings = (guildId: string) => ({
   id: guildId,
   settings: {
@@ -40,9 +40,7 @@ const defaultSettings = (guildId: string) => ({
   },
 });
 
-// Create settings routes using method chaining
 export const settingsRoutes = createRoute()
-  // Get guild settings
   .get(
     "/:guildId",
     ...compositions.authenticated,
@@ -56,7 +54,6 @@ export const settingsRoutes = createRoute()
         return c.json(settings);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
-          // Return default settings for unconfigured guilds
           return c.json(defaultSettings(guildId));
         }
         throw error;
@@ -64,7 +61,6 @@ export const settingsRoutes = createRoute()
     }
   )
 
-  // Update guild settings
   .put(
     "/:guildId",
     ...compositions.authenticated,
@@ -72,7 +68,6 @@ export const settingsRoutes = createRoute()
     zValidator("json", UpdateSettingsSchema),
     requirePermission(PermissionFlags.GUILD_SETTINGS_EDIT),
     async (c) => {
-      // Guild ID is extracted from params by context middleware
       const input = c.req.valid("json");
 
       try {
@@ -92,19 +87,16 @@ export const settingsRoutes = createRoute()
     }
   )
 
-  // Get team roles
   .get(
     "/:guildId/team-roles",
     ...compositions.authenticated,
     zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
     async (c) => {
-      // Guild ID is extracted from params by context middleware
       const roles = await Guild.getTeamRoles();
       return c.json(roles);
     }
   )
 
-  // Get user permissions for a guild
   .get(
     "/:guildId/permissions",
     ...compositions.authenticated,
@@ -113,7 +105,6 @@ export const settingsRoutes = createRoute()
       const { guildId } = c.req.valid("param");
       const user = c.get("user");
 
-      // Check if user has Discord ID linked
       if (!user.discordUserId) {
         return c.json(
           {
@@ -122,42 +113,37 @@ export const settingsRoutes = createRoute()
             roles: [],
           },
           200
-        ); // Return 200 with empty permissions
+        );
       }
 
-      // Get user's permissions and roles in parallel
       const [permissions, roles] = await Promise.all([
         Role.getUserPermissions(guildId, user.discordUserId),
         Role.getUserRoles(guildId, user.discordUserId),
       ]);
 
-      // Format response to match frontend expectations
       return c.json({
-        permissions: permissions.toString(), // Convert BigInt to string
+        permissions: permissions.toString(),
         roles: roles.map((role) => ({
           id: role.id,
           name: role.name,
-          permissions: role.permissions.toString(), // Convert BigInt to string
+          permissions: role.permissions.toString(),
           discordRoleId: role.discordRoleId,
         })),
       });
     }
   )
 
-  // Get blacklisted users and roles
   .get(
     "/:guildId/blacklist",
     ...compositions.authenticated,
     zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
     requirePermission(PermissionFlags.MEMBER_BLACKLIST),
     async (c) => {
-      // Guild ID is extracted from params by context middleware
       const blacklist = await Guild.getBlacklist();
       return c.json(blacklist);
     }
   )
 
-  // Add to blacklist
   .post(
     "/:guildId/blacklist",
     ...compositions.authenticated,
@@ -172,7 +158,6 @@ export const settingsRoutes = createRoute()
     ),
     requirePermission(PermissionFlags.MEMBER_BLACKLIST),
     async (c) => {
-      // Guild ID is extracted from params by context middleware
       const input = c.req.valid("json");
 
       try {
@@ -187,7 +172,6 @@ export const settingsRoutes = createRoute()
     }
   )
 
-  // Remove from blacklist
   .delete(
     "/:guildId/blacklist/:targetId",
     ...compositions.authenticated,
@@ -206,7 +190,6 @@ export const settingsRoutes = createRoute()
     ),
     requirePermission(PermissionFlags.MEMBER_UNBLACKLIST),
     async (c) => {
-      // Guild ID is extracted from params by context middleware
       const { targetId } = c.req.valid("param");
       const { isRole } = c.req.valid("query");
 
@@ -222,14 +205,12 @@ export const settingsRoutes = createRoute()
     }
   )
 
-  // Get guild statistics
   .get(
     "/:guildId/statistics",
     ...compositions.authenticated,
     zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
     requirePermission(PermissionFlags.ANALYTICS_VIEW),
     async (c) => {
-      // Guild ID is extracted from params by context middleware
       const stats = await Guild.getStatistics();
       return c.json(stats);
     }

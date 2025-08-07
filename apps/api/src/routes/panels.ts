@@ -8,12 +8,12 @@ import {
   UpdatePanelSchema,
   PermissionFlags,
 } from "@ticketsbot/core";
-import { createRoute, ApiErrors } from "../factory";
+import { createRoute } from "../factory";
+import { ApiErrors } from "../utils/error-handler";
 import { compositions, requirePermission } from "../middleware/context";
 import { transformApiPanelToDomain } from "../utils/schema-transforms";
 import { patterns } from "../utils/validation";
 
-// Sub-schemas for panel configuration
 const PanelQuestionSchema = z
   .object({
     id: z.string().describe("Unique question ID"),
@@ -95,14 +95,12 @@ const MultiPanelConfigSchema = z
   })
   .refine(
     (config) => {
-      // Ensure unique panel titles
       const titles = config.panels.map((p) => p.title.toLowerCase());
       return titles.length === new Set(titles).size;
     },
     { message: "Panel option titles must be unique" }
   );
 
-// Main schemas
 const CreatePanelSchema = z
   .object({
     type: z.enum(["SINGLE", "MULTI"]).optional().default("SINGLE"),
@@ -127,7 +125,6 @@ const CreatePanelSchema = z
   })
   .refine(
     (data) => {
-      // Ensure correct panel config is provided based on type
       if (data.type === "SINGLE") {
         return !!data.singlePanel;
       } else if (data.type === "MULTI") {
@@ -155,7 +152,6 @@ const UpdatePanelApiSchema = UpdatePanelSchema.omit({ id: true }).extend({
   category: z.string().optional(),
 });
 
-// Transform update data for domain layer
 const transformUpdateData = (input: z.infer<typeof UpdatePanelApiSchema>) => {
   const updateData: Record<string, any> = {};
 
@@ -175,15 +171,12 @@ const transformUpdateData = (input: z.infer<typeof UpdatePanelApiSchema>) => {
   return updateData;
 };
 
-// Create panel routes using method chaining
 export const panelRoutes = createRoute()
-  // List panels for a guild
   .get("/", ...compositions.guildScoped, async (c) => {
     const panels = await Panel.list();
     return c.json(panels);
   })
 
-  // Get a specific panel
   .get(
     "/:id",
     ...compositions.authenticated,
@@ -213,7 +206,6 @@ export const panelRoutes = createRoute()
     }
   )
 
-  // Create a new panel
   .post(
     "/",
     ...compositions.guildScoped,
@@ -222,7 +214,6 @@ export const panelRoutes = createRoute()
     async (c) => {
       const input = c.req.valid("json");
 
-      // Transform API input to domain format
       const domainInput = transformApiPanelToDomain(input);
 
       try {
@@ -242,7 +233,6 @@ export const panelRoutes = createRoute()
     }
   )
 
-  // Update a panel
   .put(
     "/:id",
     ...compositions.authenticated,
@@ -258,7 +248,6 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
       const input = c.req.valid("json");
 
-      // Check panel exists first
       try {
         await Panel.getById(id);
       } catch (error) {
@@ -268,7 +257,6 @@ export const panelRoutes = createRoute()
         throw error;
       }
 
-      // Transform and update
       const updateData = transformUpdateData(input);
 
       try {
@@ -288,7 +276,6 @@ export const panelRoutes = createRoute()
     }
   )
 
-  // Delete a panel
   .delete(
     "/:id",
     ...compositions.authenticated,
@@ -319,7 +306,6 @@ export const panelRoutes = createRoute()
     }
   )
 
-  // Deploy a panel to Discord
   .post(
     "/:id/deploy",
     ...compositions.authenticated,
@@ -334,10 +320,8 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        // Get panel data for deployment
         const panelData = await Panel.deploy(id);
 
-        // Deploy to Discord
         const result = await Discord.deployPanel(panelData);
 
         return c.json({
@@ -359,7 +343,6 @@ export const panelRoutes = createRoute()
     }
   )
 
-  // Redeploy a panel to Discord
   .put(
     "/:id/redeploy",
     ...compositions.authenticated,
@@ -381,10 +364,8 @@ export const panelRoutes = createRoute()
       const { messageId } = c.req.valid("json");
 
       try {
-        // Get panel data
         const panelData = await Panel.deploy(id);
 
-        // Update existing message
         const result = await Discord.updatePanel(panelData, messageId);
 
         return c.json({

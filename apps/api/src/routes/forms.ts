@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Form } from "@ticketsbot/core/domains";
-import { createRoute, ApiErrors } from "../factory";
+import { createRoute } from "../factory";
+import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
 import { API_TO_DOMAIN_FIELD_TYPE } from "../utils/schema-transforms";
 
-// API-specific field schema
 const ApiFormFieldSchema = z.object({
   type: z
     .enum(["SHORT_TEXT", "PARAGRAPH", "SELECT", "EMAIL", "NUMBER", "CHECKBOX", "RADIO", "DATE"])
@@ -37,7 +37,6 @@ const ApiFormFieldSchema = z.object({
   position: z.number().optional().describe("Field position in form"),
 });
 
-// Create Form Schema
 const CreateFormSchema = z
   .object({
     name: z.string().min(1).max(100).describe("Form name"),
@@ -56,7 +55,6 @@ const CreateFormSchema = z
     { message: "Field labels must be unique" }
   );
 
-// Update Form Schema
 const UpdateFormSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(1000).nullable().optional(),
@@ -72,7 +70,6 @@ const UpdateFormSchema = z.object({
     .describe("Updated form fields"),
 });
 
-// Duplicate Form Schema
 const DuplicateFormSchema = z.object({
   name: z
     .string()
@@ -85,7 +82,6 @@ const DuplicateFormSchema = z.object({
     ),
 });
 
-// Transform API fields to domain format
 const transformFieldsToDomain = (fields: z.infer<typeof ApiFormFieldSchema>[]) => {
   return fields.map((field) => ({
     type: API_TO_DOMAIN_FIELD_TYPE[field.type] || field.type,
@@ -106,15 +102,12 @@ const transformFieldsToDomain = (fields: z.infer<typeof ApiFormFieldSchema>[]) =
   }));
 };
 
-// Create forms routes using method chaining
 export const formRoutes = createRoute()
-  // List forms for a guild
   .get("/", ...compositions.guildScoped, async (c) => {
     const forms = await Form.list();
     return c.json(forms);
   })
 
-  // Get a specific form
   .get(
     "/:id",
     ...compositions.guildScoped,
@@ -139,11 +132,9 @@ export const formRoutes = createRoute()
     }
   )
 
-  // Create a new form
   .post("/", ...compositions.guildScoped, zValidator("json", CreateFormSchema), async (c) => {
     const input = c.req.valid("json");
 
-    // Transform to domain format
     const formData = {
       name: input.name,
       description: input.description === null ? undefined : input.description,
@@ -166,7 +157,6 @@ export const formRoutes = createRoute()
     }
   })
 
-  // Update a form
   .put(
     "/:id",
     ...compositions.guildScoped,
@@ -182,10 +172,8 @@ export const formRoutes = createRoute()
       const input = c.req.valid("json");
 
       try {
-        // Check form exists
         await Form.getById(id);
 
-        // Update form metadata
         if (input.name || input.description !== undefined) {
           const updateData: any = {};
           if (input.name) updateData.name = input.name;
@@ -214,7 +202,6 @@ export const formRoutes = createRoute()
     }
   )
 
-  // Delete a form
   .delete(
     "/:id",
     ...compositions.guildScoped,
@@ -244,7 +231,6 @@ export const formRoutes = createRoute()
     }
   )
 
-  // Duplicate a form
   .post(
     "/:id/duplicate",
     ...compositions.guildScoped,

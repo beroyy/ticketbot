@@ -1,4 +1,4 @@
-import type { Context, ErrorHandler } from "hono";
+import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 import {
@@ -131,40 +131,60 @@ export const errorHandler: ErrorHandler = async (err, c) => {
   return c.json(response, status);
 };
 
-export const catchErrors = <T extends unknown[], R>(handler: (...args: T) => Promise<R>) => {
-  return async (...args: T): Promise<R | Response> => {
-    try {
-      return await handler(...args);
-    } catch (error) {
-      const c = args[0] as Context;
-      const status = getStatusCode(error);
-      const response = await formatError(error);
-      return c.json(response, status) as R;
+export class ApiError extends HTTPException {
+  constructor(
+    status: number,
+    message: string,
+    options?: {
+      code?: string;
+      details?: unknown;
     }
-  };
-};
-
-export type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
-
-export const toResult = async <T>(promise: Promise<T>): Promise<Result<T>> => {
-  try {
-    const value = await promise;
-    return { ok: true, value };
-  } catch (error) {
-    return { ok: false, error: error as Error };
+  ) {
+    super(status as any, {
+      message,
+      res: new Response(
+        JSON.stringify({
+          error: message,
+          code: options?.code,
+          details: options?.details,
+        } satisfies ErrorResponse),
+        {
+          status,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ),
+    });
   }
-};
+}
 
-export const handleResult = async <T>(
-  c: Context,
-  result: Result<T>,
-  successStatus = 200
-): Promise<Response> => {
-  if (result.ok) {
-    return c.json(result.value as any, successStatus as any);
+export class ApiErrors {
+  static notFound(resource: string) {
+    return new ApiError(404, `${resource} not found`, { code: "not_found" });
   }
 
-  const status = getStatusCode(result.error);
-  const response = await formatError(result.error);
-  return c.json(response as any, status as any);
-};
+  static unauthorized(message = "Unauthorized") {
+    return new ApiError(401, message, { code: "unauthorized" });
+  }
+
+  static forbidden(message = "Permission denied") {
+    return new ApiError(403, message, { code: "forbidden" });
+  }
+
+  static badRequest(message: string, details?: unknown) {
+    return new ApiError(400, message, { code: "bad_request", details });
+  }
+
+  static conflict(message: string) {
+    return new ApiError(409, message, { code: "conflict" });
+  }
+
+  static rateLimit(message = "Too many requests") {
+    return new ApiError(429, message, { code: "rate_limit" });
+  }
+
+  static internal(message = "Internal server error") {
+    return new ApiError(500, message, { code: "internal_error" });
+  }
+}

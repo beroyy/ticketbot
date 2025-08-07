@@ -4,11 +4,11 @@ import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
 import { Account, Role, User, findById as findGuildById } from "@ticketsbot/core/domains";
 import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
-import { createRoute, ApiErrors } from "../factory";
+import { createRoute } from "../factory";
+import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
 import { logger } from "../utils/logger";
 
-// Response schemas
 const GuildResponse = z.object({
   id: z.string(),
   name: z.string(),
@@ -51,7 +51,6 @@ const _GuildSyncResponse = z.object({
   errors: z.array(z.string()).optional(),
 });
 
-// Discord API types
 interface DiscordGuild {
   id: string;
   name: string;
@@ -62,12 +61,10 @@ interface DiscordGuild {
   description?: string;
 }
 
-// Constants
 const MANAGE_GUILD_PERMISSION = BigInt(0x20);
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 const USER_AGENT = "ticketsbot.ai (https://github.com/yourusername/ticketsbot-ai, 1.0.0)";
 
-// Helper to check Discord account
 const getDiscordAccount = async (userId: string) => {
   const account = await Account.getDiscordAccount(userId);
 
@@ -85,7 +82,6 @@ const getDiscordAccount = async (userId: string) => {
   return { account };
 };
 
-// Helper to make Discord API requests
 const fetchDiscordAPI = async (path: string, accessToken: string) => {
   logger.debug("Making Discord API request", {
     path,
@@ -143,9 +139,7 @@ const fetchDiscordAPI = async (path: string, accessToken: string) => {
   }
 };
 
-// Create Discord routes using method chaining
 export const discordRoutes = createRoute()
-  // Get user's Discord guilds
   .get("/guilds", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
 
@@ -155,7 +149,6 @@ export const discordRoutes = createRoute()
       email: user.email,
     });
 
-    // Check Discord account
     const accountResult = await getDiscordAccount(user.id);
     if ("error" in accountResult) {
       logger.warn("Discord account not connected or expired", {
@@ -176,22 +169,18 @@ export const discordRoutes = createRoute()
       expiresAt: accountResult.account.accessTokenExpiresAt?.toISOString(),
     });
 
-    // Get effective Discord user ID for permission checks
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
-    
-    // Get Discord user to check cached guilds
+
     const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
 
     let allGuilds: any[] = [];
     const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-    // Check if we have cached guilds that are fresh
-    if (discordUser?.guilds && typeof discordUser.guilds === 'object') {
+    if (discordUser?.guilds && typeof discordUser.guilds === "object") {
       const guildsData = discordUser.guilds as any;
       const fetchedAt = guildsData.fetchedAt ? new Date(guildsData.fetchedAt) : null;
-      
+
       if (fetchedAt && Date.now() - fetchedAt.getTime() < CACHE_TTL) {
-        // Use cached data
         allGuilds = guildsData.data || [];
         logger.debug("Using cached guilds", {
           cachedGuilds: allGuilds.length,
@@ -201,7 +190,6 @@ export const discordRoutes = createRoute()
       }
     }
 
-    // If no cache or cache is stale, fetch from Discord
     if (allGuilds.length === 0) {
       const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
       if ("error" in result) {
@@ -219,8 +207,7 @@ export const discordRoutes = createRoute()
       }
 
       const guilds = result.data as DiscordGuild[];
-      
-      // Mark which guilds user can administrate
+
       allGuilds = guilds.map((guild) => ({
         id: guild.id,
         name: guild.name,
@@ -228,23 +215,22 @@ export const discordRoutes = createRoute()
         owner: guild.owner || false,
         permissions: guild.permissions || "0",
         features: guild.features || [],
-        isAdmin: guild.owner || 
-                 ((BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION),
+        isAdmin:
+          guild.owner ||
+          (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION,
       }));
 
-      // Update cache
       await User.updateGuildsCache(effectiveDiscordUserId, allGuilds);
 
       logger.debug("Fetched and cached guilds from Discord", {
         totalGuilds: guilds.length,
-        adminGuilds: allGuilds.filter(g => g.isAdmin).length,
+        adminGuilds: allGuilds.filter((g) => g.isAdmin).length,
         userId: user.id,
       });
     }
 
-    // Filter to only admin guilds for backward compatibility
     const adminGuilds = allGuilds
-      .filter(g => g.isAdmin)
+      .filter((g) => g.isAdmin)
       .map((guild) => ({
         id: guild.id,
         name: guild.name,
@@ -254,10 +240,8 @@ export const discordRoutes = createRoute()
         features: guild.features || [],
       }));
 
-    // Check bot installation status and database configuration for each guild
     const guildsWithBotStatus = await Promise.all(
       adminGuilds.map(async (guild) => {
-        // Check guild status in database
         const dbGuild = await findGuildById(guild.id);
         const botInstalled = dbGuild?.botInstalled || false;
         const botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
@@ -269,9 +253,6 @@ export const discordRoutes = createRoute()
         };
       })
     );
-
-    // Discord user should already exist from OAuth callback
-    // No need to fetch user profile again
 
     logger.info("Successfully fetched Discord guilds", {
       totalGuilds: allGuilds.length,
@@ -289,7 +270,6 @@ export const discordRoutes = createRoute()
     } satisfies z.infer<typeof _GuildsListResponse>);
   })
 
-  // Sync user's guilds to database
   .post("/guilds/sync", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
 
@@ -298,7 +278,6 @@ export const discordRoutes = createRoute()
       discordUserId: user.discordUserId,
     });
 
-    // Check Discord account
     const accountResult = await getDiscordAccount(user.id);
     if ("error" in accountResult) {
       logger.warn("Discord account not connected for guild sync", {
@@ -316,14 +295,12 @@ export const discordRoutes = createRoute()
       );
     }
 
-    // Get effective Discord user ID
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
-    
-    // Try to use cached guilds first
+
     const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
     let allGuilds: any[] = [];
-    
-    if (discordUser?.guilds && typeof discordUser.guilds === 'object') {
+
+    if (discordUser?.guilds && typeof discordUser.guilds === "object") {
       const guildsData = discordUser.guilds as any;
       allGuilds = guildsData.data || [];
       logger.debug("Using cached guilds for sync", {
@@ -331,7 +308,6 @@ export const discordRoutes = createRoute()
         userId: user.id,
       });
     } else {
-      // Fetch from Discord if no cache
       const result = await fetchDiscordAPI("/users/@me/guilds", accountResult.account.accessToken!);
       if ("error" in result) {
         logger.error("Failed to fetch guilds for sync", {
@@ -350,8 +326,7 @@ export const discordRoutes = createRoute()
       }
 
       const guilds = result.data as DiscordGuild[];
-      
-      // Mark admin status and cache
+
       allGuilds = guilds.map((guild) => ({
         id: guild.id,
         name: guild.name,
@@ -359,33 +334,28 @@ export const discordRoutes = createRoute()
         owner: guild.owner || false,
         permissions: guild.permissions || "0",
         features: guild.features || [],
-        isAdmin: guild.owner || 
-                 ((BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION),
+        isAdmin:
+          guild.owner ||
+          (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION,
       }));
-      
-      // Update cache
+
       await User.updateGuildsCache(effectiveDiscordUserId, allGuilds);
     }
 
-    // Filter to admin guilds
-    const adminGuilds = allGuilds.filter(g => g.isAdmin);
+    const adminGuilds = allGuilds.filter((g) => g.isAdmin);
 
     logger.info("Syncing admin guilds", {
       adminGuildCount: adminGuilds.length,
       userId: user.id,
     });
 
-    // All imports are now at the top of the file
-
     let syncedCount = 0;
     const errors: string[] = [];
 
-    // Sync each guild - but only those where bot is installed
     for (const guild of adminGuilds) {
       try {
-        // Check if bot is installed in this guild
         const dbGuild = await findGuildById(guild.id);
-        
+
         if (!dbGuild?.botInstalled) {
           logger.debug(`Skipping guild ${guild.id} - bot not installed`, {
             guildName: guild.name,
@@ -399,9 +369,12 @@ export const discordRoutes = createRoute()
           isOwner: guild.owner,
           userId: user.id,
         });
-        
-        // Update ownership if they own the guild
-        if (guild.owner && effectiveDiscordUserId && dbGuild.ownerDiscordId !== effectiveDiscordUserId) {
+
+        if (
+          guild.owner &&
+          effectiveDiscordUserId &&
+          dbGuild.ownerDiscordId !== effectiveDiscordUserId
+        ) {
           await ensureGuild(guild.id, guild.name, effectiveDiscordUserId);
           logger.info(`Updated ownership for guild ${guild.id}`, {
             guildName: guild.name,
@@ -409,13 +382,10 @@ export const discordRoutes = createRoute()
           });
         }
 
-        // Ensure default roles exist
         await Role.ensureDefaultRoles(guild.id);
 
-        // Assign appropriate role based on permissions
         if (effectiveDiscordUserId) {
           if (guild.owner) {
-            // Owner gets admin role
             const adminRole = await Role.getRoleByName(guild.id, "admin");
             if (adminRole) {
               await Role.assignRole(adminRole.id, effectiveDiscordUserId);
@@ -424,7 +394,6 @@ export const discordRoutes = createRoute()
               });
             }
           } else {
-            // Non-owner admin gets viewer role by default
             const viewerRole = await Role.getRoleByName(guild.id, "viewer");
             if (viewerRole) {
               await Role.assignRole(viewerRole.id, effectiveDiscordUserId);
@@ -458,7 +427,6 @@ export const discordRoutes = createRoute()
     } satisfies z.infer<typeof _GuildSyncResponse>);
   })
 
-  // Get specific guild details with bot status
   .get(
     "/guild/:id",
     ...compositions.authenticated,
@@ -467,13 +435,11 @@ export const discordRoutes = createRoute()
       const { id: guildId } = c.req.valid("param");
       const user = c.get("user");
 
-      // Check Discord account
       const accountResult = await getDiscordAccount(user.id);
       if ("error" in accountResult) {
         throw ApiErrors.badRequest(accountResult.error ?? "Discord error");
       }
 
-      // Fetch guild details
       const result = await fetchDiscordAPI(
         `/guilds/${guildId}`,
         accountResult.account.accessToken!
@@ -484,7 +450,6 @@ export const discordRoutes = createRoute()
 
       const guild = result.data as DiscordGuild;
 
-      // Check bot status in database
       const dbGuild = await findGuildById(guildId);
       const botInstalled = dbGuild?.botInstalled || false;
       const botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
@@ -501,7 +466,6 @@ export const discordRoutes = createRoute()
     }
   )
 
-  // Get guild roles
   .get(
     "/guild/:id/roles",
     ...compositions.authenticated,
@@ -509,19 +473,16 @@ export const discordRoutes = createRoute()
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 
-      // Verify bot is in guild
       const dbGuild = await findGuildById(guildId);
       if (!dbGuild) {
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
 
-      // Get roles using Discord service
       const roles = await Discord.getGuildRoles(guildId);
       return c.json(roles);
     }
   )
 
-  // Get guild channels
   .get(
     "/guild/:id/channels",
     ...compositions.authenticated,
@@ -540,16 +501,13 @@ export const discordRoutes = createRoute()
       const { id: guildId } = c.req.valid("param");
       const { includeNone } = c.req.valid("query");
 
-      // Verify bot is in guild
       const dbGuild = await findGuildById(guildId);
       if (!dbGuild) {
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
 
-      // Get channels
       const channels = await Discord.getGuildChannels(guildId);
 
-      // Add "None" option if requested
       if (includeNone) {
         return c.json([
           {
@@ -566,7 +524,6 @@ export const discordRoutes = createRoute()
     }
   )
 
-  // Get guild categories
   .get(
     "/guild/:id/categories",
     ...compositions.authenticated,
@@ -574,19 +531,16 @@ export const discordRoutes = createRoute()
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 
-      // Verify bot is in guild
       const dbGuild = await findGuildById(guildId);
       if (!dbGuild) {
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
 
-      // Get categories
       const categories = await Discord.getGuildCategories(guildId);
       return c.json(categories);
     }
   )
 
-  // Get bot permissions in guild
   .get(
     "/guild/:id/permissions",
     ...compositions.authenticated,

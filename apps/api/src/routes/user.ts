@@ -3,15 +3,14 @@ import { zValidator } from "@hono/zod-validator";
 import { Redis } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains";
 import { Actor } from "@ticketsbot/core/context";
-import { createRoute, ApiErrors, successResponse } from "../factory";
+import { createRoute, successResponse } from "../factory";
+import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
 import { PreferenceKeySchema } from "../utils/validation-schemas";
 import { logger } from "../utils/logger";
 
-// Constants
 const PREFERENCE_TTL = 60 * 60 * 24 * 30; // 30 days
 
-// Request/Response schemas
 const SetPreferenceSchema = z.object({
   key: PreferenceKeySchema,
   value: z.any(),
@@ -21,33 +20,31 @@ const _PreferenceResponse = z.object({
   value: z.any().nullable(),
 });
 
-// Helper to get Redis key for user preferences
 const getPreferenceKey = (discordId: string, key: string) => `preferences:user:${discordId}:${key}`;
 
-// Create user routes using method chaining
 export const userRoutes = createRoute()
-  // Get current user info with Discord connection status
   .get("/", ...compositions.authenticated, async (c) => {
     const user = c.get("user");
-    
-    // Check Discord account connection status
+
     let discordConnected = false;
     let discordAccount = null;
-    
+
     try {
       if (user.id) {
         const account = await Account.getDiscordAccount(user.id);
         if (account) {
           discordConnected = true;
-          const tokenValid = !!account.accessToken && (!account.accessTokenExpiresAt || account.accessTokenExpiresAt > new Date());
-          
+          const tokenValid =
+            !!account.accessToken &&
+            (!account.accessTokenExpiresAt || account.accessTokenExpiresAt > new Date());
+
           discordAccount = {
             accountId: account.accountId,
             hasValidToken: tokenValid,
             expiresAt: account.accessTokenExpiresAt?.toISOString() ?? null,
             needsReauth: !tokenValid,
           };
-          
+
           logger.debug("Discord account status", {
             accountId: account.accountId,
             hasToken: !!account.accessToken,
@@ -61,7 +58,7 @@ export const userRoutes = createRoute()
     } catch (error) {
       logger.error("Failed to check Discord account status", error);
     }
-    
+
     return c.json({
       id: user.id,
       email: user.email,
@@ -75,8 +72,7 @@ export const userRoutes = createRoute()
       },
     });
   })
-  
-  // Get user preference by key
+
   .get("/preferences/:key", ...compositions.authenticated, async (c) => {
     const key = c.req.param("key");
     const actor = Actor.use();
@@ -85,13 +81,11 @@ export const userRoutes = createRoute()
       throw ApiErrors.badRequest("Invalid user context");
     }
 
-    // If Discord is not connected, return null
     if (!actor.properties.discordId) {
       return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
     }
 
     if (!Redis.isAvailable()) {
-      // Redis unavailable, return null
       return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
     }
 
@@ -105,12 +99,10 @@ export const userRoutes = createRoute()
       return c.json({ value } satisfies z.infer<typeof _PreferenceResponse>);
     } catch (error) {
       console.error("Failed to get preference:", error);
-      // Return null on error rather than failing
       return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
     }
   })
 
-  // Set user preference
   .post(
     "/preferences",
     ...compositions.authenticated,
@@ -123,13 +115,11 @@ export const userRoutes = createRoute()
         throw ApiErrors.badRequest("Invalid user context");
       }
 
-      // If Discord is not connected, return success but don't store
       if (!actor.properties.discordId) {
         return c.json(successResponse());
       }
 
       if (!Redis.isAvailable()) {
-        // Redis unavailable, acknowledge but don't store
         return c.json(successResponse());
       }
 
@@ -147,7 +137,6 @@ export const userRoutes = createRoute()
     }
   )
 
-  // Delete user preference
   .delete("/preferences/:key", ...compositions.authenticated, async (c) => {
     const key = c.req.param("key");
     const actor = Actor.use();
@@ -156,13 +145,11 @@ export const userRoutes = createRoute()
       throw ApiErrors.badRequest("Invalid user context");
     }
 
-    // If Discord is not connected, return success
     if (!actor.properties.discordId) {
       return c.json(successResponse());
     }
 
     if (!Redis.isAvailable()) {
-      // Redis unavailable, return success
       return c.json(successResponse());
     }
 

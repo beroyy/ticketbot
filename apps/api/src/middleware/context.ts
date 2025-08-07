@@ -15,12 +15,7 @@ type Variables = {
   startTime: number;
 };
 
-/**
- * Extract guild ID from various sources in the request
- * Now uses Zod validation for better error handling
- */
 const extractGuildId = (c: Context): string | undefined => {
-  // Try URL params first (e.g., /guilds/:guildId/...)
   const paramGuildId = c.req.param("guildId");
   if (paramGuildId) {
     const result = DiscordGuildIdSchema.safeParse(paramGuildId);
@@ -31,7 +26,6 @@ const extractGuildId = (c: Context): string | undefined => {
     return undefined;
   }
 
-  // Try query params
   const query = c.req.query();
   if (query.guildId) {
     const result = DiscordGuildIdSchema.safeParse(query.guildId);
@@ -42,16 +36,9 @@ const extractGuildId = (c: Context): string | undefined => {
     return undefined;
   }
 
-  // For POST/PUT/PATCH, we could check body, but that requires parsing
-  // which should be done by the route handler with proper validation
-
   return undefined;
 };
 
-
-/**
- * Context middleware that provides actor context for the entire request
- */
 export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
   const session = await getSessionFromContext(c);
 
@@ -59,7 +46,6 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  // Debug logging for session data
   logger.debug("Context middleware - session data:", {
     userId: session.user.id,
     email: session.user.email,
@@ -68,15 +54,12 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
     sessionKeys: Object.keys(session.user),
   });
 
-  // Extract guild ID from request
   const guildId = extractGuildId(c);
 
-  // Calculate permissions
   let permissions = 0n;
   let effectiveDiscordUserId = session.user.discordUserId;
 
   if (guildId) {
-    // If discordUserId not in session, fallback to OAuth account
     if (!effectiveDiscordUserId) {
       logger.debug("No discordUserId in session, checking OAuth account...");
       try {
@@ -87,10 +70,12 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
           providerId: discordAccount?.providerId,
           hasAccessToken: !!discordAccount?.accessToken,
         });
-        
+
         if (discordAccount?.accountId) {
           effectiveDiscordUserId = discordAccount.accountId;
-          logger.info(`Using Discord ID from OAuth account for user ${session.user.id}: ${effectiveDiscordUserId}`);
+          logger.info(
+            `Using Discord ID from OAuth account for user ${session.user.id}: ${effectiveDiscordUserId}`
+          );
         } else {
           logger.warn("No Discord account found for user:", session.user.id);
         }
@@ -111,7 +96,6 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
         });
       } catch (error) {
         logger.error("Failed to get permissions:", error);
-        // Continue with no permissions rather than failing the request
       }
     } else {
       logger.warn("No effective Discord user ID available for permission calculation", {
@@ -121,14 +105,12 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
     }
   }
 
-  // Also set Hono variables for backward compatibility during migration
   c.set("user", session.user);
   c.set("session", session);
   if (guildId) {
     c.set("guildId", guildId);
   }
 
-  // Log final actor context
   logger.debug("Creating actor context:", {
     type: "web_user",
     userId: session.user.id,
@@ -139,7 +121,6 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
     permissionsHex: `0x${permissions.toString(16)}`,
   });
 
-  // Provide actor context for the entire request
   return Actor.provide(
     {
       type: "web_user",
@@ -156,9 +137,6 @@ export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c
   );
 };
 
-/**
- * Middleware that requires authentication (wraps withContext)
- */
 export const requireAuth: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
   const session = await getSessionFromContext(c);
 
@@ -169,17 +147,12 @@ export const requireAuth: MiddlewareHandler<{ Variables: Variables }> = async (c
   return withContext(c, next);
 };
 
-/**
- * Higher-order middleware factory for permission checks
- * Now includes better logging and error details
- */
 export const requirePermission = (permission: bigint) => {
   return async (c: Context<{ Variables: Variables }>, next: Next) => {
     const checkPermissionAndProceed = async () => {
       try {
         Actor.requirePermission(permission);
 
-        // Log successful permission check in dev
         if (env.isDev()) {
           const actor = Actor.use();
           logger.debug("Permission check passed", {
@@ -192,7 +165,6 @@ export const requirePermission = (permission: bigint) => {
         await next();
       } catch (error) {
         if (error instanceof VisibleError) {
-          // Enhanced error response with permission details in dev
           const response = env.isDev()
             ? {
                 error: error.message,
@@ -210,7 +182,6 @@ export const requirePermission = (permission: bigint) => {
       }
     };
 
-    // Ensure we have context
     if (!Actor.maybeUse()) {
       await withContext(c, checkPermissionAndProceed);
     } else {
@@ -219,14 +190,10 @@ export const requirePermission = (permission: bigint) => {
   };
 };
 
-/**
- * Higher-order middleware factory for any-of permission checks
- */
 export const requireAnyPermission = (...permissions: bigint[]) => {
   return async (c: Context<{ Variables: Variables }>, next: Next) => {
     const checkPermissionsAndProceed = async () => {
       try {
-        // Check if user has any of the specified permissions
         const hasAny = permissions.some((p) => Actor.hasPermission(p));
         if (!hasAny) {
           throw new VisibleError("permission_denied", "Missing required permissions");
@@ -242,7 +209,6 @@ export const requireAnyPermission = (...permissions: bigint[]) => {
       }
     };
 
-    // Ensure we have context
     if (!Actor.maybeUse()) {
       await withContext(c, checkPermissionsAndProceed);
     } else {
@@ -251,9 +217,6 @@ export const requireAnyPermission = (...permissions: bigint[]) => {
   };
 };
 
-/**
- * Request tracking middleware - adds requestId and timing
- */
 export const requestTracking: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
   c.set("requestId", nanoid());
   c.set("startTime", Date.now());
@@ -265,31 +228,10 @@ export const requestTracking: MiddlewareHandler<{ Variables: Variables }> = asyn
   c.header("X-Response-Time", `${duration}ms`);
 };
 
-/**
- * Middleware compositions for common patterns
- * These replace the old compositions from factory-middleware.ts
- */
 export const middleware = {
-  /**
-   * Public endpoints - no auth required
-   */
   public: [requestTracking] as const,
-
-  /**
-   * Authenticated endpoints - require valid session
-   * withContext automatically extracts guild ID if present
-   */
   authenticated: [requestTracking, withContext] as const,
-
-  /**
-   * Guild-scoped endpoints - same as authenticated in new system
-   * withContext automatically extracts guild ID from params/query
-   */
   guildScoped: [requestTracking, withContext] as const,
 } as const;
 
-/**
- * Backward compatibility export for easier migration
- * Maps old names to new middleware
- */
 export const compositions = middleware;

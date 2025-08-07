@@ -2,11 +2,11 @@ import type { Context as _Context, Next as _Next, MiddlewareHandler } from "hono
 import { Redis } from "@ticketsbot/core";
 import { env } from "../env";
 
-interface RateLimitConfig {
+type RateLimitConfig = {
   window: number;
   max: number;
   keyPrefix?: string;
-}
+};
 
 export function createRateLimit(config: RateLimitConfig): MiddlewareHandler {
   const { window, max, keyPrefix = "api" } = config;

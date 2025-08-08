@@ -16,6 +16,7 @@ import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/us
 import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StableAvatar } from "@/components/stable-avatar";
+import { LogOut } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -60,6 +61,12 @@ export function Navbar() {
   }, [selectedGuildId, hasPermission, hasAnyPermission]);
 
   if (["/setup", "/setup-v2", "/login"].includes(router.pathname)) return null;
+
+  const handleSignOut = () => {
+    setSelectedGuildId(null);
+    authClient.signOut();
+    router.push("/login");
+  };
 
   return (
     <nav className="z-50 bg-[#06234A] px-9 py-3.5 text-white">
@@ -132,13 +139,8 @@ export function Navbar() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={() => {
-                      // Clear guild selection before signing out
-                      setSelectedGuildId(null);
-                      authClient.signOut();
-                    }}
-                  >
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 size-4" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>

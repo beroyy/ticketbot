@@ -235,15 +235,6 @@ body {
   animation: fade-in 200ms ease-in-out;
 }
 
-/* Scrollbar Utilities */
-.scrollbar-reserve {
-  scrollbar-gutter: stable;
-}
-
-.scrollbar-reserve-both {
-  scrollbar-gutter: stable both-edges;
-}
-
 /* Prevent text selection layout shifts */
 .no-select-shift {
   user-select: none;

@@ -11,7 +11,6 @@ import {
 import { createRoute } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions, requirePermission } from "../middleware/context";
-import { patterns } from "../utils/validation";
 
 const PanelQuestionSchema = z
   .object({
@@ -34,7 +33,11 @@ const SinglePanelConfigSchema = z
     title: z.string().min(1).max(100).describe("Panel title"),
     emoji: z.string().max(4).optional().describe("Button emoji"),
     buttonText: z.string().min(1).max(80).optional().default("Create Ticket"),
-    buttonColor: patterns.hexColor().optional().describe("Button color"),
+    buttonColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color (e.g., #5865F2)")
+      .optional()
+      .describe("Button color"),
     categoryId: DiscordChannelIdSchema.optional().describe("Ticket category channel"),
     questions: z.array(PanelQuestionSchema).max(10).optional(),
     mentionOnOpen: DiscordChannelIdSchema.optional().describe("Role to mention"),

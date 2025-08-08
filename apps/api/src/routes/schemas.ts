@@ -12,31 +12,6 @@ import {
 import { createRoute } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
-import { globalRegistry } from "../utils/validation";
-
-globalRegistry.add(DiscordGuildIdSchema, {
-  title: "Discord Guild ID",
-  description: "A Discord server (guild) snowflake ID",
-  examples: ["123456789012345678"],
-});
-
-globalRegistry.add(DiscordChannelIdSchema, {
-  title: "Discord Channel ID",
-  description: "A Discord channel snowflake ID",
-  examples: ["987654321098765432"],
-});
-
-globalRegistry.add(DiscordUserIdSchema, {
-  title: "Discord User ID",
-  description: "A Discord user snowflake ID",
-  examples: ["111111111111111111"],
-});
-
-globalRegistry.add(TicketStatusSchema, {
-  title: "Ticket Status",
-  description: "Valid ticket status values",
-  examples: ["OPEN", "CLAIMED", "CLOSED", "PENDING"],
-});
 
 const schemaMap = {
   "discord-guild-id": DiscordGuildIdSchema,

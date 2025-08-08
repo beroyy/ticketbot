@@ -1,6 +1,6 @@
 import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { createLogger } from "@ticketsbot/core";
 import {
   Actor,
@@ -10,9 +10,21 @@ import {
   PermissionDeniedError,
 } from "@ticketsbot/core/context";
 import { env } from "../env";
-import { formatZodError } from "./validation";
 
 const logger = createLogger("api:error-handler");
+
+const formatZodError = (error: ZodError) => {
+  return {
+    error: "Validation failed",
+    code: "validation_error",
+    details: error.issues.map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message,
+      code: issue.code,
+    })),
+    formatted: z.prettifyError(error),
+  };
+};
 
 type ErrorResponse = {
   error: string;

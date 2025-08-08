@@ -6,11 +6,19 @@ import { Actor } from "@ticketsbot/core/context";
 import { createRoute, successResponse } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
-import { PreferenceKeySchema } from "../utils/validation-schemas";
 
 const logger = createLogger("api:user");
 
 const PREFERENCE_TTL = 60 * 60 * 24 * 30; // 30 days
+
+const PreferenceKeySchema = z
+  .string()
+  .min(1)
+  .max(50)
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "Preference key must contain only alphanumeric characters, underscores, and hyphens"
+  );
 
 const SetPreferenceSchema = z.object({
   key: PreferenceKeySchema,

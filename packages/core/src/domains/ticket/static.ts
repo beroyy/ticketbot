@@ -11,12 +11,12 @@ import { prisma, TicketStatus } from "@ticketsbot/db";
 /**
  * Find a ticket by its Discord channel ID
  * No permission checks - use carefully
+ * Returns tickets of any status
  */
 export const findByChannelId = async (channelId: string): Promise<any> => {
   return prisma.ticket.findFirst({
     where: {
       channelId,
-      status: TicketStatus.OPEN,
       deletedAt: null,
     },
     include: {
@@ -36,7 +36,6 @@ export const isTicketChannel = async (
   return prisma.ticket.findFirst({
     where: {
       channelId,
-      status: TicketStatus.OPEN,
       deletedAt: null,
     },
     select: {

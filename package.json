@@ -4,7 +4,7 @@
   "description": "Discord ticket bot with web dashboard",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.14.0",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"

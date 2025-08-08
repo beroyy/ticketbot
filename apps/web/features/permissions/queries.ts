@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { PermissionsResponse, UserPermissions } from "./types";
+import type { UserPermissions } from "./types";
 
 async function fetchUserPermissions(guildId: string): Promise<UserPermissions> {
   const res = await api.permissions[":guildId"].$get({

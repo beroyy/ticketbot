@@ -7,15 +7,11 @@
       "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "dev": {
-      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL"],
+      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL", "REDIS_URL"],
       "persistent": true
     },
     "start": {
-      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL"]
-    },
-    "deploy": {
-      "env": ["DISCORD_*"],
-      "cache": false
+      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL", "REDIS_URL"]
     },
     "typecheck": {
       "inputs": ["src/**", "tsconfig.json"],

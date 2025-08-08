@@ -92,7 +92,7 @@ const _routes = app
 export type AppType = typeof _routes;
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
-const host = env.API_HOST;
+const host = "0.0.0.0";
 
 Redis.initialize()
   .then(() => {

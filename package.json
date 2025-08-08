@@ -32,8 +32,7 @@
     "docker": "docker compose up --build",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
-    "lint": "turbo run lint",
-    "lint:fix": "turbo run lint -- --fix",
+    "lint": "turbo run lint -- --fix",
     "start": "turbo run start",
     "start:production": "tsx packages/scripts/src/deploy/start-production.ts",
     "typecheck": "turbo run typecheck"

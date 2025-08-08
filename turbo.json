@@ -21,13 +21,11 @@
         "DISCORD_CLIENT_SECRET",
         "DISCORD_TOKEN",
         "WEB_URL",
-        "WEB_PORT",
         "API_URL",
         "REDIS_URL",
-        "NEXT_PUBLIC_*",
-        "NEXT_PHASE",
-        "NEXT_TELEMETRY_DISABLED",
-        "POSTHOG_API_KEY"
+        "PORT_OFFSET",
+        "BASE_DOMAIN",
+        "NEXT_PUBLIC_*"
       ]
     },
     "dev": {
@@ -42,18 +40,11 @@
         "DISCORD_*",
         "NEXT_PUBLIC_*",
         "API_URL",
-        "API_HOST",
-        "API_PORT",
-        "API_SECRET",
         "WEB_URL",
-        "WEB_PORT",
+        "PORT_OFFSET",
+        "BASE_DOMAIN",
         "DEV_*",
-        "COOKIE_*",
-        "RATE_LIMIT_*",
-        "LOG_*",
-        "*_CACHE_TTL",
-        "ALLOWED_ORIGINS",
-        "POSTHOG_API_KEY"
+        "LOG_*"
       ]
     },
     "start": {
@@ -68,23 +59,17 @@
         "DISCORD_*",
         "NEXT_PUBLIC_*",
         "API_URL",
-        "API_HOST",
-        "API_PORT",
-        "API_SECRET",
         "WEB_URL",
-        "WEB_PORT",
-        "COOKIE_*",
-        "RATE_LIMIT_*",
-        "LOG_*",
-        "*_CACHE_TTL",
-        "POSTHOG_API_KEY"
+        "PORT_OFFSET",
+        "BASE_DOMAIN",
+        "LOG_*"
       ]
     },
     "lint": {
       "dependsOn": ["^lint"],
       "inputs": ["src/**", "eslint.config.*", ".eslintrc.*"],
       "outputs": [],
-      "env": ["NEXT_PHASE", "NEXT_TELEMETRY_DISABLED", "POSTHOG_API_KEY"]
+      "env": []
     },
     "typecheck": {
       "dependsOn": ["^build", "@ticketsbot/core#db:generate"],
@@ -98,13 +83,6 @@
       "outputs": ["coverage/**"],
       "cache": false,
       "env": ["NODE_ENV", "DATABASE_URL"]
-    },
-    "test:hurl": {
-      "dependsOn": ["^build"],
-      "inputs": ["tests/**/*.hurl", "tests/run-tests.sh"],
-      "outputs": ["tests/reports/**"],
-      "env": ["TEST_USER_TOKEN", "TEST_GUILD_ID", "API_URL"],
-      "cache": false
     },
     "db:generate": {
       "cache": true,

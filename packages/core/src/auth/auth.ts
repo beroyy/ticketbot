@@ -109,15 +109,14 @@ const createAuthInstance = () => {
       storeSessionInDatabase: true,
       cookieCache: {
         enabled: true,
-        maxAge: parseInt(process.env["COOKIE_CACHE_MAX_AGE"] || "300"),
+        maxAge: 300,
       },
       expiresIn: 60 * 60 * 24 * 7,
     },
     rateLimit: {
-      enabled:
-        process.env["NODE_ENV"] === "production" || process.env["RATE_LIMIT_ENABLED"] === "true",
-      window: parseInt(process.env["RATE_LIMIT_WINDOW"] || "60"),
-      max: parseInt(process.env["RATE_LIMIT_MAX"] || "100"),
+      enabled: process.env["NODE_ENV"] === "production",
+      window: 60,
+      max: 100,
       storage: "memory",
       customRules: {
         "/auth/signin": { window: 300, max: 5 },

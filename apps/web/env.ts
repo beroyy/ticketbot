@@ -77,7 +77,7 @@ const validateEnvironment = () => {
   if (typeof window === "undefined") {
     // During build phase, Next.js may not have all env vars available
     // Check if we're in the build phase
-    const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+    const isBuildPhase = false;
 
     if (isBuildPhase) {
       // During build, provide defaults for server vars that aren't critical during build
@@ -87,13 +87,8 @@ const validateEnvironment = () => {
         NODE_ENV: (process.env.NODE_ENV as any) || "production",
         WEB_URL: process.env.WEB_URL || "http://localhost:3000",
         API_URL: process.env.API_URL || "http://localhost:3001",
-        WEB_PORT: Number(process.env.WEB_PORT) || 3000,
-        NEXT_TELEMETRY_DISABLED:
-          process.env.NEXT_TELEMETRY_DISABLED === "true"
-            ? true
-            : process.env.NEXT_TELEMETRY_DISABLED === "false"
-              ? false
-              : undefined,
+        WEB_PORT: 3000,
+        NEXT_TELEMETRY_DISABLED: undefined,
       };
 
       // For client vars during build, provide defaults

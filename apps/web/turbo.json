@@ -5,32 +5,35 @@
       "env": ["NODE_ENV", "NEXT_PUBLIC_*", "WEB_URL", "API_URL"],
       "outputs": [".next/**", "!.next/cache/**"],
       "inputs": [
-        "src/**",
-        "pages/**",
-        "components/**",
-        "lib/**",
-        "styles/**",
-        "public/**",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.css",
+        "**/*.svg",
+        "**/*.png",
         "next.config.*",
         "tailwind.config.*",
         "postcss.config.*",
         "tsconfig.json",
-        "package.json"
+        "package.json",
+        "!node_modules/**",
+        "!.next/**"
       ]
     },
     "dev": {
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL"],
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "PORT_OFFSET", "WEB_URL", "API_URL"],
       "persistent": true
     },
     "start": {
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL"]
+      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "PORT_OFFSET", "WEB_URL", "API_URL"]
     },
     "lint": {
-      "inputs": ["src/**", "pages/**", "components/**", "lib/**", ".eslintrc.*", "eslint.config.*"],
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "!node_modules/**", "!.next/**", ".eslintrc.*", "eslint.config.*"],
       "outputs": []
     },
     "typecheck": {
-      "inputs": ["src/**", "pages/**", "components/**", "lib/**", "tsconfig.json"],
+      "inputs": ["**/*.ts", "**/*.tsx", "!node_modules/**", "!.next/**", "tsconfig.json"],
       "outputs": []
     }
   }

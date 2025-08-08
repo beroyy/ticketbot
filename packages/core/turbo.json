@@ -8,7 +8,7 @@
       "cache": false,
       "persistent": true
     },
-    "type-check": {
+    "typecheck": {
       "outputs": []
     },
     "clean": {
@@ -32,9 +32,6 @@
       "cache": false
     },
     "db:seed": {
-      "cache": false
-    },
-    "db:seed-from-main": {
       "cache": false
     }
   }

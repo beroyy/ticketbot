@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema } from "@ticketsbot/core";
+import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
 import { Role } from "@ticketsbot/core/domains";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
-import { logger } from "../utils/logger";
+
+const logger = createLogger("api:permissions");
 
 // Response schemas
 const _PermissionsResponseSchema = z.object({

@@ -1,6 +1,7 @@
 import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
+import { createLogger } from "@ticketsbot/core";
 import {
   Actor,
   VisibleError,
@@ -10,6 +11,8 @@ import {
 } from "@ticketsbot/core/context";
 import { env } from "../env";
 import { formatZodError } from "./validation";
+
+const logger = createLogger("api:error-handler");
 
 type ErrorResponse = {
   error: string;
@@ -108,7 +111,7 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
       };
     }
 
-    console.error("Internal error:", error);
+    logger.error("Internal error:", error);
     return {
       error: "An internal error occurred",
       code: "internal_error",
@@ -116,7 +119,7 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
     };
   }
 
-  console.error("Unknown error type:", error);
+  logger.error("Unknown error type:", error);
   return {
     error: "An unknown error occurred",
     code: "unknown_error",

@@ -1,8 +1,9 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { Role, getPanelGuildId } from "@ticketsbot/core/domains";
-import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
+import { parseDiscordId, PermissionUtils, createLogger } from "@ticketsbot/core";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
-import { logger } from "../utils/logger";
+
+const logger = createLogger("api:permissions");
 
 type Variables = {
   user: AuthSession["user"];

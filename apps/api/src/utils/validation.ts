@@ -1,5 +1,7 @@
 import { z, type ZodError, type ZodTypeAny, type ZodRawShape } from "zod";
-import { logger } from "./logger";
+import { createLogger } from "@ticketsbot/core";
+
+const logger = createLogger("api:validation");
 
 export const prettifyZodError = (error: ZodError): string => {
   return z.prettifyError(error);

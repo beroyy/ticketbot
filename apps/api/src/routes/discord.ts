@@ -4,10 +4,12 @@ import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
 import { Account, Role, User, findById as findGuildById } from "@ticketsbot/core/domains";
 import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
+import { createLogger } from "@ticketsbot/core";
 import { createRoute } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
-import { logger } from "../utils/logger";
+
+const logger = createLogger("api:discord");
 
 const GuildResponse = z.object({
   id: z.string(),

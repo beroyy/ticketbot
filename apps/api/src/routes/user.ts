@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Redis } from "@ticketsbot/core";
+import { Redis, createLogger } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains";
 import { Actor } from "@ticketsbot/core/context";
 import { createRoute, successResponse } from "../factory";
 import { ApiErrors } from "../utils/error-handler";
 import { compositions } from "../middleware/context";
 import { PreferenceKeySchema } from "../utils/validation-schemas";
-import { logger } from "../utils/logger";
+
+const logger = createLogger("api:user");
 
 const PREFERENCE_TTL = 60 * 60 * 24 * 30; // 30 days
 
@@ -98,7 +99,7 @@ export const userRoutes = createRoute()
 
       return c.json({ value } satisfies z.infer<typeof _PreferenceResponse>);
     } catch (error) {
-      console.error("Failed to get preference:", error);
+      logger.error("Failed to get preference:", error);
       return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
     }
   })
@@ -131,7 +132,7 @@ export const userRoutes = createRoute()
 
         return c.json(successResponse());
       } catch (error) {
-        console.error("Failed to set preference:", error);
+        logger.error("Failed to set preference:", error);
         throw ApiErrors.internal("Failed to save preference");
       }
     }
@@ -161,7 +162,7 @@ export const userRoutes = createRoute()
 
       return c.json(successResponse());
     } catch (error) {
-      console.error("Failed to delete preference:", error);
+      logger.error("Failed to delete preference:", error);
       throw ApiErrors.internal("Failed to delete preference");
     }
   });

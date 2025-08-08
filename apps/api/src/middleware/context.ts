@@ -1,11 +1,12 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { type AuthSession, getSessionFromContext } from "@ticketsbot/core/auth";
-import { User, DiscordGuildIdSchema } from "@ticketsbot/core";
+import { User, DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
 import { env } from "../env";
-import { logger } from "../utils/logger";
 import { nanoid } from "nanoid";
+
+const logger = createLogger("api:context");
 
 type Variables = {
   user: AuthSession["user"];

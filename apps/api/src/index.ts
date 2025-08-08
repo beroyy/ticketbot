@@ -1,5 +1,5 @@
 import { env } from "./env";
-import { logger } from "./utils/logger";
+import { createLogger } from "@ticketsbot/core";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
@@ -19,6 +19,7 @@ import { ticketRoutes } from "./routes/tickets";
 import { permissionRoutes } from "./routes/permissions";
 import { Redis } from "@ticketsbot/core";
 
+const logger = createLogger("api");
 const app = new Hono<AppEnv>().onError(errorHandler);
 
 const webUrl = env.WEB_URL;
@@ -32,7 +33,7 @@ logger.debug("🔒 CORS Configuration:", {
 
 app.use("/*", async (c, next) => {
   const origin = c.req.header("origin");
-  logger.request(c.req.method, c.req.path, origin);
+  logger.debug(`[REQUEST] ${c.req.method} ${c.req.path} - Origin: ${origin || "no-origin"}`);
   await next();
 });
 

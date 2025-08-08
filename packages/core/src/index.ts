@@ -239,6 +239,9 @@ export {
 export { Redis, type RedisHealthCheck } from "./redis";
 export { isRedisAvailable, getRedisConnection } from "./redis";
 
+// Export logger utilities
+export { logger, createLogger } from "./utils/logger";
+
 // Export domain namespaces (these include their own schemas)
 export { User } from "./domains/user";
 export { Guild } from "./domains/guild";

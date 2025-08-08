@@ -4,7 +4,7 @@ import {
   DiscordChannelIdSchema,
   DiscordUserIdSchema,
   JsonMetadataSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Guild creation schema - only required fields for initial creation

@@ -4,7 +4,7 @@ import {
   DiscordUserIdSchema,
   JsonMetadataSchema,
   PaginationSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Transcript schema

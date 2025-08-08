@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema, DiscordUserIdSchema } from "../../schemas/common";
+import { DiscordGuildIdSchema, DiscordUserIdSchema } from "../../utils/common";
 
 /**
  * Create tag schema

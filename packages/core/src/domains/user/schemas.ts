@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DiscordUserIdSchema, DiscordGuildIdSchema } from "../../schemas/common";
+import { DiscordUserIdSchema, DiscordGuildIdSchema } from "../../utils/common";
 
 /**
  * Discord user creation/update schema

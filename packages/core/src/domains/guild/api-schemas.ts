@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DiscordChannelIdSchema } from "../../schemas/common";
+import { DiscordChannelIdSchema } from "../../utils/common";
 
 /**
  * Modern settings update schema that matches the domain structure

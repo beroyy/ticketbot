@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  DiscordGuildIdSchema,
-  DiscordUserIdSchema,
-  JsonMetadataSchema,
-} from "../../schemas/common";
+import { DiscordGuildIdSchema, DiscordUserIdSchema, JsonMetadataSchema } from "../../utils/common";
 
 /**
  * Form field type enum

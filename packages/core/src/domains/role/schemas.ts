@@ -5,7 +5,7 @@ import {
   HexColorSchema,
   BigIntStringSchema,
   JsonMetadataSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Role role status

@@ -5,7 +5,7 @@ import {
   DiscordUserIdSchema,
   TicketStatusSchema,
   JsonMetadataSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Ticket creation schema for lifecycle

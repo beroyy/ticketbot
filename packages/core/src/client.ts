@@ -39,7 +39,7 @@ export {
   type FormFieldType,
   type ActionType,
   type Priority,
-} from "./schemas/common";
+} from "./utils/common";
 
 // Export permissions - avoiding duplicate exports by importing from permissions.ts
 // which already re-exports from permissions-constants

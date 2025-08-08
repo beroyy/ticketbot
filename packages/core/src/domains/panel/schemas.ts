@@ -4,7 +4,7 @@ import {
   DiscordChannelIdSchema,
   HexColorSchema,
   JsonMetadataSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Panel type enum

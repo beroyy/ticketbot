@@ -31,7 +31,7 @@ export {
   type FormFieldType,
   type ActionType,
   type Priority,
-} from "./schemas/common";
+} from "./utils/common";
 
 export {
   CreatePanelSchema,

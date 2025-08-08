@@ -6,7 +6,7 @@ import {
   TicketStatusSchema,
   PaginationSchema,
   DateRangeSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Core ticket schema - slimmed down to essentials

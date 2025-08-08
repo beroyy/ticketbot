@@ -4,7 +4,7 @@ import {
   DiscordUserIdSchema,
   DateRangeSchema,
   JsonMetadataSchema,
-} from "../../schemas/common";
+} from "../../utils/common";
 
 /**
  * Analytics snapshot schema

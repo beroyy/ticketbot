@@ -5,16 +5,14 @@ import dynamic from "next/dynamic";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query-client";
 import { UserProvider } from "@/features/user/ui/user-provider";
-// Using SSR auth provider
 import { AuthProvider } from "@/features/auth/auth-provider-ssr";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthErrorBoundary } from "@/components/auth-error-boundary";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Inter } from "next/font/google";
 import { NavbarSkeleton } from "@/components/navbar-skeleton";
 import { reportWebVitals as reportWebVitalsToAnalytics } from "@/lib/web-vitals";
-import { startPerformanceMonitoring } from "@/lib/performance-monitor";
 
 // Dynamically import Navbar with SSR disabled to avoid router issues during build
 const Navbar = dynamic(
@@ -46,12 +44,6 @@ const inter = Inter({
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => createQueryClient());
-
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      startPerformanceMonitoring();
-    }
-  }, []);
 
   // Extract auth props from pageProps
   const { session, authState, selectedGuildId, guilds, ...restProps } = pageProps;

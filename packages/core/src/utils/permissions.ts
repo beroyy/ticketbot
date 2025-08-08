@@ -9,7 +9,7 @@ import {
   ALL_PERMISSIONS,
   DefaultRolePermissions,
   type PermissionFlag,
-} from "../schemas/permissions-constants";
+} from "../schemas/permissions";
 
 // Export for use in other modules
 export { ALL_PERMISSIONS, DefaultRolePermissions };

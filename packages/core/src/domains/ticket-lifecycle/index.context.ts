@@ -1,7 +1,7 @@
 import { prisma } from "../../prisma/client";
 import { TicketStatus } from "@prisma/client";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
-import { PermissionFlags } from "../../schemas/permissions-constants";
+import { PermissionFlags } from "../../schemas/permissions";
 import { User } from "../user";
 import { Event } from "../event";
 import { Ticket } from "../ticket";

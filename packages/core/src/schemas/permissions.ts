@@ -1,19 +1,9 @@
-/**
- * Permission flag constants and types
- * Data definitions only - business logic lives in @ticketsbot/auth
- */
-
-/**
- * Permission flags as bigint for 64-bit support
- */
 export const PermissionFlags = {
-  // Panel Management
   PANEL_CREATE: 1n << 0n,
   PANEL_EDIT: 1n << 1n,
   PANEL_DELETE: 1n << 2n,
   PANEL_DEPLOY: 1n << 3n,
 
-  // Ticket Management
   TICKET_VIEW_ALL: 1n << 4n,
   TICKET_CLAIM: 1n << 5n,
   TICKET_CLOSE_ANY: 1n << 6n,
@@ -21,58 +11,39 @@ export const PermissionFlags = {
   TICKET_DELETE: 1n << 8n,
   TICKET_EXPORT: 1n << 9n,
 
-  // Role Management
   ROLE_CREATE: 1n << 10n,
   ROLE_EDIT: 1n << 11n,
   ROLE_DELETE: 1n << 12n,
   ROLE_ASSIGN: 1n << 13n,
 
-  // Member Management
   MEMBER_VIEW: 1n << 14n,
   MEMBER_BLACKLIST: 1n << 15n,
   MEMBER_UNBLACKLIST: 1n << 28n,
 
-  // Form Management
   FORM_CREATE: 1n << 16n,
   FORM_EDIT: 1n << 17n,
   FORM_DELETE: 1n << 18n,
 
-  // Tag Management
   TAG_CREATE: 1n << 19n,
   TAG_EDIT: 1n << 20n,
   TAG_DELETE: 1n << 21n,
   TAG_USE: 1n << 22n,
 
-  // Guild Settings
   GUILD_SETTINGS_VIEW: 1n << 23n,
   GUILD_SETTINGS_EDIT: 1n << 24n,
 
-  // Analytics
   ANALYTICS_VIEW: 1n << 25n,
 
-  // Feedback
   FEEDBACK_VIEW: 1n << 26n,
   FEEDBACK_MANAGE: 1n << 27n,
 } as const;
 
-/**
- * Type for permission flag keys
- */
 export type PermissionFlag = keyof typeof PermissionFlags;
 
-/**
- * Type for permission values
- */
 export type PermissionValue = (typeof PermissionFlags)[PermissionFlag];
 
-/**
- * All permissions combined - calculated dynamically
- */
 export const ALL_PERMISSIONS = Object.values(PermissionFlags).reduce((acc, flag) => acc | flag, 0n);
 
-/**
- * Permission categories for UI grouping
- */
 export const PermissionCategories = {
   "Panel Management": [
     {
@@ -199,9 +170,6 @@ export const PermissionCategories = {
   ],
 } as const;
 
-/**
- * Default role permission sets
- */
 export const DefaultRolePermissions = {
   admin: ALL_PERMISSIONS,
   support:

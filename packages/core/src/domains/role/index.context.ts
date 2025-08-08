@@ -3,7 +3,7 @@ import { GuildRoleStatus, type GuildRole, type GuildRoleMember } from "@prisma/c
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
 import { logger } from "../../utils/logger";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
-import { PermissionFlags } from "../../schemas/permissions-constants";
+import { PermissionFlags } from "../../schemas/permissions";
 
 // Export schemas
 export {
@@ -115,7 +115,6 @@ export namespace Role {
       return devPerms;
     }
 
-
     // Check if user is guild owner
     const guild = await prisma.guild.findUnique({
       where: { id: guildId },
@@ -153,7 +152,6 @@ export namespace Role {
         additionalPerms.additionalPermissions
       );
     }
-
 
     return finalPermissions;
   };
@@ -240,7 +238,6 @@ export namespace Role {
       });
 
       afterTransaction(async () => {
-
         // TODO: Add event logging when eventLog model is available
         console.log(`Role permissions updated: ${role.name} by ${userId}`);
       });
@@ -293,7 +290,6 @@ export namespace Role {
       });
 
       afterTransaction(async () => {
-
         // TODO: Add event logging when eventLog model is available
         console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
       });
@@ -334,7 +330,6 @@ export namespace Role {
       });
 
       afterTransaction(async () => {
-
         // TODO: Add event logging when eventLog model is available
         console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
       });
@@ -514,17 +509,13 @@ export namespace Role {
       },
     });
 
-
     // Log the removal
-    logger.info(
-      `Removed ${result.count} roles from user ${userId} in guild ${guildId}`,
-      {
-        removedRoles: memberships.map((m) => ({
-          id: m.guildRole.id,
-          name: m.guildRole.name,
-        })),
-      }
-    );
+    logger.info(`Removed ${result.count} roles from user ${userId} in guild ${guildId}`, {
+      removedRoles: memberships.map((m) => ({
+        id: m.guildRole.id,
+        name: m.guildRole.name,
+      })),
+    });
 
     return result.count;
   };

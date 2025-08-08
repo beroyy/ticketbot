@@ -1,5 +1,5 @@
 import { Actor, type WebActor } from "../actor";
-import { PermissionFlags } from "../../schemas/permissions-constants";
+import { PermissionFlags } from "../../schemas/permissions";
 
 // Type definitions to avoid next dependency
 interface NextApiRequest {

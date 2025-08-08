@@ -1,6 +1,6 @@
 import { prisma } from "../../prisma/client";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
-import { PermissionFlags } from "../../schemas/permissions-constants";
+import { PermissionFlags } from "../../schemas/permissions";
 import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
 import type { DomainResult, PanelWithForm } from "../types";
 import {

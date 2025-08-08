@@ -54,7 +54,7 @@ export {
   ALL_PERMISSIONS,
   PermissionCategories,
   DefaultRolePermissions,
-} from "./schemas/permissions-constants";
+} from "./schemas/permissions";
 
 // Export client-safe utilities
 export {

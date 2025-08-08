@@ -192,7 +192,7 @@ export {
   ALL_PERMISSIONS,
   PermissionCategories,
   DefaultRolePermissions,
-} from "./schemas/permissions-constants";
+} from "./schemas/permissions";
 
 export {
   type BotConfig,

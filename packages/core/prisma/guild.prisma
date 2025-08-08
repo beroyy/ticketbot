@@ -1,35 +1,28 @@
-// ====================
-// GUILD MODELS
-// ====================
-
 model Guild {
   id                      String   @id @map("id")
   name                    String?
-  ownerDiscordId          String?  @map("owner_discord_id") // Discord ID of the guild owner
+  ownerDiscordId          String?  @map("owner_discord_id")
   defaultCategoryId       String?  @map("default_category_id")
-  supportCategoryId       String?  @map("support_category_id") // Support category
+  supportCategoryId       String?  @map("support_category_id")
   maxTicketsPerUser       Int      @default(0) @map("max_tickets_per_user")
   autoCloseEnabled        Boolean  @default(false) @map("auto_close_enabled")
   autoCloseHours          Int      @default(0) @map("auto_close_hours")
   showClaimButton         Boolean  @default(true) @map("show_claim_button")
   feedbackEnabled         Boolean  @default(true) @map("feedback_enabled")
   
-  // Additional settings fields for web dashboard
   language                String?  @default("en")
   ticketCloseConfirmation Boolean? @default(true) @map("ticket_close_confirmation")
   anonymousDashboard      Boolean? @default(false) @map("anonymous_dashboard")
   
-  // Open Commands settings
   openCommandsEnabled     Boolean? @default(true) @map("open_commands_enabled")
   channelCategory         String?  @default("Server Stats") @map("channel_category")
   welcomeMessage          String?  @default("Thank you for contacting support.\nplease describe your issue and await a response.") @map("welcome_message")
   
-  // Bot installation status
   botInstalled            Boolean  @default(false) @map("bot_installed")
+  memberCount             Int      @default(0) @map("member_count")
   
-  // New settings fields for domain logic
-  colorScheme             Json?    @map("color_scheme") // Theme colors (keep as JSON for flexibility)
-  branding                Json?    // Name, logo, banner (keep as JSON for flexibility)
+  colorScheme             Json?    @map("color_scheme")
+  branding                Json?
   footerText              String?  @map("footer_text")
   footerLink              String?  @map("footer_link")
   ticketNameFormat        String?  @default("ticket-{number}") @map("ticket_name_format")
@@ -40,9 +33,8 @@ model Guild {
   totalTickets            Int      @default(0) @map("total_tickets")
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
-  deletedAt               DateTime? @map("deleted_at") // Added soft delete
+  deletedAt               DateTime? @map("deleted_at")
 
-  // Relations
   tags                    Tag[]
   panels                  Panel[]
   forms                   Form[]
@@ -55,13 +47,13 @@ model Guild {
   supportRoles            GuildSupportRole[]
   ticketAnalytics         TicketAnalyticsSnapshot[]
 
-  @@index([deletedAt]) // Index for soft delete queries
+  @@index([deletedAt])
   @@map("guilds")
 }
 
 model GuildCategory {
   guildId    String
-  categoryId String // Discord category ID
+  categoryId String
 
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
@@ -71,7 +63,7 @@ model GuildCategory {
 
 model GuildSupportRole {
   guildId String
-  roleId  String // Discord role ID
+  roleId  String
 
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 

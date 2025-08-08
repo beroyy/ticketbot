@@ -1,20 +1,15 @@
-// ====================
-// FORM MODELS
-// ====================
-
 model Form {
   id         Int      @id @default(autoincrement())
   guildId    String   @map("guild_id")
   name       String   @db.VarChar(100)
   createdAt  DateTime @default(now()) @map("created_at")
 
-  // Relations
   guild         Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
   formFields    FormField[]
   panels        Panel[]
   panelOptions  PanelOption[]
 
-  @@index([guildId]) // For listing guild's forms
+  @@index([guildId])
   @@map("forms")
 }
 
@@ -22,15 +17,14 @@ model FormField {
   id                Int     @id @default(autoincrement())
   formId            Int     @map("form_id")
   label             String  @db.VarChar(100)
-  type              FormFieldType // Now uses enum
+  type              FormFieldType
   placeholder       String?
   required          Boolean @default(false)
   orderIndex        Int     @default(0) @map("order_index")
-  validationRules   String? @map("validation_rules") // JSON for validation rules (min/max length, regex, etc.)
-  conditionalLogic  String? @map("conditional_logic") // JSON for conditional field display logic
-  options           String? // JSON for select/dropdown options
+  validationRules   String? @map("validation_rules")
+  conditionalLogic  String? @map("conditional_logic")
+  options           String?
 
-  // Relations
   form                    Form                    @relation(fields: [formId], references: [id], onDelete: Cascade)
   ticketFieldResponses    TicketFieldResponse[]
 

@@ -1,7 +1,3 @@
-// ====================
-// BLACKLIST MODEL
-// ====================
-
 model Blacklist {
   id        Int      @id @default(autoincrement())
   guildId   String   @map("guild_id")
@@ -10,10 +6,9 @@ model Blacklist {
   reason    String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  // Relations
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
-  @@unique([guildId, targetId]) // Prevent duplicate blacklist entries
-  @@index([guildId, isRole]) // For querying by type
+  @@unique([guildId, targetId])
+  @@index([guildId, isRole])
   @@map("blacklist")
 }

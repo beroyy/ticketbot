@@ -1,7 +1,3 @@
-// ====================
-// PANEL MODELS
-// ====================
-
 model Panel {
   id                  Int       @id @default(autoincrement())
   guildId             String    @map("guild_id")
@@ -15,23 +11,22 @@ model Panel {
   buttonText          String    @default("Create Ticket") @db.VarChar(80) @map("button_text")
   color               String?   @db.VarChar(7)
   welcomeMessage      String?   @map("welcome_message")
-  introTitle          String?   @db.VarChar(255) @map("intro_title") // Custom intro title for ticket embed
-  introDescription    String?   @map("intro_description") // Custom intro description for ticket embed
-  channelPrefix       String?   @db.VarChar(50) @map("channel_prefix")  // Custom channel naming prefix
-  mentionRoles        String?   @map("mention_roles") // JSON array of role IDs
-  hideMentions        Boolean   @default(false) @map("hide_mentions") // Whether to hide mentions after posting
-  parentPanelId       Int?      @map("parent_panel_id") // For multi panel hierarchy
+  introTitle          String?   @db.VarChar(255) @map("intro_title")
+  introDescription    String?   @map("intro_description")
+  channelPrefix       String?   @db.VarChar(50) @map("channel_prefix")
+  mentionRoles        String?   @map("mention_roles")
+  hideMentions        Boolean   @default(false) @map("hide_mentions")
+  parentPanelId       Int?      @map("parent_panel_id")
   orderIndex          Int       @default(0) @map("order_index")
   enabled             Boolean   @default(true)
-  permissions         String?   // JSON for role restrictions
-  messageId           String?   @map("message_id") // Discord message ID for deployed panel
-  deployedAt          DateTime? @map("deployed_at") // When panel was deployed to Discord
-  imageUrl            String?   @map("image_url") // URL for embed image (large)
-  thumbnailUrl        String?   @map("thumbnail_url") // URL for embed thumbnail (small)
-  textSections        Json?     @map("text_sections") // JSON array of text sections with heading and text
-  deletedAt           DateTime? @map("deleted_at") // Added soft delete
+  permissions         String?
+  messageId           String?   @map("message_id")
+  deployedAt          DateTime? @map("deployed_at")
+  imageUrl            String?   @map("image_url")
+  thumbnailUrl        String?   @map("thumbnail_url")
+  textSections        Json?     @map("text_sections")
+  deletedAt           DateTime? @map("deleted_at")
 
-  // Relations
   guild           Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
   form            Form?         @relation(fields: [formId], references: [id])
   parentPanel     Panel?        @relation("PanelHierarchy", fields: [parentPanelId], references: [id])
@@ -40,10 +35,10 @@ model Panel {
   panelGuildRoles  PanelGuildRole[]
   tickets         Ticket[]
 
-  @@index([deletedAt]) // Index for soft delete queries
-  @@index([guildId, enabled]) // For listing active panels
-  @@index([channelId]) // For finding panels by channel
-  @@unique([guildId, messageId]) // Each panel message is unique per guild
+  @@index([deletedAt])
+  @@index([guildId, enabled])
+  @@index([channelId])
+  @@unique([guildId, messageId])
   @@map("panels")
 }
 
@@ -54,11 +49,10 @@ model PanelOption {
   description  String?
   emoji        String? @db.VarChar(64)
   orderIndex   Int     @default(0) @map("order_index")
-  categoryId   String? @map("category_id") // Option-specific category override
-  formId       Int?    @map("form_id") // Option-specific form override
+  categoryId   String? @map("category_id")
+  formId       Int?    @map("form_id")
   enabled      Boolean @default(true)
 
-  // Relations
   panel   Panel    @relation(fields: [panelId], references: [id], onDelete: Cascade)
   form    Form?    @relation(fields: [formId], references: [id])
   tickets Ticket[]
@@ -70,8 +64,7 @@ model PanelGuildRole {
   id            Int      @id @default(autoincrement())
   panelId       Int      @map("panel_id")
   guildRoleId    Int      @map("guild_role_id")
-  
-  // Relations
+
   panel         Panel    @relation(fields: [panelId], references: [id], onDelete: Cascade)
   guildRole      GuildRole @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
   

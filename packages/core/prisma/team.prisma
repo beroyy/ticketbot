@@ -1,22 +1,17 @@
-// ====================
-// GUILD ROLE MODELS (formerly Role Models)
-// ====================
-
 model GuildRole {
   id                Int      @id @default(autoincrement())
   guildId           String   @map("guild_id")
   name              String   @db.VarChar(100)
-  discordRoleId     String?  @map("discord_role_id") // NULL if not yet created in Discord
-  status            GuildRoleStatus @default(ACTIVE) // Now uses enum
-  color             String?  @db.VarChar(7)  // Hex color
-  position          Int      @default(0) // For hierarchy
-  isDefault         Boolean  @default(false) @map("is_default") // true for admin/support
-  isManaged         Boolean  @default(true) @map("is_managed") // true = managed by our system
-  permissions       BigInt   @default(0) // Bitfield for permissions
+  discordRoleId     String?  @map("discord_role_id")
+  status            GuildRoleStatus @default(ACTIVE)
+  color             String?  @db.VarChar(7)
+  position          Int      @default(0)
+  isDefault         Boolean  @default(false) @map("is_default")
+  isManaged         Boolean  @default(true) @map("is_managed")
+  permissions       BigInt   @default(0)
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
   
-  // Relations
   guild             Guild               @relation("GuildTeamRoles", fields: [guildId], references: [id], onDelete: Cascade)
   guildRoleMembers   GuildRoleMember[]
   panelGuildRoles    PanelGuildRole[]
@@ -35,7 +30,6 @@ model GuildRoleMember {
   assignedAt      DateTime @default(now()) @map("assigned_at")
   assignedById    String?  @map("assigned_by_id")
   
-  // Relations
   discordUser     DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
   guildRole        GuildRole     @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
   assignedBy      DiscordUser? @relation("RoleAssignments", fields: [assignedById], references: [id])
@@ -50,11 +44,10 @@ model GuildMemberPermission {
   id                     Int      @id @default(autoincrement())
   discordId              String   @map("discord_id")
   guildId                String   @map("guild_id")
-  additionalPermissions  BigInt   @default(0) @map("additional_permissions") // Bitfield for extra perms
+  additionalPermissions  BigInt   @default(0) @map("additional_permissions")
   grantedAt              DateTime @default(now()) @map("granted_at")
   grantedById            String?  @map("granted_by_id")
   
-  // Relations
   discordUser            DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
   guild                  Guild        @relation("GuildTeamMemberPermissions", fields: [guildId], references: [id], onDelete: Cascade)
   grantedBy              DiscordUser? @relation("PermissionGrants", fields: [grantedById], references: [id])
@@ -67,10 +60,10 @@ model GuildMemberPermission {
 
 model Permission {
   id          Int      @id @default(autoincrement())
-  name        String   @unique // e.g., "PANEL_CREATE"
-  category    String   // e.g., "Panel Management"
+  name        String   @unique
+  category    String
   description String?
-  bitValue    BigInt   @map("bit_value") // The bit position (1 << n)
+  bitValue    BigInt   @map("bit_value")
   
   @@map("permissions")
 }

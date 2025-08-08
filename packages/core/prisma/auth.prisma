@@ -1,7 +1,3 @@
-// ====================
-// AUTHENTICATION MODELS
-// ====================
-
 model User {
   id            String   @id @default(cuid())
   name          String
@@ -10,12 +6,10 @@ model User {
   image         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
-  // Optional link to Discord (for users who log into web app)
+
   discordUserId String?  @unique
   discordUser   DiscordUser? @relation(fields: [discordUserId], references: [id])
   
-  // Better-auth relations only
   sessions      Session[]
   accounts      Account[]
   
@@ -69,19 +63,17 @@ model Verification {
 }
 
 model DiscordUser {
-  id            String   @id  // Discord ID directly (no CUID)
+  id            String   @id
   username      String   @db.VarChar(32)
   discriminator String?  @db.VarChar(5)
   avatarUrl     String?  @map("avatar_url")
-  metadata      Json?    // Discord user metadata (account info, guild-specific data)
-  guilds        Json?    // Cached Discord guilds with admin status
+  metadata      Json?
+  guilds        Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  // Optional link to web authentication
   webUser       User?
   
-  // Discord-specific relations
   openedTickets           Ticket[]          @relation("TicketOpener")
   claimedTickets          Ticket[]          @relation("TicketClaimer")
   ticketParticipants      TicketParticipant[]
@@ -89,7 +81,6 @@ model DiscordUser {
   ticketMessages          TicketMessage[]
   ticketFeedback          TicketFeedback[]
   
-  // Lifecycle event relations
   performedLifecycleEvents    TicketLifecycleEvent[] @relation("LifecyclePerformedBy")
   claimedLifecycleEvents      TicketLifecycleEvent[] @relation("LifecycleClaimer")
   closedLifecycleEvents       TicketLifecycleEvent[] @relation("LifecycleCloser")

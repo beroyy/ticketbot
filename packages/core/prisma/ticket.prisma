@@ -1,52 +1,45 @@
-// ====================
-// TICKET MODELS
-// ====================
-
 model Ticket {
   id                      Int       @id @default(autoincrement())
   guildId                 String    @map("guild_id")
-  number                  Int       @map("number") // Ticket number unique per guild
+  number                  Int       @map("number")
   panelId                 Int?      @map("panel_id")
   panelOptionId           Int?      @map("panel_option_id")
-  openerId                String    @map("opener_id") // References DiscordUser.id
-  claimedById             String?   @map("claimed_by_id") // References DiscordUser.id
+  openerId                String    @map("opener_id")
+  claimedById             String?   @map("claimed_by_id")
   channelId               String    @map("channel_id")
-  categoryId              String?   @map("category_id") // Channel category ID
+  categoryId              String?   @map("category_id")
   subject                 String?   @db.VarChar(100)
-  status                  TicketStatus  @default(OPEN) // Now uses enum
+  status                  TicketStatus  @default(OPEN)
   excludeFromAutoclose    Boolean   @default(false) @map("exclude_from_autoclose")
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
   closedAt                DateTime? @map("closed_at")
-  deletedAt               DateTime? @map("deleted_at") // Soft delete
+  deletedAt               DateTime? @map("deleted_at")
 
-  // Relations - only core relations retained
   guild                   Guild                   @relation(fields: [guildId], references: [id], onDelete: Cascade)
   panel                   Panel?                  @relation(fields: [panelId], references: [id])
   panelOption             PanelOption?            @relation(fields: [panelOptionId], references: [id])
   opener                  DiscordUser             @relation("TicketOpener", fields: [openerId], references: [id])
   claimedBy               DiscordUser?            @relation("TicketClaimer", fields: [claimedById], references: [id])
   
-  // Relations to new models
   lifecycleEvents         TicketLifecycleEvent[]
   transcript              Transcript?
   ticketParticipants      TicketParticipant[]
   events                  Event[]
 
   @@unique([guildId, number])
-  @@index([deletedAt]) // Index for soft delete queries
-  @@index([guildId, status]) // For listing tickets by status
-  @@index([openerId, status]) // For user's ticket queries
-  @@index([channelId]) // For finding ticket by channel
+  @@index([deletedAt])
+  @@index([guildId, status])
+  @@index([openerId, status])
+  @@index([channelId])
   @@map("tickets")
 }
 
 model TicketParticipant {
   ticketId  Int    @map("ticket_id")
-  userId    String @map("user_id") // References DiscordUser.id
-  role      String @db.VarChar(10) // "opener" or "participant"
+  userId    String @map("user_id")
+  role      String @db.VarChar(10)
 
-  // Relations
   ticket       Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   discordUser  DiscordUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -54,22 +47,17 @@ model TicketParticipant {
   @@map("ticket_participants")
 }
 
-// ====================
-// LIFECYCLE MODELS
-// ====================
-
 model TicketLifecycleEvent {
   id              Int      @id @default(autoincrement())
   ticketId        Int      @map("ticket_id")
   timestamp       DateTime @default(now())
-  action          String   @db.VarChar(50)  // e.g., "created", "claimed", "closed", "reopened"
+  action          String   @db.VarChar(50)
   performedById   String   @map("performed_by_id")
-  details         Json?    // Additional context for the event
-  claimedById     String?  @map("claimed_by_id") // For claim/unclaim events
-  closedById      String?  @map("closed_by_id") // For close events
+  details         Json?
+  claimedById     String?  @map("claimed_by_id")
+    closedById      String?  @map("closed_by_id")
   closeReason     String?  @map("close_reason")
 
-  // Relations
   ticket          Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   performedBy     DiscordUser @relation("LifecyclePerformedBy", fields: [performedById], references: [id])
   claimedBy       DiscordUser? @relation("LifecycleClaimer", fields: [claimedById], references: [id])
@@ -80,27 +68,21 @@ model TicketLifecycleEvent {
   @@map("ticket_lifecycle_events")
 }
 
-// ====================
-// TRANSCRIPT MODELS
-// ====================
-
 model Transcript {
   id              Int      @id @default(autoincrement())
   ticketId        Int      @unique @map("ticket_id")
   summary         String?
   sentimentScore  Float?   @map("sentiment_score")
-  embedding       String?  // For AI/semantic search
-  formData        Json?    @map("form_data") // Form field responses
+  embedding       String?
+  formData        Json?    @map("form_data")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  // Moved relations from Ticket
   ticketMessages       TicketMessage[]
   ticketHistory        TicketHistory[]
   ticketFieldResponses TicketFieldResponse[]
   ticketFeedback       TicketFeedback?
 
-  // Relation back to core
   ticket          Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@map("transcripts")
@@ -110,7 +92,7 @@ model TicketMessage {
   id              Int       @id @default(autoincrement())
   transcriptId    Int       @map("transcript_id")
   messageId       String    @unique @map("message_id")
-  authorId        String    @map("author_id") // References DiscordUser.id
+  authorId        String    @map("author_id")
   content         String?
   embeds          String?
   attachments     String?
@@ -120,7 +102,6 @@ model TicketMessage {
   editedAt        DateTime? @map("edited_at")
   deletedAt       DateTime? @map("deleted_at")
 
-  // Relations
   transcript   Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
   author       DiscordUser @relation(fields: [authorId], references: [id])
 
@@ -134,7 +115,6 @@ model TicketFieldResponse {
   fieldId       Int    @map("field_id")
   value         String
 
-  // Relations
   transcript Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
   field      FormField  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
@@ -147,10 +127,9 @@ model TicketHistory {
   transcriptId    Int      @map("transcript_id")
   timestamp       DateTime @default(now())
   action          String   @db.VarChar(50)
-  performedById   String   @map("performed_by_id") // References DiscordUser.id
+  performedById   String   @map("performed_by_id")
   details         String?
 
-  // Relations
   transcript   Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
   performedBy  DiscordUser @relation(fields: [performedById], references: [id])
 
@@ -161,21 +140,16 @@ model TicketHistory {
 model TicketFeedback {
   id              Int      @id @default(autoincrement())
   transcriptId    Int      @unique @map("transcript_id")
-  submittedById   String   @map("submitted_by_id") // References DiscordUser.id
+  submittedById   String   @map("submitted_by_id")
   rating          Int
   comment         String?
   submittedAt     DateTime @default(now()) @map("submitted_at")
 
-  // Relations
   transcript   Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
   submittedBy  DiscordUser @relation(fields: [submittedById], references: [id])
 
   @@map("ticket_feedback")
 }
-
-// ====================
-// ANALYTICS MODELS
-// ====================
 
 model TicketAnalyticsSnapshot {
   id                Int      @id @default(autoincrement())
@@ -184,14 +158,13 @@ model TicketAnalyticsSnapshot {
   totalOpen         Int      @default(0) @map("total_open")
   totalClosed       Int      @default(0) @map("total_closed")
   totalCreated      Int      @default(0) @map("total_created")
-  avgResolutionTime Float?   @map("avg_resolution_time") // In hours
-  avgResponseTime   Float?   @map("avg_response_time") // In minutes
-  byPanel           Json?    @map("by_panel") // Panel-specific stats
-  byStaff           Json?    @map("by_staff") // Staff member stats
-  byCategory        Json?    @map("by_category") // Category breakdown
+  avgResolutionTime Float?   @map("avg_resolution_time")
+  avgResponseTime   Float?   @map("avg_response_time")
+  byPanel           Json?    @map("by_panel")
+  byStaff           Json?    @map("by_staff")
+  byCategory        Json?    @map("by_category")
   createdAt         DateTime @default(now()) @map("created_at")
 
-  // Relations
   guild             Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@unique([guildId, date])

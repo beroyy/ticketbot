@@ -18,12 +18,8 @@ export {
 } from "./schemas";
 
 export namespace User {
-  // Re-export Prisma type for domain consumers
   export type Discord = DiscordUser;
 
-  /**
-   * Ensure a Discord user exists in the database, creating or updating as needed
-   */
   export const ensure = async (
     discordId: string,
     username: string,
@@ -49,9 +45,6 @@ export namespace User {
     });
   };
 
-  /**
-   * Check if a user is blacklisted in a guild
-   */
   export const isBlacklisted = async (guildId: string, userId: string): Promise<boolean> => {
     const blacklistEntry = await prisma.blacklist.findFirst({
       where: {
@@ -64,28 +57,17 @@ export namespace User {
     return !!blacklistEntry;
   };
 
-  /**
-   * Get user permissions in a guild (convenience method that delegates to Role domain)
-   */
   export const getPermissions = async (guildId: string, userId: string): Promise<bigint> => {
-    // Import Role domain here to avoid circular dependency
     const { Role } = await import("../role");
     return Role.getUserPermissions(guildId, userId);
   };
 
-  /**
-   * Get a Discord user by ID
-   */
   export const getDiscordUser = async (discordId: string): Promise<DiscordUser | null> => {
     return prisma.discordUser.findUnique({
       where: { id: discordId },
     });
   };
 
-  /**
-   * Link a Discord account to a Better Auth user
-   * This ensures the Discord ID is properly stored and cached
-   */
   export const linkDiscordAccount = async (
     betterAuthUserId: string,
     discordId: string,
@@ -95,7 +77,6 @@ export namespace User {
       avatarUrl?: string | null;
     }
   ): Promise<void> => {
-    // Ensure Discord user exists with latest data
     await ensure(
       discordId,
       userData?.username || "Unknown",
@@ -107,7 +88,6 @@ export namespace User {
       }
     );
 
-    // Update Better Auth User record with Discord ID link
     await prisma.user.update({
       where: { id: betterAuthUserId },
       data: { discordUserId: discordId },
@@ -118,9 +98,6 @@ export namespace User {
     );
   };
 
-  /**
-   * Get Better Auth user by ID with Discord data
-   */
   export const getBetterAuthUser = async (
     userId: string
   ): Promise<{
@@ -156,9 +133,6 @@ export namespace User {
     };
   };
 
-  /**
-   * Update Better Auth user's Discord ID
-   */
   export const updateDiscordUserId = async (
     userId: string,
     discordUserId: string
@@ -169,9 +143,6 @@ export namespace User {
     });
   };
 
-  /**
-   * Update Discord user's cached guilds
-   */
   export const updateGuildsCache = async (
     discordId: string,
     guilds: Array<{
@@ -193,5 +164,19 @@ export namespace User {
         } as Prisma.InputJsonValue,
       },
     });
+  };
+
+  export const findBetterAuthUserByDiscordId = async (
+    discordId: string
+  ): Promise<{ id: string; email: string } | null> => {
+    const user = await prisma.user.findFirst({
+      where: { discordUserId: discordId },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    return user;
   };
 }

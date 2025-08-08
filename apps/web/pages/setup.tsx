@@ -79,7 +79,7 @@ export default function SetupPage({ guilds = [] }: PageProps) {
   };
 
   const connectedGuilds = guilds.filter((g) => g.connected);
-  const ownedGuilds = guilds.filter((g) => g.owner);
+  const _ownedGuilds = guilds.filter((g) => g.owner);
   const hasAnyBotInstalled = connectedGuilds.length > 0;
 
   if (!isClient) return null;

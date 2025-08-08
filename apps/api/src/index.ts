@@ -3,7 +3,6 @@ import { createLogger } from "@ticketsbot/core";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
-import { auth } from "@ticketsbot/core/auth";
 import type { AppEnv } from "./factory";
 import { errorHandler } from "./utils/error-handler";
 import { healthRoutes } from "./routes/health";
@@ -61,20 +60,6 @@ app.use(
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
-
-app.on(["POST", "GET"], "/auth/*", async (c) => {
-  const response = await auth.handler(c.req.raw);
-
-  const origin = c.req.header("origin");
-  if (origin && allowedOrigins.includes(origin)) {
-    response.headers.set("Access-Control-Allow-Origin", origin);
-    response.headers.set("Access-Control-Allow-Credentials", "true");
-    response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  }
-
-  return response;
-});
 
 const _routes = app
   .route("/health", healthRoutes)

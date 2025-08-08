@@ -91,7 +91,7 @@ export const getCountByStatus = async (guildId: string): Promise<Record<string, 
   });
 
   return counts.reduce(
-    (acc, curr) => {
+    (acc: Record<string, number>, curr: { status: TicketStatus; _count: number }) => {
       acc[curr.status] = curr._count;
       return acc;
     },
@@ -161,7 +161,7 @@ export const removeParticipantFromAll = async (
 
   // Log removal details for debugging
   if (result.count > 0) {
-    const ticketNumbers = affectedTickets.map((t) => t.ticket.number);
+    const ticketNumbers = affectedTickets.map((t: { ticketId: number; ticket: { number: number } }) => t.ticket.number);
     console.log(
       `Removed user ${userId} from ${result.count} tickets in guild ${guildId}: #${ticketNumbers.join(
         ", #"

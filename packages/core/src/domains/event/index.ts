@@ -252,15 +252,15 @@ export namespace Event {
 
     return {
       totalEvents: await prisma.event.count({ where }),
-      byCategory: byCategory.map((c) => ({
+      byCategory: byCategory.map((c: { category: string; _count: number }) => ({
         category: c.category,
         count: c._count,
       })),
-      topActions: byAction.map((a) => ({
+      topActions: byAction.map((a: { action: string; _count: number }) => ({
         action: a.action,
         count: a._count,
       })),
-      mostActiveUsers: mostActiveUsers.map((u) => ({
+      mostActiveUsers: mostActiveUsers.map((u: { actorId: string; _count: number }) => ({
         userId: u.actorId,
         eventCount: u._count,
       })),

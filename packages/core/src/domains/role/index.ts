@@ -362,7 +362,7 @@ export namespace Role {
 
     // Get user details separately
     const usersMap = new Map<string, { username: string; avatarUrl: string | null }>();
-    const userIds = [...new Set(members.map((m) => m.discordId))];
+    const userIds = [...new Set(members.map((m: GuildRoleMember) => m.discordId))];
 
     if (userIds.length > 0) {
       const users = await prisma.discordUser.findMany({
@@ -376,7 +376,7 @@ export namespace Role {
     }
 
     // Combine the data
-    return members.map((member) => ({
+    return members.map((member: GuildRoleMember) => ({
       ...member,
       user: usersMap.get(member.discordId) || { username: "Unknown User", avatarUrl: null },
     }));
@@ -408,7 +408,7 @@ export namespace Role {
       where: {
         discordId: userId,
         guildRoleId: {
-          in: roleMembers.map((rm) => rm.guildRoleId),
+          in: roleMembers.map((rm: { guildRoleId: number }) => rm.guildRoleId),
         },
       },
     });
@@ -434,7 +434,7 @@ export namespace Role {
       distinct: ["discordId"],
     });
 
-    return members.map((m) => m.discordId);
+    return members.map((m: { discordId: string }) => m.discordId);
   };
 
   /**

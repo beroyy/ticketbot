@@ -67,7 +67,7 @@ const closeConfirmHandler = createButtonHandler({
             const channel = interaction.channel as TextChannel;
 
             // Archive or delete the channel
-            const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+            const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
 
           } catch (error) {
             container.logger.error("Error in Discord operations:", error);

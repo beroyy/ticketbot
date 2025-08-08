@@ -227,7 +227,3 @@ export { Form } from "./domains/form";
 
 // Context system is server-only and must be imported directly:
 // import { Actor, withTransaction } from "@ticketsbot/core/context";
-
-// Re-export Prisma client and types from @ticketsbot/db for backward compatibility
-export { prisma } from "@ticketsbot/db";
-export type * from "@ticketsbot/db";

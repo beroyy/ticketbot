@@ -97,7 +97,7 @@ const closeRequestHandler = createButtonHandler({
               const channel = interaction.channel as TextChannel;
 
               // Archive or delete the channel
-              const archiveResult = await ChannelOps.ticket.archive(
+              const _archiveResult = await ChannelOps.ticket.archive(
                 channel,
                 guild,
                 settings,

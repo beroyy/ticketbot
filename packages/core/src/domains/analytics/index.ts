@@ -1,5 +1,5 @@
 import { prisma } from "@ticketsbot/db";
-import { TicketStatus, Prisma } from "@prisma/client";
+import { TicketStatus, Prisma, type TicketLifecycleEvent } from "@prisma/client";
 import { Actor } from "../../context";
 
 // Date utility functions
@@ -146,12 +146,12 @@ export namespace Analytics {
     });
 
     const resolutionTimes = closedTickets
-      .filter((t) => t.closedAt)
-      .map((t) => differenceInHours(t.closedAt!, t.createdAt));
+      .filter((t: { createdAt: Date; closedAt: Date | null }) => t.closedAt)
+      .map((t: { createdAt: Date; closedAt: Date | null }) => differenceInHours(t.closedAt!, t.createdAt));
 
     const avgResolutionTime =
       resolutionTimes.length > 0
-        ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length
+        ? resolutionTimes.reduce((a: number, b: number) => a + b, 0) / resolutionTimes.length
         : null;
 
     return {
@@ -223,11 +223,11 @@ export namespace Analytics {
     });
 
     const waitTimes = openTickets
-      .filter((t) => t.lifecycleEvents.length === 0)
-      .map((t) => differenceInMinutes(new Date(), t.createdAt));
+      .filter((t: { createdAt: Date; lifecycleEvents: TicketLifecycleEvent[] }) => t.lifecycleEvents.length === 0)
+      .map((t: { createdAt: Date; lifecycleEvents: TicketLifecycleEvent[] }) => differenceInMinutes(new Date(), t.createdAt));
 
     const avgWaitTime =
-      waitTimes.length > 0 ? waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length : null;
+      waitTimes.length > 0 ? waitTimes.reduce((a: number, b: number) => a + b, 0) / waitTimes.length : null;
 
     // Count staff with recent activity
     const staffOnline = await prisma.ticketLifecycleEvent.groupBy({
@@ -250,7 +250,7 @@ export namespace Analytics {
       todayClosed,
       avgWaitTime,
       staffOnline: staffOnline.length,
-      queueLength: openTickets.filter((t) => t.lifecycleEvents.length === 0).length,
+      queueLength: openTickets.filter((t: { lifecycleEvents: TicketLifecycleEvent[] }) => t.lifecycleEvents.length === 0).length,
     };
   };
 
@@ -638,7 +638,7 @@ async function getStatsByPanel(guildId: string, dateFilter: any): Promise<any> {
     },
   });
 
-  return stats.map((s) => ({
+  return stats.map((s: { panelId: number | null; _count: { _all: number } }) => ({
     panelId: s.panelId,
     count: s._count._all,
   }));
@@ -691,7 +691,7 @@ async function getStatsByCategory(guildId: string, dateFilter: any): Promise<any
     },
   });
 
-  return stats.map((s) => ({
+  return stats.map((s: { categoryId: string | null; _count: { _all: number } }) => ({
     categoryId: s.categoryId,
     count: s._count._all,
   }));
@@ -735,7 +735,7 @@ async function getStatsByTime(
   `;
 
   // Format the result for consistent output
-  return result.map((row) => ({
+  return result.map((row: any) => ({
     period: row.period.toISOString().split("T")[0],
     total: Number(row.total),
     open: Number(row.open),
@@ -793,7 +793,7 @@ async function getSatisfactionScores(guildId: string, dateRange: any): Promise<a
   return {
     averageRating: feedback._avg.rating,
     totalFeedback: feedback._count,
-    distribution: distribution.map((d) => ({
+    distribution: distribution.map((d: { rating: number; _count: number }) => ({
       rating: d.rating,
       count: d._count,
     })),
@@ -822,14 +822,14 @@ async function getResponseTimeAnalysis(guildId: string, dateRange: any): Promise
     },
   });
 
-  const responseTimes = claimEvents.map((event) => ({
+  const responseTimes = claimEvents.map((event: any) => ({
     minutes: differenceInMinutes(event.timestamp, event.ticket.createdAt),
     claimedBy: event.claimedById,
   }));
 
   const avgResponseTime =
     responseTimes.length > 0
-      ? responseTimes.reduce((sum, rt) => sum + rt.minutes, 0) / responseTimes.length
+      ? responseTimes.reduce((sum: number, rt: { minutes: number; claimedBy: string | null }) => sum + rt.minutes, 0) / responseTimes.length
       : null;
 
   // Calculate percentiles

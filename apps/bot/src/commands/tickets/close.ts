@@ -55,7 +55,7 @@ export class CloseCommand extends TicketCommandBase {
     const userId = interaction.user.id;
 
     let closedTicket: any;
-    let channelDeleted = false;
+    let _channelDeleted = false;
 
     await withTransaction(async () => {
       // Close ticket using lifecycle domain
@@ -83,7 +83,7 @@ export class CloseCommand extends TicketCommandBase {
 
           // Archive or delete the channel
           const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
-          channelDeleted = archiveResult.deleted;
+          _channelDeleted = archiveResult.deleted;
 
         }
       });

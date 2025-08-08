@@ -1,5 +1,4 @@
 import { Redis } from "@ticketsbot/core";
-import { prisma } from "@ticketsbot/db";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
 import { env } from "../env";
@@ -46,21 +45,6 @@ export const healthRoutes = createRoute()
         auth: { status: "healthy", redisEnabled: false },
       },
     };
-
-    try {
-      const start = Date.now();
-      await prisma.$queryRaw`SELECT 1`;
-      result.services.database = {
-        status: "healthy",
-        latency: Date.now() - start,
-      };
-    } catch (error) {
-      result.services.database = {
-        status: "unhealthy",
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-      result.status = "unhealthy";
-    }
 
     if (Redis.isAvailable()) {
       const redisHealth = await Redis.healthCheck();

@@ -420,9 +420,9 @@ export namespace Guild {
 
         // Chart data for all timeframes
         Promise.all(
-          Object.entries(allBuckets).map(async ([timeframe, buckets]) => {
+          Object.entries(allBuckets).map(async ([timeframe, buckets]: [string, any[]]) => {
             const counts = await Promise.all(
-              buckets.map((bucket) =>
+              buckets.map((bucket: any) =>
                 prisma.ticket.count({
                   where: {
                     guildId,
@@ -441,7 +441,7 @@ export namespace Guild {
 
     // Organize bucket counts by timeframe
     const bucketCountsByTimeframe: Record<string, number[]> = {};
-    allBucketCounts.forEach(({ timeframe, counts }) => {
+    allBucketCounts.forEach(({ timeframe, counts }: { timeframe: string; counts: number[] }) => {
       bucketCountsByTimeframe[timeframe] = counts;
     });
 

@@ -342,7 +342,7 @@ export namespace Form {
       // Copy fields
       if (original.formFields.length > 0) {
         await prisma.formField.createMany({
-          data: original.formFields.map((field) => ({
+          data: original.formFields.map((field: FormField) => ({
             formId: newForm.id,
             type: field.type,
             label: field.label,

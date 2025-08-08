@@ -35,10 +35,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./prisma": {
-      "import": "@ticketsbot/db",
-      "require": "@ticketsbot/db"
-    },
     "./domains": "./src/domains/index.ts",
     "./domains/*": "./src/domains/*/index.ts",
     "./domains/*/client": "./src/domains/*/client.ts",

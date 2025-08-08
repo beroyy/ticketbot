@@ -2,7 +2,6 @@ import { prisma } from "@ticketsbot/db";
 import { Actor } from "../../context";
 import { Ticket } from "../ticket";
 
-// Import types
 import type {
   CreateTicketMessageInput,
   UpdateTicketMessageInput,
@@ -15,7 +14,6 @@ import type {
   TranscriptWithMessages,
 } from "./schemas";
 
-// Export schemas
 export {
   TranscriptSchema,
   CreateTicketMessageSchema,
@@ -39,17 +37,10 @@ export {
   type TranscriptWithMessages,
 } from "./schemas";
 
-/**
- * Transcripts domain - handles ticket messages, history, and transcript generation
- */
 export namespace Transcripts {
-  /**
-   * Get or create transcript for a ticket
-   */
   export const getTranscript = async (ticketId: number): Promise<any> => {
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -59,7 +50,6 @@ export namespace Transcripts {
       where: { ticketId },
     });
 
-    // Create transcript if it doesn't exist (for legacy tickets)
     if (!transcript) {
       transcript = await prisma.transcript.create({
         data: { ticketId },
@@ -69,26 +59,23 @@ export namespace Transcripts {
     return transcript;
   };
 
-  /**
-   * Store a message in the transcript
-   */
   export const storeMessage = async (data: CreateTicketMessageInput): Promise<any> => {
     const { CreateTicketMessageSchema } = await import("./schemas");
     const parsed = CreateTicketMessageSchema.parse(data);
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
 
-    // Get or create transcript
     const transcript = await getTranscript(parsed.ticketId);
 
-    // Create message
-    return prisma.ticketMessage.create({
-      data: {
+    return prisma.ticketMessage.upsert({
+      where: {
+        messageId: parsed.messageId,
+      },
+      create: {
         transcriptId: transcript.id,
         messageId: parsed.messageId,
         authorId: parsed.authorId,
@@ -98,12 +85,15 @@ export namespace Transcripts {
         messageType: parsed.messageType,
         referenceId: parsed.referenceId,
       },
+      update: {
+        content: parsed.content,
+        embeds: parsed.embeds,
+        attachments: parsed.attachments,
+        editedAt: new Date(),
+      },
     });
   };
 
-  /**
-   * Update a message in the transcript
-   */
   export const updateMessage = async (
     messageId: string,
     data: UpdateTicketMessageInput
@@ -111,7 +101,6 @@ export namespace Transcripts {
     const { UpdateTicketMessageSchema } = await import("./schemas");
     const parsed = UpdateTicketMessageSchema.parse(data);
 
-    // Find message and verify access
     const message = await prisma.ticketMessage.findUnique({
       where: { messageId },
       include: {
@@ -132,7 +121,6 @@ export namespace Transcripts {
       throw new Error("Access denied");
     }
 
-    // Update message
     return prisma.ticketMessage.update({
       where: { messageId },
       data: {
@@ -142,11 +130,7 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Delete a message from the transcript
-   */
   export const deleteMessage = async (messageId: string): Promise<void> => {
-    // Find message and verify access
     const message = await prisma.ticketMessage.findUnique({
       where: { messageId },
       include: {
@@ -167,7 +151,6 @@ export namespace Transcripts {
       throw new Error("Access denied");
     }
 
-    // Soft delete
     await prisma.ticketMessage.update({
       where: { messageId },
       data: {
@@ -176,9 +159,6 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Get messages for a ticket
-   */
   export const getMessages = async (
     ticketId: number,
     query?: MessageQuery
@@ -187,7 +167,6 @@ export namespace Transcripts {
     const parsedQuery = query ? MessageQuerySchema.parse(query) : undefined;
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -209,15 +188,11 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Store field responses for a ticket
-   */
   export const storeFieldResponse = async (data: StoreFieldResponseInput): Promise<any> => {
     const { StoreFieldResponseSchema } = await import("./schemas");
     const parsed = StoreFieldResponseSchema.parse(data);
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -234,15 +209,11 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Submit feedback for a ticket
-   */
   export const submitFeedback = async (data: SubmitFeedbackInput): Promise<any> => {
     const { SubmitFeedbackSchema } = await import("./schemas");
     const parsed = SubmitFeedbackSchema.parse(data);
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild and user is the opener
     const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -255,7 +226,6 @@ export namespace Transcripts {
 
     const transcript = await getTranscript(parsed.ticketId);
 
-    // Check if feedback already exists
     const existingFeedback = await prisma.ticketFeedback.findUnique({
       where: { transcriptId: transcript.id },
     });
@@ -274,13 +244,9 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Get ticket history entries
-   */
   export const getHistory = async (ticketId: number): Promise<any[]> => {
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -297,9 +263,6 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Add history entry
-   */
   export const addHistoryEntry = async (
     ticketId: number,
     action: string,
@@ -308,7 +271,6 @@ export namespace Transcripts {
   ): Promise<any> => {
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -326,26 +288,20 @@ export namespace Transcripts {
     });
   };
 
-  /**
-   * Export transcript in various formats
-   */
   export const exportTranscript = async (data: ExportTranscriptInput): Promise<string> => {
     const { ExportTranscriptSchema } = await import("./schemas");
     const parsed = ExportTranscriptSchema.parse(data);
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
 
-    // Get all transcript data
     const transcript = await getTranscript(parsed.ticketId);
     const messages = await getMessages(parsed.ticketId);
     const history = await getHistory(parsed.ticketId);
 
-    // Format based on requested type
     switch (parsed.format) {
       case "json":
         return JSON.stringify(
@@ -374,13 +330,9 @@ export namespace Transcripts {
     }
   };
 
-  /**
-   * Get full transcript with all related data
-   */
   export const getFullTranscript = async (ticketId: number): Promise<any> => {
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -400,9 +352,6 @@ export namespace Transcripts {
     };
   };
 
-  /**
-   * Update transcript summary and analysis
-   */
   export const updateSummary = async (
     ticketId: number,
     summary: string,
@@ -411,7 +360,6 @@ export namespace Transcripts {
   ): Promise<any> => {
     const guildId = Actor.guildId();
 
-    // Verify ticket belongs to guild
     const ticket = await Ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
@@ -431,7 +379,6 @@ export namespace Transcripts {
   };
 }
 
-// Helper functions for transcript formatting
 function formatAsText(ticket: any, messages: any[], history: any[]): string {
   let output = `Ticket #${ticket.number}\n`;
   output += `Subject: ${ticket.subject || "N/A"}\n`;

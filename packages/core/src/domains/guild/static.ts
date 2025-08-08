@@ -1,14 +1,5 @@
 import { prisma } from "@ticketsbot/db";
 
-/**
- * Static guild methods that don't require actor context
- * Used primarily for bot operations and system tasks
- */
-
-/**
- * Ensure a guild exists in the database
- * Used when bot joins a new guild or needs to ensure guild exists
- */
 export const ensure = async (guildId: string, name?: string, ownerId?: string): Promise<any> => {
   return prisma.guild.upsert({
     where: { id: guildId },
@@ -24,17 +15,13 @@ export const ensure = async (guildId: string, name?: string, ownerId?: string): 
   });
 };
 
-/**
- * Update basic guild information
- * Used for updating guild name, owner, etc.
- */
 export const update = async (
   guildId: string,
   data: {
     name?: string;
     ownerDiscordId?: string;
     feedbackEnabled?: boolean;
-    [key: string]: any; // Allow other fields
+    [key: string]: any;
   }
 ): Promise<any> => {
   return prisma.guild.update({
@@ -43,20 +30,12 @@ export const update = async (
   });
 };
 
-/**
- * Find a guild by ID without permission checks
- * For system operations and existence checks
- */
 export const findById = async (guildId: string): Promise<any> => {
   return prisma.guild.findUnique({
     where: { id: guildId },
   });
 };
 
-/**
- * Get guild settings without permission checks
- * Only for system operations - prefer Guild.getSettings() when you have context
- */
 export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
   const guild = await prisma.guild.findUnique({
     where: { id: guildId },
@@ -66,7 +45,6 @@ export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
     return null;
   }
 
-  // Return formatted settings
   return {
     id: guild.id,
     settings: {
@@ -92,10 +70,6 @@ export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
   };
 };
 
-/**
- * Create guild with default settings
- * Used when bot is added to a new server
- */
 export const ensureWithDefaults = async (data: {
   guildId: string;
   guildName: string;
@@ -144,10 +118,6 @@ export const ensureWithDefaults = async (data: {
   return guild;
 };
 
-/**
- * Sync bot installation status for all guilds
- * Used on bot startup to ensure database reflects current state
- */
 export const syncBotInstallStatus = async (currentGuildIds: string[]): Promise<void> => {
   // First, set all guilds to botInstalled = false
   await prisma.guild.updateMany({
@@ -164,14 +134,7 @@ export const syncBotInstallStatus = async (currentGuildIds: string[]): Promise<v
   }
 };
 
-/**
- * Static blacklist namespace for bot operations
- */
 export const Blacklist = {
-  /**
-   * Toggle blacklist status (add/remove)
-   * Returns true if added, false if removed
-   */
   toggle: async (guildId: string, targetId: string, isRole: boolean): Promise<boolean> => {
     // Check if already blacklisted
     const existing = await prisma.blacklist.findFirst({
@@ -201,9 +164,6 @@ export const Blacklist = {
     }
   },
 
-  /**
-   * Check if a user is blacklisted
-   */
   isBlacklisted: async (guildId: string, userId: string): Promise<boolean> => {
     const entry = await prisma.blacklist.findFirst({
       where: {
@@ -214,4 +174,18 @@ export const Blacklist = {
     });
     return !!entry;
   },
+};
+
+export const getAccessibleGuilds = async (discordUserId: string): Promise<string[]> => {
+  const guilds = await prisma.guild.findMany({
+    where: {
+      OR: [
+        { ownerDiscordId: discordUserId },
+        { guildMemberPermissions: { some: { discordId: discordUserId } } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  return guilds.map((g) => g.id);
 };

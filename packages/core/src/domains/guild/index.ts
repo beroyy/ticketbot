@@ -32,4 +32,5 @@ export {
   getSettingsUnchecked,
   ensureWithDefaults,
   Blacklist,
+  getAccessibleGuilds,
 } from "./static";

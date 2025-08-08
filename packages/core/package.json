@@ -43,7 +43,6 @@
   "devDependencies": {
     "@ticketsbot/eslint-config": "workspace:*",
     "@ticketsbot/tsconfig": "workspace:*",
-    "@ticketsbot/vitest-config": "workspace:*",
     "@types/ws": "^8.18.1",
     "bufferutil": "^4.0.9",
     "dotenv": "^17.2.0",

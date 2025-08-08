@@ -88,6 +88,53 @@ TicketsBot is a Discord bot platform for customer support tickets. This monorepo
 
 Remember: These are opportunities, not requirements. Focus on your primary task but improve code quality when it's on your path.
 
+## Architectural Philosophy: Avoid Over-Engineering
+
+### Keep It Simple and Explicit
+
+This codebase prioritizes **explicit, straightforward code** over clever abstractions. With a small team (max 2 developers), we optimize for clarity and maintainability.
+
+#### Anti-Patterns to Avoid
+
+1. **Hidden Transaction Coupling** (e.g., `useTransaction()`)
+   - ❌ Don't: Create functions that magically participate in transactions
+   - ✅ Do: Explicitly pass transaction clients when needed
+   - ✅ Do: Use `prisma.$transaction()` at the operation boundaries
+
+2. **Unnecessary Abstraction Layers**
+   - ❌ Don't: Add patterns like `afterTransaction()` for problems that don't exist
+   - ✅ Do: Put consistency-critical operations IN the transaction
+   - ✅ Do: Put external effects AFTER the transaction returns
+
+3. **Example: Simple, Explicit Approach**
+   ```typescript
+   // GOOD: Explicit and clear
+   const ticket = await prisma.$transaction(async (tx) => {
+     const ticket = await tx.ticket.create({ ... });
+     
+     // Audit log IN transaction (we want consistency)
+     await tx.event.create({ action: "ticket.created", ... });
+     
+     return ticket;
+   });
+   
+   // External effects AFTER transaction (if they fail, ticket still exists)
+   try {
+     await ScheduledTask.scheduleAutoClose(ticket.id, 24);
+   } catch (error) {
+     logger.error("Failed to schedule auto-close", error);
+   }
+   ```
+
+#### Why This Matters
+
+- **Dead simple**: No magic, no patterns to learn
+- **Explicit**: You can see exactly what happens when
+- **Flexible**: Decide per-case if something should be in/out of transaction
+- **Testable**: Just mock the external services
+
+Remember: The best code is code that doesn't need to exist. Only add abstractions when you have a real, recurring problem to solve.
+
 ## Monorepo Structure
 
 ```

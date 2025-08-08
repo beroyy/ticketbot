@@ -63,7 +63,7 @@ jobs:
           EOF
 
       - name: Generate Prisma Client
-        run: pnpm --filter @ticketsbot/core db:generate
+        run: pnpm --filter @ticketsbot/db db:generate
 
       - name: Run type checking
         run: pnpm turbo run typecheck --cache-dir=.turbo

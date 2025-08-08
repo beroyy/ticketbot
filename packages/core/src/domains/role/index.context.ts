@@ -1,9 +1,9 @@
 import { prisma } from "../../prisma/client";
 import { GuildRoleStatus, type GuildRole, type GuildRoleMember } from "@prisma/client";
-import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
+import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../permissions/utils";
 import { logger } from "../../utils/logger";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
-import { PermissionFlags } from "../../schemas/permissions";
+import { PermissionFlags } from "../../permissions/constants";
 
 // Export schemas
 export {

@@ -5,7 +5,7 @@ import {
   type GuildRoleMember,
   type DiscordUser,
 } from "@prisma/client";
-import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../utils/permissions";
+import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../permissions/utils";
 
 // Export specific schemas
 export {
@@ -105,7 +105,6 @@ export namespace Role {
         additionalPerms.additionalPermissions
       );
     }
-
 
     return finalPermissions;
   };
@@ -323,7 +322,6 @@ export namespace Role {
       },
     });
 
-
     return result;
   };
 
@@ -414,7 +412,6 @@ export namespace Role {
         },
       },
     });
-
 
     return result.count;
   };

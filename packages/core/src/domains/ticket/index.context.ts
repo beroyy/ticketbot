@@ -1,7 +1,7 @@
 import { prisma } from "../../prisma/client";
 import { TicketStatus, type Prisma } from "@prisma/client";
 import { Actor, afterTransaction } from "../../context";
-import { PermissionFlags } from "../../schemas/permissions";
+import { PermissionFlags } from "../../permissions/constants";
 import type { TicketQuery, UpdateTicketInput } from "./schemas";
 
 // Export only core schemas

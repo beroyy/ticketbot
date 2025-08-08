@@ -43,7 +43,7 @@ export {
 
 // Export permissions - avoiding duplicate exports by importing from permissions.ts
 // which already re-exports from permissions-constants
-import { PermissionUtils } from "./utils/permissions";
+import { PermissionUtils } from "./permissions/utils";
 export { PermissionUtils };
 
 // Export permission constants directly from permissions-constants
@@ -54,7 +54,7 @@ export {
   ALL_PERMISSIONS,
   PermissionCategories,
   DefaultRolePermissions,
-} from "./schemas/permissions";
+} from "./permissions/constants";
 
 // Export client-safe utilities
 export {

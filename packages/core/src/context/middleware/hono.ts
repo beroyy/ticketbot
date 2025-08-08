@@ -1,5 +1,5 @@
 import { Actor, type WebActor } from "../actor";
-import { PermissionFlags } from "../../schemas/permissions";
+import { PermissionFlags } from "../../permissions/constants";
 
 // Type definitions to avoid hono dependency
 interface Context {

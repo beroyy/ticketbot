@@ -192,7 +192,8 @@ export {
   ALL_PERMISSIONS,
   PermissionCategories,
   DefaultRolePermissions,
-} from "./schemas/permissions";
+} from "./permissions/constants";
+export { PermissionUtils } from "./permissions/utils";
 
 export {
   type BotConfig,
@@ -204,12 +205,6 @@ export {
   createTicketThreadName,
   validateEnvironmentVariables,
 } from "./utils";
-
-export {
-  ALL_PERMISSIONS as ALL_PERMISSIONS_UTILS,
-  DefaultRolePermissions as DefaultRolePermissionsUtils,
-  PermissionUtils,
-} from "./utils/permissions";
 
 export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./utils/discord-id";
 

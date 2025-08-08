@@ -1,5 +1,5 @@
 import { Actor, type DiscordActor } from "../actor";
-import { PermissionFlags } from "../../schemas/permissions";
+import { PermissionFlags } from "../../permissions/constants";
 
 // Type definitions to avoid discord.js dependency
 interface BaseInteraction {

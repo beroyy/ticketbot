@@ -1,5 +1,5 @@
 import { createContext } from "./index";
-import { PermissionUtils } from "../utils/permissions";
+import { PermissionUtils } from "../permissions/utils";
 import { ContextNotFoundError, PermissionDeniedError, ActorValidationError } from "./errors";
 
 /**

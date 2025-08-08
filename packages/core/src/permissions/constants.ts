@@ -44,6 +44,21 @@ export type PermissionValue = (typeof PermissionFlags)[PermissionFlag];
 
 export const ALL_PERMISSIONS = Object.values(PermissionFlags).reduce((acc, flag) => acc | flag, 0n);
 
+export const DefaultRolePermissions = {
+  admin: ALL_PERMISSIONS,
+  support:
+    PermissionFlags.TICKET_VIEW_ALL |
+    PermissionFlags.TICKET_CLAIM |
+    PermissionFlags.TICKET_ASSIGN |
+    PermissionFlags.TAG_USE |
+    PermissionFlags.MEMBER_VIEW,
+  viewer:
+    PermissionFlags.ANALYTICS_VIEW |
+    PermissionFlags.TICKET_VIEW_ALL |
+    PermissionFlags.MEMBER_VIEW |
+    PermissionFlags.GUILD_SETTINGS_VIEW,
+} as const;
+
 export const PermissionCategories = {
   "Panel Management": [
     {
@@ -168,19 +183,4 @@ export const PermissionCategories = {
       description: "Export and manage feedback",
     },
   ],
-} as const;
-
-export const DefaultRolePermissions = {
-  admin: ALL_PERMISSIONS,
-  support:
-    PermissionFlags.TICKET_VIEW_ALL |
-    PermissionFlags.TICKET_CLAIM |
-    PermissionFlags.TICKET_ASSIGN |
-    PermissionFlags.TAG_USE |
-    PermissionFlags.MEMBER_VIEW,
-  viewer:
-    PermissionFlags.ANALYTICS_VIEW |
-    PermissionFlags.TICKET_VIEW_ALL |
-    PermissionFlags.MEMBER_VIEW |
-    PermissionFlags.GUILD_SETTINGS_VIEW,
 } as const;

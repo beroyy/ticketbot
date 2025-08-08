@@ -1,6 +1,6 @@
 import { prisma } from "../../prisma/client";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
-import { PermissionFlags } from "../../schemas/permissions";
+import { PermissionFlags } from "../../permissions/constants";
 import {
   TicketStatus,
   type Prisma,

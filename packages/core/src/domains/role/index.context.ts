@@ -1,7 +1,7 @@
 import { prisma, GuildRoleStatus, type GuildRole, type GuildRoleMember } from "@ticketsbot/db";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../permissions/utils";
 import { logger } from "../../utils/logger";
-import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
+import { Actor } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 
 // Export schemas
@@ -183,9 +183,7 @@ export namespace Role {
     const guildId = Actor.guildId();
     const userId = Actor.userId();
 
-    return withTransaction(async () => {
-      const tx = useTransaction();
-
+    return prisma.$transaction(async (tx) => {
       const role = await tx.guildRole.create({
         data: {
           guildId,
@@ -197,10 +195,8 @@ export namespace Role {
         },
       });
 
-      afterTransaction(async () => {
-        // TODO: Add event logging when eventLog model is available
-        console.log(`Role created: ${role.name} by ${userId}`);
-      });
+      // TODO: Add event logging when eventLog model is available
+      console.log(`Role created: ${role.name} by ${userId}`);
 
       return role;
     });
@@ -218,9 +214,7 @@ export namespace Role {
     const guildId = Actor.guildId();
     const userId = Actor.userId();
 
-    return withTransaction(async () => {
-      const tx = useTransaction();
-
+    return prisma.$transaction(async (tx) => {
       // Verify role belongs to guild
       const role = await tx.guildRole.findUnique({
         where: { id: roleId },
@@ -236,10 +230,8 @@ export namespace Role {
         data: { permissions },
       });
 
-      afterTransaction(async () => {
-        // TODO: Add event logging when eventLog model is available
-        console.log(`Role permissions updated: ${role.name} by ${userId}`);
-      });
+      // TODO: Add event logging when eventLog model is available
+      console.log(`Role permissions updated: ${role.name} by ${userId}`);
 
       return result;
     });
@@ -257,9 +249,7 @@ export namespace Role {
     const guildId = Actor.guildId();
     const assignedById = Actor.userId();
 
-    return withTransaction(async () => {
-      const tx = useTransaction();
-
+    return prisma.$transaction(async (tx) => {
       // Verify role belongs to guild
       const role = await tx.guildRole.findUnique({
         where: { id: roleId },
@@ -288,10 +278,8 @@ export namespace Role {
         },
       });
 
-      afterTransaction(async () => {
-        // TODO: Add event logging when eventLog model is available
-        console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
-      });
+      // TODO: Add event logging when eventLog model is available
+      console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
 
       return result;
     });
@@ -306,9 +294,7 @@ export namespace Role {
     const guildId = Actor.guildId();
     const removedById = Actor.userId();
 
-    return withTransaction(async () => {
-      const tx = useTransaction();
-
+    return prisma.$transaction(async (tx) => {
       // Verify role belongs to guild
       const role = await tx.guildRole.findUnique({
         where: { id: roleId },
@@ -328,10 +314,8 @@ export namespace Role {
         },
       });
 
-      afterTransaction(async () => {
-        // TODO: Add event logging when eventLog model is available
-        console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
-      });
+      // TODO: Add event logging when eventLog model is available
+      console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
     });
   };
 
@@ -343,9 +327,7 @@ export namespace Role {
     Actor.requirePermission(PermissionFlags.ROLE_CREATE);
     const guildId = Actor.guildId();
 
-    await withTransaction(async () => {
-      const tx = useTransaction();
-
+    await prisma.$transaction(async (tx) => {
       // Check if admin role exists
       const adminRole = await tx.guildRole.findFirst({
         where: {

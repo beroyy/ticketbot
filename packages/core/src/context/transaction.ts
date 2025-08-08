@@ -99,10 +99,3 @@ export function afterTransaction(effect: () => void | Promise<void>): void {
   }
 }
 
-/**
- * Get the current transaction client or the default prisma client
- */
-export function useTransaction(): any {
-  const ctx = TransactionContext.tryUse();
-  return ctx?.tx ?? prisma;
-}

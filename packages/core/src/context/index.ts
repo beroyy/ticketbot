@@ -68,7 +68,6 @@ export {
   TransactionContext,
   withTransaction,
   afterTransaction,
-  useTransaction,
 } from "./transaction";
 
 // Export error types

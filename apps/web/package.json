@@ -1,6 +1,6 @@
 {
   "name": "@ticketsbot/web",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,8 +9,6 @@
     "build": "next build",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint --config eslint.config.js .",
-    "test": "vitest --config vitest.config.ts",
-    "test:watch": "vitest --config vitest.config.ts --watch",
     "clean": "rm -rf .next out .tsbuildinfo"
   },
   "dependencies": {
@@ -64,7 +62,6 @@
     "eslint": "^9.31.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.8.3"
   }
 }

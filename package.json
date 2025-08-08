@@ -36,7 +36,6 @@
     "lint:fix": "turbo run lint -- --fix",
     "start": "turbo run start",
     "start:production": "tsx packages/scripts/src/deploy/start-production.ts",
-    "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
@@ -51,10 +50,8 @@
     "@prisma/adapter-neon": "^6.12.0"
   },
   "devDependencies": {
-    "@orangeopensource/hurl": "^6.1.1",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^24.0.14",
-    "@vitest/ui": "^3.2.4",
     "concurrently": "^9.2.0",
     "dotenv-cli": "^9.0.0",
     "eslint": "^9.31.0",
@@ -63,8 +60,6 @@
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tsx": "^4.20.3",
     "turbo": "^2.5.5",
-    "typescript": "^5.8.3",
-    "vite": "^7.0.4",
-    "vitest": "^3.2.4"
+    "typescript": "^5.8.3"
   }
 }

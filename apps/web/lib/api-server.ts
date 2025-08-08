@@ -4,9 +4,8 @@ import type { IncomingMessage } from "http";
 import { env } from "../env";
 
 export function createServerApiClient(req: IncomingMessage) {
-  const baseURL = env.server.API_URL || "http://localhost:4001";
+  const baseURL = env.API_URL || env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-  // Forward cookies from the request
   const cookie = req.headers.cookie || "";
 
   return hc<AppType>(baseURL, {
@@ -20,16 +19,15 @@ export function createServerApiClient(req: IncomingMessage) {
   });
 }
 
-export interface Guild {
+export type Guild = {
   id: string;
   name: string;
   iconUrl: string | null;
   connected: boolean;
   owner: boolean;
   setupRequired: boolean;
-}
+};
 
-// Cached guild fetcher to avoid duplicate calls
 export async function fetchUserGuilds(req: IncomingMessage): Promise<Guild[]> {
   const api = createServerApiClient(req);
 

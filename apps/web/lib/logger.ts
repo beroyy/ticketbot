@@ -3,10 +3,10 @@
  * Only logs debug messages in development mode
  */
 
-import { isDevelopment } from "@/env";
+import { env } from "@/env";
 
 class WebLogger {
-  private isDev = isDevelopment();
+  private isDev = env.isDev();
 
   debug(...args: any[]): void {
     if (this.isDev) {

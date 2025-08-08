@@ -6,6 +6,7 @@ import { User } from "@ticketsbot/core/domains/user";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
 import { env } from "../env";
 import { nanoid } from "nanoid";
+import { createHmac } from "crypto";
 
 const logger = createLogger("api:context");
 
@@ -15,6 +16,118 @@ type Variables = {
   guildId?: string;
   requestId: string;
   startTime: number;
+};
+
+if (env.isProd() && !env.apiSecret) {
+  logger.error("API_SECRET is not set in production! HMAC authentication will fail.");
+  throw new Error("API_SECRET environment variable is required in production");
+}
+
+if (env.isDev() && !env.apiSecret) {
+  logger.warn("Using default HMAC secret for development. Set API_SECRET for production.");
+}
+
+const verifyHmacSignature = (payload: string, signature: string): boolean => {
+  const expected = createHmac("sha256", env.apiSecret).update(payload).digest("hex");
+  const isValid = signature === expected;
+
+  if (env.isDev()) {
+    logger.debug("HMAC signature validation", {
+      valid: isValid,
+      providedSignature: signature.substring(0, 16) + "...",
+      expectedSignature: expected.substring(0, 16) + "...",
+      payloadLength: payload.length,
+    });
+  }
+
+  return isValid;
+};
+
+const withHmacContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
+  const payloadHeader = c.req.header("X-Auth-Payload");
+  const signatureHeader = c.req.header("X-Auth-Signature");
+
+  if (!payloadHeader || !signatureHeader) {
+    return withContext(c, next);
+  }
+
+  try {
+    const payloadStr = Buffer.from(payloadHeader, "base64").toString();
+
+    if (!verifyHmacSignature(payloadStr, signatureHeader)) {
+      logger.warn("Invalid HMAC signature");
+      return c.json({ error: "Invalid signature" }, 401);
+    }
+
+    const payload = JSON.parse(payloadStr);
+
+    if (Date.now() - payload.timestamp > 5 * 60 * 1000) {
+      logger.warn("HMAC request expired", {
+        timestamp: payload.timestamp,
+        age: Date.now() - payload.timestamp,
+      });
+      return c.json({ error: "Request expired" }, 401);
+    }
+
+    const session: AuthSession = {
+      user: {
+        id: payload.userId,
+        email: payload.email,
+        name: payload.name || payload.email,
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        discordUserId: payload.discordUserId,
+        username: payload.username || null,
+        discriminator: payload.discriminator || null,
+        avatar_url: payload.avatar_url || null,
+        image: payload.avatar_url || null,
+      },
+      session: {
+        id: payload.sessionId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: payload.userId,
+        expiresAt: new Date(payload.expiresAt),
+        token: "",
+        ipAddress: null,
+        userAgent: null,
+      },
+    };
+
+    c.set("user", session.user);
+    c.set("session", session);
+
+    const guildId = payload.selectedGuildId || extractGuildId(c);
+    if (guildId) {
+      c.set("guildId", guildId);
+    }
+
+    logger.debug("HMAC authentication successful", {
+      userId: payload.userId,
+      email: payload.email,
+      guildId,
+      hasPermissions: !!payload.permissions,
+    });
+
+    return Actor.provide(
+      {
+        type: "web_user",
+        properties: {
+          userId: payload.userId,
+          email: payload.email,
+          discordId: payload.discordUserId || undefined,
+          selectedGuildId: guildId,
+          permissions: payload.permissions ? BigInt(payload.permissions) : 0n,
+          session,
+        },
+      },
+      () => next()
+    );
+  } catch (error) {
+    logger.error("HMAC authentication failed:", error);
+    return c.json({ error: "Authentication failed" }, 401);
+  }
 };
 
 const extractGuildId = (c: Context): string | undefined => {
@@ -232,8 +345,8 @@ export const requestTracking: MiddlewareHandler<{ Variables: Variables }> = asyn
 
 export const middleware = {
   public: [requestTracking] as const,
-  authenticated: [requestTracking, withContext] as const,
-  guildScoped: [requestTracking, withContext] as const,
+  authenticated: [requestTracking, withHmacContext] as const,
+  guildScoped: [requestTracking, withHmacContext] as const,
 } as const;
 
 export const compositions = middleware;

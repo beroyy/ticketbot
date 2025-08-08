@@ -12,7 +12,7 @@ import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
 
 export const getServerSideProps = withGuildRoute(async (context, _session, guildId, _guilds) => {
-  const api = createServerApiClient(context.req);
+  const api = await createServerApiClient(context.req, guildId);
 
   try {
     // Fetch initial tickets data

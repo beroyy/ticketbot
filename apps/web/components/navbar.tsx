@@ -17,6 +17,7 @@ import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown"
 import { Skeleton } from "@/components/ui/skeleton";
 import { StableAvatar } from "@/components/stable-avatar";
 import { LogOut } from "lucide-react";
+import { env } from "@/env";
 
 type NavItem = {
   href: string;
@@ -151,7 +152,7 @@ export function Navbar() {
               onClick={() => {
                 authClient.signIn.social({
                   provider: "discord",
-                  callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,
+                  callbackURL: env.authCallbackUrl,
                 });
               }}
               className="animate-fade-in flex h-10 min-w-[160px] items-center justify-center rounded bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30"

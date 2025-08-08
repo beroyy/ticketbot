@@ -7,11 +7,11 @@
       "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "dev": {
-      "env": ["NODE_ENV", "PORT", "PORT_OFFSET", "DATABASE_URL", "DISCORD_*", "API_URL", "WEB_URL"],
+      "env": ["NODE_ENV", "PORT", "DATABASE_URL", "DISCORD_*", "API_URL", "WEB_URL"],
       "persistent": true
     },
     "start": {
-      "env": ["NODE_ENV", "PORT", "PORT_OFFSET", "DATABASE_URL", "DISCORD_*", "API_URL", "WEB_URL"]
+      "env": ["NODE_ENV", "PORT", "DATABASE_URL", "DISCORD_*", "API_URL", "WEB_URL"]
     },
     "typecheck": {
       "inputs": ["src/**", "tsconfig.json"],

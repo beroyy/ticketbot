@@ -2,22 +2,81 @@ import { hc } from "hono/client";
 import type { AppType } from "@ticketsbot/api";
 import type { IncomingMessage } from "http";
 import { env } from "../env";
+import { getServerSession } from "./server-auth";
+import { createHmacHeaders, type HmacPayload } from "./hmac";
+import { User } from "@ticketsbot/core/domains/user";
 
-export function createServerApiClient(req: IncomingMessage) {
+/**
+ * Create server API client with HMAC authentication
+ * For use in getServerSideProps - automatically adds HMAC headers
+ */
+export async function createServerApiClient(
+  req: IncomingMessage,
+  guildId?: string
+): Promise<ReturnType<typeof hc<AppType>>> {
   const baseURL = env.API_URL || env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-  const cookie = req.headers.cookie || "";
+  // Get session for HMAC
+  const session = await getServerSession(req);
+  
+  if (!session) {
+    // No session, return client without auth
+    return hc<AppType>(baseURL, {
+      init: {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      },
+    });
+  }
+
+  // Calculate permissions if guild is provided
+  let permissions = "0";
+  if (guildId && session.user.discordUserId) {
+    try {
+      const perms = await User.getPermissions(guildId, session.user.discordUserId);
+      permissions = perms.toString();
+    } catch {
+      // Ignore permission calculation errors
+    }
+  }
+
+  // Create HMAC payload
+  const payload: HmacPayload = {
+    userId: session.user.id,
+    email: session.user.email,
+    discordUserId: session.user.discordUserId,
+    selectedGuildId: guildId,
+    permissions,
+    sessionId: session.session.id,
+    expiresAt: session.session.expiresAt,
+    timestamp: Date.now(),
+    // Add additional fields that might be needed
+    username: session.user.username,
+    discriminator: session.user.discriminator,
+    avatar_url: session.user.avatar_url,
+    name: session.user.name,
+  } as HmacPayload & { 
+    username?: string | null;
+    discriminator?: string | null;
+    avatar_url?: string | null;
+    name?: string;
+  };
+
+  const hmacHeaders = createHmacHeaders(payload);
 
   return hc<AppType>(baseURL, {
     init: {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Cookie: cookie,
+        ...hmacHeaders,
       },
     },
   });
 }
+
 
 export type Guild = {
   id: string;
@@ -29,7 +88,7 @@ export type Guild = {
 };
 
 export async function fetchUserGuilds(req: IncomingMessage): Promise<Guild[]> {
-  const api = createServerApiClient(req);
+  const api = await createServerApiClient(req);
 
   try {
     const response = await api.discord.guilds.$get();

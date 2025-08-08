@@ -23,7 +23,6 @@
         "WEB_URL",
         "API_URL",
         "REDIS_URL",
-        "PORT_OFFSET",
         "BASE_DOMAIN",
         "NEXT_PUBLIC_*"
       ]
@@ -41,7 +40,7 @@
         "NEXT_PUBLIC_*",
         "API_URL",
         "WEB_URL",
-        "PORT_OFFSET",
+        "API_SECRET",
         "BASE_DOMAIN",
         "DEV_*",
         "LOG_*"
@@ -60,7 +59,7 @@
         "NEXT_PUBLIC_*",
         "API_URL",
         "WEB_URL",
-        "PORT_OFFSET",
+        "API_SECRET",
         "BASE_DOMAIN",
         "LOG_*"
       ]
@@ -77,13 +76,6 @@
       "outputs": [],
       "cache": true
     },
-    "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "tests/**", "vitest.config.*"],
-      "outputs": ["coverage/**"],
-      "cache": false,
-      "env": ["NODE_ENV", "DATABASE_URL"]
-    },
     "db:generate": {
       "cache": false,
       "inputs": ["prisma/**/*.prisma"],
@@ -91,10 +83,6 @@
       "env": ["DATABASE_URL"]
     },
     "db:push": {
-      "cache": false,
-      "env": ["DATABASE_URL"]
-    },
-    "db:push:force": {
       "cache": false,
       "env": ["DATABASE_URL"]
     },

@@ -1,4 +1,5 @@
 import type { IncomingMessage } from "http";
+import { auth } from "@ticketsbot/core/auth";
 
 export type ServerSession = {
   user: {
@@ -6,8 +7,8 @@ export type ServerSession = {
     email: string;
     name: string;
     emailVerified: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;  // ISO string for serialization
+    updatedAt: string;  // ISO string for serialization
     discordUserId: string | null;
     username: string | null;
     discriminator: string | null;
@@ -16,65 +17,73 @@ export type ServerSession = {
   };
   session: {
     id: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;  // ISO string for serialization
+    updatedAt: string;  // ISO string for serialization
     userId: string;
-    expiresAt: Date;
+    expiresAt: string;  // ISO string for serialization
     token: string;
     ipAddress?: string | null;
     userAgent?: string | null;
   };
 };
 
+/**
+ * Convert Next.js IncomingMessage to Headers for Better Auth
+ * Simplified version that just passes the headers
+ */
+function getHeadersFromRequest(req: IncomingMessage): Headers {
+  const headers = new Headers();
+  Object.entries(req.headers).forEach(([key, value]) => {
+    if (value) {
+      if (Array.isArray(value)) {
+        value.forEach((v) => headers.append(key, v));
+      } else {
+        headers.set(key, value);
+      }
+    }
+  });
+  return headers;
+}
+
+/**
+ * Get server session using Better Auth's native API
+ * Better Auth handles cookie cache automatically (1 hour cache, then DB fallback)
+ */
 export async function getServerSession(req: IncomingMessage): Promise<ServerSession | null> {
   try {
-    if (!req.headers.cookie) {
+    const headers = getHeadersFromRequest(req);
+    
+    // Use Better Auth's native getSession - it handles cookie cache automatically
+    const getSessionFn = auth.api.getSession as (params: {
+      headers: Headers;
+    }) => Promise<any>;
+    
+    const sessionData = await getSessionFn({ headers });
+    
+    if (!sessionData) {
+      console.log("[Auth] No session found");
       return null;
     }
-
-    const cookies = req.headers.cookie.split(";").reduce(
-      (acc, cookie) => {
-        const [key, value] = cookie.trim().split("=");
-        if (key && value) {
-          acc[key] = value;
-        }
-        return acc;
+    
+    // Convert Dates to ISO strings for Next.js serialization
+    const session: ServerSession = {
+      user: {
+        ...sessionData.user,
+        createdAt: new Date(sessionData.user.createdAt).toISOString(),
+        updatedAt: new Date(sessionData.user.updatedAt).toISOString(),
       },
-      {} as Record<string, string>
-    );
-
-    const sessionDataCookie = cookies["session_data"];
-
-    // Check if we have the session_data cookie
-    if (!sessionDataCookie) {
-      return null;
-    }
-
-    try {
-      // Decode the base64 encoded session data
-      const decodedSessionData = Buffer.from(sessionDataCookie, "base64").toString("utf-8");
-      const sessionData = JSON.parse(decodedSessionData);
-
-      // Check if session is expired (expiresAt is in milliseconds)
-      if (sessionData.expiresAt && sessionData.expiresAt < Date.now()) {
-        return null;
-      }
-
-      // Return the session in the expected format
-      // The session_data cookie has a nested structure: { session: { user: {...}, session: {...} } }
-      if (sessionData.session?.user && sessionData.session?.session) {
-        return {
-          user: sessionData.session.user,
-          session: sessionData.session.session,
-        } as ServerSession;
-      }
-
-      return null;
-    } catch {
-      // Failed to parse session data
-      return null;
-    }
-  } catch {
+      session: {
+        ...sessionData.session,
+        createdAt: new Date(sessionData.session.createdAt).toISOString(),
+        updatedAt: new Date(sessionData.session.updatedAt).toISOString(),
+        expiresAt: new Date(sessionData.session.expiresAt).toISOString(),
+      },
+    };
+    
+    console.log("[Auth] Session found for user:", session.user.email);
+    return session;
+  } catch (error) {
+    console.error("[Auth] Failed to get session:", error);
     return null;
   }
 }

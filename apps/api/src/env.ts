@@ -10,6 +10,8 @@ export const env = {
   WEB_URL: process.env.WEB_URL || "http://localhost:3000",
   API_URL: process.env.API_URL || "http://localhost:3001",
 
+  apiSecret: process.env.API_SECRET || "",
+
   isDev: () => process.env.NODE_ENV === "development",
   isProd: () => process.env.NODE_ENV === "production",
 };

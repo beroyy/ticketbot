@@ -3,7 +3,6 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
-import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@ticketsbot/db";
 import { User } from "../domains/user";
 import { Account } from "../domains/account";
@@ -46,19 +45,16 @@ function getEnvVar(key: string, fallback?: string): string {
 
 const getOrigins = () => {
   const webOrigin = getEnvVar("WEB_URL", "http://localhost:3000");
-  const apiOrigin = getEnvVar("API_URL", "http://localhost:3001");
 
   if (!getOrigins.logged) {
     logger.info("Auth trusted origins:", {
       webOrigin,
-      apiOrigin,
       envWebUrl: process.env.WEB_URL,
-      envApiUrl: process.env.API_URL,
     });
     getOrigins.logged = true;
   }
 
-  return { webOrigin, apiOrigin };
+  return { webOrigin };
 };
 getOrigins.logged = false;
 
@@ -89,21 +85,27 @@ type AuthInstance = {
   [key: string]: unknown;
 };
 
-const createAuthInstance = () => {
-  const { webOrigin, apiOrigin } = getOrigins();
+// Singleton auth instance
+let authInstance: AuthInstance | null = null;
+
+const createAuthInstance = (): AuthInstance => {
+  // Return existing instance if already created
+  if (authInstance) {
+    return authInstance;
+  }
+
+  const { webOrigin } = getOrigins();
 
   const cookieDomain = process.env.NODE_ENV === "production" ? ".ticketsbot.co" : "localhost";
 
-  logger.debug("Creating Better Auth instance", {
-    baseURL: apiOrigin,
-    basePath: "/auth",
+  logger.info("Creating Better Auth instance (singleton)", {
     discordConfigured: !!discordClientId && !!discordClientSecret,
-    redirectURI: `${apiOrigin}/auth/callback/discord`,
+    redirectURI: `${webOrigin}/api/auth/callback/discord`,
     discordClientId: discordClientId?.substring(0, 6) + "...",
     nodeEnv: process.env["NODE_ENV"],
   });
 
-  return betterAuth({
+  authInstance = betterAuth({
     database: prismaAdapter(prisma, {
       provider: "postgresql",
     }),
@@ -112,7 +114,7 @@ const createAuthInstance = () => {
       storeSessionInDatabase: true,
       cookieCache: {
         enabled: true,
-        maxAge: 300,
+        maxAge: 3600,  // 1 hour cache
       },
       expiresIn: 60 * 60 * 24 * 7,
     },
@@ -122,17 +124,15 @@ const createAuthInstance = () => {
       max: 100,
       storage: "memory",
       customRules: {
-        "/auth/signin": { window: 300, max: 5 },
-        "/auth/signup": { window: 300, max: 3 },
-        "/auth/callback/*": { window: 60, max: 10 },
-        "/auth/forgot-password": { window: 900, max: 3 },
-        "/auth/reset-password": { window: 300, max: 5 },
-        "/auth/me": { window: 60, max: 30 },
+        "/api/auth/signin": { window: 300, max: 5 },
+        "/api/auth/signup": { window: 300, max: 3 },
+        "/api/auth/callback/*": { window: 60, max: 10 },
+        "/api/auth/forgot-password": { window: 900, max: 3 },
+        "/api/auth/reset-password": { window: 300, max: 5 },
+        "/api/auth/me": { window: 60, max: 30 },
       },
     },
-    baseURL: apiOrigin,
-    basePath: "/auth",
-    trustedOrigins: [webOrigin, apiOrigin],
+    trustedOrigins: [webOrigin],
     advanced: {
       // cookiePrefix: "ticketsbot",
       useSecureCookies: process.env["NODE_ENV"] === "production",
@@ -205,26 +205,14 @@ const createAuthInstance = () => {
         const { user, session } = sessionData;
 
         const existingUser = user as any;
-        if (
-          existingUser.discordUserId &&
-          existingUser.username &&
-          existingUser.discordDataFetchedAt
-        ) {
-          const dataAge = Date.now() - new Date(existingUser.discordDataFetchedAt).getTime();
-          const MAX_AGE = 30 * 60 * 1000; // 30 minutes
-
-          if (dataAge < MAX_AGE) {
-            logger.debug("Using cached Discord data from session", {
-              userId: user.id,
-              discordUserId: existingUser.discordUserId,
-              dataAge: Math.round(dataAge / 1000) + "s",
-            });
-            return { session, user };
-          }
+        
+        // Fast path: If we already have Discord data, return immediately
+        if (existingUser.discordUserId && existingUser.username) {
+          return { session, user };
         }
 
-        // Slow path: Fetch Discord data if missing or stale
-        logger.debug("customSession slow path triggered", {
+        // Slow path: Only fetch if truly missing Discord data
+        logger.debug("customSession fetching missing Discord data", {
           userId: user.id,
           hasDiscordUserId: !!existingUser.discordUserId,
           hasUsername: !!existingUser.username,
@@ -304,7 +292,6 @@ const createAuthInstance = () => {
           user: enhancedUser,
         };
       }),
-      nextCookies(),
     ],
     hooks: {
       after: createAuthMiddleware(async (ctx) => {
@@ -510,8 +497,11 @@ const createAuthInstance = () => {
       }),
     },
   }) as AuthInstance;
+  
+  return authInstance;
 };
 
 export { getSessionFromContext } from "./services/session";
 
+// Export singleton auth instance
 export const auth = createAuthInstance();

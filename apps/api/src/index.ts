@@ -6,7 +6,6 @@ import { serve } from "@hono/node-server";
 import { auth } from "@ticketsbot/core/auth";
 import type { AppEnv } from "./factory";
 import { errorHandler } from "./utils/error-handler";
-import { authRoutes } from "./routes/auth";
 import { healthRoutes } from "./routes/health";
 import { userRoutes } from "./routes/user";
 import { discordRoutes } from "./routes/discord";
@@ -78,7 +77,6 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
 });
 
 const _routes = app
-  .route("/auth", authRoutes)
   .route("/health", healthRoutes)
   .route("/user", userRoutes)
   .route("/discord", discordRoutes)

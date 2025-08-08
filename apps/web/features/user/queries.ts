@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 
 // User profile queries
 export const userQueries = {
@@ -7,10 +8,11 @@ export const userQueries = {
   profile: () => ({
     queryKey: ["user", "profile"],
     queryFn: async () => {
-      const res = await api.auth.me.$get();
-      if (!res.ok) throw new Error("Failed to fetch user profile");
-      const data = await res.json();
-      return data.user;
+      // Use Better Auth's session instead of the old /auth/me endpoint
+      const response = await authClient.getSession();
+      const session = response.data;
+      if (!session?.user) throw new Error("Not authenticated");
+      return session.user;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,

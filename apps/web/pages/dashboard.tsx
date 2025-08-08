@@ -13,7 +13,7 @@ import { User } from "@ticketsbot/core/domains/user";
 import { PermissionFlags } from "@ticketsbot/core";
 
 export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
-  const api = createServerApiClient(context.req);
+  const api = await createServerApiClient(context.req, guildId);
   let hasAnalyticsPermission = false;
   let initialTicketStats: any = null;
   let initialRecentActivity: any[] = [];

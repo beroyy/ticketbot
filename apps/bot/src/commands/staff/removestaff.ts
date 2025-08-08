@@ -2,7 +2,6 @@ import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
 import { Role } from "@ticketsbot/core/domains/role";
-import { Event } from "@ticketsbot/core/domains/event";
 import { parseDiscordId } from "@ticketsbot/core";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
@@ -45,18 +44,8 @@ export const RemoveStaffCommand = createCommand({
         for (const role of userRoles) {
           await Role.removeRole(role.id, userId);
           removedRoles.push(role.name);
-
-          // Create event log
-          await Event.create({
-            guildId,
-            actorId: parseDiscordId(interaction.user.id),
-            category: "TEAM",
-            action: "member_role_removed",
-            targetType: "USER",
-            targetId: targetUser.id,
-            guildRoleId: role.id,
-            metadata: { roleName: role.name },
-          });
+          
+          // Event logging removed - TCN will handle this automatically
         }
 
         // Schedule Discord role sync after transaction

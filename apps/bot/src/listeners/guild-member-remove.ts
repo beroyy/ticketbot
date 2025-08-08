@@ -47,25 +47,9 @@ export const GuildMemberRemoveListener = ListenerFactory.on("guildMemberRemove",
         },
       });
 
-      // 4. Log event IN transaction for consistency
+      // Event logging removed - TCN will handle this automatically
+      
       if (removedRoles.count > 0 || removedFromTickets.count > 0 || unclaimedTickets.count > 0) {
-        await tx.event.create({
-          data: {
-            guildId: guildId,
-            actorId: userId,
-            category: "MEMBER",
-            action: "member.left",
-            targetType: "USER",
-            targetId: userId,
-            metadata: {
-              username: member.user.username,
-              rolesRemoved: removedRoles.count,
-              ticketsAffected: removedFromTickets.count,
-              ticketsUnclaimed: unclaimedTickets.count,
-            },
-          },
-        });
-
         container.logger.info(
           `Member ${member.user.username} removed from guild ${member.guild.name}: ` +
           `${removedRoles.count} roles removed, ${removedFromTickets.count} tickets affected, ` +

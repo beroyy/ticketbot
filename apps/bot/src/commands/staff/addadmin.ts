@@ -3,7 +3,6 @@ import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/disc
 import { RoleOps } from "@bot/lib/discord-operations";
 import { Role } from "@ticketsbot/core/domains/role";
 import { User } from "@ticketsbot/core/domains/user";
-import { Event } from "@ticketsbot/core/domains/event";
 import { parseDiscordId } from "@ticketsbot/core";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
@@ -56,18 +55,8 @@ export const AddAdminCommand = createCommand({
 
         // Assign role
         await Role.assignRole(adminRole.id, userId, parseDiscordId(interaction.user.id));
-
-        // Create event log
-        await Event.create({
-          guildId,
-          actorId: parseDiscordId(interaction.user.id),
-          category: "TEAM",
-          action: "member_role_added",
-          targetType: "USER",
-          targetId: targetUser.id,
-          guildRoleId: adminRole.id,
-          metadata: { roleName: "admin" },
-        });
+        
+        // Event logging removed - TCN will handle this automatically
 
         // Schedule Discord role sync after transaction
         afterTransaction(async () => {

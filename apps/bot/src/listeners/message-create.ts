@@ -93,34 +93,7 @@ export const MessageCreateListener = ListenerFactory.on(
           },
         });
 
-        // 4. Log event for non-bot messages (IN transaction for consistency)
-        if (!message.author.bot) {
-          // Determine message type
-          const member =
-            message.member ||
-            (await message.guild!.members.fetch(message.author.id).catch(() => null));
-          const hasTicketRole =
-            member?.roles.cache.some((role) => role.name.startsWith(ROLE_PREFIX)) ?? false;
-          const messageType = hasTicketRole ? "staff" : "customer";
-
-          await tx.event.create({
-            data: {
-              guildId,
-              actorId: authorId,
-              category: "TICKET",
-              action: `message.${messageType}_sent`,
-              targetType: "TICKET",
-              targetId: ticket.id.toString(),
-              ticketId: ticket.id,
-              metadata: {
-                messageId: message.id,
-                ticketNumber: ticket.number,
-                messageLength: message.content.length,
-                hasAttachments: message.attachments.size > 0,
-              },
-            },
-          });
-        }
+        // Event logging removed - TCN will handle this automatically
       });
     } catch (error) {
       container.logger.error(`Failed to handle message in ticket ${message.channelId}:`, error);

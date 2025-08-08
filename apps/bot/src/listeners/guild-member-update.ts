@@ -1,7 +1,5 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Event } from "@ticketsbot/core/domains/event";
 import { container } from "@sapphire/framework";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 
 const ROLE_PREFIX = "Tickets ";
 
@@ -23,50 +21,20 @@ export const GuildMemberUpdateListener = ListenerFactory.on(
 
       if (addedRoles.size === 0 && removedRoles.size === 0) return;
 
-      const actor: DiscordActor = {
-        type: "discord_user",
-        properties: {
-          userId: newMember.client.user.id,
-          username: newMember.client.user.username,
-          guildId: newMember.guild.id,
-          permissions: 0n,
-        },
-      };
-
-      await Actor.Context.provideAsync(actor, async () => {
-        // Log role additions
-        for (const [, role] of addedRoles) {
-          await Event.create({
-            guildId: newMember.guild.id,
-            actorId: newMember.id,
-            category: "TEAM",
-            action: "role.assigned",
-            targetType: "ROLE",
-            targetId: role.id,
-            metadata: {
-              roleName: role.name,
-              userId: newMember.id,
-              roleColor: role.hexColor,
-            },
-          });
-        }
-
-        // Log role removals
-        for (const [, role] of removedRoles) {
-          await Event.create({
-            guildId: newMember.guild.id,
-            actorId: newMember.id,
-            category: "TEAM",
-            action: "role.removed",
-            targetType: "ROLE",
-            targetId: role.id,
-            metadata: {
-              roleName: role.name,
-              userId: newMember.id,
-            },
-          });
-        }
-      });
+      // Event logging removed - TCN will handle this automatically
+      // The database changes to guild_role_members will trigger notifications
+      
+      // Just log for debugging if needed
+      if (addedRoles.size > 0) {
+        container.logger.info(
+          `Member ${newMember.user.tag} gained ${addedRoles.size} ticket role(s)`
+        );
+      }
+      if (removedRoles.size > 0) {
+        container.logger.info(
+          `Member ${newMember.user.tag} lost ${removedRoles.size} ticket role(s)`
+        );
+      }
     } catch (error) {
       container.logger.error(`Failed to track role changes:`, error);
     }

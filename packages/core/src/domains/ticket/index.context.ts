@@ -301,23 +301,7 @@ export namespace Ticket {
       },
     });
 
-    // Log event
-    afterTransaction(async () => {
-      const { Event } = await import("../event");
-      await Event.create({
-        guildId,
-        actorId: Actor.userId(),
-        category: "TICKET",
-        action: "ticket.participant_added",
-        targetType: "TICKET",
-        targetId: ticketId.toString(),
-        ticketId,
-        metadata: {
-          participantId: userId,
-          role,
-        },
-      });
-    });
+    // Event logging removed - TCN will handle this automatically
   };
 
   /**
@@ -347,22 +331,7 @@ export namespace Ticket {
       },
     });
 
-    // Log event
-    afterTransaction(async () => {
-      const { Event } = await import("../event");
-      await Event.create({
-        guildId,
-        actorId: Actor.userId(),
-        category: "TICKET",
-        action: "ticket.participant_removed",
-        targetType: "TICKET",
-        targetId: ticketId.toString(),
-        ticketId,
-        metadata: {
-          participantId: userId,
-        },
-      });
-    });
+    // Event logging removed - TCN will handle this automatically
   };
 
   /**

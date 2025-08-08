@@ -1,6 +1,6 @@
 import { createFactory } from "hono/factory";
 import type { AuthSession } from "@ticketsbot/core/auth";
-import type { Guild as PrismaGuild, Ticket as PrismaTicket } from "@prisma/client";
+import type { Guild as PrismaGuild, Ticket as PrismaTicket } from "@ticketsbot/db";
 
 export type AppEnv = {
   Variables: {

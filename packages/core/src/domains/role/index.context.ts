@@ -1,5 +1,4 @@
-import { prisma } from "@ticketsbot/db";
-import { GuildRoleStatus, type GuildRole, type GuildRoleMember } from "@prisma/client";
+import { prisma, GuildRoleStatus, type GuildRole, type GuildRoleMember } from "@ticketsbot/db";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../permissions/utils";
 import { logger } from "../../utils/logger";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";

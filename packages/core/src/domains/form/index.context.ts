@@ -1,12 +1,12 @@
-import { prisma } from "@ticketsbot/db";
+import {
+  prisma,
+  type Form as PrismaForm,
+  type FormField,
+  type Panel as PrismaPanel,
+  type FormFieldType,
+} from "@ticketsbot/db";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
-import type {
-  Form as PrismaForm,
-  FormField,
-  Panel as PrismaPanel,
-  FormFieldType,
-} from "@prisma/client";
 
 type FormWithFields = PrismaForm & {
   formFields: FormField[];

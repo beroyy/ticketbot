@@ -1,5 +1,5 @@
 import { container } from "@sapphire/framework";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import type { EmbedBuilder, TextChannel } from "discord.js";
 
 /**

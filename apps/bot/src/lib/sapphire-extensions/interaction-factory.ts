@@ -8,7 +8,7 @@ import type {
 import type { Result } from "@bot/lib/discord-utils/result";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 import { parseDiscordId } from "@ticketsbot/core";
-import { Role as TeamDomain } from "@ticketsbot/core/domains";
+import { Role as TeamDomain } from "@ticketsbot/core/domains/role";
 
 /**
  * Helper to wrap handler execution with Discord context

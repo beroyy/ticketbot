@@ -1,6 +1,9 @@
 import type { Guild } from "discord.js";
 import { container } from "@sapphire/framework";
-import { Panel, Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
+import { Panel } from "@ticketsbot/core/domains/panel";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { ChannelOps } from "./channel";
 import { MessageOps } from "./message";

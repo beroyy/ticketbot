@@ -1,4 +1,4 @@
-import type { Role } from "@ticketsbot/core/domains";
+import type { Role } from "@ticketsbot/core/domains/role";
 
 /**
  * Common validation helpers for staff commands

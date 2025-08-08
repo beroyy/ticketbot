@@ -1,7 +1,9 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
-import { ensure as ensureGuild, update as updateGuild, User, Role } from "@ticketsbot/core/domains";
+import { ensureGuild, updateGuild } from "@ticketsbot/core/domains/guild";
+import { User } from "@ticketsbot/core/domains/user";
+import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId } from "@ticketsbot/core";
 
 export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guild: Guild) => {

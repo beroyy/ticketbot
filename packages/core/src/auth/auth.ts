@@ -5,16 +5,17 @@ import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@ticketsbot/db";
-import { User as UserDomain, Account as AccountDomain } from "../domains";
+import { User } from "../domains/user";
+import { Account } from "../domains/account";
 import { getDiscordAvatarUrl } from "./services/discord-api";
-import type { User, Session } from "./types";
+import type { User as AuthUser, Session } from "./types";
 
 type AuthContext = {
   newSession?: {
-    user: User;
+    user: AuthUser;
     session: Session;
   };
-  user?: User;
+  user?: AuthUser;
 };
 
 type SessionData = {
@@ -231,7 +232,7 @@ const createAuthInstance = () => {
           hasUsername: !!existingUser.username,
         });
 
-        const fullUser = await UserDomain.getBetterAuthUser(user.id);
+        const fullUser = await User.getBetterAuthUser(user.id);
         logger.debug("Fetched full user from DB", {
           userId: user.id,
           hasDiscordUserId: !!fullUser?.discordUserId,
@@ -240,7 +241,7 @@ const createAuthInstance = () => {
 
         let discordUser = null;
         if (fullUser?.discordUserId) {
-          discordUser = await UserDomain.getDiscordUser(fullUser.discordUserId);
+          discordUser = await User.getDiscordUser(fullUser.discordUserId);
           logger.debug("Fetched Discord user", {
             discordUserId: fullUser.discordUserId,
             username: discordUser?.username,
@@ -257,7 +258,7 @@ const createAuthInstance = () => {
         // Only do the account lookup if we don't have a Discord ID
         if (!discordUserId) {
           logger.debug("No Discord ID on user, checking OAuth accounts", { userId: user.id });
-          const discordAccount = await AccountDomain.getDiscordAccount(user.id);
+          const discordAccount = await Account.getDiscordAccount(user.id);
           logger.debug("Discord OAuth account lookup result", {
             userId: user.id,
             found: !!discordAccount,
@@ -267,7 +268,7 @@ const createAuthInstance = () => {
           if (discordAccount?.accountId) {
             discordUserId = discordAccount.accountId;
 
-            await UserDomain.ensure(
+            await User.ensure(
               discordAccount.accountId,
               `User_${discordAccount.accountId.slice(-6)}`,
               undefined,
@@ -275,13 +276,13 @@ const createAuthInstance = () => {
               { source: "customSession" }
             );
 
-            await UserDomain.updateDiscordUserId(user.id, discordAccount.accountId);
+            await User.updateDiscordUserId(user.id, discordAccount.accountId);
             logger.info("Updated user with Discord ID from OAuth account", {
               userId: user.id,
               discordUserId: discordAccount.accountId,
             });
 
-            discordUser = await UserDomain.getDiscordUser(discordAccount.accountId);
+            discordUser = await User.getDiscordUser(discordAccount.accountId);
           }
         }
 
@@ -332,7 +333,7 @@ const createAuthInstance = () => {
           logger.debug("User found after Discord callback:", user.id);
 
           try {
-            const account = await AccountDomain.getDiscordAccount(user.id);
+            const account = await Account.getDiscordAccount(user.id);
 
             logger.debug("Discord account found:", account?.accountId);
 
@@ -365,7 +366,7 @@ const createAuthInstance = () => {
               );
 
               // Ensure DiscordUser exists first
-              await UserDomain.ensure(
+              await User.ensure(
                 account.accountId,
                 discordProfile.username,
                 discordProfile.discriminator || undefined,
@@ -452,9 +453,9 @@ const createAuthInstance = () => {
                 });
 
                 // Only set up ownership and roles for guilds where bot is installed
-                const guildModule = await import("../domains/guild");
-                const findGuildById = guildModule.findById;
-                const ensureGuild = guildModule.ensure;
+                const guildModule = await import("../domains/guild/system");
+                const findGuildById = guildModule.getGuildById;
+                const ensureGuild = guildModule.ensureGuild;
                 const roleModule = await import("../domains/role");
                 const Role = roleModule.Role;
 

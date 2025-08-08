@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
-import { Role } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
 

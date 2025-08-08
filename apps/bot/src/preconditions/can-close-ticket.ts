@@ -1,7 +1,7 @@
 import { Precondition } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
-import { Role } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
 

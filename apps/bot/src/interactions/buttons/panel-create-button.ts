@@ -1,7 +1,10 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
-import { Panel, Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
+import { Panel } from "@ticketsbot/core/domains/panel";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";

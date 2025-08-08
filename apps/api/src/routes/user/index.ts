@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Redis, createLogger } from "@ticketsbot/core";
-import { Account } from "@ticketsbot/core/domains";
+import { Account } from "@ticketsbot/core/domains/account";
 import { Actor } from "@ticketsbot/core/context";
 import { createRoute, successResponse } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";

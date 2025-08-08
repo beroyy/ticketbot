@@ -7,7 +7,7 @@ import {
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
-import { Role } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
 

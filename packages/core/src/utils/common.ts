@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TicketStatus as PrismaTicketStatus } from "@prisma/client";
+import { TicketStatus as PrismaTicketStatus } from "@ticketsbot/db";
 
 export const DiscordIdSchema = z
   .string()

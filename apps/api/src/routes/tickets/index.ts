@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, TicketStatusSchema, PermissionFlags } from "@ticketsbot/core";
-import { Ticket, TicketLifecycle, Transcripts, Analytics, User } from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
+import { Analytics } from "@ticketsbot/core/domains/analytics";
+import { User } from "@ticketsbot/core/domains/user";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions, requirePermission } from "../../middleware/context";
@@ -107,7 +111,7 @@ export const ticketRoutes = createRoute()
     const input = c.req.valid("json");
 
     try {
-      const { TicketLifecycle } = await import("@ticketsbot/core/domains");
+      const { TicketLifecycle } = await import("@ticketsbot/core/domains/ticket-lifecycle");
       const ticket = await TicketLifecycle.create({
         guildId: input.guildId,
         channelId: "",

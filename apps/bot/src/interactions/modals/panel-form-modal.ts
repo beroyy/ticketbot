@@ -1,7 +1,7 @@
 import { err, ok, createModalErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction } from "discord.js";
-import { Panel } from "@ticketsbot/core/domains";
+import { Panel } from "@ticketsbot/core/domains/panel";
 import { TicketOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 

@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { InteractionResponse, err, ok } from "@bot/lib/discord-utils";
-import { Tag } from "@ticketsbot/core/domains";
+import { Tag } from "@ticketsbot/core/domains/tag";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 

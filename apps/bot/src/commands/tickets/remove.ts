@@ -2,7 +2,8 @@ import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { ChannelOps } from "@bot/lib/discord-operations";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
-import { Ticket, Transcripts } from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
 export class RemoveCommand extends TicketCommandBase {

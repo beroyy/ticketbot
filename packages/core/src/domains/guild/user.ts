@@ -1,15 +1,14 @@
-import { prisma } from "@ticketsbot/db";
-import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
-import { PermissionFlags } from "../../permissions/constants";
 import {
+  prisma,
   TicketStatus,
   type Prisma,
   type Guild as _PrismaGuild,
   type GuildRole as _TeamRole,
   type Blacklist as _Blacklist,
-} from "@prisma/client";
+} from "@ticketsbot/db";
+import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
+import { PermissionFlags } from "../../permissions/constants";
 
-// Type for the formatted API response
 type FormattedGuildSettings = ReturnType<typeof formatGuildSettings>;
 type FormattedTeamRole = {
   id: number;
@@ -27,15 +26,7 @@ type FormattedBlacklistEntry = {
   createdAt: string;
 };
 
-/**
- * Context-aware Guild domain methods
- * These methods automatically use actor context for permissions and guild context
- */
 export namespace Guild {
-  /**
-   * Get settings for the current guild
-   * Requires GUILD_SETTINGS_VIEW permission
-   */
   export const getSettings = async (): Promise<FormattedGuildSettings> => {
     Actor.requirePermission(PermissionFlags.GUILD_SETTINGS_VIEW);
     const guildId = Actor.guildId();
@@ -56,10 +47,6 @@ export namespace Guild {
     return formatGuildSettings(guild);
   };
 
-  /**
-   * Update guild settings
-   * Requires GUILD_SETTINGS_EDIT permission
-   */
   export const updateSettings = async (input: {
     settings?: {
       transcriptsChannel?: string | null;
@@ -89,7 +76,6 @@ export namespace Guild {
     const guildId = Actor.guildId();
 
     return withTransaction(async () => {
-      // First check if guild exists
       const existing = await prisma.guild.findUnique({
         where: { id: guildId },
       });
@@ -98,7 +84,6 @@ export namespace Guild {
         throw new VisibleError("not_found", "Guild not found");
       }
 
-      // Build update data
       const updateData: Prisma.GuildUpdateInput = {};
 
       if (input.settings) {
@@ -111,11 +96,9 @@ export namespace Guild {
         if (input.settings.defaultTicketMessage !== undefined) {
           updateData.defaultTicketMessage = input.settings.defaultTicketMessage;
         }
-        // Handle ticketCategories through junction table
         if (input.settings.ticketCategories !== undefined) {
           // This will be handled separately after the main update
         }
-        // Handle supportRoles through junction table
         if (input.settings.supportRoles !== undefined) {
           // This will be handled separately after the main update
         }
@@ -168,9 +151,6 @@ export namespace Guild {
     });
   };
 
-  /**
-   * Get team roles for the current guild
-   */
   export const getTeamRoles = async (): Promise<FormattedTeamRole[]> => {
     const guildId = Actor.guildId();
 
@@ -189,10 +169,6 @@ export namespace Guild {
     }));
   };
 
-  /**
-   * Get blacklisted users and roles
-   * Requires MEMBER_BLACKLIST permission to view
-   */
   export const getBlacklist = async (): Promise<FormattedBlacklistEntry[]> => {
     Actor.requirePermission(PermissionFlags.MEMBER_BLACKLIST);
     const guildId = Actor.guildId();
@@ -211,10 +187,6 @@ export namespace Guild {
     }));
   };
 
-  /**
-   * Add a user or role to the blacklist
-   * Requires MEMBER_BLACKLIST permission
-   */
   export const addToBlacklist = async (input: {
     targetId: string;
     isRole: boolean;
@@ -223,7 +195,6 @@ export namespace Guild {
     Actor.requirePermission(PermissionFlags.MEMBER_BLACKLIST);
     const guildId = Actor.guildId();
 
-    // Check if already blacklisted
     const existing = await prisma.blacklist.findFirst({
       where: {
         guildId,
@@ -258,10 +229,6 @@ export namespace Guild {
     };
   };
 
-  /**
-   * Remove from blacklist
-   * Requires MEMBER_UNBLACKLIST permission
-   */
   export const removeFromBlacklist = async (targetId: string, isRole: boolean): Promise<any> => {
     Actor.requirePermission(PermissionFlags.MEMBER_UNBLACKLIST);
     const guildId = Actor.guildId();
@@ -285,18 +252,12 @@ export namespace Guild {
     return { success: true, removed: deleted.count };
   };
 
-  /**
-   * Get statistics for the guild
-   * Requires STATS_VIEW permission
-   * Returns statistics for all timeframes (1D, 1W, 1M, 3M)
-   */
   export const getStatistics = async (): Promise<any> => {
     Actor.requirePermission(PermissionFlags.ANALYTICS_VIEW);
     const guildId = Actor.guildId();
 
     const now = new Date();
 
-    // Define timeframe configurations
     const timeframeConfigs = {
       "1D": { days: 1, bucketSize: "hour", bucketCount: 24 },
       "1W": { days: 7, bucketSize: "day", bucketCount: 7 },
@@ -304,7 +265,6 @@ export namespace Guild {
       "3M": { days: 90, bucketSize: "week", bucketCount: 13 },
     };
 
-    // Generate buckets for each timeframe
     const generateBuckets = (timeframe: keyof typeof timeframeConfigs) => {
       const config = timeframeConfigs[timeframe];
       const buckets: { start: Date; end: Date; date: string }[] = [];
@@ -312,7 +272,6 @@ export namespace Guild {
       startDate.setDate(startDate.getDate() - config.days);
 
       if (config.bucketSize === "hour") {
-        // For 1D: Generate hourly buckets
         startDate.setHours(0, 0, 0, 0);
         for (let i = 0; i < 24; i++) {
           const bucketStart = new Date(startDate);
@@ -329,7 +288,6 @@ export namespace Guild {
           }
         }
       } else if (config.bucketSize === "day") {
-        // For 1W and 1M: Generate daily buckets
         const currentDate = new Date(startDate);
         while (currentDate < now) {
           const bucketStart = new Date(currentDate);
@@ -345,7 +303,6 @@ export namespace Guild {
           currentDate.setDate(currentDate.getDate() + 1);
         }
       } else if (config.bucketSize === "week") {
-        // For 3M: Generate weekly buckets
         const currentDate = new Date(startDate);
         while (currentDate < now) {
           const bucketStart = new Date(currentDate);
@@ -365,7 +322,6 @@ export namespace Guild {
       return buckets;
     };
 
-    // Generate all bucket sets
     const allBuckets = {
       "1D": generateBuckets("1D"),
       "1W": generateBuckets("1W"),
@@ -373,15 +329,12 @@ export namespace Guild {
       "3M": generateBuckets("3M"),
     };
 
-    // Query data for all timeframes in parallel
     const [totalTickets, openTickets, topSupportAgents, ticketsByCategory, allBucketCounts] =
       await Promise.all([
-        // Total tickets all time
         prisma.ticket.count({
           where: { guildId },
         }),
 
-        // Currently open tickets
         prisma.ticket.count({
           where: {
             guildId,
@@ -389,7 +342,6 @@ export namespace Guild {
           },
         }),
 
-        // Top support agents (last 30 days) - Updated to use lifecycle events
         prisma.ticketLifecycleEvent.groupBy({
           by: ["performedById"],
           where: {
@@ -408,7 +360,6 @@ export namespace Guild {
           take: 5,
         }),
 
-        // Tickets by category (last 30 days)
         prisma.ticket.groupBy({
           by: ["categoryId"],
           where: {
@@ -418,7 +369,6 @@ export namespace Guild {
           _count: true,
         }),
 
-        // Chart data for all timeframes
         Promise.all(
           Object.entries(allBuckets).map(async ([timeframe, buckets]: [string, any[]]) => {
             const counts = await Promise.all(
@@ -439,38 +389,31 @@ export namespace Guild {
         ),
       ]);
 
-    // Organize bucket counts by timeframe
     const bucketCountsByTimeframe: Record<string, number[]> = {};
     allBucketCounts.forEach(({ timeframe, counts }: { timeframe: string; counts: number[] }) => {
       bucketCountsByTimeframe[timeframe] = counts;
     });
 
-    // Format chart data for each timeframe
     const chartDataByTimeframe: Record<string, any[]> = {};
     const periodDataByTimeframe: Record<string, any> = {};
 
     Object.entries(allBuckets).forEach(([timeframe, buckets]) => {
       const counts = bucketCountsByTimeframe[timeframe] || [];
 
-      // Format chart data
       chartDataByTimeframe[timeframe] = buckets.map((bucket, index) => ({
         date: bucket.date,
         tickets: counts[index] || 0,
       }));
 
-      // Calculate period totals for each timeframe
       const periodTotal = counts.reduce((sum, count) => sum + count, 0);
 
-      // Calculate comparison periods
       const config = timeframeConfigs[timeframe as keyof typeof timeframeConfigs];
       const periodStart = new Date(now);
       periodStart.setDate(periodStart.getDate() - config.days);
 
-      // Previous period for comparison
       const prevPeriodStart = new Date(periodStart);
       prevPeriodStart.setDate(prevPeriodStart.getDate() - config.days);
 
-      // Query previous period count for percentage change
       periodDataByTimeframe[timeframe] = {
         totalTickets: periodTotal,
         startDate: periodStart.toISOString(),
@@ -478,7 +421,6 @@ export namespace Guild {
       };
     });
 
-    // Calculate percentage changes for each timeframe
     const percentageChangeByTimeframe: Record<string, any> = {};
     for (const timeframe of Object.keys(timeframeConfigs)) {
       const config = timeframeConfigs[timeframe as keyof typeof timeframeConfigs];
@@ -529,12 +471,10 @@ export namespace Guild {
     }
 
     return {
-      // Basic counts (always available)
       totalTickets,
       openTickets,
       closedTickets: totalTickets - openTickets,
 
-      // Data organized by timeframe
       timeframes: {
         "1D": {
           chartData: chartDataByTimeframe["1D"],
@@ -554,7 +494,6 @@ export namespace Guild {
         },
       },
 
-      // Additional analytics (30-day window)
       topSupportAgents: topSupportAgents.map((agent) => ({
         userId: agent.performedById,
         ticketsClosed: agent._count,
@@ -564,15 +503,12 @@ export namespace Guild {
         count: cat._count,
       })),
 
-      // For frontend compatibility
       totals: {
         activeTickets: openTickets,
       },
     };
   };
 }
-
-// Helper functions
 
 function formatGuildSettings(guild: any) {
   return {

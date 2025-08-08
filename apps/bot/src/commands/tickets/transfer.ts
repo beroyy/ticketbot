@@ -1,7 +1,9 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
-import { Role, TicketLifecycle, Transcripts } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import { PermissionFlags } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";

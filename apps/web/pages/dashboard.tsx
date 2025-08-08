@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
-import { User } from "@ticketsbot/core/domains";
+import { User } from "@ticketsbot/core/domains/user";
 import { PermissionFlags } from "@ticketsbot/core";
 
 export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {

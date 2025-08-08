@@ -1,6 +1,7 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ButtonInteraction } from "discord.js";
-import { User as UserDomain, Transcripts } from "@ticketsbot/core/domains";
+import { User as UserDomain } from "@ticketsbot/core/domains/user";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
   err,

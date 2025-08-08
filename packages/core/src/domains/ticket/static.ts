@@ -1,5 +1,4 @@
-import { prisma } from "@ticketsbot/db";
-import { TicketStatus } from "@prisma/client";
+import { prisma, TicketStatus } from "@ticketsbot/db";
 
 /**
  * Static ticket methods that don't require actor context

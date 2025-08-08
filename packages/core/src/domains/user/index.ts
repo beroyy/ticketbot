@@ -1,5 +1,4 @@
-import { prisma } from "@ticketsbot/db";
-import { Prisma, type DiscordUser } from "@prisma/client";
+import { prisma, Prisma, type DiscordUser } from "@ticketsbot/db";
 
 // Export specific schemas
 export {

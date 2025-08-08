@@ -10,7 +10,10 @@ import {
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { Role, Ticket, User, Analytics } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { User } from "@ticketsbot/core/domains/user";
+import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 

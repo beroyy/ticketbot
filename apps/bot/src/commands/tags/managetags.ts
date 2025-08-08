@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
-import { Tag } from "@ticketsbot/core/domains";
+import { Tag } from "@ticketsbot/core/domains/tag";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";

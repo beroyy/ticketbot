@@ -1,7 +1,8 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { type AuthSession, getSessionFromContext } from "@ticketsbot/core/auth";
-import { User, DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
-import { Account } from "@ticketsbot/core/domains";
+import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
+import { Account } from "@ticketsbot/core/domains/account";
+import { User } from "@ticketsbot/core/domains/user";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
 import { env } from "../env";
 import { nanoid } from "nanoid";

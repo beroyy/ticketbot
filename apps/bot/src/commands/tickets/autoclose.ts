@@ -8,7 +8,10 @@ import {
   err,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { User, Ticket, ScheduledTask, Transcripts } from "@ticketsbot/core/domains";
+import { User } from "@ticketsbot/core/domains/user";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { ScheduledTask } from "@ticketsbot/core/domains/scheduled-task";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";

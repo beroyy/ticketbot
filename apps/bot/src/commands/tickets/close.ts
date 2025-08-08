@@ -2,7 +2,8 @@ import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
-import { TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 

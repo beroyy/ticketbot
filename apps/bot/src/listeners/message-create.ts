@@ -1,5 +1,5 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Event } from "@ticketsbot/core/domains";
+import { Event } from "@ticketsbot/core/domains/event";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";

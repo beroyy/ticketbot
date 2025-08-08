@@ -2,12 +2,10 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
-import {
-  User as UserDomain,
-  Ticket,
-  TicketLifecycle,
-  getSettingsUnchecked,
-} from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { User } from "@ticketsbot/core/domains/user";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
@@ -27,8 +25,7 @@ const closeConfirmHandler = createButtonHandler({
       return err("Not a ticket channel");
     }
 
-    // Ensure user exists
-    await UserDomain.ensure(
+    await User.ensure(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,
@@ -55,7 +52,6 @@ const closeConfirmHandler = createButtonHandler({
           notifyOpener: true,
         });
 
-        // Get guild settings
         const settings = await getSettingsUnchecked(guild.id);
         if (!settings) {
           throw new Error("Guild not properly configured");

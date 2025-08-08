@@ -1,5 +1,5 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Event } from "@ticketsbot/core/domains";
+import { Event } from "@ticketsbot/core/domains/event";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 import type { Role } from "discord.js";

@@ -1,6 +1,10 @@
 import { prisma } from "@ticketsbot/db";
 
-export const ensure = async (guildId: string, name?: string, ownerId?: string): Promise<any> => {
+export const ensureGuild = async (
+  guildId: string,
+  name?: string,
+  ownerId?: string
+): Promise<any> => {
   return prisma.guild.upsert({
     where: { id: guildId },
     update: {
@@ -15,7 +19,7 @@ export const ensure = async (guildId: string, name?: string, ownerId?: string): 
   });
 };
 
-export const update = async (
+export const updateGuild = async (
   guildId: string,
   data: {
     name?: string;
@@ -30,7 +34,7 @@ export const update = async (
   });
 };
 
-export const findById = async (guildId: string): Promise<any> => {
+export const getGuildById = async (guildId: string): Promise<any> => {
   return prisma.guild.findUnique({
     where: { id: guildId },
   });
@@ -70,7 +74,7 @@ export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
   };
 };
 
-export const ensureWithDefaults = async (data: {
+export const ensureGuildWithDefaults = async (data: {
   guildId: string;
   guildName: string;
   ownerId?: string;

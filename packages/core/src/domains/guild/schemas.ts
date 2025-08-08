@@ -6,17 +6,11 @@ import {
   JsonMetadataSchema,
 } from "../../utils/common";
 
-/**
- * Guild creation schema - only required fields for initial creation
- */
 export const CreateGuildSchema = z.object({
   id: DiscordGuildIdSchema,
-  name: z.string().nullable().optional(), // nullable in DB
+  name: z.string().nullable().optional(),
 });
 
-/**
- * Guild update schema - all fields optional except ID
- */
 export const UpdateGuildSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   icon_url: z.url({ error: "Invalid URL" }).nullable().optional(),
@@ -27,26 +21,17 @@ export const UpdateGuildSchema = z.object({
   metadata: JsonMetadataSchema.optional(),
 });
 
-/**
- * Guild settings update schema - for bot configuration
- */
 export const UpdateGuildSettingsSchema = z.object({
   ticket_category_id: DiscordChannelIdSchema.nullable().optional(),
   transcript_channel_id: DiscordChannelIdSchema.nullable().optional(),
   log_channel_id: DiscordChannelIdSchema.nullable().optional(),
 });
 
-/**
- * Guild query schema
- */
 export const GuildQuerySchema = z.object({
   id: DiscordGuildIdSchema.optional(),
   owner_discord_id: DiscordUserIdSchema.optional(),
 });
 
-/**
- * General settings schema for guild configuration
- */
 export const GeneralSettingsSchema = z.object({
   maxTicketsPerUser: z
     .number()
@@ -61,9 +46,6 @@ export const GeneralSettingsSchema = z.object({
   anonymousDashboard: z.boolean().optional(),
 });
 
-/**
- * Auto-close configuration schema
- */
 export const AutoCloseSchema = z.object({
   enabled: z.boolean(),
   inactiveHours: z
@@ -75,9 +57,6 @@ export const AutoCloseSchema = z.object({
   exemptRoles: z.array(DiscordUserIdSchema).optional(),
 });
 
-/**
- * Open commands configuration schema
- */
 export const OpenCommandsSchema = z.object({
   enabled: z.boolean(),
   commands: z
@@ -86,9 +65,6 @@ export const OpenCommandsSchema = z.object({
   cooldown: z.number().int().min(0).max(300).optional(),
 });
 
-/**
- * Context menu configuration schema
- */
 export const ContextMenuSchema = z.object({
   enabled: z.boolean(),
   options: z
@@ -102,9 +78,6 @@ export const ContextMenuSchema = z.object({
     .max(25, "Maximum 25 menu options allowed"),
 });
 
-/**
- * Type inference helpers
- */
 export type CreateGuildInput = z.infer<typeof CreateGuildSchema>;
 export type UpdateGuildInput = z.infer<typeof UpdateGuildSchema>;
 export type UpdateGuildSettingsInput = z.infer<typeof UpdateGuildSettingsSchema>;

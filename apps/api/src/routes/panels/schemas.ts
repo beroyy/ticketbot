@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema, DiscordChannelIdSchema, UpdatePanelSchema } from "@ticketsbot/core";
+import { DiscordGuildIdSchema, DiscordChannelIdSchema } from "@ticketsbot/core";
+import { UpdatePanelSchema } from "@ticketsbot/core/domains/panel";
 
 export const PanelQuestionSchema = z
   .object({

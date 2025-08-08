@@ -1,10 +1,10 @@
-import { prisma } from "@ticketsbot/db";
 import {
+  prisma,
   GuildRoleStatus,
   type GuildRole,
   type GuildRoleMember,
   type DiscordUser,
-} from "@prisma/client";
+} from "@ticketsbot/db";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../permissions/utils";
 
 // Export specific schemas

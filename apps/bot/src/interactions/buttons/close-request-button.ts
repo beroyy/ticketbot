@@ -8,12 +8,10 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
-import {
-  Ticket,
-  User as UserDomain,
-  TicketLifecycle,
-  getSettingsUnchecked,
-} from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { User } from "@ticketsbot/core/domains/user";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
@@ -54,8 +52,7 @@ const closeRequestHandler = createButtonHandler({
       return err("Invalid close request");
     }
 
-    // Ensure user exists
-    await UserDomain.ensure(
+    await User.ensure(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,

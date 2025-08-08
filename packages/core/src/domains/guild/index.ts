@@ -1,36 +1,18 @@
-// Export specific schemas
+// Export schemas
+export * from "./schemas";
+export * from "./api-schemas";
+
+// Export user-facing namespace
+export { Guild } from "./user";
+
+// Export system functions
 export {
-  CreateGuildSchema,
-  UpdateGuildSchema,
-  UpdateGuildSettingsSchema,
-  GuildQuerySchema,
-  GeneralSettingsSchema,
-  AutoCloseSchema,
-  OpenCommandsSchema,
-  ContextMenuSchema,
-  type CreateGuildInput,
-  type UpdateGuildInput,
-  type UpdateGuildSettingsInput,
-  type GuildQuery,
-  type GeneralSettingsInput,
-  type AutoCloseInput,
-  type OpenCommandsInput,
-  type ContextMenuInput,
-} from "./schemas";
-
-export { UpdateSettingsSchema, type UpdateSettingsInput } from "./api-schemas";
-
-// Export context-aware Guild namespace as the default
-export { Guild } from "./index.context";
-
-// Export static methods that don't require context (for bot operations, etc.)
-export {
-  ensure,
-  update,
-  findById,
-  syncBotInstallStatus,
+  ensureGuild,
+  updateGuild,
+  getGuildById,
   getSettingsUnchecked,
-  ensureWithDefaults,
+  ensureGuildWithDefaults,
+  syncBotInstallStatus,
   Blacklist,
   getAccessibleGuilds,
-} from "./static";
+} from "./system";

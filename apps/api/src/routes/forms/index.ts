@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Form } from "@ticketsbot/core/domains";
+import { Form } from "@ticketsbot/core/domains/form";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions } from "../../middleware/context";

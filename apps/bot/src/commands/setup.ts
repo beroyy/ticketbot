@@ -10,14 +10,10 @@ import {
   type Result,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import {
-  Role,
-  User,
-  Panel,
-  ensure as ensureGuild,
-  update as updateGuild,
-  ensureWithDefaults as ensureGuildWithDefaults,
-} from "@ticketsbot/core/domains";
+import { ensureGuild, updateGuild, ensureGuildWithDefaults } from "@ticketsbot/core/domains/guild";
+import { Role } from "@ticketsbot/core/domains/role";
+import { User } from "@ticketsbot/core/domains/user";
+import { Panel } from "@ticketsbot/core/domains/panel";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { RoleOps } from "@bot/lib/discord-operations/roles";

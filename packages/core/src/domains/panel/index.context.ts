@@ -1,13 +1,13 @@
-import { prisma } from "@ticketsbot/db";
-import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
-import { PermissionFlags } from "../../permissions/constants";
-import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
 import {
+  prisma,
   Prisma,
   type Panel as PrismaPanel,
   type Form as PrismaForm,
   type FormField,
-} from "@prisma/client";
+} from "@ticketsbot/db";
+import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
+import { PermissionFlags } from "../../permissions/constants";
+import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
 
 // Type for Panel with its form included
 type PanelWithForm = PrismaPanel & {

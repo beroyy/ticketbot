@@ -2,7 +2,8 @@ import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Client } from "discord.js";
 import { isDevelopment } from "@bot/config";
-import { ScheduledTask, syncBotInstallStatus } from "@ticketsbot/core/domains";
+import { ScheduledTask } from "@ticketsbot/core/domains/scheduled-task";
+import { syncBotInstallStatus } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 
 export const ReadyListener = ListenerFactory.once("ready", async (client: Client<true>) => {

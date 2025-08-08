@@ -2,7 +2,7 @@ import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Message, PartialMessage } from "discord.js";
 import { TranscriptOps } from "@bot/lib/discord-operations";
-import { Ticket } from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 
 export const MessageUpdateListener = ListenerFactory.on(

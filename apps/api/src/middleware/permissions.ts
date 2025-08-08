@@ -1,5 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
-import { Role, getPanelGuildId } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
+import { getPanelGuildId } from "@ticketsbot/core/domains/panel";
 import { parseDiscordId, PermissionUtils, createLogger } from "@ticketsbot/core";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
 

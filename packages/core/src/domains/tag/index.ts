@@ -10,8 +10,7 @@ export {
   type TrackTagUsage,
 } from "./schemas";
 
-import { prisma } from "@ticketsbot/db";
-import type { Tag as PrismaTag } from "@prisma/client";
+import { prisma, type Tag as PrismaTag } from "@ticketsbot/db";
 
 export namespace Tag {
   /**

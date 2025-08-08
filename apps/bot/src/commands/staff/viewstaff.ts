@@ -7,7 +7,7 @@ import {
   StaffHelpers,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { Role } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 

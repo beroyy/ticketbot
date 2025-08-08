@@ -1,4 +1,4 @@
-import { User } from "../../domains";
+import { User } from "@ticketsbot/core/domains/user";
 import { logger } from "../utils/logger";
 
 export async function linkDiscordAccount(
@@ -28,7 +28,7 @@ export async function ensureDiscordLinked(betterAuthUserId: string): Promise<str
       return user.discordUserId;
     }
 
-    const { Account } = await import("@ticketsbot/core/domains");
+    const { Account } = await import("@ticketsbot/core/domains/account");
     const discordAccount = await Account.getDiscordAccount(betterAuthUserId);
 
     if (!discordAccount?.accountId) {

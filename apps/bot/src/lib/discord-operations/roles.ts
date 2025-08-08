@@ -1,6 +1,6 @@
 import type { GuildMember, Guild } from "discord.js";
 import { container } from "@sapphire/framework";
-import type { Role } from "@ticketsbot/core/domains";
+import type { Role } from "@ticketsbot/core/domains/role";
 
 export const RoleOps = {
   /**

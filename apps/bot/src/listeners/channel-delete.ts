@@ -1,5 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Ticket, TicketLifecycle } from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 

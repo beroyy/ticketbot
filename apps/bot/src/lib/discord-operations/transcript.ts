@@ -1,5 +1,7 @@
 import type { Message } from "discord.js";
-import { User as UserDomain, Ticket, Transcripts } from "@ticketsbot/core/domains";
+import { User as UserDomain } from "@ticketsbot/core/domains/user";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 
 // Helper to serialize embeds

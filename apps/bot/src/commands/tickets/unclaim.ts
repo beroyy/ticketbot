@@ -1,7 +1,7 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
-import { TicketLifecycle } from "@ticketsbot/core/domains";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import type { ChatInputCommandInteraction } from "discord.js";
 
 export class UnclaimCommand extends TicketCommandBase {

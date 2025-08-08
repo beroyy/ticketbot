@@ -4,7 +4,7 @@
     "baseUrl": "../..",
     "outDir": "./dist",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "declaration": false,
     "declarationMap": false,
     "paths": {

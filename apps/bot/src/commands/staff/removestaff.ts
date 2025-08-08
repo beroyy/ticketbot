@@ -1,7 +1,8 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Role, Event } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
+import { Event } from "@ticketsbot/core/domains/event";
 import { parseDiscordId } from "@ticketsbot/core";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";

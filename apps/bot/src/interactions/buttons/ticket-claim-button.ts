@@ -2,7 +2,8 @@ import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/disc
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { MessageOps } from "@bot/lib/discord-operations";
 import type { ButtonInteraction } from "discord.js";
-import { User as UserDomain, TicketLifecycle } from "@ticketsbot/core/domains";
+import { User as UserDomain } from "@ticketsbot/core/domains/user";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { parseDiscordId } from "@ticketsbot/core";
 

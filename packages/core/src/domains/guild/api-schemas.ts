@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { DiscordChannelIdSchema } from "../../utils/common";
 
-/**
- * Modern settings update schema that matches the domain structure
- */
 export const UpdateSettingsSchema = z.object({
   settings: z
     .object({

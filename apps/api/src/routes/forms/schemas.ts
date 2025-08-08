@@ -1,15 +1,15 @@
 import { z } from "zod";
-import type { DomainFormFieldType } from "@ticketsbot/core";
 
-export const API_TO_DOMAIN_FIELD_TYPE: Record<string, DomainFormFieldType> = {
-  SHORT_TEXT: "TEXT",
-  PARAGRAPH: "TEXT_AREA",
-  SELECT: "SELECT",
-  EMAIL: "EMAIL",
-  NUMBER: "NUMBER",
-  CHECKBOX: "CHECKBOX",
-  RADIO: "RADIO",
-  DATE: "DATE",
+// Map API field types to domain field types
+export const API_TO_DOMAIN_FIELD_TYPE: Record<string, string> = {
+  SHORT_TEXT: "short_text",
+  PARAGRAPH: "paragraph",
+  SELECT: "select",
+  EMAIL: "email",
+  NUMBER: "number",
+  CHECKBOX: "checkbox",
+  RADIO: "radio",
+  DATE: "date",
 };
 
 export const ApiFormFieldSchema = z.object({
@@ -90,7 +90,7 @@ export const DuplicateFormSchema = z.object({
 
 export const transformFieldsToDomain = (fields: z.infer<typeof ApiFormFieldSchema>[]) => {
   return fields.map((field) => ({
-    type: API_TO_DOMAIN_FIELD_TYPE[field.type] || (field.type as DomainFormFieldType),
+    type: API_TO_DOMAIN_FIELD_TYPE[field.type] || field.type.toLowerCase(),
     label: field.label,
     placeholder: field.placeholder,
     required: field.required ?? false,

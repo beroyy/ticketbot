@@ -8,7 +8,8 @@ import { container } from "@sapphire/framework";
 import { join as _join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { Role, ScheduledTask } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
+import { ScheduledTask } from "@ticketsbot/core/domains/scheduled-task";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

@@ -8,7 +8,9 @@ import {
   ok,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { User, Transcripts, TicketLifecycle } from "@ticketsbot/core/domains";
+import { User } from "@ticketsbot/core/domains/user";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
   ActionRowBuilder,

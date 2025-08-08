@@ -2,7 +2,7 @@ import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
 import { parseDiscordId } from "@ticketsbot/core";
-import { update as updateGuild } from "@ticketsbot/core/domains";
+import { updateGuild } from "@ticketsbot/core/domains/guild";
 
 export const GuildDeleteListener = ListenerFactory.on("guildDelete", async (guild: Guild) => {
   const { logger } = container;

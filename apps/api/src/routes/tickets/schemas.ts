@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DiscordGuildIdSchema, DiscordChannelIdSchema, TicketStatusSchema } from "@ticketsbot/core";
-import { TicketLifecycle, Transcripts } from "@ticketsbot/core/domains";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { ApiErrors } from "../../utils/error-handler";
 
 export const _TicketDashboardResponse = z.object({

@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, type Result, err, ok, match } from "@bot/lib/discord-utils";
-import { Blacklist as GuildBlacklist } from "@ticketsbot/core/domains";
+import { Blacklist as GuildBlacklist } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 

@@ -1,6 +1,8 @@
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction, TextChannel } from "discord.js";
-import { Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
+import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";

@@ -1,4 +1,3 @@
-// Export specific schemas
 export {
   PanelTypeSchema,
   CreatePanelSchema,
@@ -10,8 +9,6 @@ export {
   type PanelQuery,
 } from "./schemas";
 
-// Export context-aware Panel namespace
 export { Panel } from "./index.context";
 
-// Export static methods that don't require context
-export { findById, getGuildId } from "./static";
+export { getPanelById as findById, getPanelGuildId } from "./static";

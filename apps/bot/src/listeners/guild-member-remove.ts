@@ -1,5 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Role as RoleDomain, Event } from "@ticketsbot/core/domains";
+import { Role as RoleDomain } from "@ticketsbot/core/domains/role";
+import { Event } from "@ticketsbot/core/domains/event";
 import { removeParticipantFromAll } from "@ticketsbot/core/domains/ticket";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";

@@ -1,10 +1,10 @@
-import { prisma } from "@ticketsbot/db";
 import {
+  prisma,
   Prisma,
   type Event as PrismaEvent,
   type EventCategory,
   type EventTargetType,
-} from "@prisma/client";
+} from "@ticketsbot/db";
 import { Actor } from "../../context";
 
 export namespace Event {

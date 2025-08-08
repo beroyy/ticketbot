@@ -1,5 +1,4 @@
-import { prisma } from "@ticketsbot/db";
-import { TicketStatus, Prisma, type TicketLifecycleEvent } from "@prisma/client";
+import { prisma, TicketStatus, Prisma, type TicketLifecycleEvent } from "@ticketsbot/db";
 import { Actor } from "../../context";
 
 // Date utility functions

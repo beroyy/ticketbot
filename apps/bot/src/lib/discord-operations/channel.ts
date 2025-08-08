@@ -6,7 +6,8 @@ import {
   PermissionFlagsBits,
   type OverwriteResolvable,
 } from "discord.js";
-import { Role, getSettingsUnchecked } from "@ticketsbot/core/domains";
+import { Role } from "@ticketsbot/core/domains/role";
+import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { createTicketChannelName } from "@ticketsbot/core";
 
 interface TicketInfo {

@@ -1,6 +1,6 @@
 import { logger } from "../utils/logger";
 
-interface DiscordUser {
+type DiscordUser = {
   id: string;
   username: string;
   discriminator: string;
@@ -16,7 +16,7 @@ interface DiscordUser {
   flags?: number;
   premium_type?: number;
   public_flags?: number;
-}
+};
 
 export async function fetchDiscordUser(accessToken: string): Promise<DiscordUser | null> {
   try {

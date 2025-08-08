@@ -1,4 +1,4 @@
-export interface User {
+export type User = {
   id: string;
   email: string;
   name: string | null;
@@ -7,13 +7,12 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   emailVerified: boolean;
-  // Discord data is provided by session enhancement plugin but not stored in DB
   username?: string | null;
   discriminator?: string | null;
   avatar_url?: string | null;
-}
+};
 
-export interface Session {
+export type Session = {
   id: string;
   userId: string;
   expiresAt: Date;
@@ -22,7 +21,7 @@ export interface Session {
   updatedAt: Date;
   ipAddress?: string | null;
   userAgent?: string | null;
-}
+};
 
 export interface AuthSession {
   session: Session;

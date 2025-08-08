@@ -61,7 +61,6 @@ export async function getServerSession(req: IncomingMessage): Promise<ServerSess
     const sessionData = await getSessionFn({ headers });
     
     if (!sessionData) {
-      console.log("[Auth] No session found");
       return null;
     }
     
@@ -80,7 +79,6 @@ export async function getServerSession(req: IncomingMessage): Promise<ServerSess
       },
     };
     
-    console.log("[Auth] Session found for user:", session.user.email);
     return session;
   } catch (error) {
     console.error("[Auth] Failed to get session:", error);

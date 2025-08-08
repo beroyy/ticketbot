@@ -11,6 +11,7 @@ export const env = {
   authCallbackUrl: typeof window !== "undefined" ? window.location.origin : undefined,
   discordInviteUrl: `https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID}`,
 
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
   hmacSecret: process.env.API_SECRET,
 
   isDev: () => process.env.NODE_ENV === "development",

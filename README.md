@@ -322,6 +322,35 @@ pnpm lint             # Check code style
 pnpm format           # Format code with Prettier
 ```
 
+## 🚀 CI/CD
+
+### GitHub Actions
+
+Automated code quality checks on push/PR to `main` branch:
+
+- Type checking across all packages
+- Linting with ESLint
+- Uses Turborepo for fast incremental builds
+
+### Deployment
+
+**Web (Vercel):** Auto-deploys from `main` branch  
+**API & Bot:** Manual deployment via `pnpm start:production`
+
+Production startup handles:
+
+1. Database schema sync (`db:push`)
+2. Prisma client regeneration
+3. Service startup with health checks
+
+### Docker
+
+Multi-stage build optimized for caching:
+
+- Includes Redis for caching/sessions
+- Exposes ports: API (3001), Bot (3002)
+- Run with: `pnpm docker` or `docker compose up`
+
 ## 🏗️ Project Structure
 
 ```

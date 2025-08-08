@@ -13,7 +13,6 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
   logger.info(`📝 ${container.stores.get("commands").size} commands loaded`);
   logger.info(`👂 ${container.stores.get("listeners").size} listeners loaded`);
 
-
   // Initialize scheduled task system
   try {
     await ScheduledTask.initialize();

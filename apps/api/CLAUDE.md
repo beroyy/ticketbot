@@ -25,22 +25,20 @@ const panel = await Panel.create(data); // Checks permissions via context
 ## Key Implementation Patterns
 
 ### Route + Validation
+
 ```typescript
-app.put("/settings", 
-  zValidator("json", UpdateSettingsSchema), 
-  async (c) => {
-    const data = c.req.valid("json"); // Type-safe
-    return c.json(await Settings.update(data));
-  }
-);
+app.put("/settings", zValidator("json", UpdateSettingsSchema), async (c) => {
+  const data = c.req.valid("json"); // Type-safe
+  return c.json(await Settings.update(data));
+});
 ```
 
 ### Error Mapping
+
 - `VisibleError` → 400
-- `PermissionDeniedError` → 403  
+- `PermissionDeniedError` → 403
 - `NotFoundError` → 404
 - Unexpected → 500
-
 
 ## Route Structure
 
@@ -76,6 +74,7 @@ await withTransaction(async () => {
 See README.md for required environment variables.
 
 Key differences from other apps:
+
 - Uses `PORT` (not `API_PORT`)
 - Default port is 3001 (not 9001)
 - Discord vars use `NEXT_PUBLIC_` prefix

@@ -13,20 +13,20 @@ import type { InferGetServerSidePropsType } from "next";
 
 export const getServerSideProps = withGuildRoute(async (context, _session, guildId, _guilds) => {
   const api = createServerApiClient(context.req);
-  
+
   try {
     // Fetch initial tickets data
     const response = await api.tickets.$get({
-      query: { 
+      query: {
         guildId,
         status: "active",
         page: "1",
-        pageSize: "50"
-      }
+        pageSize: "50",
+      },
     });
-    
+
     if (response.ok) {
-      const tickets = await response.json() as any[];
+      const tickets = (await response.json()) as any[];
       return {
         props: {
           initialTickets: tickets || [],
@@ -37,7 +37,7 @@ export const getServerSideProps = withGuildRoute(async (context, _session, guild
   } catch (error) {
     console.error("Failed to fetch initial tickets:", error);
   }
-  
+
   return {
     props: {
       initialTickets: [],

@@ -84,7 +84,6 @@ export class CloseCommand extends TicketCommandBase {
           // Archive or delete the channel
           const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
           _channelDeleted = archiveResult.deleted;
-
         }
       });
     });

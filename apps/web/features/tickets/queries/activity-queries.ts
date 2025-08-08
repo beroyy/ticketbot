@@ -44,7 +44,7 @@ export const activityQueries = {
       if (!guildId) throw new Error("Guild ID is required");
       const res = await api.tickets[":id"].activity.$get({
         param: { id: encodeURIComponent(ticketId) },
-        query: { guildId }
+        query: { guildId },
       });
       if (!res.ok) throw new Error("Failed to fetch activity log");
       return res.json();

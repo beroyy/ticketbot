@@ -33,8 +33,6 @@ interface FormDraft {
   lastSaved: number;
 }
 
-
-
 // Store slices
 interface NotificationSlice {
   notifications: Notification[];
@@ -70,11 +68,7 @@ interface UserPreferencesSlice {
 }
 
 // Complete store interface
-interface GlobalStore
-  extends NotificationSlice,
-    ModalSlice,
-    FormSlice,
-    UserPreferencesSlice {}
+interface GlobalStore extends NotificationSlice, ModalSlice, FormSlice, UserPreferencesSlice {}
 
 // Custom storage with superjson - generic to work with partialize
 const createSuperjsonStorage = <T>(): PersistStorage<T> => ({
@@ -114,20 +108,20 @@ export const useGlobalStore = create<GlobalStore>()(
           set((state) => {
             state.notifications = state.notifications.filter((n) => n.id !== id);
           }),
-        clearNotifications: () => 
+        clearNotifications: () =>
           set((state) => {
             state.notifications = [];
           }),
 
         // Modal slice
         modal: { type: null, data: {}, isOpen: false },
-        openModal: (type, data = {}) => 
+        openModal: (type, data = {}) =>
           set((state) => {
             state.modal.type = type;
             state.modal.data = data;
             state.modal.isOpen = true;
           }),
-        closeModal: () => 
+        closeModal: () =>
           set((state) => {
             state.modal.type = null;
             state.modal.data = {};
@@ -141,7 +135,7 @@ export const useGlobalStore = create<GlobalStore>()(
         // Form slice (persisted)
         drafts: {},
         currentFormId: null,
-        setCurrentForm: (formId) => 
+        setCurrentForm: (formId) =>
           set((state) => {
             state.currentFormId = formId;
           }),
@@ -173,7 +167,7 @@ export const useGlobalStore = create<GlobalStore>()(
           set((state) => {
             delete state.drafts[formId];
           }),
-        clearAllDrafts: () => 
+        clearAllDrafts: () =>
           set((state) => {
             state.drafts = {};
           }),
@@ -184,12 +178,11 @@ export const useGlobalStore = create<GlobalStore>()(
           set((state) => {
             state.selectedGuildId = guildId;
           }),
-
       })),
       {
         name: "global-storage",
         storage: createSuperjsonStorage(),
-        partialize: (state) => ({ 
+        partialize: (state) => ({
           drafts: state.drafts,
           selectedGuildId: state.selectedGuildId,
         }),
@@ -207,7 +200,6 @@ export const useModal = () => useGlobalStore((s) => s.modal);
 export const useModalActions = () =>
   useGlobalStore((s) => ({ openModal: s.openModal, closeModal: s.closeModal }));
 
-
 export const useDrafts = () => useGlobalStore((s) => s.drafts);
 export const useCurrentFormId = () => useGlobalStore((s) => s.currentFormId);
 export const useFormActions = () => {
@@ -223,7 +215,6 @@ export const useFormActions = () => {
     setCurrentForm,
   };
 };
-
 
 // Convenience notification methods
 export const notify = {

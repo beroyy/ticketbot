@@ -12,7 +12,7 @@ export const GuildDeleteListener = ListenerFactory.on("guildDelete", async (guil
     // Update botInstalled status to false
     const guildId = parseDiscordId(guild.id);
     await updateGuild(guildId, { botInstalled: false });
-    
+
     logger.info(`✅ Updated guild ${guild.name} with botInstalled = false`);
 
     // Log the removal

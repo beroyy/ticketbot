@@ -1,5 +1,11 @@
 import type { GetServerSideProps, GetServerSidePropsContext } from "next";
-import { getServerSession, determineAuthState, getSelectedGuildFromCookie, type ServerSession, type AuthState } from "./server-auth";
+import {
+  getServerSession,
+  determineAuthState,
+  getSelectedGuildFromCookie,
+  type ServerSession,
+  type AuthState,
+} from "./server-auth";
 import { fetchUserGuilds, type Guild } from "./api-server";
 import { parseCookies } from "./utils";
 
@@ -17,15 +23,15 @@ export interface GuildAuthProps extends BaseAuthProps {
 export function withPublicRoute(): GetServerSideProps<BaseAuthProps> {
   return async (context) => {
     const session = await getServerSession(context.req);
-    
+
     if (session) {
       // Check if they have a guild selected
       const cookies = parseCookies(context.req.headers.cookie || "");
       const selectedGuildId = getSelectedGuildFromCookie(cookies);
-      
+
       // Redirect to appropriate page
       const destination = selectedGuildId ? "/dashboard" : "/setup";
-      
+
       return {
         redirect: {
           destination,
@@ -33,7 +39,7 @@ export function withPublicRoute(): GetServerSideProps<BaseAuthProps> {
         },
       };
     }
-    
+
     return {
       props: {
         session: null,
@@ -52,7 +58,7 @@ export function withAuthRoute<P extends Record<string, any> = Record<string, any
 ): GetServerSideProps<BaseAuthProps & P> {
   return async (context) => {
     const session = await getServerSession(context.req);
-    
+
     if (!session) {
       return {
         redirect: {
@@ -61,12 +67,12 @@ export function withAuthRoute<P extends Record<string, any> = Record<string, any
         },
       };
     }
-    
+
     // Check for selected guild in cookies
     const cookies = parseCookies(context.req.headers.cookie || "");
     const selectedGuildId = getSelectedGuildFromCookie(cookies);
     const authState = determineAuthState(session, selectedGuildId);
-    
+
     if (authState === "authenticated") {
       return {
         redirect: {
@@ -75,12 +81,12 @@ export function withAuthRoute<P extends Record<string, any> = Record<string, any
         },
       };
     }
-    
+
     // Get additional props if function provided
     const additionalProps = getServerSidePropsFunc
       ? await getServerSidePropsFunc(context, session)
       : { props: {} as P };
-    
+
     return {
       props: {
         ...additionalProps.props,
@@ -102,7 +108,7 @@ export function withGuildRoute<P extends Record<string, any> = Record<string, an
 ): GetServerSideProps<GuildAuthProps & P> {
   return async (context) => {
     const session = await getServerSession(context.req);
-    
+
     if (!session) {
       return {
         redirect: {
@@ -111,11 +117,11 @@ export function withGuildRoute<P extends Record<string, any> = Record<string, an
         },
       };
     }
-    
+
     // Get selected guild from cookie
     const cookies = parseCookies(context.req.headers.cookie || "");
     const selectedGuildId = getSelectedGuildFromCookie(cookies);
-    
+
     if (!selectedGuildId) {
       return {
         redirect: {
@@ -124,19 +130,19 @@ export function withGuildRoute<P extends Record<string, any> = Record<string, an
         },
       };
     }
-    
+
     // Fetch guilds server-side
     const guilds = await fetchUserGuilds(context.req);
-    
+
     // Verify selected guild is valid
-    const validGuild = guilds.find(g => g.id === selectedGuildId && g.connected);
+    const validGuild = guilds.find((g) => g.id === selectedGuildId && g.connected);
     if (!validGuild) {
       // Clear invalid guild selection and redirect to setup
       context.res.setHeader(
         "Set-Cookie",
         "ticketsbot-selected-guild=; Path=/; Max-Age=0; HttpOnly"
       );
-      
+
       return {
         redirect: {
           destination: "/setup",
@@ -144,14 +150,14 @@ export function withGuildRoute<P extends Record<string, any> = Record<string, an
         },
       };
     }
-    
+
     const authState = "authenticated";
-    
+
     // Get additional props if function provided
     const additionalProps = getServerSidePropsFunc
       ? await getServerSidePropsFunc(context, session, selectedGuildId, guilds)
       : { props: {} as P };
-    
+
     return {
       props: {
         ...additionalProps.props,

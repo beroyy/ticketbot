@@ -314,42 +314,49 @@ export const env = envSchema.parse(process.env);
 When building new UI components, follow these tactics to minimize Cumulative Layout Shift (CLS):
 
 ### Component Structure
+
 - **Reserve space for dynamic content** - Set explicit dimensions (height/width) for containers that will load content
 - **Use skeleton loaders** - Match exact dimensions of final content, not generic placeholders
 - **Implement stable components** - Create wrapper components for images/avatars with fixed dimensions
 - **Avoid conditional mounting** - Use opacity/visibility transitions instead of mounting/unmounting elements
 
 ### Loading States
+
 - **Create matching skeletons** - Skeleton should have identical layout structure as loaded content
 - **Set minimum heights** - Use `min-h-*` for containers that may have variable content
 - **Reserve space for scrollbars** - Apply `scrollbar-gutter: stable` to prevent shifts when content overflows
 - **Lazy load heavy components** - Use `dynamic()` imports with proper loading states for charts/visualizations
 
 ### Images and Media
+
 - **Use Next.js Image with fill** - Prefer `fill` prop with container dimensions over width/height
 - **Add aspect ratios** - Use `aspect-ratio` CSS or Tailwind's aspect utilities
 - **Implement image placeholders** - Show colored background or blur placeholder while loading
 - **Preload critical images** - Add `priority` prop for above-the-fold images
 
 ### Typography and Fonts
+
 - **Configure font display** - Use `display: 'swap'` in font configuration
 - **Define fallback fonts** - Specify system fonts that match metrics
 - **Use `adjustFontFallback`** - Enable Next.js font metric matching
-- **Avoid FOUT/FOIT** - Preload critical font weights in _document.tsx
+- **Avoid FOUT/FOIT** - Preload critical font weights in \_document.tsx
 
 ### Layout Stability
+
 - **Fixed navbar height** - Maintain consistent height across all states
 - **Stable button dimensions** - Set min-width/height for interactive elements
 - **Use CSS Grid for layouts** - More predictable than flexbox for complex layouts
 - **Apply `contain: layout`** - Use CSS containment for independent components
 
 ### Animation and Transitions
+
 - **Animate transform/opacity only** - Avoid animating properties that trigger layout
 - **Use CSS transitions** - Prefer CSS over JavaScript for simple state changes
 - **Add will-change sparingly** - Only for elements that definitely animate
 - **Implement fade transitions** - Use opacity for showing/hiding instead of display changes
 
 ### Performance Monitoring
+
 - **Track Web Vitals** - Monitor CLS scores in development and production
 - **Test on slow connections** - Use Chrome DevTools network throttling
 - **Verify with Lighthouse** - Target CLS score < 0.1

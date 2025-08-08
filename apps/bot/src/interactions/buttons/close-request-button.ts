@@ -103,7 +103,6 @@ const closeRequestHandler = createButtonHandler({
                 settings,
                 userId
               );
-
             } catch (error) {
               container.logger.error("Error in Discord operations:", error);
             }
@@ -122,7 +121,6 @@ const closeRequestHandler = createButtonHandler({
           embeds: [],
           components: [],
         });
-
       } catch (error) {
         container.logger.error("Failed to cancel close request:", error);
         await interaction.reply({

@@ -29,7 +29,16 @@
       "env": ["NODE_ENV", "NEXT_PUBLIC_*", "DATABASE_URL", "PORT_OFFSET", "WEB_URL", "API_URL"]
     },
     "lint": {
-      "inputs": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "!node_modules/**", "!.next/**", ".eslintrc.*", "eslint.config.*"],
+      "inputs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "!node_modules/**",
+        "!.next/**",
+        ".eslintrc.*",
+        "eslint.config.*"
+      ],
       "outputs": []
     },
     "typecheck": {

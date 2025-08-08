@@ -4,12 +4,12 @@ type RefetchType = "critical" | "normal" | "background";
 
 /**
  * Smart refetch hook that adjusts polling intervals based on user activity and document visibility.
- * 
+ *
  * @param type - The type of data being polled:
  *   - 'critical': Most important data (e.g., messages in viewed ticket) - fastest polling
  *   - 'normal': Standard importance (e.g., ticket list) - medium polling
  *   - 'background': Low priority (e.g., stats) - slowest polling
- * 
+ *
  * @returns Polling interval in milliseconds, or false to disable polling
  */
 export function useSmartRefetch(type: RefetchType = "normal"): number | false {
@@ -28,7 +28,7 @@ export function useSmartRefetch(type: RefetchType = "normal"): number | false {
     // Reset activity timer and mark as active
     const handleActivity = () => {
       clearTimeout(activityTimer);
-      
+
       if (!isActive) {
         isActive = true;
         setInterval(getInterval(type, true, document.hidden));
@@ -43,9 +43,9 @@ export function useSmartRefetch(type: RefetchType = "normal"): number | false {
 
     // Listen for user activity
     const activityEvents = ["mousedown", "keydown", "touchstart", "scroll"];
-    
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    activityEvents.forEach(event => {
+    activityEvents.forEach((event) => {
       document.addEventListener(event, handleActivity, { passive: true });
     });
 
@@ -56,7 +56,7 @@ export function useSmartRefetch(type: RefetchType = "normal"): number | false {
     return () => {
       clearTimeout(activityTimer);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      activityEvents.forEach(event => {
+      activityEvents.forEach((event) => {
         document.removeEventListener(event, handleActivity);
       });
     };

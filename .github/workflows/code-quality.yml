@@ -4,19 +4,19 @@ on:
   push:
     branches: [main]
     paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - 'turbo.json'
-      - '.github/workflows/**'
+      - "apps/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+      - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - 'turbo.json'
-      - '.github/workflows/**'
+      - "apps/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+      - ".github/workflows/**"
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

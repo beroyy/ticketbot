@@ -11,10 +11,10 @@ export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guil
   try {
     // 1. Create guild record
     await ensureGuild(parseDiscordId(guild.id), guild.name, parseDiscordId(guild.ownerId));
-    
+
     // 2. Update botInstalled status
     await updateGuild(parseDiscordId(guild.id), { botInstalled: true });
-    
+
     logger.info(`✅ Guild ${guild.name} added to database with botInstalled = true`);
 
     // 2. Fetch owner info

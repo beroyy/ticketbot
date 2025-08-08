@@ -17,15 +17,15 @@ export function useDiscordStatus() {
     queryKey: ["user", "discord-status"],
     queryFn: async () => {
       const res = await api.user.$get();
-      
+
       if (!res.ok) {
         logger.error("Failed to fetch user info:", res.status);
         throw new Error("Failed to fetch user info");
       }
-      
+
       const data = await res.json();
       logger.debug("Discord connection status:", data.discord);
-      
+
       return data.discord as DiscordStatus;
     },
     staleTime: 30 * 1000, // 30 seconds

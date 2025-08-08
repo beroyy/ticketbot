@@ -17,7 +17,7 @@ export default function Login(_props: PageProps) {
   const handleSignUp = async () => {
     try {
       setIsRedirecting(true);
-      
+
       await authClient.signIn.social({
         provider: "discord",
         callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,

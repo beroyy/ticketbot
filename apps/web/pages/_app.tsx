@@ -52,7 +52,7 @@ export default function App({ Component, pageProps }: AppProps) {
       startPerformanceMonitoring();
     }
   }, []);
-  
+
   // Extract auth props from pageProps
   const { session, authState, selectedGuildId, guilds, ...restProps } = pageProps;
 

@@ -123,7 +123,6 @@ export class OpenCommand extends TicketCommandBase {
               embeds: [welcomeEmbed],
               components: [actionButtons.toJSON()],
             });
-
           } catch (error) {
             container.logger.error("Error in Discord operations:", error);
           }

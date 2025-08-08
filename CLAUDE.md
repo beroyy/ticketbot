@@ -658,6 +658,7 @@ app.get("/tickets", validateRequest(ticketSchemas.list), async (c) => {
   - Maintains zero-downtime deployment capability
 
 See implementation details:
+
 - [Turborepo Docker Guide](https://turbo.build/repo/docs/guides/tools/docker)
 - [Render Monorepo Support](https://render.com/docs/monorepo-support)
 

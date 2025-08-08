@@ -49,7 +49,7 @@ async function startProduction() {
 
     // Step 3: Start the services with concurrently
     console.log("🚀 Starting API and Bot services...");
-    
+
     // Use exec instead of spawn for better shell command handling
     const services = exec(
       'npx concurrently -n api,bot -c blue,green "pnpm --filter @ticketsbot/api start" "pnpm --filter @ticketsbot/bot start"',
@@ -78,7 +78,6 @@ async function startProduction() {
       console.log(`Services exited with code ${code}`);
       process.exit(code || 0);
     });
-
   } catch (error) {
     console.error("❌ Failed to start production services:", error);
     process.exit(1);

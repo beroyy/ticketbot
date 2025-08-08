@@ -5,10 +5,10 @@ import { env } from "../env";
 
 export function createServerApiClient(req: IncomingMessage) {
   const baseURL = env.server.API_URL || "http://localhost:4001";
-  
+
   // Forward cookies from the request
   const cookie = req.headers.cookie || "";
-  
+
   return hc<AppType>(baseURL, {
     init: {
       headers: {
@@ -32,7 +32,7 @@ export interface Guild {
 // Cached guild fetcher to avoid duplicate calls
 export async function fetchUserGuilds(req: IncomingMessage): Promise<Guild[]> {
   const api = createServerApiClient(req);
-  
+
   try {
     const response = await api.discord.guilds.$get();
     if (response.ok) {

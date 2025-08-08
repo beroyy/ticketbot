@@ -36,26 +36,26 @@ interface AuthProviderProps {
   initialGuilds?: Guild[];
 }
 
-export function AuthProvider({ 
-  children, 
+export function AuthProvider({
+  children,
   initialSession = null,
   initialAuthState: _initialAuthState = "unauthenticated",
   initialGuildId = null,
-  initialGuilds = []
+  initialGuilds = [],
 }: AuthProviderProps) {
   const router = useRouter();
-  
+
   // Use client-side session for updates, but default to server session
   const { data: clientSession } = authClient.useSession();
   const session = (clientSession as ServerSession | null) || initialSession;
-  
+
   // Get selected guild from store (hydrated)
   const storeSelectedGuildId = useHydratedStore(useGlobalStore, (state) => state.selectedGuildId);
   const setSelectedGuildIdStore = useGlobalStore((state) => state.setSelectedGuildId);
-  
+
   // Use store value if available, otherwise use initial
   const selectedGuildId = storeSelectedGuildId ?? initialGuildId;
-  
+
   const setSelectedGuildId = (guildId: string | null) => {
     if (guildId) {
       // Verify guild is valid
@@ -76,21 +76,22 @@ export function AuthProvider({
       document.cookie = "ticketsbot-selected-guild=; path=/; max-age=0";
     }
   };
-  
+
   const authState = useMemo(() => {
     if (!session) return "unauthenticated";
     if (!selectedGuildId) return "no-guild";
-    
+
     const hasValidGuild = initialGuilds.some((g) => g.id === selectedGuildId && g.connected);
     if (!hasValidGuild) return "no-guild";
-    
+
     return "authenticated";
   }, [session, selectedGuildId, initialGuilds]);
-  
+
   const contextValue: AuthContextValue = {
     session,
     isAuthenticated: !!session,
-    hasGuildSelected: !!selectedGuildId && initialGuilds.some((g) => g.id === selectedGuildId && g.connected),
+    hasGuildSelected:
+      !!selectedGuildId && initialGuilds.some((g) => g.id === selectedGuildId && g.connected),
     isLoading: false, // No loading state needed with SSR
     selectedGuildId,
     setSelectedGuildId,
@@ -101,6 +102,6 @@ export function AuthProvider({
       router.replace(router.asPath);
     },
   };
-  
+
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }

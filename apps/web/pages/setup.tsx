@@ -48,7 +48,7 @@ export default function SetupPageV2({ guilds }: PageProps) {
     } else {
       setSelectedGuildId(guildId);
       setCurrentStep("complete");
-      
+
       // Set cookie for server-side auth
       document.cookie = `ticketsbot-selected-guild=${guildId}; path=/; max-age=604800`;
 
@@ -62,7 +62,7 @@ export default function SetupPageV2({ guilds }: PageProps) {
     if (selectedGuild) {
       setSelectedGuildId(selectedGuild);
       setCurrentStep("complete");
-      
+
       // Set cookie for server-side auth
       document.cookie = `ticketsbot-selected-guild=${selectedGuild}; path=/; max-age=604800`;
 

@@ -31,8 +31,8 @@ export const ticketQueries = {
     queryKey: ticketKeys.detail(ticketId),
     queryFn: async (): Promise<Ticket | null> => {
       if (!guildId || !ticketId) return null;
-      const res = await api.tickets[":id"].$get({ 
-        param: { id: encodeURIComponent(ticketId) } 
+      const res = await api.tickets[":id"].$get({
+        param: { id: encodeURIComponent(ticketId) },
       });
       if (!res.ok) throw new Error("Failed to fetch ticket details");
       return res.json();
@@ -48,8 +48,8 @@ export const ticketQueries = {
     queryKey: ticketKeys.stats(guildId),
     queryFn: async () => {
       if (!guildId) return null;
-      const res = await api.tickets.statistics[":guildId"].$get({ 
-        param: { guildId } 
+      const res = await api.tickets.statistics[":guildId"].$get({
+        param: { guildId },
       });
       if (!res.ok) throw new Error("Failed to fetch ticket stats");
       return res.json();
@@ -66,9 +66,9 @@ export const ticketQueries = {
     queryFn: async () => {
       if (!guildId) throw new Error("Guild ID is required");
       const encodedId = encodeURIComponent(ticketId);
-      const res = await api.tickets[":id"].messages.$get({ 
+      const res = await api.tickets[":id"].messages.$get({
         param: { id: encodedId },
-        query: { guildId }
+        query: { guildId },
       });
       if (!res.ok) throw new Error("Failed to fetch ticket messages");
       return res.json();

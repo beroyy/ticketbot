@@ -7,79 +7,73 @@ import type { Role } from "discord.js";
 const ROLE_PREFIX = "Tickets ";
 
 // Role Create
-export const RoleCreateListener = ListenerFactory.on(
-  "roleCreate",
-  async (role: Role) => {
-    if (!role.name.startsWith(ROLE_PREFIX)) return;
+export const RoleCreateListener = ListenerFactory.on("roleCreate", async (role: Role) => {
+  if (!role.name.startsWith(ROLE_PREFIX)) return;
 
-    try {
-      const actor: DiscordActor = {
-        type: "discord_user",
-        properties: {
-          userId: role.client.user.id,
-          username: role.client.user.username,
-          guildId: role.guild.id,
-          permissions: 0n,
+  try {
+    const actor: DiscordActor = {
+      type: "discord_user",
+      properties: {
+        userId: role.client.user.id,
+        username: role.client.user.username,
+        guildId: role.guild.id,
+        permissions: 0n,
+      },
+    };
+
+    await Actor.Context.provideAsync(actor, async () => {
+      await Event.create({
+        guildId: role.guild.id,
+        actorId: role.client.user.id,
+        category: "TEAM",
+        action: "role.created",
+        targetType: "ROLE",
+        targetId: role.id,
+        metadata: {
+          roleName: role.name,
+          roleColor: role.hexColor,
+          permissions: role.permissions.toArray(),
         },
-      };
-
-      await Actor.Context.provideAsync(actor, async () => {
-        await Event.create({
-          guildId: role.guild.id,
-          actorId: role.client.user.id,
-          category: "TEAM",
-          action: "role.created",
-          targetType: "ROLE",
-          targetId: role.id,
-          metadata: {
-            roleName: role.name,
-            roleColor: role.hexColor,
-            permissions: role.permissions.toArray(),
-          }
-        });
       });
-    } catch (error) {
-      container.logger.error(`Failed to track role creation:`, error);
-    }
+    });
+  } catch (error) {
+    container.logger.error(`Failed to track role creation:`, error);
   }
-);
+});
 
 // Role Delete
-export const RoleDeleteListener = ListenerFactory.on(
-  "roleDelete",
-  async (role: Role) => {
-    if (!role.name.startsWith(ROLE_PREFIX)) return;
+export const RoleDeleteListener = ListenerFactory.on("roleDelete", async (role: Role) => {
+  if (!role.name.startsWith(ROLE_PREFIX)) return;
 
-    try {
-      const actor: DiscordActor = {
-        type: "discord_user",
-        properties: {
-          userId: role.client.user.id,
-          username: role.client.user.username,
-          guildId: role.guild.id,
-          permissions: 0n,
+  try {
+    const actor: DiscordActor = {
+      type: "discord_user",
+      properties: {
+        userId: role.client.user.id,
+        username: role.client.user.username,
+        guildId: role.guild.id,
+        permissions: 0n,
+      },
+    };
+
+    await Actor.Context.provideAsync(actor, async () => {
+      await Event.create({
+        guildId: role.guild.id,
+        actorId: role.client.user.id,
+        category: "TEAM",
+        action: "role.deleted",
+        targetType: "ROLE",
+        targetId: role.id,
+        metadata: {
+          roleName: role.name,
+          hadMembers: role.members.size,
         },
-      };
-
-      await Actor.Context.provideAsync(actor, async () => {
-        await Event.create({
-          guildId: role.guild.id,
-          actorId: role.client.user.id,
-          category: "TEAM",
-          action: "role.deleted",
-          targetType: "ROLE",
-          targetId: role.id,
-          metadata: {
-            roleName: role.name,
-            hadMembers: role.members.size,
-          }
-        });
       });
-    } catch (error) {
-      container.logger.error(`Failed to track role deletion:`, error);
-    }
+    });
+  } catch (error) {
+    container.logger.error(`Failed to track role deletion:`, error);
   }
-);
+});
 
 // Role Update (permissions, name changes)
 export const RoleUpdateListener = ListenerFactory.on(
@@ -114,7 +108,7 @@ export const RoleUpdateListener = ListenerFactory.on(
             metadata: {
               roleName: newRole.name,
               renamedFrom: oldRole.name,
-            }
+            },
           });
         } else if (wasTicketRole && !isTicketRole) {
           // Role left ticket system
@@ -128,19 +122,19 @@ export const RoleUpdateListener = ListenerFactory.on(
             metadata: {
               roleName: oldRole.name,
               renamedTo: newRole.name,
-            }
+            },
           });
         } else if (wasTicketRole && isTicketRole) {
           // Track changes
           const changes: Record<string, any> = {};
-          
+
           if (oldRole.name !== newRole.name) {
             changes.name = { old: oldRole.name, new: newRole.name };
           }
           if (oldRole.permissions.bitfield !== newRole.permissions.bitfield) {
             changes.permissions = {
-              added: newRole.permissions.toArray().filter(p => !oldRole.permissions.has(p)),
-              removed: oldRole.permissions.toArray().filter(p => !newRole.permissions.has(p)),
+              added: newRole.permissions.toArray().filter((p) => !oldRole.permissions.has(p)),
+              removed: oldRole.permissions.toArray().filter((p) => !newRole.permissions.has(p)),
             };
           }
 
@@ -155,7 +149,7 @@ export const RoleUpdateListener = ListenerFactory.on(
               metadata: {
                 roleName: newRole.name,
                 changes,
-              }
+              },
             });
           }
         }

@@ -47,21 +47,22 @@ API_HOST=0.0.0.0
 ## API Routes
 
 ### Public
+
 - `GET /health` - Health check
 - `GET /health/detailed` - Service status
 - `GET|POST /auth/*` - Authentication
 
 ### Authenticated
 
-| Route | Purpose |
-|-------|------|
-| `/tickets` | List, create, update, claim, close tickets |
-| `/panels` | Manage and deploy ticket panels |
-| `/guilds/:guildId` | Guild settings and team management |
-| `/discord` | Guild/channel/role listings |
-| `/forms` | Dynamic form builder |
-| `/user` | User profile and preferences |
-| `/permissions` | Permission checks |
+| Route              | Purpose                                    |
+| ------------------ | ------------------------------------------ |
+| `/tickets`         | List, create, update, claim, close tickets |
+| `/panels`          | Manage and deploy ticket panels            |
+| `/guilds/:guildId` | Guild settings and team management         |
+| `/discord`         | Guild/channel/role listings                |
+| `/forms`           | Dynamic form builder                       |
+| `/user`            | User profile and preferences               |
+| `/permissions`     | Permission checks                          |
 
 ## Key Features
 
@@ -76,13 +77,14 @@ API_HOST=0.0.0.0
 ### Adding Routes
 
 1. Create route file in `src/routes/`
-2. Define Zod schemas for validation  
+2. Define Zod schemas for validation
 3. Use domain methods from `@ticketsbot/core/domains`
 4. Mount in `index.ts`
 
 ### Error Handling
 
 Domain errors automatically map to HTTP status:
+
 - `VisibleError` → 400
 - `PermissionDeniedError` → 403
 - `NotFoundError` → 404

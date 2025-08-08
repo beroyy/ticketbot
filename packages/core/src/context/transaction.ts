@@ -10,7 +10,7 @@ import { ContextMonitoring } from "./monitoring";
  */
 
 export interface TransactionContextValue {
-  type: 'transaction'; // For consistent context logging
+  type: "transaction"; // For consistent context logging
   tx: any; // Using any to avoid Prisma transaction client type issues
   afterCommitHandlers: (() => void | Promise<void>)[];
 }
@@ -40,7 +40,10 @@ export async function withTransaction<T>(callback: () => Promise<T>): Promise<T>
     result = await prisma.$transaction(
       async (tx: any) => {
         // Execute callback with transaction context
-        return TransactionContext.provideAsync({ type: 'transaction', tx, afterCommitHandlers: handlers }, callback);
+        return TransactionContext.provideAsync(
+          { type: "transaction", tx, afterCommitHandlers: handlers },
+          callback
+        );
       },
       {
         maxWait: 5000, // 5 seconds

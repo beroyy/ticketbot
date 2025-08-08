@@ -9,12 +9,14 @@ export default function LandingPage() {
         <p className="mb-8 text-lg text-gray-600">
           The best Discord bot for customer support tickets
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex justify-center gap-4">
           <Link href="/login">
             <Button size="lg">Get Started</Button>
           </Link>
           <Link href="/dashboard">
-            <Button variant="outline" size="lg">Dashboard</Button>
+            <Button variant="outline" size="lg">
+              Dashboard
+            </Button>
           </Link>
         </div>
       </div>

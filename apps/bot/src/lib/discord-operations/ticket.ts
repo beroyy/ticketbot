@@ -99,7 +99,6 @@ export const TicketOps = {
 
           // Store welcome message in transcript
           await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
-
         } catch (error) {
           container.logger.error("Error in Discord operations:", error);
           throw error;

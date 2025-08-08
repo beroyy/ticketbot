@@ -147,7 +147,9 @@ export namespace Analytics {
 
     const resolutionTimes = closedTickets
       .filter((t: { createdAt: Date; closedAt: Date | null }) => t.closedAt)
-      .map((t: { createdAt: Date; closedAt: Date | null }) => differenceInHours(t.closedAt!, t.createdAt));
+      .map((t: { createdAt: Date; closedAt: Date | null }) =>
+        differenceInHours(t.closedAt!, t.createdAt)
+      );
 
     const avgResolutionTime =
       resolutionTimes.length > 0
@@ -223,11 +225,18 @@ export namespace Analytics {
     });
 
     const waitTimes = openTickets
-      .filter((t: { createdAt: Date; lifecycleEvents: TicketLifecycleEvent[] }) => t.lifecycleEvents.length === 0)
-      .map((t: { createdAt: Date; lifecycleEvents: TicketLifecycleEvent[] }) => differenceInMinutes(new Date(), t.createdAt));
+      .filter(
+        (t: { createdAt: Date; lifecycleEvents: TicketLifecycleEvent[] }) =>
+          t.lifecycleEvents.length === 0
+      )
+      .map((t: { createdAt: Date; lifecycleEvents: TicketLifecycleEvent[] }) =>
+        differenceInMinutes(new Date(), t.createdAt)
+      );
 
     const avgWaitTime =
-      waitTimes.length > 0 ? waitTimes.reduce((a: number, b: number) => a + b, 0) / waitTimes.length : null;
+      waitTimes.length > 0
+        ? waitTimes.reduce((a: number, b: number) => a + b, 0) / waitTimes.length
+        : null;
 
     // Count staff with recent activity
     const staffOnline = await prisma.ticketLifecycleEvent.groupBy({
@@ -250,7 +259,9 @@ export namespace Analytics {
       todayClosed,
       avgWaitTime,
       staffOnline: staffOnline.length,
-      queueLength: openTickets.filter((t: { lifecycleEvents: TicketLifecycleEvent[] }) => t.lifecycleEvents.length === 0).length,
+      queueLength: openTickets.filter(
+        (t: { lifecycleEvents: TicketLifecycleEvent[] }) => t.lifecycleEvents.length === 0
+      ).length,
     };
   };
 
@@ -829,7 +840,10 @@ async function getResponseTimeAnalysis(guildId: string, dateRange: any): Promise
 
   const avgResponseTime =
     responseTimes.length > 0
-      ? responseTimes.reduce((sum: number, rt: { minutes: number; claimedBy: string | null }) => sum + rt.minutes, 0) / responseTimes.length
+      ? responseTimes.reduce(
+          (sum: number, rt: { minutes: number; claimedBy: string | null }) => sum + rt.minutes,
+          0
+        ) / responseTimes.length
       : null;
 
   // Calculate percentiles

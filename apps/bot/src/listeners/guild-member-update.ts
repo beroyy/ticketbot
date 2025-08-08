@@ -15,10 +15,10 @@ export const GuildMemberUpdateListener = ListenerFactory.on(
 
       // Find ticket role changes
       const addedRoles = newMember.roles.cache.filter(
-        role => !oldMember.roles.cache.has(role.id) && role.name.startsWith(ROLE_PREFIX)
+        (role) => !oldMember.roles.cache.has(role.id) && role.name.startsWith(ROLE_PREFIX)
       );
       const removedRoles = oldMember.roles.cache.filter(
-        role => !newMember.roles.cache.has(role.id) && role.name.startsWith(ROLE_PREFIX)
+        (role) => !newMember.roles.cache.has(role.id) && role.name.startsWith(ROLE_PREFIX)
       );
 
       if (addedRoles.size === 0 && removedRoles.size === 0) return;
@@ -47,7 +47,7 @@ export const GuildMemberUpdateListener = ListenerFactory.on(
               roleName: role.name,
               userId: newMember.id,
               roleColor: role.hexColor,
-            }
+            },
           });
         }
 
@@ -63,7 +63,7 @@ export const GuildMemberUpdateListener = ListenerFactory.on(
             metadata: {
               roleName: role.name,
               userId: newMember.id,
-            }
+            },
           });
         }
       });

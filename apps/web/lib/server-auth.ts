@@ -37,7 +37,7 @@ export async function getServerSession(
     Object.entries(req.headers).forEach(([key, value]) => {
       if (value) {
         if (Array.isArray(value)) {
-          value.forEach(v => headers.append(key, v));
+          value.forEach((v) => headers.append(key, v));
         } else {
           headers.set(key, value);
         }

@@ -161,7 +161,9 @@ export const removeParticipantFromAll = async (
 
   // Log removal details for debugging
   if (result.count > 0) {
-    const ticketNumbers = affectedTickets.map((t: { ticketId: number; ticket: { number: number } }) => t.ticket.number);
+    const ticketNumbers = affectedTickets.map(
+      (t: { ticketId: number; ticket: { number: number } }) => t.ticket.number
+    );
     console.log(
       `Removed user ${userId} from ${result.count} tickets in guild ${guildId}: #${ticketNumbers.join(
         ", #"

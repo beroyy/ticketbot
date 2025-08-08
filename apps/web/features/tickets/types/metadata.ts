@@ -22,11 +22,7 @@ export interface RoleMetadata {
 
 // Type guard functions
 export function isUserMetadata(obj: unknown): obj is UserMetadata {
-  return (
-    obj !== null &&
-    typeof obj === "object" &&
-    "displayName" in obj
-  );
+  return obj !== null && typeof obj === "object" && "displayName" in obj;
 }
 
 export function hasGuildData(metadata: UserMetadata): metadata is UserMetadata & {

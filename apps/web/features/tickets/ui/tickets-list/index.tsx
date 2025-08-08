@@ -50,7 +50,6 @@ export function TicketsList({
   );
 }
 
-
 function ErrorState({ error }: { error: Error | null }) {
   return (
     <Alert variant="destructive" className="m-4">

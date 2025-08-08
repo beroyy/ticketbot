@@ -71,6 +71,3 @@ export {
 } from "./utils";
 
 export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./utils/discord-id";
-
-// Re-export Zod for convenience
-export { z } from "zod";

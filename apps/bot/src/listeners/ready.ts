@@ -4,7 +4,6 @@ import type { Client } from "discord.js";
 import { isDevelopment } from "@bot/config";
 import { ScheduledTask, syncBotInstallStatus } from "@ticketsbot/core/domains";
 import { parseDiscordId } from "@ticketsbot/core";
-import { initializePostHog } from "@ticketsbot/core/analytics";
 
 export const ReadyListener = ListenerFactory.once("ready", async (client: Client<true>) => {
   const { logger } = container;
@@ -14,18 +13,6 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
   logger.info(`📝 ${container.stores.get("commands").size} commands loaded`);
   logger.info(`👂 ${container.stores.get("listeners").size} listeners loaded`);
 
-  // Initialize analytics (PostHog) - disabled in development
-  if (process.env.NODE_ENV === "production") {
-    try {
-      initializePostHog({
-        apiKey: "",
-        host: "https://us.i.posthog.com",
-      });
-      logger.info("✅ Analytics initialized");
-    } catch (error) {
-      logger.error("❌ Failed to initialize analytics:", error);
-    }
-  }
 
   // Initialize scheduled task system
   try {

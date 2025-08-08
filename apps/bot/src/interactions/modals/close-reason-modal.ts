@@ -6,7 +6,6 @@ import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/disco
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
-import { captureEvent } from "@ticketsbot/core/analytics";
 
 const closeReasonModalHandler = createModalHandler({
   pattern: "close_reason_modal",
@@ -60,14 +59,6 @@ const closeReasonModalHandler = createModalHandler({
             // Archive or delete the channel
             const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
 
-            // Track event
-            await captureEvent("ticket_closed", {
-              ticketId: ticket.id,
-              closedBy: userId,
-              hasReason: !!reason,
-              channelDeleted: archiveResult.deleted,
-              channelArchived: archiveResult.archived,
-            });
           } catch (error) {
             container.logger.error("Error in Discord operations:", error);
           }

@@ -27,18 +27,9 @@
     "bullmq": "^5.56.5",
     "discord.js": "^14.21.0",
     "hono": "^4.8.5",
-    "posthog-node": "^5.5.1",
     "redis": "^5.6.0",
     "ws": "^8.18.3",
     "zod": "^4.0.5"
-  },
-  "peerDependencies": {
-    "posthog-js": "^1.189.0"
-  },
-  "peerDependenciesMeta": {
-    "posthog-js": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@ticketsbot/eslint-config": "workspace:*",
@@ -63,10 +54,7 @@
     "./context": "./src/context/index.ts",
     "./auth": "./src/auth/index.ts",
     "./auth/client": "./src/auth/client.ts",
-    "./analytics": "./src/analytics/index.ts",
-    "./analytics/api": "./src/analytics/api/index.ts",
-    "./analytics/bot": "./src/analytics/bot/index.ts",
-    "./analytics/web": "./src/analytics/web/index.ts"
+    "./analytics": "./src/analytics/index.ts"
   },
   "prisma": {
     "schema": "./prisma/"

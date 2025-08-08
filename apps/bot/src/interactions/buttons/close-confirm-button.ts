@@ -11,7 +11,6 @@ import {
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
-import { captureEvent } from "@ticketsbot/core/analytics";
 
 const closeConfirmHandler = createButtonHandler({
   pattern: "ticket_close_confirm",
@@ -70,13 +69,6 @@ const closeConfirmHandler = createButtonHandler({
             // Archive or delete the channel
             const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
 
-            // Track event
-            await captureEvent("ticket_closed", {
-              ticketId: ticket.id,
-              closedBy: userId,
-              channelDeleted: archiveResult.deleted,
-              channelArchived: archiveResult.archived,
-            });
           } catch (error) {
             container.logger.error("Error in Discord operations:", error);
           }

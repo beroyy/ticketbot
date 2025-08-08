@@ -17,7 +17,6 @@ import {
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
-import { captureEvent } from "@ticketsbot/core/analytics";
 
 // Pattern matches both close_confirm_<id> and close_cancel_<id>
 const closeRequestPattern = /^close_(confirm|cancel)(?:_(.+))?$/;
@@ -105,14 +104,6 @@ const closeRequestHandler = createButtonHandler({
                 userId
               );
 
-              // Track event
-              await captureEvent("ticket_closed", {
-                ticketId: ticket.id,
-                closedBy: userId,
-                reason: "Close request approved by opener",
-                channelDeleted: archiveResult.deleted,
-                channelArchived: archiveResult.archived,
-              });
             } catch (error) {
               container.logger.error("Error in Discord operations:", error);
             }
@@ -132,11 +123,6 @@ const closeRequestHandler = createButtonHandler({
           components: [],
         });
 
-        // Track event
-        await captureEvent("ticket_close_request_denied", {
-          ticketId: ticket.id,
-          deniedBy: interaction.user.id,
-        });
       } catch (error) {
         container.logger.error("Failed to cancel close request:", error);
         await interaction.reply({

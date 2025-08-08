@@ -10,7 +10,6 @@ import {
   TicketValidation,
 } from "@bot/lib/discord-utils";
 import { Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
-import { captureEvent } from "@ticketsbot/core/analytics";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import type { ChatInputCommandInteraction } from "discord.js";
 
@@ -125,15 +124,6 @@ export class OpenCommand extends TicketCommandBase {
               components: [actionButtons.toJSON()],
             });
 
-            // Track event
-            await captureEvent("ticket_created", {
-              ticketId: ticket.id,
-              ticketNumber: ticket.number,
-              guildId: guild.id,
-              userId,
-              hasSubject: !!subjectResult.value,
-              channelCreated: true,
-            });
           } catch (error) {
             container.logger.error("Error in Discord operations:", error);
           }

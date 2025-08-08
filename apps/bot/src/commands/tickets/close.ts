@@ -3,7 +3,6 @@ import type { Command } from "@sapphire/framework";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
 import { TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
-import { captureEvent } from "@ticketsbot/core/analytics";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
@@ -86,14 +85,6 @@ export class CloseCommand extends TicketCommandBase {
           const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
           channelDeleted = archiveResult.deleted;
 
-          // Track event
-          await captureEvent("ticket_closed", {
-            ticketId: ticket.id,
-            closedBy: userId,
-            hasReason: !!reasonResult.value,
-            channelDeleted,
-            channelArchived: archiveResult.archived,
-          });
         }
       });
     });

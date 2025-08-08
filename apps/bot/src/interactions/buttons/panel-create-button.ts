@@ -5,7 +5,6 @@ import { Panel, Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbo
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
-import { captureEvent } from "@ticketsbot/core/analytics";
 
 const PANEL_CREATE_PATTERN = /^create_ticket_(\d+)$/;
 
@@ -104,15 +103,6 @@ const panelCreateHandler = createButtonHandler({
             // Store welcome message in transcript
             await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
 
-            // Track event
-            await captureEvent("ticket_created", {
-              ticketId: ticket.id,
-              ticketNumber: ticket.number,
-              guildId: guild.id,
-              userId,
-              panelId,
-              channelCreated: true,
-            });
           } catch (error) {
             container.logger.error("Error in Discord operations:", error);
           }

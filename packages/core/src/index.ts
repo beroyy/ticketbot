@@ -1,10 +1,3 @@
-/**
- * @ticketsbot/core
- *
- * Core utilities, schemas, database, and shared functionality for TicketsBot
- */
-
-// Export common schemas only (not domain-specific ones)
 export {
   DiscordIdSchema,
   DiscordUserIdSchema,
@@ -40,7 +33,6 @@ export {
   type Priority,
 } from "./schemas/common";
 
-// Export domain-specific schemas for API usage
 export {
   CreatePanelSchema,
   UpdatePanelSchema,
@@ -72,7 +64,6 @@ export {
   type FormWithFields,
 } from "./domains/form/schemas";
 
-// Export schemas from refactored ticket domains
 export {
   TicketCoreSchema,
   UpdateTicketSchema,
@@ -203,7 +194,6 @@ export {
   DefaultRolePermissions,
 } from "./schemas/permissions-constants";
 
-// Export utilities
 export {
   type BotConfig,
   type TicketEmbedOptions,
@@ -223,7 +213,6 @@ export {
 
 export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./utils/discord-id";
 
-// Export prisma client and services
 export { prisma } from "./prisma/client";
 
 export {
@@ -235,14 +224,11 @@ export {
   type ZodSchema,
 } from "./prisma/services/validation";
 
-// Export Redis utilities
 export { Redis, type RedisHealthCheck } from "./redis";
 export { isRedisAvailable, getRedisConnection } from "./redis";
 
-// Export logger utilities
 export { logger, createLogger } from "./utils/logger";
 
-// Export domain namespaces (these include their own schemas)
 export { User } from "./domains/user";
 export { Guild } from "./domains/guild";
 export { Ticket } from "./domains/ticket";
@@ -257,6 +243,3 @@ export { Form } from "./domains/form";
 
 // Context system is server-only and must be imported directly:
 // import { Actor, withTransaction } from "@ticketsbot/core/context";
-
-// Re-export Zod v4 for convenience
-export { z } from "zod";

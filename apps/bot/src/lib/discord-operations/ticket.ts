@@ -2,7 +2,6 @@ import type { Guild } from "discord.js";
 import { container } from "@sapphire/framework";
 import { Panel, Ticket, TicketLifecycle, getSettingsUnchecked } from "@ticketsbot/core/domains";
 import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
-import { captureEvent } from "@ticketsbot/core/analytics";
 import { ChannelOps } from "./channel";
 import { MessageOps } from "./message";
 import { TranscriptOps } from "./transcript";
@@ -101,16 +100,6 @@ export const TicketOps = {
           // Store welcome message in transcript
           await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
 
-          // Track event
-          await captureEvent("ticket_created", {
-            ticketId: ticket.id,
-            ticketNumber: ticket.number,
-            guildId: guild.id,
-            userId,
-            panelId,
-            hasFormResponses: !!formResponses && formResponses.length > 0,
-            channelCreated: true,
-          });
         } catch (error) {
           container.logger.error("Error in Discord operations:", error);
           throw error;

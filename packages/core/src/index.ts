@@ -56,9 +56,6 @@ export {
 
 export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./utils/discord-id";
 
-export { Redis, type RedisHealthCheck } from "./redis";
-export { isRedisAvailable, getRedisConnection } from "./redis";
-
 export { logger, createLogger } from "./utils/logger";
 
 // Discord integration is server-only and must be imported directly:

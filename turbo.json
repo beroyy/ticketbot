@@ -22,7 +22,6 @@
         "DISCORD_TOKEN",
         "WEB_URL",
         "API_URL",
-        "REDIS_URL",
         "BASE_DOMAIN",
         "NEXT_PUBLIC_*"
       ]
@@ -34,7 +33,6 @@
       "env": [
         "NODE_ENV",
         "DATABASE_URL",
-        "REDIS_URL",
         "BETTER_AUTH_SECRET",
         "DISCORD_*",
         "NEXT_PUBLIC_*",
@@ -53,7 +51,6 @@
       "env": [
         "NODE_ENV",
         "DATABASE_URL",
-        "REDIS_URL",
         "BETTER_AUTH_SECRET",
         "DISCORD_*",
         "NEXT_PUBLIC_*",

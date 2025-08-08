@@ -517,9 +517,9 @@ export namespace TicketLifecycle {
         select: {
           guildId: true,
           status: true,
-          // closeRequestId: true, // TODO: Field doesn't exist in schema
+          closeRequestId: true,
           openerId: true,
-          // excludeFromAutoclose: true, // TODO: Field doesn't exist
+          excludeFromAutoclose: true,
         },
       });
 
@@ -531,10 +531,9 @@ export namespace TicketLifecycle {
         throw new Error("Can only request to close open tickets");
       }
 
-      // TODO: closeRequestId field doesn't exist in schema
-      // if (ticket.closeRequestId) {
-      //   throw new Error("A close request is already pending for this ticket");
-      // }
+      if (ticket.closeRequestId) {
+        throw new Error("A close request is already pending for this ticket");
+      }
 
       // Generate close request ID
       const closeRequestId = `cr_${input.ticketId}_${Date.now()}`;
@@ -556,35 +555,20 @@ export namespace TicketLifecycle {
       await tx.ticket.update({
         where: { id: input.ticketId },
         data: {
-          // closeRequestId, // TODO: Field doesn't exist in schema
-          // TODO: These fields don't exist in schema
-          // closeRequestBy: input.requestedById,
-          // closeRequestReason: input.reason || null,
-          // closeRequestCreatedAt: new Date(),
-          // autoCloseAt:
-          //   input.autoCloseHours && !ticket.excludeFromAutoclose
-          //     ? new Date(Date.now() + input.autoCloseHours * 60 * 60 * 1000)
-          //     : null,
+          closeRequestId,
+          closeRequestBy: input.requestedById,
+          closeRequestReason: input.reason || null,
+          closeRequestCreatedAt: new Date(),
+          autoCloseAt:
+            input.autoCloseHours && !ticket.excludeFromAutoclose
+              ? new Date(Date.now() + input.autoCloseHours * 60 * 60 * 1000)
+              : null,
           updatedAt: new Date(),
         },
       });
 
+      // With pg_cron, we don't need to track job IDs
       const autoCloseJobId: string | null = null;
-
-      // Schedule auto-close if requested and not excluded
-      // TODO: Move scheduled task creation outside transaction
-      // if (input.autoCloseHours && !ticket.excludeFromAutoclose) {
-      //   const { ScheduledTask } = await import("../scheduled-task");
-      //   const jobId = await ScheduledTask.scheduleAutoClose(
-      //     input.ticketId,
-      //     input.autoCloseHours!
-      //   );
-      //
-      //   if (jobId) {
-      //     // Store job ID for return
-      //     autoCloseJobId = jobId;
-      //   }
-      // }
 
       // TODO: Move event logging outside transaction
       // await Event.create({
@@ -623,7 +607,7 @@ export namespace TicketLifecycle {
         select: {
           guildId: true,
           status: true,
-          // closeRequestId: true, // TODO: Field doesn't exist in schema
+          closeRequestId: true,
           openerId: true,
         },
       });
@@ -632,10 +616,9 @@ export namespace TicketLifecycle {
         throw new Error("Ticket not found");
       }
 
-      // TODO: closeRequestId field doesn't exist in schema
-      // if (!ticket.closeRequestId) {
-      //   throw new Error("No close request pending for this ticket");
-      // }
+      if (!ticket.closeRequestId) {
+        throw new Error("No close request pending for this ticket");
+      }
 
       // Only ticket opener can cancel close request
       if (ticket.openerId !== cancelledById) {
@@ -655,21 +638,16 @@ export namespace TicketLifecycle {
       await tx.ticket.update({
         where: { id: ticketId },
         data: {
-          // closeRequestId: null, // TODO: Field doesn't exist in schema
-          // TODO: These fields don't exist in schema
-          // closeRequestBy: null,
-          // closeRequestReason: null,
-          // closeRequestCreatedAt: null,
-          // autoCloseAt: null,
+          closeRequestId: null,
+          closeRequestBy: null,
+          closeRequestReason: null,
+          closeRequestCreatedAt: null,
+          autoCloseAt: null,
           updatedAt: new Date(),
         },
       });
 
-      // Cancel scheduled job if exists
-      // We'll need to cancel by ticket ID since we don't store job IDs
-      // TODO: Handle after-commit side effects - move this outside transaction
-      // const { ScheduledTask } = await import("../scheduled-task");
-      // await ScheduledTask.cancelAutoCloseForTicket(ticketId);
+      // With pg_cron, cancellation happens automatically when we clear autoCloseAt
 
       // TODO: Move event logging outside transaction
       // await Event.create({
@@ -697,9 +675,9 @@ export namespace TicketLifecycle {
         select: {
           guildId: true,
           status: true,
-          // closeRequestId: true, // TODO: Field doesn't exist in schema
-          // closeRequestBy: true, // TODO: Field doesn't exist
-          // excludeFromAutoclose: true, // TODO: Field doesn't exist
+          closeRequestId: true,
+          closeRequestBy: true,
+          excludeFromAutoclose: true,
         },
       });
 
@@ -711,15 +689,13 @@ export namespace TicketLifecycle {
         throw new Error("Ticket is not open");
       }
 
-      // TODO: closeRequestId field doesn't exist in schema
-      // if (!ticket.closeRequestId) {
-      //   throw new Error("No close request found");
-      // }
+      if (!ticket.closeRequestId) {
+        throw new Error("No close request found");
+      }
 
-      // TODO: excludeFromAutoclose field doesn't exist
-      // if (ticket.excludeFromAutoclose) {
-      //   throw new Error("Ticket excluded from auto-close");
-      // }
+      if (ticket.excludeFromAutoclose) {
+        throw new Error("Ticket excluded from auto-close");
+      }
 
       // Create auto-close event
       await tx.ticketLifecycleEvent.create({

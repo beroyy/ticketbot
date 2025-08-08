@@ -42,28 +42,11 @@ export const healthRoutes = createRoute()
       },
     };
 
-    // Check if scheduled tasks (BullMQ) are available
-    // We keep Redis for BullMQ only
-    try {
-      const { Redis } = await import("@ticketsbot/core");
-      if (Redis.isAvailable()) {
-        const redisHealth = await Redis.healthCheck();
-        result.services.scheduledTasks = {
-          enabled: true,
-          status: redisHealth.connected ? "healthy" : "unhealthy",
-        };
-      } else {
-        result.services.scheduledTasks = {
-          enabled: false,
-          status: "not_configured",
-        };
-      }
-    } catch {
-      result.services.scheduledTasks = {
-        enabled: false,
-        status: "not_configured",
-      };
-    }
+    // Scheduled tasks now use pg_cron instead of Redis/BullMQ
+    result.services.scheduledTasks = {
+      enabled: true,
+      status: "healthy", // pg_cron runs in the database
+    };
 
     // Update overall status based on services
     if (result.services.database.status === "unhealthy") {

@@ -24,9 +24,6 @@ const envSchema = z.object({
   DISCORD_BOT_PREFIX: z.string().max(5).default("!").optional(),
   DISCORD_BOT_STATUS: z.string().max(128).optional(),
 
-  // Optional services
-  REDIS_URL: z.string().url().optional(),
-
   // Logging configuration
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).optional(),
   LOG_REQUESTS: stringbool().optional(),
@@ -69,7 +66,6 @@ try {
       environment: env.NODE_ENV,
       port: env.BOT_PORT,
       clientId: env.DISCORD_CLIENT_ID,
-      redis: env.REDIS_URL ? "configured" : "not configured",
       status: env.DISCORD_BOT_STATUS || "default",
     });
   }

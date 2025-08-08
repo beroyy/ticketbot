@@ -14,7 +14,6 @@ import { formRoutes } from "./routes/forms";
 import { guildRoutes } from "./routes/guilds";
 import { ticketRoutes } from "./routes/tickets";
 import { permissionRoutes } from "./routes/permissions";
-import { Redis } from "@ticketsbot/core";
 
 const logger = createLogger("api");
 const app = new Hono<AppEnv>().onError(errorHandler);
@@ -77,14 +76,6 @@ export type AppType = typeof _routes;
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const host = "0.0.0.0";
 
-Redis.initialize()
-  .then(() => {
-    logger.info("✅ Redis initialized (if configured)");
-  })
-  .catch((error: unknown) => {
-    logger.warn("⚠️ Redis initialization failed:", error);
-  });
-
 logger.info(`🚀 API server listening on ${host}:${port} (${env.NODE_ENV})`);
 
 serve({
@@ -95,14 +86,12 @@ serve({
 
 process.on("SIGINT", async () => {
   logger.info("Received SIGINT. Graceful shutdown...");
-  await Redis.shutdown();
   // eslint-disable-next-line no-process-exit -- Graceful shutdown requires process.exit
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   logger.info("Received SIGTERM. Graceful shutdown...");
-  await Redis.shutdown();
   // eslint-disable-next-line no-process-exit -- Graceful shutdown requires process.exit
   process.exit(0);
 });

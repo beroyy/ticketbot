@@ -10,7 +10,6 @@ import {
 } from "@bot/lib/discord-utils";
 import { User } from "@ticketsbot/core/domains/user";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
-import { ScheduledTask } from "@ticketsbot/core/domains/scheduled-task";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -77,12 +76,7 @@ export class AutoCloseCommand extends TicketCommandBase {
             `Auto-close ${newExclusionStatus ? "disabled" : "enabled"} by support staff`
           );
 
-          // Cancel any pending auto-close jobs if excluding
-          if (newExclusionStatus) {
-            afterTransaction(async () => {
-              await ScheduledTask.cancelAutoCloseForTicket(ticket.id);
-            });
-          }
+          // With pg_cron, auto-close is automatically skipped when excludeFromAutoclose is true
         });
 
         // Send response

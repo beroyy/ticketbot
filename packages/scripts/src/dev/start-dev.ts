@@ -8,7 +8,6 @@ import { fileURLToPath } from "url";
 import {
   checkPostgresConnection,
   checkDatabaseSchema,
-  checkRedisConnection,
 } from "./check-services.js";
 import { initializeDatabase } from "../db/init-db.js";
 import { main as seedDatabase } from "../db/seeders/index.js";
@@ -25,7 +24,6 @@ config({ path: envPath });
 interface Flags {
   help: boolean;
   seed: boolean;
-  noRedis: boolean;
   skipChecks: boolean;
   reset: boolean;
 }
@@ -34,7 +32,6 @@ function parseFlags(args: string[]): Flags {
   return {
     help: args.includes("--help") || args.includes("-h"),
     seed: args.includes("--seed"),
-    noRedis: args.includes("--no-redis"),
     skipChecks: args.includes("--skip-checks"),
     reset: args.includes("--reset"),
   };
@@ -48,14 +45,12 @@ Usage: pnpm dev [options]
 
 Options:
   --seed          Seed database with test data
-  --no-redis      Skip Redis startup checks
   --skip-checks   Skip all service checks (fast start)
   --reset         Reset database before starting
   --help, -h      Show this help message
 
 Default behavior:
   - Checks and initializes PostgreSQL if needed
-  - Checks and starts Redis if needed  
   - Does NOT seed database (use --seed for test data)
 
 Examples:
@@ -142,44 +137,6 @@ async function main() {
         console.log("✅ Database schema ready");
       }
 
-      // Redis checks
-      if (!flags.noRedis) {
-        console.log("\n🔍 Checking Redis...");
-        const redisRunning = await checkRedisConnection();
-        if (!redisRunning) {
-          console.log("🐳 Starting Redis with Docker...");
-          try {
-            // Check if Docker is available
-            try {
-              execSync("docker --version", { stdio: "ignore" });
-            } catch {
-              console.error("❌ Docker not found. Please install Docker or use --no-redis");
-              console.error("   Download Docker: https://www.docker.com/get-started");
-              process.exit(1);
-            }
-
-            execSync("docker compose up -d redis", {
-              stdio: "inherit",
-              cwd: rootDir,
-            });
-
-            // Wait for Redis to be ready
-            const redisReady = await waitForService(checkRedisConnection, "Redis", 10, 1000);
-            if (!redisReady) {
-              console.warn("⚠️  Redis started but not responding. Some features may not work.");
-            } else {
-              console.log("✅ Redis started");
-            }
-          } catch (error) {
-            console.warn("⚠️  Could not start Redis. Some features may not work.");
-            console.warn("   Run 'docker compose up -d redis' manually if needed.");
-          }
-        } else {
-          console.log("✅ Redis available");
-        }
-      } else {
-        console.log("\n⚠️  Skipping Redis (--no-redis flag)");
-      }
 
       // Seed if requested
       if (flags.seed) {
@@ -210,19 +167,6 @@ async function main() {
     const shutdown = () => {
       console.log("\n🛑 Shutting down services...");
       turbo.kill("SIGTERM");
-
-      // Also stop Redis if we started it
-      if (!flags.noRedis && !flags.skipChecks) {
-        try {
-          execSync("docker compose stop redis", {
-            stdio: "ignore",
-            cwd: rootDir,
-          });
-        } catch {
-          // Ignore errors on shutdown
-        }
-      }
-
       process.exit(0);
     };
 

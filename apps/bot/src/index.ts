@@ -9,7 +9,6 @@ import { join as _join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { Role } from "@ticketsbot/core/domains/role";
-import { ScheduledTask } from "@ticketsbot/core/domains/scheduled-task";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -38,14 +37,6 @@ const client = new TicketsBotClient({
 
 process.on("SIGINT", async () => {
   console.log("Received SIGINT. Graceful shutdown...");
-
-  try {
-    await ScheduledTask.shutdown();
-    console.log("✅ Scheduled task system shut down");
-  } catch (error) {
-    console.error("❌ Error shutting down scheduled task system:", error);
-  }
-
   void client.destroy();
   // eslint-disable-next-line no-process-exit
   process.exit(0);
@@ -53,14 +44,6 @@ process.on("SIGINT", async () => {
 
 process.on("SIGTERM", async () => {
   console.log("Received SIGTERM. Graceful shutdown...");
-
-  try {
-    await ScheduledTask.shutdown();
-    console.log("✅ Scheduled task system shut down");
-  } catch (error) {
-    console.error("❌ Error shutting down scheduled task system:", error);
-  }
-
   void client.destroy();
   // eslint-disable-next-line no-process-exit
   process.exit(0);

@@ -7,11 +7,11 @@
       "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "dev": {
-      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL", "REDIS_URL", "BETTER_AUTH_SECRET", "WEB_URL", "API_URL"],
+      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL", "BETTER_AUTH_SECRET", "WEB_URL", "API_URL"],
       "persistent": true
     },
     "start": {
-      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL", "REDIS_URL", "BETTER_AUTH_SECRET", "WEB_URL", "API_URL"]
+      "env": ["NODE_ENV", "DISCORD_*", "DATABASE_URL", "BETTER_AUTH_SECRET", "WEB_URL", "API_URL"]
     },
     "typecheck": {
       "inputs": ["src/**", "tsconfig.json"],

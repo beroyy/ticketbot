@@ -1,4 +1,3 @@
-// Export specific domain namespaces
 export { User } from "./user";
 export { Guild } from "./guild";
 export { Ticket } from "./ticket";
@@ -13,7 +12,6 @@ export { Transcripts } from "./transcripts";
 export { Analytics } from "./analytics";
 export { ScheduledTask } from "./scheduled-task";
 
-// Export static methods from Guild domain
 export {
   ensure,
   update,
@@ -24,7 +22,6 @@ export {
   Blacklist,
 } from "./guild";
 
-// Export static methods from Ticket domain (slimmed down)
 export {
   findByChannelId,
   isTicketChannel,
@@ -34,5 +31,4 @@ export {
   hasOpenTickets,
 } from "./ticket";
 
-// Export static methods from Panel domain
 export { findById as findPanelById, getGuildId as getPanelGuildId } from "./panel";

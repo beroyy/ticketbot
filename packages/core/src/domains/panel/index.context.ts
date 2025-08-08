@@ -2,13 +2,21 @@ import { prisma } from "@ticketsbot/db";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
-import type { DomainResult, PanelWithForm } from "../types";
 import {
   Prisma,
   type Panel as PrismaPanel,
   type Form as PrismaForm,
   type FormField,
 } from "@prisma/client";
+
+// Type for Panel with its form included
+type PanelWithForm = PrismaPanel & {
+  form:
+    | (PrismaForm & {
+        formFields: FormField[];
+      })
+    | null;
+};
 
 // Export schemas
 export {
@@ -118,7 +126,7 @@ export namespace Panel {
    * Get panel with form for internal use (not formatted for API)
    * Checks that the panel belongs to the current guild
    */
-  export const getWithForm = async (panelId: number): DomainResult<PanelWithForm> => {
+  export const getWithForm = async (panelId: number): Promise<PanelWithForm> => {
     const guildId = Actor.guildId();
 
     const panel = await prisma.panel.findUnique({

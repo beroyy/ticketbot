@@ -2,7 +2,7 @@ import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig, UserWithRole, SeederDependencies } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generateTicketScenario } from "./utils";
-import { prisma } from "@ticketsbot/core/prisma/client";
+import { prisma } from "@ticketsbot/db";
 
 export class TicketSeeder {
   private logger: ProgressLogger;

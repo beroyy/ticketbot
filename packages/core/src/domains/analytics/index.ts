@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/client";
+import { prisma } from "@ticketsbot/db";
 import { TicketStatus, Prisma } from "@prisma/client";
 import { Actor } from "../../context";
 

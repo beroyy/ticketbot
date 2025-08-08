@@ -122,6 +122,7 @@ Thumbs.db
 # Prisma
 prisma/migrations/
 !prisma/migrations/.gitkeep
+generated/prisma
 
 # Claude
 CLAUDE.local.md

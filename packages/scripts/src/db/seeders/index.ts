@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { Actor, type SystemActor } from "@ticketsbot/core/context";
-import { prisma } from "@ticketsbot/core/prisma/client";
+import { prisma } from "@ticketsbot/db";
 import { type SeedConfig, DEFAULT_CONFIG, DATA_VOLUMES, type SeederDependencies } from "./types";
 import { ProgressLogger } from "./utils";
 

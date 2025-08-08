@@ -1,7 +1,7 @@
 import { withTransaction } from "@ticketsbot/core/context";
 import type { SeedConfig } from "./types";
 import { ProgressLogger } from "./utils";
-import { prisma } from "@ticketsbot/core/prisma/client";
+import { prisma } from "@ticketsbot/db";
 
 export class FormSeeder {
   private logger: ProgressLogger;
@@ -197,7 +197,7 @@ export class FormSeeder {
     this.logger.log("Clearing forms...");
 
     await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
 
       // Clear in correct order
       await prisma.formField.deleteMany({});

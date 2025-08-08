@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/client";
+import { prisma } from "@ticketsbot/db";
 import {
   Prisma,
   type Event as PrismaEvent,

@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/client";
+import { prisma } from "@ticketsbot/db";
 import { TicketStatus } from "@prisma/client";
 import { Actor, withTransaction, afterTransaction, useTransaction } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";

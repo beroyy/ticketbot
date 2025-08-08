@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/client";
+import { prisma } from "@ticketsbot/db";
 import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";

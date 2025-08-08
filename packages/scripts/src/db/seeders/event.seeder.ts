@@ -128,7 +128,7 @@ export class EventSeeder {
     this.logger.log("Clearing events...");
 
     await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
       await prisma.event.deleteMany({});
     });
 

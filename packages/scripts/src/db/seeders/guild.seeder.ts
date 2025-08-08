@@ -2,7 +2,7 @@ import { withTransaction } from "@ticketsbot/core/context";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig } from "./types";
 import { ProgressLogger, SnowflakeGenerator } from "./utils";
-import { prisma } from "@ticketsbot/core/prisma/client";
+import { prisma } from "@ticketsbot/db";
 
 export class GuildSeeder {
   private logger: ProgressLogger;
@@ -105,7 +105,7 @@ export class GuildSeeder {
     this.logger.log("Clearing existing guilds...");
 
     await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
 
       // Clear in correct order to respect foreign keys
       await prisma.blacklist.deleteMany({});

@@ -2,7 +2,7 @@ import { Role } from "@ticketsbot/core/domains";
 import { withTransaction } from "@ticketsbot/core/context";
 import type { SeedConfig, UserWithRole } from "./types";
 import { ProgressLogger } from "./utils";
-import { prisma } from "@ticketsbot/core/prisma/client";
+import { prisma } from "@ticketsbot/db";
 
 export class TeamSeeder {
   private logger: ProgressLogger;
@@ -101,7 +101,7 @@ export class TeamSeeder {
     this.logger.log("Clearing team data...");
 
     await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
 
       // Clear in correct order
       await prisma.guildRoleMember.deleteMany({});

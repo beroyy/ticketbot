@@ -2,7 +2,7 @@ import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generatePanelData } from "./utils";
-import { prisma } from "@ticketsbot/core/prisma/client";
+import { prisma } from "@ticketsbot/db";
 
 export class PanelSeeder {
   private logger: ProgressLogger;
@@ -152,7 +152,7 @@ export class PanelSeeder {
     this.logger.log("Clearing panels...");
 
     await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
 
       // Clear in correct order
       await prisma.panelOption.deleteMany({});

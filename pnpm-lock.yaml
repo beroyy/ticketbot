@@ -291,12 +291,6 @@ importers:
 
   packages/core:
     dependencies:
-      '@neondatabase/serverless':
-        specifier: ^1.0.1
-        version: 1.0.1
-      '@prisma/adapter-neon':
-        specifier: ^6.12.0
-        version: 6.12.0
       '@prisma/client':
         specifier: ^6.12.0
         version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
@@ -328,6 +322,9 @@ importers:
         specifier: ^4.0.5
         version: 4.0.5
     devDependencies:
+      '@ticketsbot/db':
+        specifier: workspace:*
+        version: link:../db
       '@ticketsbot/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -346,15 +343,34 @@ importers:
       eslint:
         specifier: ^9.31.0
         version: 9.31.0(jiti@2.4.2)
-      prisma:
-        specifier: ^6.12.0
-        version: 6.12.0(typescript@5.8.3)
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
+
+  packages/db:
+    dependencies:
+      '@neondatabase/serverless':
+        specifier: ^1.0.1
+        version: 1.0.1
+      '@prisma/adapter-neon':
+        specifier: ^6.12.0
+        version: 6.12.0
+      '@prisma/client':
+        specifier: ^6.12.0
+        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
+      ws:
+        specifier: ^8.18.3
+        version: 8.18.3(bufferutil@4.0.9)
+    devDependencies:
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
+      prisma:
+        specifier: ^6.12.0
+        version: 6.12.0(typescript@5.8.3)
 
   packages/eslint-config:
     dependencies:
@@ -5867,7 +5883,7 @@ snapshots:
 
   '@types/pg@8.15.4':
     dependencies:
-      '@types/node': 22.16.5
+      '@types/node': 24.0.15
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 

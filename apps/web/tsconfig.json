@@ -9,6 +9,7 @@
       "@ticketsbot/core/auth": ["../../packages/core/src/auth/index.ts"],
       "@ticketsbot/core/env": ["../../packages/core/src/env/index.ts"],
       "@ticketsbot/core/env/client": ["../../packages/core/src/env/client.ts"],
+      "@ticketsbot/db": ["../../packages/db/src/index.ts"],
       "@ticketsbot/discord": ["../../packages/discord/src/index.ts"],
       "@ticketsbot/discord/*": ["../../packages/discord/src/*"]
     },

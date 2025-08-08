@@ -4,7 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
-import { prisma } from "../prisma";
+import { prisma } from "@ticketsbot/db";
 import { User as UserDomain, Account as AccountDomain } from "../domains";
 import { getDiscordAvatarUrl } from "./services/discord-api";
 import type { User, Session } from "./types";

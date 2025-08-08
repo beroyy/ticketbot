@@ -208,17 +208,6 @@ export {
 
 export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./utils/discord-id";
 
-export { prisma } from "./prisma/client";
-
-export {
-  type ValidationResult,
-  type ValidationError,
-  ValidationService,
-  validated,
-  ZodError,
-  type ZodSchema,
-} from "./prisma/services/validation";
-
 export { Redis, type RedisHealthCheck } from "./redis";
 export { isRedisAvailable, getRedisConnection } from "./redis";
 
@@ -238,3 +227,7 @@ export { Form } from "./domains/form";
 
 // Context system is server-only and must be imported directly:
 // import { Actor, withTransaction } from "@ticketsbot/core/context";
+
+// Re-export Prisma client and types from @ticketsbot/db for backward compatibility
+export { prisma } from "@ticketsbot/db";
+export type * from "@ticketsbot/db";

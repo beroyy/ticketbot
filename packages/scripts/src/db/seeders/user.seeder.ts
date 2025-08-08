@@ -112,7 +112,7 @@ export class UserSeeder {
 
     await withTransaction(async () => {
       // Clear users through raw Prisma since we don't have a delete method in User domain
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
       await prisma.discordUser.deleteMany({});
     });
 

@@ -1,5 +1,5 @@
 import { Redis } from "@ticketsbot/core";
-import { prisma } from "@ticketsbot/core/prisma";
+import { prisma } from "@ticketsbot/db";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
 import { env } from "../env";

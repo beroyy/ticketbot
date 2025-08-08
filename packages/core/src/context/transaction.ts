@@ -1,6 +1,6 @@
 import { createContext } from "./index";
 // import type { PrismaClient } from "@prisma/client";
-import { prisma } from "../prisma/client";
+import { prisma } from "@ticketsbot/db";
 import { TransactionError } from "./errors";
 import { ContextMonitoring } from "./monitoring";
 

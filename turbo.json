@@ -4,7 +4,7 @@
   "globalDependencies": ["package.json", "turbo.json", "pnpm-workspace.yaml", ".env*"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "@ticketsbot/core#db:generate"],
+      "dependsOn": ["^build", "@ticketsbot/db#db:generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*",
@@ -29,7 +29,7 @@
       ]
     },
     "dev": {
-      "dependsOn": ["@ticketsbot/core#db:generate"],
+      "dependsOn": ["@ticketsbot/db#db:generate"],
       "cache": false,
       "persistent": true,
       "env": [
@@ -72,7 +72,7 @@
       "env": []
     },
     "typecheck": {
-      "dependsOn": ["^build", "@ticketsbot/core#db:generate"],
+      "dependsOn": ["^build", "@ticketsbot/db#db:generate"],
       "inputs": ["src/**", "tsconfig.json", "tsconfig.tsbuildinfo"],
       "outputs": [],
       "cache": true
@@ -85,9 +85,9 @@
       "env": ["NODE_ENV", "DATABASE_URL"]
     },
     "db:generate": {
-      "cache": true,
+      "cache": false,
       "inputs": ["prisma/**/*.prisma"],
-      "outputs": ["node_modules/.prisma/**"],
+      "outputs": ["generated/**"],
       "env": ["DATABASE_URL"]
     },
     "db:push": {

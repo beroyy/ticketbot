@@ -60,7 +60,7 @@ export class TagSeeder {
     this.logger.log("Clearing tags...");
 
     await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/core/prisma/client");
+      const { prisma } = await import("@ticketsbot/db");
       await prisma.tag.deleteMany({});
     });
 

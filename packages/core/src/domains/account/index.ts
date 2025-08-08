@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/client";
+import { prisma } from "@ticketsbot/db";
 import type { Account as PrismaAccount } from "@prisma/client";
 
 /**

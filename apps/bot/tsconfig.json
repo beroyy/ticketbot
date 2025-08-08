@@ -9,12 +9,12 @@
     "declarationMap": false,
     "paths": {
       "@ticketsbot/core": ["packages/core/src/index.ts"],
-      "@ticketsbot/core/prisma": ["packages/core/src/prisma/index.ts"],
       "@ticketsbot/core/domains": ["packages/core/src/domains/index.ts"],
       "@ticketsbot/core/domains/*": ["packages/core/src/domains/*/index.ts"],
       "@ticketsbot/core/context": ["packages/core/src/context/index.ts"],
       "@ticketsbot/core/analytics": ["packages/core/src/analytics/index.ts"],
       "@ticketsbot/core/analytics/bot": ["packages/core/src/analytics/bot/index.ts"],
+      "@ticketsbot/db": ["packages/db/src/index.ts"],
       "@ticketsbot/discord": ["packages/discord/src/index.ts"],
       "@ticketsbot/discord/*": ["packages/discord/src/*"],
       "@bot/*": ["apps/bot/src/*"]

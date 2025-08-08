@@ -9,15 +9,15 @@ import {
 import { fetchUserGuilds, type Guild } from "./api-server";
 import { parseCookies } from "./utils";
 
-export interface BaseAuthProps {
+export type BaseAuthProps = {
   session: ServerSession | null;
   authState: AuthState;
-}
+};
 
-export interface GuildAuthProps extends BaseAuthProps {
+export type GuildAuthProps = BaseAuthProps & {
   guilds: Guild[];
   selectedGuildId: string | null;
-}
+};
 
 // For public pages (login) - redirects if authenticated
 export function withPublicRoute(): GetServerSideProps<BaseAuthProps> {
@@ -38,6 +38,8 @@ export function withPublicRoute(): GetServerSideProps<BaseAuthProps> {
           permanent: false,
         },
       };
+    } else {
+      console.log("🚨 🚨 🚨 no session!");
     }
 
     return {

@@ -31,7 +31,7 @@ export const getServerSideProps = withAuthRoute(async (context, _session) => {
 
 type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
 
-export default function SetupPageV2({ guilds }: PageProps) {
+export default function SetupPageV2({ guilds = [] }: PageProps) {
   const router = useRouter();
   const { setSelectedGuildId } = useAuth();
   const [currentStep, setCurrentStep] = useState<SetupStep>("select-guild");

@@ -1,8 +1,6 @@
-import { auth } from "@ticketsbot/core/auth";
 import type { IncomingMessage } from "http";
-import type { GetServerSidePropsContext } from "next";
 
-export interface ServerSession {
+export type ServerSession = {
   user: {
     id: string;
     email: string;
@@ -26,28 +24,55 @@ export interface ServerSession {
     ipAddress?: string | null;
     userAgent?: string | null;
   };
-}
+};
 
-export async function getServerSession(
-  req: IncomingMessage | GetServerSidePropsContext["req"]
-): Promise<ServerSession | null> {
+export async function getServerSession(req: IncomingMessage): Promise<ServerSession | null> {
   try {
-    // Convert IncomingMessage headers to Headers object
-    const headers = new Headers();
-    Object.entries(req.headers).forEach(([key, value]) => {
-      if (value) {
-        if (Array.isArray(value)) {
-          value.forEach((v) => headers.append(key, v));
-        } else {
-          headers.set(key, value);
-        }
-      }
-    });
+    if (!req.headers.cookie) {
+      return null;
+    }
 
-    const session = await auth.api.getSession({ headers });
-    return session as ServerSession;
+    const cookies = req.headers.cookie.split(";").reduce(
+      (acc, cookie) => {
+        const [key, value] = cookie.trim().split("=");
+        acc[key] = value;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
+    const sessionDataCookie = cookies["session_data"];
+
+    // Check if we have the session_data cookie
+    if (!sessionDataCookie) {
+      return null;
+    }
+
+    try {
+      // Decode the base64 encoded session data
+      const decodedSessionData = Buffer.from(sessionDataCookie, "base64").toString("utf-8");
+      const sessionData = JSON.parse(decodedSessionData);
+
+      // Check if session is expired (expiresAt is in milliseconds)
+      if (sessionData.expiresAt && sessionData.expiresAt < Date.now()) {
+        return null;
+      }
+
+      // Return the session in the expected format
+      // The session_data cookie has a nested structure: { session: { user: {...}, session: {...} } }
+      if (sessionData.session?.user && sessionData.session?.session) {
+        return {
+          user: sessionData.session.user,
+          session: sessionData.session.session,
+        } as ServerSession;
+      }
+
+      return null;
+    } catch (error) {
+      // Failed to parse session data
+      return null;
+    }
   } catch (error) {
-    console.error("Failed to get server session:", error);
     return null;
   }
 }

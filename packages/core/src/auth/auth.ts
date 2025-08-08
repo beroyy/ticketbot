@@ -79,7 +79,7 @@ if (!discordClientId || !discordClientSecret) {
   });
 }
 
-interface AuthInstance {
+type AuthInstance = {
   handler: (request: Request) => Promise<Response>;
   api: {
     getSession: (params: { headers: Headers }) => Promise<unknown>;
@@ -87,10 +87,12 @@ interface AuthInstance {
   };
   options?: Record<string, unknown>;
   [key: string]: unknown;
-}
+};
 
 const createAuthInstance = () => {
   const { webOrigin, apiOrigin } = getOrigins();
+
+  const cookieDomain = process.env.NODE_ENV === "production" ? ".ticketsbot.co" : "localhost";
 
   logger.debug("Creating Better Auth instance", {
     baseURL: apiOrigin,
@@ -132,11 +134,11 @@ const createAuthInstance = () => {
     basePath: "/auth",
     trustedOrigins: [webOrigin, apiOrigin],
     advanced: {
-      cookiePrefix: "ticketsbot",
+      // cookiePrefix: "ticketsbot",
       useSecureCookies: process.env["NODE_ENV"] === "production",
       crossSubDomainCookies: {
         enabled: true,
-        domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
+        domain: cookieDomain,
       },
       disableCSRFCheck: process.env["NODE_ENV"] === "development",
       cookies: {
@@ -146,7 +148,7 @@ const createAuthInstance = () => {
             sameSite: "lax",
             secure: process.env["NODE_ENV"] === "production",
             httpOnly: true,
-            domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
+            domain: cookieDomain,
             path: "/",
           },
         },
@@ -154,9 +156,9 @@ const createAuthInstance = () => {
           name: "session_data",
           attributes: {
             sameSite: "lax",
-            secure: true,
+            secure: process.env["NODE_ENV"] === "production",
             httpOnly: true,
-            domain: process.env["NODE_ENV"] === "production" ? ".ticketsbot.co" : "localhost",
+            domain: cookieDomain,
             path: "/",
           },
         },
@@ -181,12 +183,9 @@ const createAuthInstance = () => {
             hasAvatar: !!profile.avatar,
           });
 
-          // Return mapped user data that will be stored
-          // Note: discordUserId is NOT set here to avoid foreign key constraint
-          // It will be linked after the DiscordUser is created in the callback hook
           return {
-            name: profile.username, // Update the display name
-            email: profile.email || `${profile.id}@discord.local`, // Fallback email
+            name: profile.username,
+            email: profile.email,
           };
         },
       },
@@ -205,7 +204,6 @@ const createAuthInstance = () => {
       customSession(async (sessionData: SessionData) => {
         const { user, session } = sessionData;
 
-        // Quick path: If user already has Discord data and it's fresh, return immediately
         const existingUser = user as any;
         if (
           existingUser.discordUserId &&

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,7 @@ import type { InferGetServerSidePropsType } from "next";
 import { OnboardingDialog } from "@/components/onboarding-dialog";
 import { BlurredLp } from "@/components/blurred-lp";
 import { useHideScrollbar } from "@/hooks";
-
-const discordInviteUrl = `https://discord.com/oauth2/authorize?client_id=${
-  process.env.NODE_ENV === "production" ? "1397412199869186090" : "1397414095753318522"
-}`;
+import { env } from "@/env";
 
 type SetupStep = "select-guild" | "configure-guild" | "complete";
 
@@ -62,7 +60,6 @@ export default function SetupPage({ guilds = [] }: PageProps) {
       setSelectedGuildId(selectedGuild);
       setCurrentStep("complete");
 
-      // Set cookie for server-side auth
       document.cookie = `ticketsbot-selected-guild=${selectedGuild}; path=/; max-age=604800`;
 
       setTimeout(() => {
@@ -78,7 +75,7 @@ export default function SetupPage({ guilds = [] }: PageProps) {
     }, 500);
 
     setCurrentStep("configure-guild");
-    window.open(discordInviteUrl, "_blank");
+    window.open(env.discordInviteUrl, "_blank");
   };
 
   const connectedGuilds = guilds.filter((g) => g.connected);

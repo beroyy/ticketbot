@@ -8,7 +8,10 @@ export const env = {
 
   NEXT_PUBLIC_DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || "",
 
-  isDev: () => (process.env.NODE_ENV || "development") === "development",
+  authCallbackUrl: typeof window !== "undefined" ? window.location.origin : undefined,
+  discordInviteUrl: `https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID}`,
+
+  isDev: () => process.env.NODE_ENV === "development",
   isProd: () => process.env.NODE_ENV === "production",
   isTest: () => process.env.NODE_ENV === "test",
 };

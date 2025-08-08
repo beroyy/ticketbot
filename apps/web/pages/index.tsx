@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { withAuthRoute } from "@/lib/with-auth";
+import { withPublicRoute } from "@/lib/with-auth";
 
-export const getServerSideProps = withAuthRoute();
+export const getServerSideProps = withPublicRoute();
 
 export default function LandingPage() {
   return (

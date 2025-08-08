@@ -5,6 +5,7 @@ import type { InferGetServerSidePropsType } from "next";
 import { BlurredLp } from "@/components/blurred-lp";
 import { OnboardingDialog } from "@/components/onboarding-dialog";
 import { useHideScrollbar } from "@/hooks";
+import { env } from "@/env";
 
 export const getServerSideProps = withPublicRoute();
 
@@ -20,7 +21,7 @@ export default function LoginPage(_props: PageProps) {
 
       await authClient.signIn.social({
         provider: "discord",
-        callbackURL: typeof window !== "undefined" ? window.location.origin : undefined,
+        callbackURL: env.authCallbackUrl,
       });
     } catch (error) {
       console.error("Error signing in:", error);

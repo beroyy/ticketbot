@@ -1,14 +1,9 @@
 import { createAuthClient } from "better-auth/react";
 import { nextCookies } from "better-auth/next-js";
+import { env } from "@/env";
 
-/**
- * Auth client for better-auth integration
- * Note: Using ReturnType to capture the client type without referencing internal modules
- */
-type AuthClientType = ReturnType<typeof createAuthClient>;
-
-export const authClient: AuthClientType = createAuthClient({
-  baseURL: process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001",
+export const authClient = createAuthClient({
+  baseURL: env.NEXT_PUBLIC_API_URL,
   basePath: "/auth",
   plugins: [nextCookies()],
 });

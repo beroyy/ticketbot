@@ -108,12 +108,14 @@ export default function SetupPage({ guilds = [] }: PageProps) {
         <>
           {!hasAnyBotInstalled ? (
             <OnboardingDialog
-              title="Invite Ticketsbot to your Server"
+              heroImage={<Image src="/logo-blue.svg" alt="Ticketsbot" width={280} height={80} />}
+              title="Invite the bot to your server"
               description="You will need admin access to complete this step"
               isLoading={isRedirecting}
               onButtonPress={handleInviteBotPress}
               buttonDisabled={isRedirecting}
               buttonText="Invite Ticketsbot"
+              buttonClassName="fancy-button hover:opacity-90 hover:transition-opacity hover:duration-500 hover:ease-in-out"
             />
           ) : (
             <div className="space-y-3">

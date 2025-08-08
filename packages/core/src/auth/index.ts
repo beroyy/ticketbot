@@ -7,6 +7,3 @@ export { linkDiscordAccount, ensureDiscordLinked } from "./services/discord-link
 
 // Session management
 export { getSession, getSessionFromContext, requireSession } from "./services/session";
-
-// Permission utilities
-export { AuthPermissionUtils } from "./services/permissions";

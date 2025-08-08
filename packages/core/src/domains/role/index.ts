@@ -69,16 +69,6 @@ export namespace Role {
    * Get cumulative permissions for a user (from all roles + additional permissions)
    */
   export const getUserPermissions = async (guildId: string, userId: string): Promise<bigint> => {
-    // Development mode permission override - check this first before cache
-    if (process.env["NODE_ENV"] === "development" && process.env["DEV_PERMISSIONS_HEX"]) {
-      const devPerms = BigInt(process.env["DEV_PERMISSIONS_HEX"]);
-      console.log(
-        `🔧 DEV MODE: getUserPermissions returning DEV_PERMISSIONS_HEX ${process.env["DEV_PERMISSIONS_HEX"]} for user ${userId} in guild ${guildId}`
-      );
-      return devPerms;
-    }
-
-
     // Check if user is guild owner
     const guild = await prisma.guild.findUnique({
       where: { id: guildId },
@@ -128,17 +118,6 @@ export namespace Role {
     userId: string,
     permission: bigint
   ): Promise<boolean> => {
-    // Development mode permission override
-    if (process.env["NODE_ENV"] === "development" && process.env["DEV_PERMISSIONS_HEX"]) {
-      const devPerms = BigInt(process.env["DEV_PERMISSIONS_HEX"]);
-      if (PermissionUtils.hasPermission(devPerms, permission)) {
-        console.log(
-          `🔧 DEV MODE: Granting permission ${permission.toString(16)} via DEV_PERMISSIONS_HEX`
-        );
-        return true;
-      }
-    }
-
     const userPermissions = await getUserPermissions(guildId, userId);
     return PermissionUtils.hasPermission(userPermissions, permission);
   };
@@ -151,18 +130,6 @@ export namespace Role {
     userId: string,
     ...permissions: bigint[]
   ): Promise<boolean> => {
-    // Development mode permission override
-    if (process.env["NODE_ENV"] === "development" && process.env["DEV_PERMISSIONS_HEX"]) {
-      const devPerms = BigInt(process.env["DEV_PERMISSIONS_HEX"]);
-      const hasAny = PermissionUtils.hasAnyPermission(devPerms, ...permissions);
-      if (hasAny) {
-        console.log(
-          `🔧 DEV MODE: Granting one of ${permissions.length.toString()} permissions via DEV_PERMISSIONS_HEX`
-        );
-        return true;
-      }
-    }
-
     const userPermissions = await getUserPermissions(guildId, userId);
     return PermissionUtils.hasAnyPermission(userPermissions, ...permissions);
   };
@@ -175,18 +142,6 @@ export namespace Role {
     userId: string,
     ...permissions: bigint[]
   ): Promise<boolean> => {
-    // Development mode permission override
-    if (process.env["NODE_ENV"] === "development" && process.env["DEV_PERMISSIONS_HEX"]) {
-      const devPerms = BigInt(process.env["DEV_PERMISSIONS_HEX"]);
-      const hasAll = PermissionUtils.hasAllPermissions(devPerms, ...permissions);
-      if (hasAll) {
-        console.log(
-          `🔧 DEV MODE: Granting all ${permissions.length.toString()} permissions via DEV_PERMISSIONS_HEX`
-        );
-        return true;
-      }
-    }
-
     const userPermissions = await getUserPermissions(guildId, userId);
     return PermissionUtils.hasAllPermissions(userPermissions, ...permissions);
   };

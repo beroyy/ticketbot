@@ -8,8 +8,7 @@ import { container } from "@sapphire/framework";
 import { join as _join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { teamPermissionChecker } from "@bot/lib/team-permission-checker";
-import { ScheduledTask } from "@ticketsbot/core/domains";
+import { Role, ScheduledTask } from "@ticketsbot/core/domains";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,7 +20,10 @@ class TicketsBotClient extends BaseBotClient {
   }
 }
 
-configurePermissionProvider(teamPermissionChecker);
+// Simple adapter for Role domain to implement PermissionProvider interface
+configurePermissionProvider({
+  getUserPermissions: Role.getUserPermissions,
+});
 
 const client = new TicketsBotClient({
   intents: [

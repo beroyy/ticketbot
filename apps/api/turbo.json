@@ -13,7 +13,7 @@
     "start": {
       "env": ["NODE_ENV", "PORT", "DATABASE_URL", "DISCORD_*"]
     },
-    "type-check": {
+    "typecheck": {
       "inputs": ["src/**", "tsconfig.json"],
       "outputs": []
     }

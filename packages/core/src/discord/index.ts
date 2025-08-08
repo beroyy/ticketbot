@@ -1,8 +1,3 @@
-/**
- * Functional Discord service namespace
- * Replaces the class-based DiscordClientService with a modern functional approach
- */
-
 import {
   Client,
   GatewayIntentBits,
@@ -20,8 +15,7 @@ import {
 } from "discord.js";
 import { VisibleError } from "@ticketsbot/core/context";
 
-// Types
-interface PanelData {
+type PanelData = {
   id: number;
   type: "SINGLE" | "MULTI";
   title: string;
@@ -38,38 +32,27 @@ interface PanelData {
   textSections?: any;
   mentionRoles?: any;
   form?: any;
-  children?: PanelData[]; // For multi-panels
-}
+  children?: PanelData[]; // multi-panels
+};
 
-interface DeploymentResult {
+type DeploymentResult = {
   messageId: string;
   channelId: string;
-}
+};
 
-/**
- * Discord API client namespace
- * Provides pure Discord API operations without event handling
- */
 export namespace Discord {
-  // Singleton client instance
   let client: Client | null = null;
   let initPromise: Promise<Client> | null = null;
 
-  /**
-   * Get or initialize the Discord client
-   */
   const getClient = async (): Promise<Client> => {
-    // Return existing client if available
     if (client?.isReady()) {
       return client;
     }
 
-    // Wait for ongoing initialization
     if (initPromise) {
       return initPromise;
     }
 
-    // Start new initialization
     initPromise = initializeClient();
     client = await initPromise;
     initPromise = null;
@@ -77,9 +60,6 @@ export namespace Discord {
     return client;
   };
 
-  /**
-   * Initialize Discord client
-   */
   const initializeClient = async (): Promise<Client> => {
     const newClient = new Client({
       intents: [
@@ -90,7 +70,6 @@ export namespace Discord {
       ],
     });
 
-    // Set up error handlers
     newClient.on("error", (error) => {
       console.error("Discord client error:", error);
     });
@@ -99,10 +78,6 @@ export namespace Discord {
       console.warn("Discord client warning:", warning);
     });
 
-    // Note: All Discord event handling is done in the bot application
-    // This client is purely for API operations
-
-    // Login with timeout
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error("Discord client login timeout"));
@@ -123,22 +98,15 @@ export namespace Discord {
     return newClient;
   };
 
-  /**
-   * Deploy a panel to Discord
-   */
   export const deployPanel = async (panel: PanelData): Promise<DeploymentResult> => {
     const client = await getClient();
 
-    // Validate guild
     const guild = await validateGuild(client, panel.guildId);
 
-    // Get channel
     const channel = await getTextChannel(guild, panel.channelId);
 
-    // Check permissions
     await checkChannelPermissions(channel);
 
-    // Create and send message
     const messageOptions = createPanelMessage(panel);
     const message = await channel.send(messageOptions);
 
@@ -148,32 +116,24 @@ export namespace Discord {
     };
   };
 
-  /**
-   * Update a deployed panel
-   */
   export const updatePanel = async (
     panel: PanelData,
     messageId: string
   ): Promise<DeploymentResult> => {
     const client = await getClient();
 
-    // Validate guild
     const guild = await validateGuild(client, panel.guildId);
 
-    // Get channel
     const channel = await getTextChannel(guild, panel.channelId);
 
-    // Check permissions
     await checkChannelPermissions(channel);
 
-    // Fetch existing message
     const message = await channel.messages.fetch(messageId).catch(() => null);
 
     if (!message) {
       throw new VisibleError("not_found", "Panel message not found");
     }
 
-    // Update message - use only embeds and components for edit
     const { embeds, components } = createPanelMessage(panel);
     await message.edit({ embeds, components });
 
@@ -183,9 +143,6 @@ export namespace Discord {
     };
   };
 
-  /**
-   * Delete a deployed panel
-   */
   export const deletePanel = async (
     guildId: string,
     channelId: string,
@@ -200,14 +157,10 @@ export namespace Discord {
 
       await message.delete();
     } catch (error) {
-      // Log but don't throw - panel may already be deleted
       console.warn(`Failed to delete panel message ${messageId}:`, error);
     }
   };
 
-  /**
-   * Get available channels for a guild
-   */
   export const getGuildChannels = async (guildId: string) => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
@@ -225,9 +178,6 @@ export namespace Discord {
     return channels;
   };
 
-  /**
-   * Get available categories for a guild
-   */
   export const getGuildCategories = async (guildId: string) => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
@@ -243,9 +193,6 @@ export namespace Discord {
     return categories;
   };
 
-  /**
-   * Get available roles for a guild
-   */
   export const getGuildRoles = async (guildId: string) => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
@@ -263,10 +210,7 @@ export namespace Discord {
     return roles;
   };
 
-  /**
-   * Check if bot is in a guild
-   */
-  export const isInGuild = async (guildId: string): Promise<boolean> => {
+  export const isBotInGuild = async (guildId: string): Promise<boolean> => {
     try {
       const client = await getClient();
       const guild = await client.guilds.fetch(guildId);
@@ -276,9 +220,6 @@ export namespace Discord {
     }
   };
 
-  /**
-   * Get bot's permissions in a guild
-   */
   export const getBotPermissions = async (guildId: string) => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
@@ -297,8 +238,6 @@ export namespace Discord {
       canManageMessages: member.permissions.has(PermissionFlagsBits.ManageMessages),
     };
   };
-
-  // Helper functions
 
   const validateGuild = async (client: Client, guildId: string): Promise<Guild> => {
     try {
@@ -381,7 +320,6 @@ export namespace Discord {
       embed.setThumbnail(panel.thumbnailUrl);
     }
 
-    // Add text sections if present
     if (panel.textSections && Array.isArray(panel.textSections)) {
       for (const section of panel.textSections) {
         if (section.name && section.value) {
@@ -403,7 +341,6 @@ export namespace Discord {
     const rows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
 
     if (panel.type === "SINGLE") {
-      // Single panel - create button
       const button = new ButtonBuilder()
         .setCustomId(`ticket_create_${panel.id}`)
         .setLabel(panel.buttonText)
@@ -415,7 +352,6 @@ export namespace Discord {
 
       rows.push(new ActionRowBuilder<ButtonBuilder>().addComponents(button));
     } else if (panel.type === "MULTI" && panel.children) {
-      // Multi panel - create select menu
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`ticket_select_${panel.id}`)
         .setPlaceholder(panel.buttonText || "Select an option")
@@ -434,10 +370,6 @@ export namespace Discord {
     return rows;
   };
 
-
-  /**
-   * Create a ticket channel
-   */
   export const createTicketChannel = async (data: {
     guildId: string;
     name: string;
@@ -450,7 +382,6 @@ export namespace Discord {
     const guild = await validateGuild(client, data.guildId);
 
     if (data.isThread && data.parentChannelId) {
-      // Create thread
       const parentChannel = await getTextChannel(guild, data.parentChannelId);
       const thread = await parentChannel.threads.create({
         name: data.name,
@@ -459,7 +390,6 @@ export namespace Discord {
       });
       return { channelId: thread.id };
     } else {
-      // Create text channel
       const channel = await guild.channels.create({
         name: data.name,
         type: ChannelType.GuildText,
@@ -470,9 +400,6 @@ export namespace Discord {
     }
   };
 
-  /**
-   * Delete a ticket channel
-   */
   export const deleteTicketChannel = async (guildId: string, channelId: string): Promise<void> => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
@@ -487,9 +414,6 @@ export namespace Discord {
     }
   };
 
-  /**
-   * Send message to a channel
-   */
   export const sendMessage = async (
     guildId: string,
     channelId: string,
@@ -504,10 +428,10 @@ export namespace Discord {
     return { messageId: message.id };
   };
 
-  /**
-   * Check if a channel exists and is text-based
-   */
-  export const isValidTextChannel = async (guildId: string, channelId: string): Promise<boolean> => {
+  export const isValidTextChannel = async (
+    guildId: string,
+    channelId: string
+  ): Promise<boolean> => {
     const client = await getClient();
     const guild = await validateGuild(client, guildId);
 
@@ -519,9 +443,6 @@ export namespace Discord {
     }
   };
 
-  /**
-   * Get Discord user
-   */
   export const getUser = async (userId: string): Promise<User | null> => {
     const client = await getClient();
     try {
@@ -531,14 +452,8 @@ export namespace Discord {
     }
   };
 
-  /**
-   * Get the Discord client (for advanced operations)
-   */
   export const getDiscordClient = getClient;
 
-  /**
-   * Cleanup Discord client on shutdown
-   */
   export const cleanup = async (): Promise<void> => {
     if (client) {
       client.destroy();
@@ -548,9 +463,7 @@ export namespace Discord {
   };
 }
 
-// Register cleanup on process exit
 process.on("SIGINT", () => Discord.cleanup());
 process.on("SIGTERM", () => Discord.cleanup());
 
-// Export ticket operations
 export * from "./ticket-operations";

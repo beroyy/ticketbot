@@ -1,12 +1,6 @@
-/**
- * Ticket-specific Discord API operations
- * Provides helper functions for ticket-related Discord operations
- */
-
 import { Discord } from "./index";
 import type { TextChannel } from "discord.js";
 
-// Import domains dynamically to avoid circular dependencies
 const getTicketLifecycle = async () => {
   const { TicketLifecycle } = await import("../domains/ticket-lifecycle");
   return TicketLifecycle;
@@ -22,10 +16,6 @@ const getTicket = async () => {
   return Ticket;
 };
 
-
-/**
- * Create a ticket from a panel interaction
- */
 export const createTicketFromPanel = async (data: {
   guildId: string;
   userId: string;
@@ -37,10 +27,8 @@ export const createTicketFromPanel = async (data: {
 }): Promise<{ ticketId: number; channelId: string }> => {
   const TicketLifecycle = await getTicketLifecycle();
 
-  // Generate channel name
   const channelName = `ticket-${Date.now().toString(36)}`;
 
-  // Create the channel first
   const { channelId } = await Discord.createTicketChannel({
     guildId: data.guildId,
     name: channelName,
@@ -50,7 +38,6 @@ export const createTicketFromPanel = async (data: {
     parentChannelId: data.parentChannelId,
   });
 
-  // Create the ticket record
   const ticket = await TicketLifecycle.create({
     guildId: data.guildId,
     channelId,
@@ -60,17 +47,12 @@ export const createTicketFromPanel = async (data: {
     categoryId: data.categoryId,
   });
 
-  // Note: The bot application handles post-creation actions like welcome messages
-
   return {
     ticketId: ticket.id,
     channelId,
   };
 };
 
-/**
- * Close a ticket and optionally delete the channel
- */
 export const closeTicket = async (data: {
   ticketId: number;
   closedById: string;
@@ -80,11 +62,9 @@ export const closeTicket = async (data: {
   const TicketLifecycle = await getTicketLifecycle();
   const Ticket = await getTicket();
 
-  // Get ticket details
   const ticket = await Ticket.getByIdUnchecked(data.ticketId);
   if (!ticket) throw new Error("Ticket not found");
 
-  // Close the ticket
   await TicketLifecycle.close({
     ticketId: data.ticketId,
     closedById: data.closedById,
@@ -93,29 +73,22 @@ export const closeTicket = async (data: {
     notifyOpener: true,
   });
 
-  // Delete the channel if requested
   if (data.deleteChannel && ticket.channelId) {
     await Discord.deleteTicketChannel(ticket.guildId, ticket.channelId);
   }
 };
 
-/**
- * Send a message to a ticket channel
- */
 export const sendTicketMessage = async (
   ticketId: number,
   content: string | object
 ): Promise<void> => {
   const Ticket = await getTicket();
 
-  // Get ticket details
   const ticket = await Ticket.getByIdUnchecked(ticketId);
   if (!ticket || !ticket.channelId) throw new Error("Ticket or channel not found");
 
-  // Send the message
   const { messageId } = await Discord.sendMessage(ticket.guildId, ticket.channelId, content);
 
-  // Store in transcript if it's a string message
   if (typeof content === "string") {
     const Transcripts = await getTranscripts();
     await Transcripts.storeMessage({
@@ -131,9 +104,6 @@ export const sendTicketMessage = async (
   }
 };
 
-/**
- * Update ticket channel permissions
- */
 export const updateTicketPermissions = async (
   ticketId: number,
   permissions: {
@@ -145,20 +115,16 @@ export const updateTicketPermissions = async (
   const Ticket = await getTicket();
   const client = await Discord.getDiscordClient();
 
-  // Get ticket details
   const ticket = await Ticket.getByIdUnchecked(ticketId);
   if (!ticket || !ticket.channelId) throw new Error("Ticket or channel not found");
 
-  // Get the channel
   const guild = await client.guilds.fetch(ticket.guildId);
   const channel = (await guild.channels.fetch(ticket.channelId)) as TextChannel;
 
   if (!channel) throw new Error("Channel not found");
 
-  // Update permissions
   const updates: Promise<any>[] = [];
 
-  // Allow users
   if (permissions.allowedUsers) {
     for (const userId of permissions.allowedUsers) {
       updates.push(
@@ -171,7 +137,6 @@ export const updateTicketPermissions = async (
     }
   }
 
-  // Allow roles
   if (permissions.allowedRoles) {
     for (const roleId of permissions.allowedRoles) {
       updates.push(
@@ -184,7 +149,6 @@ export const updateTicketPermissions = async (
     }
   }
 
-  // Deny users
   if (permissions.deniedUsers) {
     for (const userId of permissions.deniedUsers) {
       updates.push(

@@ -5,6 +5,7 @@
 - **Framework**: Hono with AsyncLocalStorage context system
 - **Business Logic**: Domain-driven via `@ticketsbot/core/domains`
 - **Validation**: Zod with `@hono/zod-validator`
+- **Zod v4**: See `docs/zod-v4.md` for breaking changes and new patterns
 - **Error Handling**: Centralized handler maps domain errors to HTTP
 
 ## Middleware Stack

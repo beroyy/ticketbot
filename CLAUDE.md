@@ -122,6 +122,7 @@ Remember: These are opportunities, not requirements. Focus on your primary task 
 - **Database**: PostgreSQL with Prisma
 - **Caching**: Redis
 - **Validation**: Zod v4 API
+- **Zod v4 Migration**: Review `docs/zod-v4.md` before using Zod - breaking changes from v3
 - **UI Components**: shadcn/ui with Tailwind CSS
 - **State Management**: TanStack Query v5, Zustand v5
 - **Forms**: React Hook Form with Zod validation

@@ -303,6 +303,7 @@ export const env = envSchema.parse(process.env);
 - `zustand` ^5.0.6 - Client state management
 - `react-hook-form` ^7.60.0 - Form handling
 - `zod` ^4.0.5 - Schema validation
+- **Note**: Review `docs/zod-v4.md` for Zod v4 migration guide
 - `@ticketsbot/core` - Shared types and business logic
 - `@ticketsbot/auth/client` - Authentication client
 - `radix-ui` latest - Headless UI components

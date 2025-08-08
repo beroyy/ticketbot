@@ -364,6 +364,7 @@ pnpm dev
 - `@sapphire/plugin-logger` - Structured logging
 - `discord.js` v14 - Discord API wrapper
 - `@ticketsbot/core` - Domain logic and schemas
+- **Important**: When using Zod, review `docs/zod-v4.md` for v4 API changes
 
 ### Utilities
 

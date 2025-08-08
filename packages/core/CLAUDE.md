@@ -129,6 +129,7 @@ import { Actor, withTransaction } from "@ticketsbot/core/context";
 ## Dependencies
 
 - **zod** - Schema validation (v4 with latest features)
+- **Critical**: Review `docs/zod-v4.md` before creating schemas - v4 has breaking changes
 - **@sapphire/bitfield** - Permission flag operations
 - **better-auth** - Authentication framework
 - **@prisma/client** - Database ORM

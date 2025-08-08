@@ -1,12 +1,29 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { Event } from "@ticketsbot/core/domains/event";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
-import { TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 import type { Message } from "discord.js";
+import { prisma } from "@ticketsbot/db";
+import { parseDiscordId } from "@ticketsbot/core";
 
 const ROLE_PREFIX = "Tickets ";
+
+// Helper to serialize embeds
+const serializeEmbeds = (embeds: any[]) =>
+  embeds.length > 0 ? JSON.stringify(embeds.map((embed) => embed.toJSON())) : null;
+
+// Helper to serialize attachments
+const serializeAttachments = (attachments: Map<string, any>) =>
+  attachments.size > 0
+    ? JSON.stringify(
+        Array.from(attachments.values()).map((attachment) => ({
+          id: attachment.id,
+          name: attachment.name,
+          url: attachment.url,
+          size: attachment.size,
+          contentType: attachment.contentType,
+        }))
+      )
+    : null;
 
 export const MessageCreateListener = ListenerFactory.on(
   "messageCreate",
@@ -14,30 +31,69 @@ export const MessageCreateListener = ListenerFactory.on(
     if (message.system || !message.guild) return;
 
     try {
-      // Check if this is a ticket channel using static method (no context needed)
+      // Check if this is a ticket channel
       const ticket = await findByChannelId(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
-      // Create actor context for the message author (not the bot)
-      const actor: DiscordActor = {
-        type: "discord_user",
-        properties: {
-          userId: message.author.id,
-          username: message.author.username,
-          guildId: message.guildId!,
-          permissions: 0n,
-        },
-      };
+      const messageId = parseDiscordId(message.id);
+      const authorId = parseDiscordId(message.author.id);
+      const guildId = message.guildId!;
 
-      await Actor.Context.provideAsync(actor, async () => {
-        // Store ALL messages in transcripts
-        if (message.author.bot) {
-          await TranscriptOps.store.botMessage(message, ticket);
-        } else {
-          await TranscriptOps.store.userMessage(message);
+      // Wrap transcript storage and event logging in transaction
+      await prisma.$transaction(async (tx) => {
+        // 1. Ensure user exists
+        await tx.discordUser.upsert({
+          where: { id: authorId },
+          update: {
+            username: message.author.username,
+            discriminator: message.author.discriminator,
+            avatarUrl: message.author.displayAvatarURL(),
+          },
+          create: {
+            id: authorId,
+            username: message.author.username,
+            discriminator: message.author.discriminator,
+            avatarUrl: message.author.displayAvatarURL(),
+          },
+        });
+
+        // 2. Get or create transcript
+        let transcript = await tx.transcript.findUnique({
+          where: { ticketId: ticket.id },
+        });
+
+        if (!transcript) {
+          transcript = await tx.transcript.create({
+            data: {
+              ticketId: ticket.id,
+            },
+          });
         }
 
-        // Log non-bot messages as events for activity tracking
+        // 3. Store message in transcript
+        await tx.ticketMessage.upsert({
+          where: { messageId },
+          update: {
+            content: message.content || "",
+            embeds: serializeEmbeds(message.embeds),
+            attachments: serializeAttachments(message.attachments),
+            editedAt: message.editedAt,
+          },
+          create: {
+            transcriptId: transcript.id,
+            messageId,
+            authorId,
+            content: message.content || "",
+            embeds: serializeEmbeds(message.embeds),
+            attachments: serializeAttachments(message.attachments),
+            messageType: message.author.bot ? "system" : "user",
+            referenceId: message.reference?.messageId
+              ? parseDiscordId(message.reference.messageId)
+              : null,
+          },
+        });
+
+        // 4. Log event for non-bot messages (IN transaction for consistency)
         if (!message.author.bot) {
           // Determine message type
           const member =
@@ -47,19 +103,21 @@ export const MessageCreateListener = ListenerFactory.on(
             member?.roles.cache.some((role) => role.name.startsWith(ROLE_PREFIX)) ?? false;
           const messageType = hasTicketRole ? "staff" : "customer";
 
-          await Event.create({
-            guildId: message.guildId!,
-            actorId: message.author.id,
-            category: "TICKET",
-            action: `message.${messageType}_sent`,
-            targetType: "TICKET",
-            targetId: ticket.id.toString(),
-            ticketId: ticket.id,
-            metadata: {
-              messageId: message.id,
-              ticketNumber: ticket.number,
-              messageLength: message.content.length,
-              hasAttachments: message.attachments.size > 0,
+          await tx.event.create({
+            data: {
+              guildId,
+              actorId: authorId,
+              category: "TICKET",
+              action: `message.${messageType}_sent`,
+              targetType: "TICKET",
+              targetId: ticket.id.toString(),
+              ticketId: ticket.id,
+              metadata: {
+                messageId: message.id,
+                ticketNumber: ticket.number,
+                messageLength: message.content.length,
+                hasAttachments: message.attachments.size > 0,
+              },
             },
           });
         }

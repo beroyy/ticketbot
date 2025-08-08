@@ -1,50 +1,140 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
-import { ensureGuild, updateGuild } from "@ticketsbot/core/domains/guild";
-import { User } from "@ticketsbot/core/domains/user";
-import { Role } from "@ticketsbot/core/domains/role";
-import { parseDiscordId } from "@ticketsbot/core";
+import { parseDiscordId, DefaultRolePermissions } from "@ticketsbot/core";
+import { prisma } from "@ticketsbot/db";
 
 export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guild: Guild) => {
   const { logger } = container;
   logger.info(`Joined new guild: ${guild.name} (${guild.id})`);
 
   try {
-    // 1. Create guild record
-    await ensureGuild(parseDiscordId(guild.id), guild.name, parseDiscordId(guild.ownerId));
+    const guildId = parseDiscordId(guild.id);
+    const ownerId = parseDiscordId(guild.ownerId);
 
-    // 2. Update botInstalled status
-    await updateGuild(parseDiscordId(guild.id), { botInstalled: true });
-
-    logger.info(`✅ Guild ${guild.name} added to database with botInstalled = true`);
-
-    // 2. Fetch owner info
+    // Fetch owner info first (Discord API call)
     const owner = await guild.fetchOwner();
     logger.info(`📋 Fetched owner information for ${owner.user.tag}`);
 
-    // 3. Ensure owner exists in user database
-    await User.ensure(
-      parseDiscordId(owner.id),
-      owner.user.username,
-      owner.user.discriminator,
-      owner.user.displayAvatarURL()
-    );
-    logger.info(`👤 Ensured owner ${owner.user.tag} exists in database`);
+    // Wrap all DB operations in a single transaction
+    await prisma.$transaction(async (tx) => {
+      // 1. Ensure guild exists and is marked as installed
+      await tx.guild.upsert({
+        where: { id: guildId },
+        update: {
+          name: guild.name,
+          botInstalled: true,
+        },
+        create: {
+          id: guildId,
+          name: guild.name,
+          botInstalled: true,
+        },
+      });
 
-    // 4. Create default team roles
-    await Role.ensureDefaultRoles(parseDiscordId(guild.id));
-    logger.info(`🎭 Created default team roles for guild ${guild.name}`);
+      // 2. Ensure owner exists in user database
+      await tx.discordUser.upsert({
+        where: { id: ownerId },
+        update: {
+          username: owner.user.username,
+          discriminator: owner.user.discriminator,
+          avatarUrl: owner.user.displayAvatarURL(),
+        },
+        create: {
+          id: ownerId,
+          username: owner.user.username,
+          discriminator: owner.user.discriminator,
+          avatarUrl: owner.user.displayAvatarURL(),
+        },
+      });
 
-    // 5. Assign owner to admin role
-    const adminRole = await Role.getRoleByName(parseDiscordId(guild.id), "admin");
-    if (adminRole) {
-      await Role.assignRole(adminRole.id, parseDiscordId(owner.id));
-      logger.info(`👑 Assigned admin role to guild owner ${owner.user.tag}`);
-    }
+      // 3. Create default team roles (admin, support, viewer)
+      const adminRole = await tx.guildRole.upsert({
+        where: {
+          guildId_name: {
+            guildId: guildId,
+            name: "admin",
+          },
+        },
+        update: {
+          isDefault: true,
+          permissions: DefaultRolePermissions.admin,
+        },
+        create: {
+          guildId: guildId,
+          name: "admin",
+          color: "#5865F2",
+          position: 100,
+          isDefault: true,
+          permissions: DefaultRolePermissions.admin,
+        },
+      });
+
+      await tx.guildRole.upsert({
+        where: {
+          guildId_name: {
+            guildId: guildId,
+            name: "support",
+          },
+        },
+        update: {
+          isDefault: true,
+          permissions: DefaultRolePermissions.support,
+        },
+        create: {
+          guildId: guildId,
+          name: "support",
+          color: "#57F287",
+          position: 50,
+          isDefault: true,
+          permissions: DefaultRolePermissions.support,
+        },
+      });
+
+      await tx.guildRole.upsert({
+        where: {
+          guildId_name: {
+            guildId: guildId,
+            name: "viewer",
+          },
+        },
+        update: {
+          isDefault: true,
+          permissions: DefaultRolePermissions.viewer,
+        },
+        create: {
+          guildId: guildId,
+          name: "viewer",
+          color: "#99AAB5",
+          position: 10,
+          isDefault: true,
+          permissions: DefaultRolePermissions.viewer,
+        },
+      });
+
+      // 4. Assign owner to admin role
+      await tx.guildRoleMember.upsert({
+        where: {
+          discordId_guildRoleId: {
+            discordId: ownerId,
+            guildRoleId: adminRole.id,
+          },
+        },
+        update: {
+          assignedAt: new Date(),
+        },
+        create: {
+          discordId: ownerId,
+          guildRoleId: adminRole.id,
+          assignedById: null, // System assignment
+        },
+      });
+
+      logger.info(`✅ Database setup completed for guild ${guild.name}`);
+    });
 
     logger.info(
-      `✅ Completed setup for guild ${guild.name} - owner ${owner.user.tag} now has admin permissions`
+      `✅ Completed all setup for guild ${guild.name} - owner ${owner.user.tag} now has admin permissions`
     );
   } catch (error) {
     logger.error(`❌ Failed to complete setup for guild ${guild.name}:`, error);

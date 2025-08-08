@@ -131,22 +131,23 @@ export namespace TicketLifecycle {
         data: { totalTickets: ticketNumber },
       });
 
-      // TODO: Move event logging outside transaction or handle differently
-      // Previously used afterTransaction which ran after commit
-      // await Event.create({
-      //     guildId,
-      //     actorId: userId,
-      //     category: "TICKET",
-      //     action: "ticket.created",
-      //     targetType: "TICKET",
-      //     targetId: ticket.id.toString(),
-      //     ticketId: ticket.id,
-      //     metadata: {
-      //       ticketNumber: ticket.number,
-      //       panelId: parsed.panelId,
-      //       subject: parsed.subject,
-      //     },
-      // });
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: userId,
+          category: "TICKET",
+          action: "ticket.created",
+          targetType: "TICKET",
+          targetId: ticket.id.toString(),
+          ticketId: ticket.id,
+          metadata: {
+            ticketNumber: ticket.number,
+            panelId: parsed.panelId,
+            subject: parsed.subject,
+          },
+        },
+      });
 
       return ticket;
     });
@@ -214,17 +215,18 @@ export namespace TicketLifecycle {
         },
       });
 
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId,
-      // actorId: claimerId,
-      // category: "TICKET",
-      // action: "ticket.claimed",
-      // targetType: "TICKET",
-      // targetId: parsed.ticketId.toString(),
-      // ticketId: parsed.ticketId,
-      // });
-      // });
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: claimerId,
+          category: "TICKET",
+          action: "ticket.claimed",
+          targetType: "TICKET",
+          targetId: parsed.ticketId.toString(),
+          ticketId: parsed.ticketId,
+        },
+      });
 
       return updated;
     });
@@ -292,17 +294,18 @@ export namespace TicketLifecycle {
         },
       });
 
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId,
-      // actorId: performedById,
-      // category: "TICKET",
-      // action: "ticket.unclaimed",
-      // targetType: "TICKET",
-      // targetId: parsed.ticketId.toString(),
-      // ticketId: parsed.ticketId,
-      // });
-      // });
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: performedById,
+          category: "TICKET",
+          action: "ticket.unclaimed",
+          targetType: "TICKET",
+          targetId: parsed.ticketId.toString(),
+          ticketId: parsed.ticketId,
+        },
+      });
 
       return updated;
     });
@@ -361,21 +364,22 @@ export namespace TicketLifecycle {
         },
       });
 
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId,
-      // actorId: closedById,
-      // category: "TICKET",
-      // action: "ticket.closed",
-      // targetType: "TICKET",
-      // targetId: parsed.ticketId.toString(),
-      // ticketId: parsed.ticketId,
-      // metadata: {
-      // reason: parsed.reason,
-      // deleteChannel: parsed.deleteChannel,
-      // },
-      // });
-      // });
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: closedById,
+          category: "TICKET",
+          action: "ticket.closed",
+          targetType: "TICKET",
+          targetId: parsed.ticketId.toString(),
+          ticketId: parsed.ticketId,
+          metadata: {
+            reason: parsed.reason,
+            deleteChannel: parsed.deleteChannel,
+          },
+        },
+      });
 
       return updated;
     });
@@ -431,20 +435,21 @@ export namespace TicketLifecycle {
         },
       });
 
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId,
-      // actorId: reopenedById,
-      // category: "TICKET",
-      // action: "ticket.reopened",
-      // targetType: "TICKET",
-      // targetId: parsed.ticketId.toString(),
-      // ticketId: parsed.ticketId,
-      // metadata: {
-      // reason: parsed.reason,
-      // },
-      // });
-      // });
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: reopenedById,
+          category: "TICKET",
+          action: "ticket.reopened",
+          targetType: "TICKET",
+          targetId: parsed.ticketId.toString(),
+          ticketId: parsed.ticketId,
+          metadata: {
+            reason: parsed.reason,
+          },
+        },
+      });
 
       return updated;
     });
@@ -567,25 +572,26 @@ export namespace TicketLifecycle {
         },
       });
 
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: input.requestedById,
+          category: "TICKET",
+          action: "ticket.close_requested",
+          targetType: "TICKET",
+          targetId: input.ticketId.toString(),
+          ticketId: input.ticketId,
+          metadata: {
+            reason: input.reason,
+            autoCloseHours: input.autoCloseHours,
+            closeRequestId,
+          },
+        },
+      });
+
       // With pg_cron, we don't need to track job IDs
       const autoCloseJobId: string | null = null;
-
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId,
-      // actorId: input.requestedById,
-      // category: "TICKET",
-      // action: "ticket.close_requested",
-      // targetType: "TICKET",
-      // targetId: input.ticketId.toString(),
-      // ticketId: input.ticketId,
-      // metadata: {
-      // reason: input.reason,
-      // autoCloseHours: input.autoCloseHours,
-      // closeRequestId,
-      // },
-      // });
-      // });
 
       return { closeRequestId, autoCloseJobId };
     });
@@ -647,19 +653,20 @@ export namespace TicketLifecycle {
         },
       });
 
-      // With pg_cron, cancellation happens automatically when we clear autoCloseAt
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId,
+          actorId: cancelledById,
+          category: "TICKET",
+          action: "ticket.close_request_cancelled",
+          targetType: "TICKET",
+          targetId: ticketId.toString(),
+          ticketId,
+        },
+      });
 
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId,
-      // actorId: cancelledById,
-      // category: "TICKET",
-      // action: "ticket.close_request_cancelled",
-      // targetType: "TICKET",
-      // targetId: ticketId.toString(),
-      // ticketId,
-      // });
-      // });
+      // With pg_cron, cancellation happens automatically when we clear autoCloseAt
     });
   };
 
@@ -718,20 +725,21 @@ export namespace TicketLifecycle {
         },
       });
 
-      // TODO: Move event logging outside transaction
-      // await Event.create({
-      // guildId: ticket.guildId,
-      // actorId: closedById,
-      // category: "TICKET",
-      // action: "ticket.auto_closed",
-      // targetType: "TICKET",
-      // targetId: ticketId.toString(),
-      // ticketId,
-      // metadata: {
-      // closeRequestId: ticket.closeRequestId,
-      // },
-      // });
-      // });
+      // Log event IN transaction for consistency
+      await tx.event.create({
+        data: {
+          guildId: ticket.guildId,
+          actorId: closedById,
+          category: "TICKET",
+          action: "ticket.auto_closed",
+          targetType: "TICKET",
+          targetId: ticketId.toString(),
+          ticketId,
+          metadata: {
+            closeRequestId: ticket.closeRequestId,
+          },
+        },
+      });
 
       return updated;
     });

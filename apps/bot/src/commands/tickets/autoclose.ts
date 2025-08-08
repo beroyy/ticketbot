@@ -13,7 +13,7 @@ import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { withTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
 
 export class AutoCloseCommand extends TicketCommandBase {

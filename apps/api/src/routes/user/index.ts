@@ -1,16 +1,9 @@
-import type { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
-import { Redis, createLogger } from "@ticketsbot/core";
+import { createLogger } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains/account";
-import { Actor } from "@ticketsbot/core/context";
-import { createRoute, successResponse } from "../../factory";
-import { ApiErrors } from "../../utils/error-handler";
+import { createRoute } from "../../factory";
 import { compositions } from "../../middleware/context";
-import { SetPreferenceSchema, type _PreferenceResponse, getPreferenceKey } from "./schemas";
 
 const logger = createLogger("api:user");
-
-const PREFERENCE_TTL = 60 * 60 * 24 * 30; // 30 days
 
 export const userRoutes = createRoute()
   .get("/", ...compositions.authenticated, async (c) => {
@@ -61,97 +54,4 @@ export const userRoutes = createRoute()
         account: discordAccount,
       },
     });
-  })
-
-  .get("/preferences/:key", ...compositions.authenticated, async (c) => {
-    const key = c.req.param("key");
-    const actor = Actor.use();
-
-    if (actor.type !== "web_user") {
-      throw ApiErrors.badRequest("Invalid user context");
-    }
-
-    if (!actor.properties.discordId) {
-      return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
-    }
-
-    if (!Redis.isAvailable()) {
-      return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
-    }
-
-    try {
-      const value = await Redis.withRetry(async (client) => {
-        const redisKey = getPreferenceKey(actor.properties.discordId!, key);
-        const data = await client.get(redisKey);
-        return data ? JSON.parse(data) : null;
-      }, "get-preference");
-
-      return c.json({ value } satisfies z.infer<typeof _PreferenceResponse>);
-    } catch (error) {
-      logger.error("Failed to get preference:", error);
-      return c.json({ value: null } satisfies z.infer<typeof _PreferenceResponse>);
-    }
-  })
-
-  .post(
-    "/preferences",
-    ...compositions.authenticated,
-    zValidator("json", SetPreferenceSchema),
-    async (c) => {
-      const { key, value } = c.req.valid("json");
-      const actor = Actor.use();
-
-      if (actor.type !== "web_user") {
-        throw ApiErrors.badRequest("Invalid user context");
-      }
-
-      if (!actor.properties.discordId) {
-        return c.json(successResponse());
-      }
-
-      if (!Redis.isAvailable()) {
-        return c.json(successResponse());
-      }
-
-      try {
-        await Redis.withRetry(async (client) => {
-          const redisKey = getPreferenceKey(actor.properties.discordId!, key);
-          await client.setEx(redisKey, PREFERENCE_TTL, JSON.stringify(value));
-        }, "set-preference");
-
-        return c.json(successResponse());
-      } catch (error) {
-        logger.error("Failed to set preference:", error);
-        throw ApiErrors.internal("Failed to save preference");
-      }
-    }
-  )
-
-  .delete("/preferences/:key", ...compositions.authenticated, async (c) => {
-    const key = c.req.param("key");
-    const actor = Actor.use();
-
-    if (actor.type !== "web_user") {
-      throw ApiErrors.badRequest("Invalid user context");
-    }
-
-    if (!actor.properties.discordId) {
-      return c.json(successResponse());
-    }
-
-    if (!Redis.isAvailable()) {
-      return c.json(successResponse());
-    }
-
-    try {
-      await Redis.withRetry(async (client) => {
-        const redisKey = getPreferenceKey(actor.properties.discordId!, key);
-        await client.del(redisKey);
-      }, "delete-preference");
-
-      return c.json(successResponse());
-    } catch (error) {
-      logger.error("Failed to delete preference:", error);
-      throw ApiErrors.internal("Failed to delete preference");
-    }
   });

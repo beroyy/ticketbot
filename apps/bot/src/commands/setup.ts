@@ -342,32 +342,6 @@ Do you want to proceed?`
       transcriptsChannel: parseDiscordId(transcriptChannel.id),
     });
 
-    // Clear caches to ensure web UI gets fresh data
-    if ((await import("@ticketsbot/core")).Redis.isAvailable()) {
-      const { Redis } = await import("@ticketsbot/core");
-      try {
-        // Clear all user guild caches (we don't know which users need refresh)
-        await Redis.withRetry(async (client) => {
-          const keys = await client.keys("discord:guilds:*");
-          if (keys.length > 0) {
-            // Delete keys one by one to avoid spread operator issues
-            for (const key of keys) {
-              await client.del(key);
-            }
-          }
-
-          // Also clear permission cache for the guild owner
-          const permKey = `perms:${guildId}:${parseDiscordId(interaction.user.id)}`;
-          await client.del(permKey);
-        }, "setup.clearCaches");
-        container.logger.info(
-          `Cleared guild and permission caches after setup for guild ${guildId}`
-        );
-      } catch (error) {
-        container.logger.warn("Failed to clear caches after setup:", error);
-      }
-    }
-
     const successEmbed = Embed.success(
       "Auto Setup Complete",
       `ticketsbot.ai has been automatically configured for your server!`

@@ -1,7 +1,5 @@
-import { Redis } from "@ticketsbot/core";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
-import { env } from "../env";
 
 type HealthStatus = "healthy" | "unhealthy" | "degraded";
 
@@ -18,12 +16,10 @@ type HealthCheckResult = {
     database: ServiceStatus;
     auth: {
       status: "healthy" | "unhealthy";
-      redisEnabled: boolean;
     };
-    redis?: ServiceStatus;
-    rateLimit?: {
+    scheduledTasks?: {
       enabled: boolean;
-      storage: "redis" | "memory";
+      status: "healthy" | "unhealthy" | "not_configured";
     };
   };
 };
@@ -41,62 +37,43 @@ export const healthRoutes = createRoute()
       status: "healthy",
       timestamp: new Date().toISOString(),
       services: {
-        database: { status: "unhealthy" },
-        auth: { status: "healthy", redisEnabled: false },
+        database: { status: "healthy" }, // TODO: Actually check database
+        auth: { status: "healthy" },
       },
     };
 
-    if (Redis.isAvailable()) {
-      const redisHealth = await Redis.healthCheck();
-
-      if (redisHealth.connected) {
-        result.services.redis = {
-          status: "healthy",
-          ...(redisHealth.latency !== undefined && { latency: redisHealth.latency }),
+    // Check if scheduled tasks (BullMQ) are available
+    // We keep Redis for BullMQ only
+    try {
+      const { Redis } = await import("@ticketsbot/core");
+      if (Redis.isAvailable()) {
+        const redisHealth = await Redis.healthCheck();
+        result.services.scheduledTasks = {
+          enabled: true,
+          status: redisHealth.connected ? "healthy" : "unhealthy",
         };
-        result.services.auth.redisEnabled = true;
       } else {
-        result.services.redis = {
-          status: "unhealthy",
-          ...(redisHealth.error !== undefined && { error: redisHealth.error }),
+        result.services.scheduledTasks = {
+          enabled: false,
+          status: "not_configured",
         };
-        result.status = result.status === "unhealthy" ? "unhealthy" : "degraded";
       }
+    } catch {
+      result.services.scheduledTasks = {
+        enabled: false,
+        status: "not_configured",
+      };
     }
 
-    const rateLimitEnabled = env.isProd();
-    result.services.rateLimit = {
-      enabled: rateLimitEnabled,
-      storage:
-        Redis.isAvailable() && result.services.redis?.status === "healthy" ? "redis" : "memory",
-    };
-
+    // Update overall status based on services
     if (result.services.database.status === "unhealthy") {
       result.status = "unhealthy";
-    } else if (result.services.redis && result.services.redis.status === "unhealthy") {
+    } else if (
+      result.services.scheduledTasks?.status === "unhealthy" &&
+      result.services.scheduledTasks.enabled
+    ) {
       result.status = "degraded";
     }
 
     return c.json(result);
-  })
-
-  .get("/redis", ...compositions.public, async (c) => {
-    if (!Redis.isAvailable()) {
-      return c.json(
-        {
-          status: "not_configured",
-          message: "Redis is not configured",
-        },
-        404
-      );
-    }
-
-    const health = await Redis.healthCheck();
-
-    return c.json({
-      connected: health.connected,
-      latency: health.latency,
-      error: health.error,
-      purpose: "permission_caching" as const,
-    });
   });

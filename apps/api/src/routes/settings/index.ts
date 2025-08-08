@@ -3,42 +3,10 @@ import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
 import { UpdateSettingsSchema } from "@ticketsbot/core/domains/guild";
 import { Guild, Role } from "@ticketsbot/core/domains";
-import { createRoute } from "../factory";
-import { ApiErrors } from "../utils/error-handler";
-import { compositions, requirePermission } from "../middleware/context";
-
-const defaultSettings = (guildId: string) => ({
-  id: guildId,
-  settings: {
-    transcriptsChannel: null,
-    logChannel: null,
-    defaultTicketMessage: null,
-    ticketCategories: [],
-    supportRoles: [],
-    ticketNameFormat: "ticket-{number}",
-    allowUserClose: true,
-  },
-  footer: {
-    text: null,
-    link: null,
-  },
-  colors: {
-    primary: "#5865F2",
-    success: "#57F287",
-    error: "#ED4245",
-  },
-  branding: {
-    name: "Support",
-    logo: null,
-    banner: null,
-  },
-  tags: [],
-  metadata: {
-    totalTickets: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-});
+import { createRoute } from "../../factory";
+import { ApiErrors } from "../../utils/error-handler";
+import { compositions, requirePermission } from "../../middleware/context";
+import { defaultSettings } from "./schemas";
 
 export const settingsRoutes = createRoute()
   .get(

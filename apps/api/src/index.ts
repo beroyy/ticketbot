@@ -8,7 +8,6 @@ import type { AppEnv } from "./factory";
 import { errorHandler } from "./utils/error-handler";
 import { authRoutes } from "./routes/auth";
 import { healthRoutes } from "./routes/health";
-import { schemaRoutes } from "./routes/schemas";
 import { userRoutes } from "./routes/user";
 import { discordRoutes } from "./routes/discord";
 import { panelRoutes } from "./routes/panels";
@@ -81,7 +80,6 @@ app.on(["POST", "GET"], "/auth/*", async (c) => {
 const _routes = app
   .route("/auth", authRoutes)
   .route("/health", healthRoutes)
-  .route("/schemas", schemaRoutes)
   .route("/user", userRoutes)
   .route("/discord", discordRoutes)
   .route("/panels", panelRoutes)

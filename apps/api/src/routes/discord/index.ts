@@ -2,58 +2,18 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
-import { Account, Role, User, findById as findGuildById } from "@ticketsbot/core/domains";
+import { Role, User, findById as findGuildById } from "@ticketsbot/core/domains";
 import { ensure as ensureGuild } from "@ticketsbot/core/domains/guild";
 import { createLogger } from "@ticketsbot/core";
-import { createRoute } from "../factory";
-import { ApiErrors } from "../utils/error-handler";
-import { compositions } from "../middleware/context";
+import { createRoute } from "../../factory";
+import { ApiErrors } from "../../utils/error-handler";
+import { compositions } from "../../middleware/context";
+import type { GuildsListResponse, GuildSyncResponse, GuildDetailResponse } from "./schemas";
+import { getDiscordAccount, fetchDiscordAPI, MANAGE_GUILD_PERMISSION } from "./helpers";
 
 const logger = createLogger("api:discord");
 
-const GuildResponse = z.object({
-  id: z.string(),
-  name: z.string(),
-  icon: z.string().nullable(),
-  owner: z.boolean(),
-  permissions: z.string(),
-  features: z.array(z.string()),
-  botInstalled: z.boolean().optional(),
-  botConfigured: z.boolean().optional(),
-});
-
-const _GuildsListResponse = z.object({
-  guilds: z.array(GuildResponse),
-  connected: z.boolean(),
-  error: z.string().nullable(),
-  code: z.string().nullable(),
-});
-
-const _GuildDetailResponse = z.object({
-  id: z.string(),
-  name: z.string(),
-  icon: z.string().nullable(),
-  description: z.string().optional(),
-  features: z.array(z.string()),
-  botInstalled: z.boolean(),
-  botConfigured: z.boolean(),
-});
-
-const _ChannelResponse = z.object({
-  id: z.string().nullable(),
-  name: z.string(),
-  type: z.number().nullable(),
-  parentId: z.string().nullable(),
-});
-
-const _GuildSyncResponse = z.object({
-  success: z.boolean(),
-  syncedCount: z.number(),
-  totalAdminGuilds: z.number(),
-  errors: z.array(z.string()).optional(),
-});
-
-interface DiscordGuild {
+type DiscordGuild = {
   id: string;
   name: string;
   icon: string | null;
@@ -61,84 +21,6 @@ interface DiscordGuild {
   owner?: boolean;
   features?: string[];
   description?: string;
-}
-
-const MANAGE_GUILD_PERMISSION = BigInt(0x20);
-const DISCORD_API_BASE = "https://discord.com/api/v10";
-const USER_AGENT = "ticketsbot.ai (https://github.com/yourusername/ticketsbot-ai, 1.0.0)";
-
-const getDiscordAccount = async (userId: string) => {
-  const account = await Account.getDiscordAccount(userId);
-
-  if (!account?.accessToken) {
-    return { error: "Discord account not connected", code: "DISCORD_NOT_CONNECTED" };
-  }
-
-  if (account.accessTokenExpiresAt && account.accessTokenExpiresAt < new Date()) {
-    return {
-      error: "Discord token expired, please re-authenticate",
-      code: "DISCORD_TOKEN_EXPIRED",
-    };
-  }
-
-  return { account };
-};
-
-const fetchDiscordAPI = async (path: string, accessToken: string) => {
-  logger.debug("Making Discord API request", {
-    path,
-    hasToken: !!accessToken,
-  });
-
-  try {
-    const response = await fetch(`${DISCORD_API_BASE}${path}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "User-Agent": USER_AGENT,
-      },
-    });
-
-    logger.debug("Discord API response", {
-      path,
-      status: response.status,
-      statusText: response.statusText,
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      logger.error("Discord API request failed", {
-        path,
-        status: response.status,
-        statusText: response.statusText,
-        errorBody,
-      });
-
-      if (response.status === 401) {
-        return {
-          error: "Discord token invalid, please re-authenticate",
-          code: "DISCORD_TOKEN_INVALID",
-        };
-      }
-      if (response.status === 404) {
-        throw ApiErrors.notFound("Resource");
-      }
-      throw new Error(`Discord API error: ${response.status} - ${errorBody}`);
-    }
-
-    const data = await response.json();
-    logger.debug("Discord API request successful", {
-      path,
-      dataLength: Array.isArray(data) ? data.length : 1,
-    });
-
-    return { data };
-  } catch (error) {
-    logger.error("Discord API request exception", {
-      path,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
 };
 
 export const discordRoutes = createRoute()
@@ -163,7 +45,7 @@ export const discordRoutes = createRoute()
         connected: false,
         error: accountResult.error ?? null,
         code: accountResult.code ?? null,
-      } satisfies z.infer<typeof _GuildsListResponse>);
+      } satisfies z.infer<typeof GuildsListResponse>);
     }
 
     logger.debug("Discord account found", {
@@ -176,7 +58,7 @@ export const discordRoutes = createRoute()
     const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
 
     let allGuilds: any[] = [];
-    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    const CACHE_TTL = 5 * 60 * 1000;
 
     if (discordUser?.guilds && typeof discordUser.guilds === "object") {
       const guildsData = discordUser.guilds as any;
@@ -205,7 +87,7 @@ export const discordRoutes = createRoute()
           connected: false,
           error: result.error ?? null,
           code: result.code ?? null,
-        } satisfies z.infer<typeof _GuildsListResponse>);
+        } satisfies z.infer<typeof GuildsListResponse>);
       }
 
       const guilds = result.data as DiscordGuild[];
@@ -269,7 +151,7 @@ export const discordRoutes = createRoute()
       connected: true,
       error: null,
       code: null,
-    } satisfies z.infer<typeof _GuildsListResponse>);
+    } satisfies z.infer<typeof GuildsListResponse>);
   })
 
   .post("/guilds/sync", ...compositions.authenticated, async (c) => {
@@ -292,7 +174,7 @@ export const discordRoutes = createRoute()
           syncedCount: 0,
           totalAdminGuilds: 0,
           errors: [accountResult.error || "Discord account not connected"],
-        } satisfies z.infer<typeof _GuildSyncResponse>,
+        } satisfies z.infer<typeof GuildSyncResponse>,
         400
       );
     }
@@ -322,7 +204,7 @@ export const discordRoutes = createRoute()
             syncedCount: 0,
             totalAdminGuilds: 0,
             errors: [result.error || "Failed to fetch guilds from Discord"],
-          } satisfies z.infer<typeof _GuildSyncResponse>,
+          } satisfies z.infer<typeof GuildSyncResponse>,
           500
         );
       }
@@ -426,7 +308,7 @@ export const discordRoutes = createRoute()
       syncedCount,
       totalAdminGuilds: adminGuilds.length,
       errors: errors.length > 0 ? errors : undefined,
-    } satisfies z.infer<typeof _GuildSyncResponse>);
+    } satisfies z.infer<typeof GuildSyncResponse>);
   })
 
   .get(
@@ -464,7 +346,7 @@ export const discordRoutes = createRoute()
         features: guild.features || [],
         botInstalled,
         botConfigured,
-      } satisfies z.infer<typeof _GuildDetailResponse>);
+      } satisfies z.infer<typeof GuildDetailResponse>);
     }
   )
 

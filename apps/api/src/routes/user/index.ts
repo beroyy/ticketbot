@@ -1,35 +1,16 @@
-import { z } from "zod";
+import type { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Redis, createLogger } from "@ticketsbot/core";
 import { Account } from "@ticketsbot/core/domains";
 import { Actor } from "@ticketsbot/core/context";
-import { createRoute, successResponse } from "../factory";
-import { ApiErrors } from "../utils/error-handler";
-import { compositions } from "../middleware/context";
+import { createRoute, successResponse } from "../../factory";
+import { ApiErrors } from "../../utils/error-handler";
+import { compositions } from "../../middleware/context";
+import { SetPreferenceSchema, type _PreferenceResponse, getPreferenceKey } from "./schemas";
 
 const logger = createLogger("api:user");
 
 const PREFERENCE_TTL = 60 * 60 * 24 * 30; // 30 days
-
-const PreferenceKeySchema = z
-  .string()
-  .min(1)
-  .max(50)
-  .regex(
-    /^[a-zA-Z0-9_-]+$/,
-    "Preference key must contain only alphanumeric characters, underscores, and hyphens"
-  );
-
-const SetPreferenceSchema = z.object({
-  key: PreferenceKeySchema,
-  value: z.any(),
-});
-
-const _PreferenceResponse = z.object({
-  value: z.any().nullable(),
-});
-
-const getPreferenceKey = (discordId: string, key: string) => `preferences:user:${discordId}:${key}`;
 
 export const userRoutes = createRoute()
   .get("/", ...compositions.authenticated, async (c) => {

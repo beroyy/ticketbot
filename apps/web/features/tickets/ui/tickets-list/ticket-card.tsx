@@ -30,7 +30,6 @@ export function TicketCard({ ticket, isSelected, onClick }: TicketCardProps) {
       style={isSelected ? TICKET_CARD_STYLES.SELECTED : TICKET_CARD_STYLES.DEFAULT}
       onClick={onClick}
     >
-      {/* Header with ID, Date, and Assignee */}
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <EmojiProgressIcon
@@ -52,7 +51,6 @@ export function TicketCard({ ticket, isSelected, onClick }: TicketCardProps) {
         />
       </div>
 
-      {/* Type and Status */}
       <div className="mb-4 flex items-center space-x-3.5">
         <div className="-ml-1.5 flex items-center space-x-0.5">
           <div className="flex size-10 items-center justify-center rounded">
@@ -63,7 +61,6 @@ export function TicketCard({ ticket, isSelected, onClick }: TicketCardProps) {
         <StatusBadge status={ticket.status} />
       </div>
 
-      {/* Bottom Info Grid */}
       <TicketInfoGrid
         urgency={ticket.urgency || DEFAULT_URGENCY}
         awaitingResponse={ticket.awaitingResponse}

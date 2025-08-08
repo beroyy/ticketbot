@@ -37,12 +37,16 @@
   --color-dark-faded-blue: hsla(214, 75%, 25%, 1);
   --color-strong-blue: hsla(214, 60%, 17%, 1);
 
+  --color-light-blurple: hsla(240, 62%, 69%, 1);
+
   --color-strong-black: hsla(222, 33%, 8%, 1);
 
   /* Border radius */
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);
   --radius-sm: calc(0.5rem - 4px);
+  --radius-10: 10rem;
+  --radius-20: 20px;
 
   /* Letter spacing */
   --letter-spacing-subtle: 0.01em;

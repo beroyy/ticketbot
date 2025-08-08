@@ -32,11 +32,9 @@ export async function fetchUserGuilds(req: IncomingMessage): Promise<Guild[]> {
   const api = createServerApiClient(req);
 
   try {
-    console.log("Fetching user guilds from API...");
     const response = await api.discord.guilds.$get();
     if (response.ok) {
       const data = await response.json();
-      console.log(`Successfully fetched ${data.guilds?.length || 0} guilds`);
       return data.guilds.map((g: any) => ({
         id: g.id,
         name: g.name,
@@ -46,10 +44,8 @@ export async function fetchUserGuilds(req: IncomingMessage): Promise<Guild[]> {
         setupRequired: g.botInstalled && !g.botConfigured,
       }));
     }
-    console.error("Failed to fetch guilds - status:", response.status);
     return [];
-  } catch (error) {
-    console.error("Failed to fetch guilds - error:", error);
+  } catch {
     return [];
   }
 }

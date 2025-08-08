@@ -38,8 +38,6 @@ export function withPublicRoute(): GetServerSideProps<BaseAuthProps> {
           permanent: false,
         },
       };
-    } else {
-      console.log("🚨 🚨 🚨 no session!");
     }
 
     return {

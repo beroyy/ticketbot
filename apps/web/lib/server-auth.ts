@@ -35,7 +35,9 @@ export async function getServerSession(req: IncomingMessage): Promise<ServerSess
     const cookies = req.headers.cookie.split(";").reduce(
       (acc, cookie) => {
         const [key, value] = cookie.trim().split("=");
-        acc[key] = value;
+        if (key && value) {
+          acc[key] = value;
+        }
         return acc;
       },
       {} as Record<string, string>
@@ -68,11 +70,11 @@ export async function getServerSession(req: IncomingMessage): Promise<ServerSess
       }
 
       return null;
-    } catch (error) {
+    } catch {
       // Failed to parse session data
       return null;
     }
-  } catch (error) {
+  } catch {
     return null;
   }
 }

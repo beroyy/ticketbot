@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "dev": "tsx watch --import ./src/load-env.ts src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint --config eslint.config.js src/",

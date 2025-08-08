@@ -14,20 +14,20 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "dotenvx run -- turbo build",
     "clean": "turbo run clean && rm -rf node_modules/.cache/turbo",
-    "db:generate": "dotenv -- pnpm --filter @ticketsbot/db db:generate",
-    "db:migrate": "dotenv -- pnpm --filter @ticketsbot/db db:migrate",
-    "db:push": "dotenv -- pnpm --filter @ticketsbot/db db:push",
-    "db:push:force": "dotenv -- pnpm --filter @ticketsbot/db db:push:force",
-    "db:seed": "tsx packages/scripts/src/db/seed.ts",
-    "db:studio": "dotenv -- pnpm --filter @ticketsbot/db db:studio",
-    "db:reset": "dotenv -- pnpm --filter @ticketsbot/db db:reset",
-    "dev": "tsx packages/scripts/src/dev/start-dev.ts",
+    "db:generate": "dotenvx run -- pnpm --filter @ticketsbot/db db:generate",
+    "db:migrate": "dotenvx run -- pnpm --filter @ticketsbot/db db:migrate",
+    "db:push": "dotenvx run -- pnpm --filter @ticketsbot/db db:push",
+    "db:push:force": "dotenvx run -- pnpm --filter @ticketsbot/db db:push:force",
+    "db:seed": "dotenvx run -- tsx packages/scripts/src/db/seed.ts",
+    "db:studio": "dotenvx run -- pnpm --filter @ticketsbot/db db:studio",
+    "db:reset": "dotenvx run -- pnpm --filter @ticketsbot/db db:reset",
+    "dev": "dotenvx run -- turbo dev",
     "docker": "docker compose up --build",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "lint": "turbo run lint -- --fix",
-    "start": "turbo run start",
+    "start": "dotenvx run -- turbo start",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
@@ -42,10 +42,10 @@
     "@prisma/adapter-neon": "^6.12.0"
   },
   "devDependencies": {
+    "@dotenvx/dotenvx": "^1.48.4",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^24.0.14",
     "concurrently": "^9.2.0",
-    "dotenv-cli": "^9.0.0",
     "eslint": "^9.31.0",
     "neonctl": "^2.12.0",
     "prettier": "^3.6.2",

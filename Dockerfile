@@ -30,4 +30,4 @@ EXPOSE 3000 3001 3002
 
 ENV NODE_ENV=production
 
-CMD ["pnpm", "start:production"]
+CMD ["pnpm", "start"]

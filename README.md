@@ -335,7 +335,7 @@ Automated code quality checks on push/PR to `main` branch:
 ### Deployment
 
 **Web (Vercel):** Auto-deploys from `main` branch  
-**API & Bot:** Manual deployment via `pnpm start:production`
+**API & Bot:** Manual deployment via `pnpm start`
 
 Production startup handles:
 

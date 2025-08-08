@@ -1,5 +1,12 @@
 import { BitField } from "@sapphire/bitfield";
-import { PermissionFlags, ALL_PERMISSIONS, type PermissionFlag } from "./constants";
+import {
+  PermissionFlags,
+  ALL_PERMISSIONS,
+  DefaultRolePermissions,
+  type PermissionFlag,
+} from "./constants";
+
+export { ALL_PERMISSIONS, DefaultRolePermissions };
 
 const createBitField = () => new BitField(PermissionFlags);
 

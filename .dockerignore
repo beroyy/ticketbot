@@ -61,3 +61,6 @@ docs
 
 # Package manager
 .pnpm-store
+
+# Web
+apps/web

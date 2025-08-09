@@ -5,8 +5,6 @@ import type { Message } from "discord.js";
 import { prisma } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 
-const ROLE_PREFIX = "Tickets ";
-
 // Helper to serialize embeds
 const serializeEmbeds = (embeds: any[]) =>
   embeds.length > 0 ? JSON.stringify(embeds.map((embed) => embed.toJSON())) : null;
@@ -37,7 +35,6 @@ export const MessageCreateListener = ListenerFactory.on(
 
       const messageId = parseDiscordId(message.id);
       const authorId = parseDiscordId(message.author.id);
-      const guildId = message.guildId!;
 
       // Wrap transcript storage and event logging in transaction
       await prisma.$transaction(async (tx) => {

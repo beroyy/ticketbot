@@ -53,7 +53,7 @@ export const AddSupportCommand = createCommand({
       }
 
       // Run database operations in transaction
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (_tx) => {
         // Ensure user exists
         await User.ensure(
           userId,

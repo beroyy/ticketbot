@@ -244,15 +244,16 @@ export namespace Role {
    */
   export const assignRole = async (
     roleId: number,
-    targetUserId: string
+    targetUserId: string,
+    options?: { tx?: any }
   ): Promise<{ member: GuildRoleMember; role: { id: number; name: string; guildId: string } }> => {
     Actor.requirePermission(PermissionFlags.ROLE_ASSIGN);
     const guildId = Actor.guildId();
     const assignedById = Actor.userId();
 
-    return prisma.$transaction(async (tx) => {
+    const operation = async (client: any) => {
       // Verify role belongs to guild
-      const role = await tx.guildRole.findUnique({
+      const role = await client.guildRole.findUnique({
         where: { id: roleId },
         select: { id: true, guildId: true, name: true },
       });
@@ -261,7 +262,7 @@ export namespace Role {
         throw new Error("Role not found");
       }
 
-      const member = await tx.guildRoleMember.upsert({
+      const member = await client.guildRoleMember.upsert({
         where: {
           discordId_guildRoleId: {
             discordId: targetUserId,
@@ -283,7 +284,14 @@ export namespace Role {
       console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
 
       return { member, role };
-    });
+    };
+
+    // If transaction client provided, use it. Otherwise create new transaction
+    if (options?.tx) {
+      return operation(options.tx);
+    } else {
+      return prisma.$transaction(async (tx) => operation(tx));
+    }
   };
 
   /**
@@ -293,15 +301,16 @@ export namespace Role {
    */
   export const removeRole = async (
     roleId: number,
-    targetUserId: string
+    targetUserId: string,
+    options?: { tx?: any }
   ): Promise<{ removed: boolean; role: { id: number; name: string; guildId: string } }> => {
     Actor.requirePermission(PermissionFlags.ROLE_ASSIGN);
     const guildId = Actor.guildId();
     const removedById = Actor.userId();
 
-    return prisma.$transaction(async (tx) => {
+    const operation = async (client: any) => {
       // Verify role belongs to guild
-      const role = await tx.guildRole.findUnique({
+      const role = await client.guildRole.findUnique({
         where: { id: roleId },
         select: { id: true, guildId: true, name: true },
       });
@@ -311,7 +320,7 @@ export namespace Role {
       }
 
       try {
-        await tx.guildRoleMember.delete({
+        await client.guildRoleMember.delete({
           where: {
             discordId_guildRoleId: {
               discordId: targetUserId,
@@ -323,11 +332,18 @@ export namespace Role {
         // TODO: Add event logging when eventLog model is available
         console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
         return { removed: true, role };
-      } catch (error) {
+      } catch (_error) {
         // Role assignment might not exist
         return { removed: false, role };
       }
-    });
+    };
+
+    // If transaction client provided, use it. Otherwise create new transaction
+    if (options?.tx) {
+      return operation(options.tx);
+    } else {
+      return prisma.$transaction(async (tx) => operation(tx));
+    }
   };
 
   /**
@@ -335,7 +351,7 @@ export namespace Role {
    * Requires ROLE_CREATE permission
    * Returns created or existing role IDs
    */
-  export const ensureDefaultRoles = async (): Promise<{
+  export const ensureDefaultRoles = async (options?: { tx?: any }): Promise<{
     adminRoleId: number;
     supportRoleId: number;
     viewerRoleId: number;
@@ -343,9 +359,9 @@ export namespace Role {
     Actor.requirePermission(PermissionFlags.ROLE_CREATE);
     const guildId = Actor.guildId();
 
-    return prisma.$transaction(async (tx) => {
+    const operation = async (client: any) => {
       // Check if admin role exists
-      let adminRole = await tx.guildRole.findFirst({
+      let adminRole = await client.guildRole.findFirst({
         where: {
           guildId,
           name: "admin",
@@ -354,7 +370,7 @@ export namespace Role {
       });
 
       if (!adminRole) {
-        adminRole = await tx.guildRole.create({
+        adminRole = await client.guildRole.create({
           data: {
             guildId,
             name: "admin",
@@ -367,7 +383,7 @@ export namespace Role {
       }
 
       // Check if support role exists
-      let supportRole = await tx.guildRole.findFirst({
+      let supportRole = await client.guildRole.findFirst({
         where: {
           guildId,
           name: "support",
@@ -376,7 +392,7 @@ export namespace Role {
       });
 
       if (!supportRole) {
-        supportRole = await tx.guildRole.create({
+        supportRole = await client.guildRole.create({
           data: {
             guildId,
             name: "support",
@@ -389,7 +405,7 @@ export namespace Role {
       }
 
       // Check if viewer role exists
-      let viewerRole = await tx.guildRole.findFirst({
+      let viewerRole = await client.guildRole.findFirst({
         where: {
           guildId,
           name: "viewer",
@@ -398,7 +414,7 @@ export namespace Role {
       });
 
       if (!viewerRole) {
-        viewerRole = await tx.guildRole.create({
+        viewerRole = await client.guildRole.create({
           data: {
             guildId,
             name: "viewer",
@@ -415,7 +431,14 @@ export namespace Role {
         supportRoleId: supportRole.id,
         viewerRoleId: viewerRole.id,
       };
-    });
+    };
+
+    // If transaction client provided, use it. Otherwise create new transaction
+    if (options?.tx) {
+      return operation(options.tx);
+    } else {
+      return prisma.$transaction(async (tx) => operation(tx));
+    }
   };
 
   /**

@@ -1,5 +1,3 @@
-import { withTransaction } from "@ticketsbot/core/context";
-import { prisma } from "@ticketsbot/db";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generatePanelData } from "./utils";
@@ -24,7 +22,7 @@ export class PanelSeeder {
 
     const panelIds: number[] = [];
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       // Create static panels first
       const staticPanels = [
         {
@@ -54,7 +52,7 @@ export class PanelSeeder {
         const channelId = this.snowflake.generate();
         const categoryId = this.snowflake.generate();
 
-        const panel = await prisma.panel.create({
+        const panel = await tx.panel.create({
           data: {
             guildId,
             type: template.type,
@@ -83,7 +81,7 @@ export class PanelSeeder {
 
       // Deploy first two panels after creation
       for (let i = 0; i < Math.min(2, panelIds.length); i++) {
-        await prisma.panel.update({
+        await tx.panel.update({
           where: { id: panelIds[i] },
           data: {
             messageId: this.snowflake.generate(),
@@ -99,7 +97,7 @@ export class PanelSeeder {
         const channelId = this.snowflake.generate();
         const categoryId = this.snowflake.generate();
 
-        const panel = await prisma.panel.create({
+        const panel = await tx.panel.create({
           data: {
             guildId,
             type: panelData.type,
@@ -127,7 +125,7 @@ export class PanelSeeder {
         if (panelData.type === "MULTI" && panelData.options) {
           for (let j = 0; j < panelData.options.length; j++) {
             const option = panelData.options[j]!;
-            await prisma.panelOption.create({
+            await tx.panelOption.create({
               data: {
                 panelId: panel.id,
                 name: option.name,
@@ -150,12 +148,10 @@ export class PanelSeeder {
   async clear(): Promise<void> {
     this.logger.log("Clearing panels...");
 
-    await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/db");
-
+    await prisma.$transaction(async (tx) => {
       // Clear in correct order
-      await prisma.panelOption.deleteMany({});
-      await prisma.panel.deleteMany({});
+      await tx.panelOption.deleteMany({});
+      await tx.panel.deleteMany({});
     });
 
     this.logger.success("Cleared panels");

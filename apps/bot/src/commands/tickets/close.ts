@@ -58,7 +58,7 @@ export class CloseCommand extends TicketCommandBase {
     let _channelDeleted = false;
 
     // Close ticket in transaction
-    const closedTicket = await prisma.$transaction(async (tx) => {
+    const closedTicket = await prisma.$transaction(async (_tx) => {
       // Close ticket using lifecycle domain
       return await TicketLifecycle.close({
         ticketId: ticket.id,

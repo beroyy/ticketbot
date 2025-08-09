@@ -6,7 +6,7 @@ import {
   type GuildRole as _TeamRole,
   type Blacklist as _Blacklist,
 } from "@ticketsbot/db";
-import { Actor, withTransaction, VisibleError } from "../../context";
+import { Actor, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 
 type FormattedGuildSettings = ReturnType<typeof formatGuildSettings>;
@@ -75,8 +75,8 @@ export namespace Guild {
     Actor.requirePermission(PermissionFlags.GUILD_SETTINGS_EDIT);
     const guildId = Actor.guildId();
 
-    return withTransaction(async () => {
-      const existing = await prisma.guild.findUnique({
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.guild.findUnique({
         where: { id: guildId },
       });
 
@@ -133,7 +133,7 @@ export namespace Guild {
         };
       }
 
-      const updated = await prisma.guild.update({
+      const updated = await tx.guild.update({
         where: { id: guildId },
         data: updateData,
         include: {

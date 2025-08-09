@@ -1,4 +1,3 @@
-import { withTransaction } from "@ticketsbot/core/context";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig } from "./types";
 import { ProgressLogger, SnowflakeGenerator } from "./utils";
@@ -19,9 +18,9 @@ export class GuildSeeder {
     // Use DEV_GUILD_ID from environment or generate one
     const guildId = process.env.DEV_GUILD_ID || this.snowflake.generate();
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       // Create or update guild with comprehensive settings
-      await prisma.guild.upsert({
+      await tx.guild.upsert({
         where: { id: guildId },
         update: {
           name: faker.company.name() + " Community",
@@ -65,7 +64,7 @@ export class GuildSeeder {
       const supportRoleCount = faker.number.int({ min: 1, max: 3 });
       for (let i = 0; i < supportRoleCount; i++) {
         const roleId = this.snowflake.generate();
-        await prisma.guildSupportRole.create({
+        await tx.guildSupportRole.create({
           data: {
             guildId,
             roleId,
@@ -83,7 +82,7 @@ export class GuildSeeder {
         for (let i = 0; i < blacklistCount; i++) {
           const userId = blacklistUserIds[i];
           if (userId) {
-            await prisma.blacklist.create({
+            await tx.blacklist.create({
               data: {
                 guildId,
                 targetId: userId,
@@ -104,13 +103,11 @@ export class GuildSeeder {
   async clear(): Promise<void> {
     this.logger.log("Clearing existing guilds...");
 
-    await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/db");
-
+    await prisma.$transaction(async (tx) => {
       // Clear in correct order to respect foreign keys
-      await prisma.blacklist.deleteMany({});
-      await prisma.guildSupportRole.deleteMany({});
-      await prisma.guild.deleteMany({});
+      await tx.blacklist.deleteMany({});
+      await tx.guildSupportRole.deleteMany({});
+      await tx.guild.deleteMany({});
     });
 
     this.logger.success("Cleared existing guilds");

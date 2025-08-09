@@ -1,5 +1,5 @@
 import { User } from "@ticketsbot/core/domains/user";
-import { withTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import type { SeedConfig, UserWithRole } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generateUserData } from "./utils";
 
@@ -30,7 +30,7 @@ export class UserSeeder {
       roleDistribution.customer -= total - count;
     }
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       let created = 0;
 
       // Create customers
@@ -42,7 +42,9 @@ export class UserSeeder {
           id,
           userData.username,
           userData.discriminator || undefined,
-          userData.avatarUrl
+          userData.avatarUrl,
+          undefined,
+          { tx }
         );
 
         users.push({
@@ -66,7 +68,9 @@ export class UserSeeder {
           id,
           userData.username,
           userData.discriminator || undefined,
-          userData.avatarUrl
+          userData.avatarUrl,
+          undefined,
+          { tx }
         );
 
         users.push({
@@ -87,7 +91,9 @@ export class UserSeeder {
           id,
           userData.username,
           userData.discriminator || undefined,
-          userData.avatarUrl
+          userData.avatarUrl,
+          undefined,
+          { tx }
         );
 
         users.push({
@@ -110,10 +116,9 @@ export class UserSeeder {
   async clear(): Promise<void> {
     this.logger.log("Clearing existing users...");
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       // Clear users through raw Prisma since we don't have a delete method in User domain
-      const { prisma } = await import("@ticketsbot/db");
-      await prisma.discordUser.deleteMany({});
+      await tx.discordUser.deleteMany({});
     });
 
     this.logger.success("Cleared existing users");

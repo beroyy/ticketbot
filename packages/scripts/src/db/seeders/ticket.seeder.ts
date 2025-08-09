@@ -1,5 +1,3 @@
-import { withTransaction } from "@ticketsbot/core/context";
-import { prisma } from "@ticketsbot/db";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig, UserWithRole, SeederDependencies } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generateTicketScenario } from "./utils";
@@ -24,7 +22,7 @@ export class TicketSeeder {
     for (let batchStart = 0; batchStart < count; batchStart += batchSize) {
       const batchEnd = Math.min(batchStart + batchSize, count);
 
-      await withTransaction(async () => {
+      await prisma.$transaction(async (tx) => {
         for (let i = batchStart; i < batchEnd; i++) {
           const scenario = generateTicketScenario();
 
@@ -44,7 +42,7 @@ export class TicketSeeder {
           if (!panelId) continue;
 
           // Create ticket
-          const ticket = await prisma.ticket.create({
+          const ticket = await tx.ticket.create({
             data: {
               guildId: dependencies.guildId,
               number: i + 1,
@@ -66,9 +64,9 @@ export class TicketSeeder {
           // Store ticket ID for post-transaction updates
           const ticketId = ticket.id;
 
-          // After transaction: claim and close tickets as needed
+          // Claim and close tickets within transaction
           if (assignee) {
-            await prisma.ticket.update({
+            await tx.ticket.update({
               where: { id: ticketId },
               data: {
                 claimedById: assignee.id,
@@ -78,7 +76,7 @@ export class TicketSeeder {
 
           // Close ticket if scenario says so
           if (scenario.status === "CLOSED") {
-            await prisma.ticket.update({
+            await tx.ticket.update({
               where: { id: ticketId },
               data: {
                 status: "CLOSED",
@@ -88,8 +86,8 @@ export class TicketSeeder {
             });
           }
 
-          // Add messages
-          await this.addTicketMessages(ticket.id, scenario, opener, assignee);
+          // Add messages within transaction
+          await this.addTicketMessages(ticket.id, scenario, opener, assignee, tx);
 
           created++;
         }
@@ -105,10 +103,11 @@ export class TicketSeeder {
     ticketId: number,
     scenario: ReturnType<typeof generateTicketScenario>,
     opener: UserWithRole,
-    assignee?: UserWithRole
+    assignee: UserWithRole | undefined,
+    tx: any
   ): Promise<void> {
     // Initial message from opener
-    await prisma.ticketMessage.create({
+    await tx.ticketMessage.create({
       data: {
         ticketId,
         messageId: this.snowflake.generate(),
@@ -120,7 +119,7 @@ export class TicketSeeder {
 
     // Add support responses if claimed
     if (assignee) {
-      await prisma.ticketMessage.create({
+      await tx.ticketMessage.create({
         data: {
           ticketId,
           messageId: this.snowflake.generate(),
@@ -133,7 +132,7 @@ export class TicketSeeder {
 
       // Add follow-up if needed
       if (scenario.priority === "High" || scenario.priority === "Urgent") {
-        await prisma.ticketMessage.create({
+        await tx.ticketMessage.create({
           data: {
             ticketId,
             messageId: this.snowflake.generate(),
@@ -148,7 +147,7 @@ export class TicketSeeder {
 
       // Add resolution message if closed
       if (scenario.status === "CLOSED" && scenario.resolutionNotes) {
-        await prisma.ticketMessage.create({
+        await tx.ticketMessage.create({
           data: {
             ticketId,
             messageId: this.snowflake.generate(),
@@ -165,13 +164,13 @@ export class TicketSeeder {
   async clear(): Promise<void> {
     this.logger.log("Clearing tickets...");
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       // Clear in correct order
-      await prisma.ticketMessage.deleteMany({});
-      await prisma.ticketHistory.deleteMany({});
-      await prisma.ticketFieldResponse.deleteMany({});
-      await prisma.ticketFeedback.deleteMany({});
-      await prisma.ticket.deleteMany({});
+      await tx.ticketMessage.deleteMany({});
+      await tx.ticketHistory.deleteMany({});
+      await tx.ticketFieldResponse.deleteMany({});
+      await tx.ticketFeedback.deleteMany({});
+      await tx.ticket.deleteMany({});
     });
 
     this.logger.success("Cleared tickets");

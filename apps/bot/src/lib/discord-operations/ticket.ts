@@ -38,7 +38,6 @@ export const TicketOps = {
   createFromPanel: async (options: TicketCreationOptions): Promise<TicketCreationResult> => {
     const { panelId, userId, username, guild, formResponses } = options;
 
-    let ticket: any;
     let channelId: string | undefined;
 
     // Get panel details first
@@ -54,7 +53,7 @@ export const TicketOps = {
     }
 
     // Create ticket in transaction
-    ticket = await prisma.$transaction(async (tx) => {
+    const ticket = await prisma.$transaction(async (_tx) => {
       // Create ticket using lifecycle domain
       return await TicketLifecycle.create({
         guildId: guild.id,

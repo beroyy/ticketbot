@@ -24,9 +24,11 @@ export namespace User {
     username: string,
     discriminator?: string,
     avatarUrl?: string,
-    metadata?: unknown
+    metadata?: unknown,
+    options?: { tx?: any }
   ): Promise<DiscordUser> => {
-    return prisma.discordUser.upsert({
+    const client = options?.tx || prisma;
+    return client.discordUser.upsert({
       where: { id: discordId },
       update: {
         username,

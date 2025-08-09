@@ -5,7 +5,7 @@ import {
   type Panel as PrismaPanel,
   type FormFieldType,
 } from "@ticketsbot/db";
-import { Actor, withTransaction, VisibleError } from "../../context";
+import { Actor, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 
 type FormWithFields = PrismaForm & {
@@ -109,9 +109,9 @@ export namespace Form {
     Actor.requirePermission(PermissionFlags.PANEL_CREATE);
     const guildId = Actor.guildId();
 
-    return withTransaction(async () => {
+    return prisma.$transaction(async (tx) => {
       // Create form
-      const form = await prisma.form.create({
+      const form = await tx.form.create({
         data: {
           name: input.name,
           guildId,
@@ -120,7 +120,7 @@ export namespace Form {
 
       // Create form fields
       if (input.fields.length > 0) {
-        await prisma.formField.createMany({
+        await tx.formField.createMany({
           data: input.fields.map((field, index) => ({
             formId: form.id,
             type: field.type,
@@ -135,7 +135,7 @@ export namespace Form {
       }
 
       // Fetch the complete form with fields
-      const completeForm = await prisma.form.findUnique({
+      const completeForm = await tx.form.findUnique({
         where: { id: form.id },
         include: {
           formFields: {
@@ -191,10 +191,10 @@ export namespace Form {
       throw new VisibleError("permission_denied", "Form does not belong to this guild");
     }
 
-    return withTransaction(async () => {
+    return prisma.$transaction(async (tx) => {
       // Update form metadata
       if (input.name) {
-        await prisma.form.update({
+        await tx.form.update({
           where: { id: formId },
           data: { name: input.name },
         });
@@ -203,12 +203,12 @@ export namespace Form {
       // Update fields if provided
       if (input.fields) {
         // Delete all existing fields
-        await prisma.formField.deleteMany({
+        await tx.formField.deleteMany({
           where: { formId },
         });
 
         // Create new fields
-        await prisma.formField.createMany({
+        await tx.formField.createMany({
           data: input.fields.map((field, index) => ({
             formId,
             type: field.type,
@@ -223,7 +223,7 @@ export namespace Form {
       }
 
       // Fetch updated form
-      const updatedForm = await prisma.form.findUnique({
+      const updatedForm = await tx.form.findUnique({
         where: { id: formId },
         include: {
           formFields: {
@@ -281,14 +281,14 @@ export namespace Form {
       );
     }
 
-    return withTransaction(async () => {
+    return prisma.$transaction(async (tx) => {
       // Delete form fields first (cascade)
-      await prisma.formField.deleteMany({
+      await tx.formField.deleteMany({
         where: { formId },
       });
 
       // Delete form
-      const deleted = await prisma.form.delete({
+      const deleted = await tx.form.delete({
         where: { id: formId },
       });
 
@@ -324,9 +324,9 @@ export namespace Form {
       throw new VisibleError("permission_denied", "Form does not belong to this guild");
     }
 
-    return withTransaction(async () => {
+    return prisma.$transaction(async (tx) => {
       // Create new form
-      const newForm = await prisma.form.create({
+      const newForm = await tx.form.create({
         data: {
           name: newName,
           guildId,
@@ -335,7 +335,7 @@ export namespace Form {
 
       // Copy fields
       if (original.formFields.length > 0) {
-        await prisma.formField.createMany({
+        await tx.formField.createMany({
           data: original.formFields.map((field: FormField) => ({
             formId: newForm.id,
             type: field.type,
@@ -350,7 +350,7 @@ export namespace Form {
       }
 
       // Fetch complete new form
-      const completeForm = await prisma.form.findUnique({
+      const completeForm = await tx.form.findUnique({
         where: { id: newForm.id },
         include: {
           formFields: {

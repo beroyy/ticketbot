@@ -5,7 +5,7 @@ import {
   type Form as PrismaForm,
   type FormField,
 } from "@ticketsbot/db";
-import { Actor, withTransaction, VisibleError } from "../../context";
+import { Actor, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
 
@@ -174,17 +174,17 @@ export namespace Panel {
     }
     const channelId = channelResult.data;
 
-    return withTransaction(async () => {
+    return prisma.$transaction(async (tx) => {
       if (input.type === "SINGLE") {
         if (!input.singlePanel) {
           throw new VisibleError("validation_error", "singlePanel is required for SINGLE type");
         }
-        return createSinglePanel(guildId, channelId, input.singlePanel, input.welcomeMessage);
+        return createSinglePanel(guildId, channelId, input.singlePanel, input.welcomeMessage, { tx });
       } else {
         if (!input.multiPanel) {
           throw new VisibleError("validation_error", "multiPanel is required for MULTI type");
         }
-        return createMultiPanel(guildId, channelId, input.multiPanel, input.welcomeMessage);
+        return createMultiPanel(guildId, channelId, input.multiPanel, input.welcomeMessage, { tx });
       }
     });
   };
@@ -226,10 +226,10 @@ export namespace Panel {
       throw new VisibleError("permission_denied", "Panel does not belong to this guild");
     }
 
-    return withTransaction(async () => {
+    return prisma.$transaction(async (tx) => {
       // Update form if questions provided
       if (input.questions && panel.formId) {
-        await updatePanelForm(panel.formId, input.questions);
+        await updatePanelForm(panel.formId, input.questions, { tx });
       }
 
       // Parse channel ID if provided
@@ -254,7 +254,7 @@ export namespace Panel {
       }
 
       // Update panel
-      const updated = await prisma.panel.update({
+      const updated = await tx.panel.update({
         where: { id: panelId },
         data: {
           channelId: channelId || undefined,
@@ -313,8 +313,8 @@ export namespace Panel {
       throw new VisibleError("permission_denied", "Panel does not belong to this guild");
     }
 
-    return withTransaction(async () => {
-      const deleted = await prisma.panel.delete({
+    return prisma.$transaction(async (tx) => {
+      const deleted = await tx.panel.delete({
         where: { id: panelId },
       });
 
@@ -416,12 +416,15 @@ async function createSinglePanel(
   guildId: string,
   channelId: string,
   input: SinglePanelInput,
-  welcomeMessage?: WelcomeMessage
+  welcomeMessage?: WelcomeMessage,
+  options?: { tx?: any }
 ) {
+  const client = options?.tx || prisma;
+  
   // Create form if questions provided
   let formId: number | undefined;
   if (input.questions && input.questions.length > 0) {
-    const form = await prisma.form.create({
+    const form = await client.form.create({
       data: {
         name: `${input.title} Form`,
         guildId,
@@ -429,7 +432,7 @@ async function createSinglePanel(
     });
 
     // Create form fields
-    await prisma.formField.createMany({
+    await client.formField.createMany({
       data: input.questions
         .filter((q) => q.enabled)
         .map((q, index) => ({
@@ -458,7 +461,7 @@ async function createSinglePanel(
   }
 
   // Create panel
-  const panel = await prisma.panel.create({
+  const panel = await client.panel.create({
     data: {
       type: "SINGLE",
       title: input.title,
@@ -495,10 +498,13 @@ async function createMultiPanel(
   guildId: string,
   channelId: string,
   input: MultiPanelInput,
-  welcomeMessage?: WelcomeMessage
+  welcomeMessage?: WelcomeMessage,
+  options?: { tx?: any }
 ) {
+  const client = options?.tx || prisma;
+  
   // Create parent panel
-  const parentPanel = await prisma.panel.create({
+  const parentPanel = await client.panel.create({
     data: {
       type: "MULTI",
       title: input.title,
@@ -512,19 +518,19 @@ async function createMultiPanel(
   });
 
   // Create child panels
-  const childPanels = await Promise.all(
+  await Promise.all(
     input.panels.map(async (childInput, index) => {
       // Create form if needed
       let formId: number | undefined;
       if (childInput.questions && childInput.questions.length > 0) {
-        const form = await prisma.form.create({
+        const form = await client.form.create({
           data: {
             name: `${childInput.title} Form`,
             guildId,
           },
         });
 
-        await prisma.formField.createMany({
+        await client.formField.createMany({
           data: childInput.questions
             .filter((q) => q.enabled)
             .map((q, idx) => ({
@@ -549,7 +555,7 @@ async function createMultiPanel(
         }
       }
 
-      return prisma.panel.create({
+      return client.panel.create({
         data: {
           type: "SINGLE",
           title: childInput.title,
@@ -592,14 +598,16 @@ async function createMultiPanel(
   return formatPanelForAPI(panelWithForm);
 }
 
-async function updatePanelForm(formId: number, questions: Question[]) {
+async function updatePanelForm(formId: number, questions: Question[], options?: { tx?: any }) {
+  const db = options?.tx || prisma;
+  
   // Delete existing fields
-  await prisma.formField.deleteMany({
+  await db.formField.deleteMany({
     where: { formId },
   });
 
   // Create new fields
-  await prisma.formField.createMany({
+  await db.formField.createMany({
     data: questions
       .filter((q) => q.enabled)
       .map((q, index) => ({

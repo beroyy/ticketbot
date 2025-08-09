@@ -159,11 +159,10 @@ export namespace Role {
   /**
    * Ensure default roles exist for a guild
    */
-  export const ensureDefaultRoles = async (guildId: string): Promise<void> => {
-    // Use transaction to ensure atomicity and handle race conditions
-    await prisma.$transaction(async (tx) => {
+  export const ensureDefaultRoles = async (guildId: string, options?: { tx?: any }): Promise<void> => {
+    const operation = async (client: any) => {
       // Use upsert to handle race conditions and ensure idempotency
-      await tx.guildRole.upsert({
+      await client.guildRole.upsert({
         where: {
           guildId_name: {
             guildId: guildId,
@@ -185,7 +184,7 @@ export namespace Role {
         },
       });
 
-      await tx.guildRole.upsert({
+      await client.guildRole.upsert({
         where: {
           guildId_name: {
             guildId: guildId,
@@ -207,7 +206,7 @@ export namespace Role {
         },
       });
 
-      await tx.guildRole.upsert({
+      await client.guildRole.upsert({
         where: {
           guildId_name: {
             guildId: guildId,
@@ -228,7 +227,14 @@ export namespace Role {
           permissions: DefaultRolePermissions.viewer,
         },
       });
-    });
+    };
+
+    // If transaction client provided, use it. Otherwise create new transaction
+    if (options?.tx) {
+      await operation(options.tx);
+    } else {
+      await prisma.$transaction(async (tx) => operation(tx));
+    }
   };
 
   /**
@@ -237,9 +243,11 @@ export namespace Role {
   export const assignRole = async (
     roleId: number,
     userId: string,
-    assignedById?: string
+    assignedById?: string,
+    options?: { tx?: any }
   ): Promise<GuildRoleMember> => {
-    const result = await prisma.guildRoleMember.upsert({
+    const db = options?.tx || prisma;
+    const result = await db.guildRoleMember.upsert({
       where: {
         discordId_guildRoleId: {
           discordId: userId,
@@ -332,8 +340,9 @@ export namespace Role {
   /**
    * Get a specific role by name
    */
-  export const getRoleByName = async (guildId: string, name: string): Promise<GuildRole | null> => {
-    return prisma.guildRole.findFirst({
+  export const getRoleByName = async (guildId: string, name: string, options?: { tx?: any }): Promise<GuildRole | null> => {
+    const db = options?.tx || prisma;
+    return db.guildRole.findFirst({
       where: {
         guildId,
         name,

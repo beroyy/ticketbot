@@ -62,4 +62,4 @@ export { logger, createLogger } from "./utils/logger";
 // import { Discord } from "@ticketsbot/core/discord";
 
 // Context system is server-only and must be imported directly:
-// import { Actor, withTransaction } from "@ticketsbot/core/context";
+// import { Actor } from "@ticketsbot/core/context";

@@ -50,11 +50,10 @@ const panelCreateHandler = createButtonHandler({
     const username = interaction.user.username;
 
     try {
-      let ticket: any;
       let channel: any;
 
       // Create ticket in transaction
-      ticket = await prisma.$transaction(async (tx) => {
+      const ticket = await prisma.$transaction(async (_tx) => {
         // Create ticket using lifecycle domain
         return await TicketLifecycle.create({
           guildId: guild.id,

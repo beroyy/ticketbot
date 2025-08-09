@@ -91,7 +91,7 @@ export class OpenCommand extends TicketCommandBase {
 
     try {
       // Create ticket in transaction
-      ticket = await prisma.$transaction(async (tx) => {
+      ticket = await prisma.$transaction(async (_tx) => {
         // Create ticket using lifecycle domain with actual channel ID
         const createdTicket = await TicketLifecycle.create({
           guildId: guild.id,

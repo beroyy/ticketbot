@@ -40,7 +40,7 @@ export const RemoveStaffCommand = createCommand({
       const rolesToSync = userRoles.filter((role) => role.discordRoleId);
 
       // Remove all roles within transaction
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (_tx) => {
         for (const role of userRoles) {
           await Role.removeRole(role.id, userId);
           removedRoles.push(role.name);

@@ -9,11 +9,9 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import { User } from "@ticketsbot/core/domains/user";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
+import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { withTransaction } from "@ticketsbot/core/context";
 import { container } from "@sapphire/framework";
 
 export class AutoCloseCommand extends TicketCommandBase {
@@ -62,19 +60,27 @@ export class AutoCloseCommand extends TicketCommandBase {
       );
 
       try {
-        await withTransaction(async () => {
-          // Update the exclusion status
-          await Ticket.update(ticket.id, {
-            excludeFromAutoclose: newExclusionStatus,
+        await prisma.$transaction(async (tx) => {
+          // Update the exclusion status directly with transaction client
+          await tx.ticket.update({
+            where: { id: ticket.id },
+            data: {
+              excludeFromAutoclose: newExclusionStatus,
+            },
           });
 
-          // Log the change
-          await Transcripts.addHistoryEntry(
-            ticket.id,
-            newExclusionStatus ? "auto_close_excluded" : "auto_close_included",
-            performerDiscordId,
-            `Auto-close ${newExclusionStatus ? "disabled" : "enabled"} by support staff`
-          );
+          // Log the change directly with transaction client
+          await tx.ticketLifecycleEvent.create({
+            data: {
+              ticketId: ticket.id,
+              action: newExclusionStatus ? "auto_close_excluded" : "auto_close_included",
+              performedById: performerDiscordId,
+              details: {
+                message: `Auto-close ${newExclusionStatus ? "disabled" : "enabled"} by support staff`,
+              },
+              timestamp: new Date(),
+            },
+          });
 
           // With pg_cron, auto-close is automatically skipped when excludeFromAutoclose is true
         });

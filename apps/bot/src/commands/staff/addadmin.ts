@@ -37,7 +37,7 @@ export const AddAdminCommand = createCommand({
         return err("User already admin");
       }
 
-      // Get admin role
+      // Get admin role first
       const adminRole = await Role.getRoleByName(guildId, "admin");
       if (!adminRole) {
         await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("admin"));
@@ -51,11 +51,13 @@ export const AddAdminCommand = createCommand({
           userId,
           targetUser.username,
           targetUser.discriminator,
-          targetUser.displayAvatarURL()
+          targetUser.displayAvatarURL(),
+          undefined,
+          { tx }
         );
 
         // Assign role
-        await Role.assignRole(adminRole.id, userId, parseDiscordId(interaction.user.id));
+        await Role.assignRole(adminRole.id, userId, undefined, { tx });
         
         // Event logging removed - TCN will handle this automatically
       });

@@ -1,7 +1,7 @@
 import { Tag } from "@ticketsbot/core/domains/tag";
-import { withTransaction } from "@ticketsbot/core/context";
 import type { SeedConfig } from "./types";
 import { ProgressLogger, generateTagData } from "./utils";
+import { prisma } from "@ticketsbot/db";
 
 export class TagSeeder {
   private logger: ProgressLogger;
@@ -13,7 +13,7 @@ export class TagSeeder {
   async seed(guildId: string, count: number): Promise<void> {
     this.logger.log(`Creating ${count} tags...`);
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       // Create static tags first
       const staticTags = [
         { name: "status", content: "Check system status: https://status.example.com" },
@@ -33,7 +33,7 @@ export class TagSeeder {
           guildId,
           name: tag.name,
           content: tag.content,
-        });
+        }, { tx });
       }
 
       // Create additional dynamic tags
@@ -42,13 +42,13 @@ export class TagSeeder {
         const tagData = generateTagData();
 
         // Ensure unique tag names
-        const existingTag = await Tag.findByName(guildId, tagData.name);
+        const existingTag = await Tag.findByName(guildId, tagData.name, { tx });
         if (!existingTag) {
           await Tag.create({
             guildId,
             name: tagData.name,
             content: tagData.content,
-          });
+          }, { tx });
         }
       }
     });
@@ -59,9 +59,8 @@ export class TagSeeder {
   async clear(): Promise<void> {
     this.logger.log("Clearing tags...");
 
-    await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/db");
-      await prisma.tag.deleteMany({});
+    await prisma.$transaction(async (tx) => {
+      await tx.tag.deleteMany({});
     });
 
     this.logger.success("Cleared tags");

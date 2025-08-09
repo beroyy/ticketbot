@@ -1,4 +1,3 @@
-import { withTransaction } from "@ticketsbot/core/context";
 import type { SeedConfig } from "./types";
 import { ProgressLogger } from "./utils";
 import { prisma } from "@ticketsbot/db";
@@ -15,9 +14,9 @@ export class FormSeeder {
 
     const formIds: number[] = [];
 
-    await withTransaction(async () => {
+    await prisma.$transaction(async (tx) => {
       // Create main support form
-      const mainForm = await prisma.form.create({
+      const mainForm = await tx.form.create({
         data: {
           guildId,
           name: "General Support Request",
@@ -69,14 +68,14 @@ export class FormSeeder {
         },
       ];
 
-      await prisma.formField.createMany({
+      await tx.formField.createMany({
         data: mainFields,
       });
 
       // Create additional forms based on environment
       if (this.config.environment !== "small") {
         // Bug report form
-        const bugForm = await prisma.form.create({
+        const bugForm = await tx.form.create({
           data: {
             guildId,
             name: "Bug Report Form",
@@ -133,14 +132,14 @@ export class FormSeeder {
           },
         ];
 
-        await prisma.formField.createMany({
+        await tx.formField.createMany({
           data: bugFields,
         });
       }
 
       if (this.config.environment === "large") {
         // Feature request form
-        const featureForm = await prisma.form.create({
+        const featureForm = await tx.form.create({
           data: {
             guildId,
             name: "Feature Request Form",
@@ -183,7 +182,7 @@ export class FormSeeder {
           },
         ];
 
-        await prisma.formField.createMany({
+        await tx.formField.createMany({
           data: featureFields,
         });
       }
@@ -196,12 +195,10 @@ export class FormSeeder {
   async clear(): Promise<void> {
     this.logger.log("Clearing forms...");
 
-    await withTransaction(async () => {
-      const { prisma } = await import("@ticketsbot/db");
-
+    await prisma.$transaction(async (tx) => {
       // Clear in correct order
-      await prisma.formField.deleteMany({});
-      await prisma.form.deleteMany({});
+      await tx.formField.deleteMany({});
+      await tx.form.deleteMany({});
     });
 
     this.logger.success("Cleared forms");

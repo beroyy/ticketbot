@@ -38,7 +38,7 @@ const closeReasonModalHandler = createModalHandler({
 
     try {
       // Close ticket in transaction
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (_tx) => {
         // Close ticket using lifecycle domain
         await TicketLifecycle.close({
           ticketId: ticket.id,

@@ -62,12 +62,7 @@ export {
   Actor, // This exports both the type and the namespace
 } from "./actor";
 
-// Export transaction context
-export {
-  type TransactionContextValue,
-  TransactionContext,
-  withTransaction,
-} from "./transaction";
+// Transaction context has been removed - use explicit prisma.$transaction() instead
 
 // Export error types
 export {

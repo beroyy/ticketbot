@@ -37,21 +37,6 @@ enum GuildRoleStatus {
   INACTIVE
 }
 
-enum EventCategory {
-  TICKET
-  TEAM
-  PANEL
-  MEMBER
-  GUILD
-}
-
-enum EventTargetType {
-  TICKET
-  ROLE
-  USER
-  PANEL
-  GUILD
-}
 
 model User {
   id            String   @id @default(cuid())
@@ -143,7 +128,6 @@ model DiscordUser {
   guildMemberPermissions   GuildMemberPermission[]
   assignedRoles           GuildRoleMember[]  @relation("RoleAssignments")
   grantedPermissions      GuildMemberPermission[] @relation("PermissionGrants")
-  events                  Event[]
   
   @@map("discord_users")
 }
@@ -163,40 +147,6 @@ model Blacklist {
   @@map("blacklist")
 }
 
-model Event {
-  id               String   @id @default(cuid())
-  guildId          String   @map("guild_id")
-  
-  actorId          String   @map("actor_id")
-  
-  category         EventCategory
-  action           String
-  
-  targetType       EventTargetType @map("target_type")
-  targetId         String   @map("target_id")
-  
-  ticketId         Int?     @map("ticket_id")
-  guildRoleId       Int?     @map("guild_role_id")
-  
-  metadata         Json?
-  
-  createdAt        DateTime @default(now()) @map("created_at")
-  expiresAt        DateTime? @map("expires_at")
-  
-  guild            Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  actor            DiscordUser  @relation(fields: [actorId], references: [id])
-  guildRole         GuildRole?    @relation(fields: [guildRoleId], references: [id])
-  ticket           Ticket?      @relation(fields: [ticketId], references: [id])
-  
-  @@index([guildId, createdAt(sort: Desc)])
-  @@index([actorId, createdAt(sort: Desc)])
-  @@index([ticketId, createdAt(sort: Desc)])
-  @@index([guildRoleId, createdAt(sort: Desc)])
-  @@index([targetType, targetId, createdAt(sort: Desc)])
-  @@index([expiresAt])
-  
-  @@map("events")
-}
 
 model Form {
   id         Int      @id @default(autoincrement())
@@ -275,7 +225,6 @@ model Guild {
   blacklist               Blacklist[]
   guildRoles               GuildRole[] @relation("GuildTeamRoles")
   guildMemberPermissions   GuildMemberPermission[] @relation("GuildTeamMemberPermissions")
-  events                  Event[]
   categories              GuildCategory[]
   supportRoles            GuildSupportRole[]
   ticketAnalytics         TicketAnalyticsSnapshot[]
@@ -410,7 +359,6 @@ model GuildRole {
   guild             Guild               @relation("GuildTeamRoles", fields: [guildId], references: [id], onDelete: Cascade)
   guildRoleMembers   GuildRoleMember[]
   panelGuildRoles    PanelGuildRole[]
-  events            Event[]
   
   @@unique([guildId, discordRoleId])
   @@unique([guildId, name])
@@ -495,7 +443,6 @@ model Ticket {
   lifecycleEvents         TicketLifecycleEvent[]
   transcript              Transcript?
   ticketParticipants      TicketParticipant[]
-  events                  Event[]
 
   @@unique([guildId, number])
   @@index([deletedAt])

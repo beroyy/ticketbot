@@ -12,7 +12,6 @@ import { FormSeeder } from "./form.seeder";
 import { PanelSeeder } from "./panel.seeder";
 import { TagSeeder } from "./tag.seeder";
 import { TicketSeeder } from "./ticket.seeder";
-import { EventSeeder } from "./event.seeder";
 
 export class DatabaseSeederOrchestrator {
   private logger: ProgressLogger;
@@ -51,7 +50,6 @@ export class DatabaseSeederOrchestrator {
         const panelSeeder = new PanelSeeder(this.config);
         const tagSeeder = new TagSeeder(this.config);
         const ticketSeeder = new TicketSeeder(this.config);
-        const eventSeeder = new EventSeeder(this.config);
 
         // Seed in dependency order
         const users = await userSeeder.seed(volume.users);
@@ -79,7 +77,6 @@ export class DatabaseSeederOrchestrator {
         };
 
         await ticketSeeder.seed(dependencies, volume.tickets);
-        await eventSeeder.seed(guildId, users);
 
         // Log summary
         this.logSummary({
@@ -101,7 +98,6 @@ export class DatabaseSeederOrchestrator {
     this.logger.log("🧹 Clearing all existing data...");
 
     const tables = [
-      "event",
       "ticketMessage",
       "ticketHistory",
       "ticketFieldResponse",

@@ -39,7 +39,6 @@
     "./discord": "./src/discord/index.ts",
     "./domains/account": "./src/domains/account/index.ts",
     "./domains/analytics": "./src/domains/analytics/index.ts",
-    "./domains/event": "./src/domains/event/index.ts",
     "./domains/form": "./src/domains/form/index.ts",
     "./domains/guild": "./src/domains/guild/index.ts",
     "./domains/guild/user": "./src/domains/guild/user.ts",

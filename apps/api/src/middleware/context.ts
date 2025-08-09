@@ -1,12 +1,9 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
-import { type AuthSession, getSessionFromContext } from "@ticketsbot/core/auth";
+import type { AuthSession } from "@ticketsbot/core/auth";
 import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
-import { Account } from "@ticketsbot/core/domains/account";
-import { User } from "@ticketsbot/core/domains/user";
 import { Actor, VisibleError } from "@ticketsbot/core/context";
 import { env } from "../env";
 import { nanoid } from "nanoid";
-import { createHmac } from "crypto";
 
 const logger = createLogger("api:context");
 
@@ -18,115 +15,124 @@ type Variables = {
   startTime: number;
 };
 
-if (env.isProd() && !env.apiSecret) {
-  logger.error("API_SECRET is not set in production! HMAC authentication will fail.");
-  throw new Error("API_SECRET environment variable is required in production");
-}
+// Simple in-memory cache for session validation
+const sessionCache = new Map<string, { data: any; expires: number }>();
 
-if (env.isDev() && !env.apiSecret) {
-  logger.warn("Using default HMAC secret for development. Set API_SECRET for production.");
-}
-
-const verifyHmacSignature = (payload: string, signature: string): boolean => {
-  const expected = createHmac("sha256", env.apiSecret).update(payload).digest("hex");
-  const isValid = signature === expected;
-
-  if (env.isDev()) {
-    logger.debug("HMAC signature validation", {
-      valid: isValid,
-      providedSignature: signature.substring(0, 16) + "...",
-      expectedSignature: expected.substring(0, 16) + "...",
-      payloadLength: payload.length,
-    });
+const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
+  // Get cookies from request
+  const cookieHeader = c.req.header("cookie");
+  if (!cookieHeader) {
+    return c.json({ error: "Unauthorized" }, 401);
   }
 
-  return isValid;
-};
+  // Check cache first
+  const cacheKey = cookieHeader;
+  const cached = sessionCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) {
+    logger.debug("Using cached session validation");
+    const sessionData = cached.data;
+    
+    if (sessionData) {
+      c.set("user", sessionData.user);
+      c.set("session", sessionData);
 
-const withHmacContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
-  const payloadHeader = c.req.header("X-Auth-Payload");
-  const signatureHeader = c.req.header("X-Auth-Signature");
+      const guildId = extractGuildId(c);
+      if (guildId) {
+        c.set("guildId", guildId);
+      }
 
-  if (!payloadHeader || !signatureHeader) {
-    return withContext(c, next);
+      return Actor.provide(
+        {
+          type: "web_user",
+          properties: {
+            userId: sessionData.user.id,
+            email: sessionData.user.email,
+            discordId: sessionData.user.discordUserId || undefined,
+            selectedGuildId: guildId,
+            permissions: BigInt(sessionData.permissions || 0),
+            session: sessionData,
+          },
+        },
+        () => next()
+      );
+    }
   }
 
+  // Call validation endpoint
   try {
-    const payloadStr = Buffer.from(payloadHeader, "base64").toString();
+    const guildId = extractGuildId(c);
+    const webUrl = env.WEB_URL || "http://localhost:3000";
+    
+    const response = await fetch(`${webUrl}/api/auth/validate-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify({ guildId }),
+    });
 
-    if (!verifyHmacSignature(payloadStr, signatureHeader)) {
-      logger.warn("Invalid HMAC signature");
-      return c.json({ error: "Invalid signature" }, 401);
+    if (!response.ok) {
+      logger.debug("Session validation failed", { status: response.status });
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const payload = JSON.parse(payloadStr);
-
-    if (Date.now() - payload.timestamp > 5 * 60 * 1000) {
-      logger.warn("HMAC request expired", {
-        timestamp: payload.timestamp,
-        age: Date.now() - payload.timestamp,
-      });
-      return c.json({ error: "Request expired" }, 401);
-    }
-
-    const session: AuthSession = {
-      user: {
-        id: payload.userId,
-        email: payload.email,
-        name: payload.name || payload.email,
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        discordUserId: payload.discordUserId,
-        username: payload.username || null,
-        discriminator: payload.discriminator || null,
-        avatar_url: payload.avatar_url || null,
-        image: payload.avatar_url || null,
-      },
-      session: {
-        id: payload.sessionId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: payload.userId,
-        expiresAt: new Date(payload.expiresAt),
-        token: "",
-        ipAddress: null,
-        userAgent: null,
-      },
+    const result = await response.json() as { 
+      valid: boolean; 
+      session?: AuthSession & { permissions: string };
     };
+    if (!result.valid || !result.session) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
-    c.set("user", session.user);
-    c.set("session", session);
+    const sessionData = result.session;
 
-    const guildId = payload.selectedGuildId || extractGuildId(c);
+    // Cache the result for 60 seconds
+    sessionCache.set(cacheKey, {
+      data: sessionData,
+      expires: Date.now() + 60 * 1000,
+    });
+
+    // Clean up old cache entries periodically
+    if (sessionCache.size > 100) {
+      const now = Date.now();
+      for (const [key, value] of sessionCache.entries()) {
+        if (value.expires < now) {
+          sessionCache.delete(key);
+        }
+      }
+    }
+
+    logger.debug("Session validated successfully", {
+      userId: sessionData.user.id,
+      email: sessionData.user.email,
+      hasPermissions: !!sessionData.permissions,
+    });
+
+    c.set("user", sessionData.user);
+    c.set("session", sessionData);
+
     if (guildId) {
       c.set("guildId", guildId);
     }
-
-    logger.debug("HMAC authentication successful", {
-      userId: payload.userId,
-      email: payload.email,
-      guildId,
-      hasPermissions: !!payload.permissions,
-    });
 
     return Actor.provide(
       {
         type: "web_user",
         properties: {
-          userId: payload.userId,
-          email: payload.email,
-          discordId: payload.discordUserId || undefined,
+          userId: sessionData.user.id,
+          email: sessionData.user.email,
+          discordId: sessionData.user.discordUserId || undefined,
           selectedGuildId: guildId,
-          permissions: payload.permissions ? BigInt(payload.permissions) : 0n,
-          session,
+          permissions: BigInt(sessionData.permissions || 0),
+          session: sessionData.session,
         },
       },
       () => next()
     );
   } catch (error) {
-    logger.error("HMAC authentication failed:", error);
-    return c.json({ error: "Authentication failed" }, 401);
+    logger.error("Session validation error:", error);
+    return c.json({ error: "Unauthorized" }, 401);
   }
 };
 
@@ -154,112 +160,18 @@ const extractGuildId = (c: Context): string | undefined => {
   return undefined;
 };
 
-export const withContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
-  const session = await getSessionFromContext(c);
-
-  if (!session) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  logger.debug("Context middleware - session data:", {
-    userId: session.user.id,
-    email: session.user.email,
-    discordUserId: session.user.discordUserId,
-    hasDiscordUserId: !!session.user.discordUserId,
-    sessionKeys: Object.keys(session.user),
-  });
-
-  const guildId = extractGuildId(c);
-
-  let permissions = 0n;
-  let effectiveDiscordUserId = session.user.discordUserId;
-
-  if (guildId) {
-    if (!effectiveDiscordUserId) {
-      logger.debug("No discordUserId in session, checking OAuth account...");
-      try {
-        const discordAccount = await Account.getDiscordAccount(session.user.id);
-        logger.debug("OAuth account lookup result:", {
-          found: !!discordAccount,
-          accountId: discordAccount?.accountId,
-          providerId: discordAccount?.providerId,
-          hasAccessToken: !!discordAccount?.accessToken,
-        });
-
-        if (discordAccount?.accountId) {
-          effectiveDiscordUserId = discordAccount.accountId;
-          logger.info(
-            `Using Discord ID from OAuth account for user ${session.user.id}: ${effectiveDiscordUserId}`
-          );
-        } else {
-          logger.warn("No Discord account found for user:", session.user.id);
-        }
-      } catch (error) {
-        logger.error("Failed to fetch Discord account as fallback:", error);
-      }
-    }
-
-    if (effectiveDiscordUserId) {
-      try {
-        permissions = await User.getPermissions(guildId, effectiveDiscordUserId);
-        logger.debug(`Context middleware - calculated permissions:`, {
-          guildId,
-          discordUserId: effectiveDiscordUserId,
-          permissions: permissions.toString(),
-          permissionsHex: `0x${permissions.toString(16)}`,
-          hasAnyPermission: permissions > 0n,
-        });
-      } catch (error) {
-        logger.error("Failed to get permissions:", error);
-      }
-    } else {
-      logger.warn("No effective Discord user ID available for permission calculation", {
-        guildId,
-        sessionUserId: session.user.id,
-      });
-    }
-  }
-
-  c.set("user", session.user);
-  c.set("session", session);
-  if (guildId) {
-    c.set("guildId", guildId);
-  }
-
-  logger.debug("Creating actor context:", {
-    type: "web_user",
-    userId: session.user.id,
-    email: session.user.email,
-    discordId: effectiveDiscordUserId ?? "undefined",
-    selectedGuildId: guildId ?? "none",
-    permissions: permissions.toString(),
-    permissionsHex: `0x${permissions.toString(16)}`,
-  });
-
-  return Actor.provide(
-    {
-      type: "web_user",
-      properties: {
-        userId: session.user.id,
-        email: session.user.email,
-        discordId: effectiveDiscordUserId ?? undefined,
-        selectedGuildId: guildId,
-        permissions,
-        session,
-      },
-    },
-    () => next()
-  );
-};
+// Legacy context middleware - no longer used
+// All authentication now goes through withHmacContext which handles both cookies and HMAC
 
 export const requireAuth: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
-  const session = await getSessionFromContext(c);
-
-  if (!session) {
-    return c.json({ error: "Authentication required" }, 401);
+  // Check if we already have a session from withHmacContext
+  const existingSession = c.get("session");
+  if (existingSession) {
+    return next();
   }
 
-  return withContext(c, next);
+  // If not, this shouldn't happen as withHmacContext should handle all auth
+  return c.json({ error: "Authentication required" }, 401);
 };
 
 export const requirePermission = (permission: bigint) => {
@@ -297,11 +209,7 @@ export const requirePermission = (permission: bigint) => {
       }
     };
 
-    if (!Actor.maybeUse()) {
-      await withContext(c, checkPermissionAndProceed);
-    } else {
-      await checkPermissionAndProceed();
-    }
+    await checkPermissionAndProceed();
   };
 };
 
@@ -324,11 +232,7 @@ export const requireAnyPermission = (...permissions: bigint[]) => {
       }
     };
 
-    if (!Actor.maybeUse()) {
-      await withContext(c, checkPermissionsAndProceed);
-    } else {
-      await checkPermissionsAndProceed();
-    }
+    await checkPermissionsAndProceed();
   };
 };
 
@@ -345,8 +249,8 @@ export const requestTracking: MiddlewareHandler<{ Variables: Variables }> = asyn
 
 export const middleware = {
   public: [requestTracking] as const,
-  authenticated: [requestTracking, withHmacContext] as const,
-  guildScoped: [requestTracking, withHmacContext] as const,
+  authenticated: [requestTracking, withAuthContext] as const,
+  guildScoped: [requestTracking, withAuthContext] as const,
 } as const;
 
 export const compositions = middleware;

@@ -59,7 +59,7 @@ export default function TicketsPage({ selectedGuildId, initialTickets }: PagePro
   const selectedTicketId = useTicketsStore((s) => s.selectedTicketId);
   const selectTicket = useTicketsStore((s) => s.selectTicket);
 
-  // Fetch tickets directly
+  // Fetch tickets using the API client
   const {
     data: tickets = initialTickets,
     isLoading,
@@ -67,7 +67,15 @@ export default function TicketsPage({ selectedGuildId, initialTickets }: PagePro
   } = useQuery({
     queryKey: ["tickets", selectedGuildId, filters, activeTab],
     queryFn: async () => {
-      const response = await fetch(`/api/tickets?guildId=${selectedGuildId}&status=${activeTab}`);
+      const { api } = await import("@/lib/api");
+      const response = await api.tickets.$get({
+        query: {
+          guildId: selectedGuildId!,
+          status: activeTab,
+          page: "1",
+          pageSize: "50"
+        }
+      });
       if (!response.ok) throw new Error("Failed to fetch tickets");
       return response.json();
     },

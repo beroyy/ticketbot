@@ -87,10 +87,27 @@ export function withAuthRoute<P extends Record<string, any> = Record<string, any
       ? await getServerSidePropsFunc(context, session)
       : { props: {} as P };
 
+    // Clean session data for serialization - convert undefined to null
+    const cleanSession = {
+      ...session,
+      user: {
+        ...session.user,
+        username: session.user.username ?? null,
+        discriminator: session.user.discriminator ?? null,
+        avatar_url: session.user.avatar_url ?? null,
+        image: session.user.image ?? null,
+      },
+      session: {
+        ...session.session,
+        ipAddress: session.session.ipAddress ?? null,
+        userAgent: session.session.userAgent ?? null,
+      },
+    };
+
     return {
       props: {
         ...additionalProps.props,
-        session,
+        session: cleanSession,
         authState,
       },
     };
@@ -158,10 +175,27 @@ export function withGuildRoute<P extends Record<string, any> = Record<string, an
       ? await getServerSidePropsFunc(context, session, selectedGuildId, guilds)
       : { props: {} as P };
 
+    // Clean session data for serialization - convert undefined to null
+    const cleanSession = {
+      ...session,
+      user: {
+        ...session.user,
+        username: session.user.username ?? null,
+        discriminator: session.user.discriminator ?? null,
+        avatar_url: session.user.avatar_url ?? null,
+        image: session.user.image ?? null,
+      },
+      session: {
+        ...session.session,
+        ipAddress: session.session.ipAddress ?? null,
+        userAgent: session.session.userAgent ?? null,
+      },
+    };
+
     return {
       props: {
         ...additionalProps.props,
-        session,
+        session: cleanSession,
         authState,
         guilds,
         selectedGuildId,

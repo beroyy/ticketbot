@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { useAuth } from "@/features/auth/auth-provider-ssr";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ExternalLink, Settings } from "lucide-react";
+import { CheckCircle, ExternalLink, Settings, AlertCircle } from "lucide-react";
 import { withAuthRoute } from "@/lib/with-auth";
 import { fetchUserGuilds } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
@@ -12,6 +12,7 @@ import { OnboardingDialog } from "@/components/onboarding-dialog";
 import { BlurredLp } from "@/components/blurred-lp";
 import { useHideScrollbar } from "@/hooks";
 import { env } from "@/env";
+import { useUserGuilds } from "@/features/user/queries";
 
 type SetupStep = "select-guild" | "configure-guild" | "complete";
 
@@ -26,13 +27,21 @@ export const getServerSideProps = withAuthRoute(async (context, _session) => {
 
 type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
 
-export default function SetupPage({ guilds = [] }: PageProps) {
+export default function SetupPage({ guilds: initialGuilds = [] }: PageProps) {
   const router = useRouter();
   const { setSelectedGuildId } = useAuth();
   const [currentStep, setCurrentStep] = useState<SetupStep>("select-guild");
   const [selectedGuild, setSelectedGuild] = useState<string | null>(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isWaitingForBot, setIsWaitingForBot] = useState(false);
+  const [waitStartTime, setWaitStartTime] = useState<number | null>(null);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
   const { isClient } = useHideScrollbar();
+  
+  // Use client-side query for refreshing
+  const { data: freshGuilds, isLoading: isRefreshing, refetch } = useUserGuilds();
+  
+  // Use fresh guilds if available, otherwise use initial SSR guilds
+  const guilds = freshGuilds || initialGuilds;
 
   const handleGuildSelect = async (guildId: string) => {
     const guild = guilds.find((g) => g.id === guildId);
@@ -69,14 +78,55 @@ export default function SetupPage({ guilds = [] }: PageProps) {
   };
 
   const handleInviteBotPress = () => {
-    setIsRedirecting(true);
-    setTimeout(() => {
-      setIsRedirecting(false);
-    }, 500);
-
-    setCurrentStep("configure-guild");
+    setIsWaitingForBot(true);
+    setWaitStartTime(Date.now());
+    setHasTimedOut(false);
     window.open(env.discordInviteUrl, "_blank");
   };
+
+  const handleRefresh = useCallback(async () => {
+    const result = await refetch();
+    
+    // Check if bot was added
+    const connectedGuilds = result.data?.filter((g) => g.connected) || [];
+    if (connectedGuilds.length > 0) {
+      // Bot was added! Reset waiting state
+      setIsWaitingForBot(false);
+      setWaitStartTime(null);
+      setHasTimedOut(false);
+    }
+  }, [refetch]);
+
+  // Page visibility detection for auto-refresh
+  useEffect(() => {
+    if (!isWaitingForBot) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isWaitingForBot) {
+        handleRefresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isWaitingForBot, handleRefresh]);
+
+  // Timeout handling - 60 seconds
+  useEffect(() => {
+    if (!waitStartTime) return;
+
+    const checkTimeout = setInterval(() => {
+      const elapsed = Date.now() - waitStartTime;
+      if (elapsed > 60000) { // 60 seconds
+        setHasTimedOut(true);
+        clearInterval(checkTimeout);
+      }
+    }, 1000);
+
+    return () => clearInterval(checkTimeout);
+  }, [waitStartTime]);
 
   const connectedGuilds = guilds.filter((g) => g.connected);
   const _ownedGuilds = guilds.filter((g) => g.owner);
@@ -104,53 +154,113 @@ export default function SetupPage({ guilds = [] }: PageProps) {
       {currentStep === "select-guild" && (
         <>
           {!hasAnyBotInstalled ? (
-            <OnboardingDialog
-              heroImage={<Image src="/logo-blue.svg" alt="Ticketsbot" width={280} height={80} />}
-              title="Invite the bot to your server"
-              description="You will need admin access to complete this step"
-              isLoading={isRedirecting}
-              onButtonPress={handleInviteBotPress}
-              buttonDisabled={isRedirecting}
-              buttonText="Invite Ticketsbot"
-              buttonClassName="fancy-button hover:opacity-90 hover:transition-opacity hover:duration-500 hover:ease-in-out"
-            />
-          ) : (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700">Your servers with TicketsBot:</h3>
-              {connectedGuilds.map((guild) => (
-                <button
-                  key={guild.id}
-                  onClick={() => handleGuildSelect(guild.id)}
-                  className="w-full rounded-lg border border-gray-200 p-4 text-left transition-all hover:border-blue-500 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-4">
-                    {guild.iconUrl ? (
-                      <img src={guild.iconUrl} alt={guild.name} className="size-12 rounded-full" />
-                    ) : (
-                      <div className="flex size-12 items-center justify-center rounded-full bg-gray-200">
-                        <span className="text-lg font-semibold text-gray-600">{guild.name[0]}</span>
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{guild.name}</h4>
-                      <p className="text-sm text-gray-500">
-                        {guild.setupRequired ? "Needs configuration" : "Ready to use"}
+            <>
+              {hasTimedOut ? (
+                // Timeout message
+                <div className="rounded-20 fixed left-1/2 top-1/2 z-20 w-[35rem] -translate-x-1/2 -translate-y-1/2 border bg-white p-6 pt-12 shadow-lg">
+                  <div className="flex flex-col items-center gap-5 text-center">
+                    <div className="flex size-16 items-center justify-center rounded-full bg-yellow-100">
+                      <AlertCircle className="size-8 text-yellow-600" />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-strong-black text-pretty text-3xl font-semibold tracking-tight">
+                        Taking longer than expected
+                      </h2>
+                      <p className="text-sub-gray text-pretty tracking-tight">
+                        Please ensure you've completed the bot invitation in Discord. The bot needs Administrator permissions.
                       </p>
                     </div>
-                    {guild.setupRequired ? (
-                      <Settings className="h-5 w-5 text-orange-500" />
-                    ) : (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    )}
+                    <div className="flex w-full flex-col gap-3">
+                      <Button
+                        className="bg-dark-faded-blue hover:bg-dark-faded-blue/95 w-full"
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                      >
+                        {isRefreshing ? (
+                          <LoadingSpinner className="size-5" />
+                        ) : (
+                          "Check Again"
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setHasTimedOut(false);
+                          setWaitStartTime(Date.now());
+                          window.open(env.discordInviteUrl, "_blank");
+                        }}
+                        className="w-full"
+                      >
+                        Try Inviting Again
+                      </Button>
+                    </div>
                   </div>
-                </button>
-              ))}
+                </div>
+              ) : (
+                <OnboardingDialog
+                  heroImage={<Image src="/logo-blue.svg" alt="Ticketsbot" width={280} height={80} />}
+                  title={isWaitingForBot ? undefined : "Invite the bot to your server"}
+                  description={isWaitingForBot ? undefined : "You will need admin access to complete this step"}
+                  isLoading={isRefreshing}
+                  onButtonPress={handleInviteBotPress}
+                  buttonDisabled={isRefreshing}
+                  buttonText="Invite Ticketsbot"
+                  buttonClassName="fancy-button hover:opacity-90 hover:transition-opacity hover:duration-500 hover:ease-in-out"
+                  isWaiting={isWaitingForBot}
+                  onRefresh={handleRefresh}
+                />
+              )}
+            </>
+          ) : (
+            // Guild selection dialog
+            <div className="rounded-20 fixed left-1/2 top-1/2 z-20 w-[35rem] -translate-x-1/2 -translate-y-1/2 border bg-white p-6 shadow-lg">
+              <div className="flex flex-col gap-5">
+                <div className="text-center">
+                  <h2 className="text-strong-black text-pretty text-3xl font-semibold tracking-tight">
+                    Select Your Server
+                  </h2>
+                  <p className="text-sub-gray mt-2 text-pretty tracking-tight">
+                    Choose a server to manage with TicketsBot
+                  </p>
+                </div>
 
-              <div className="mt-6 text-center">
-                <Button variant="outline" onClick={handleInviteBotPress} className="gap-2">
-                  <ExternalLink className="h-4 w-4" />
-                  Add to Another Server
-                </Button>
+                <div className="max-h-[400px] space-y-3 overflow-y-auto">
+                  {connectedGuilds.map((guild) => (
+                    <button
+                      key={guild.id}
+                      onClick={() => handleGuildSelect(guild.id)}
+                      className="w-full rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-500 hover:shadow-md"
+                    >
+                      <div className="flex items-center gap-4">
+                        {guild.iconUrl ? (
+                          <img src={guild.iconUrl} alt={guild.name} className="size-12 rounded-full" />
+                        ) : (
+                          <div className="flex size-12 items-center justify-center rounded-full bg-gray-200">
+                            <span className="text-lg font-semibold text-gray-600">{guild.name[0]}</span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h4 className="text-gray-900 font-semibold">{guild.name}</h4>
+                          <p className="text-sm text-gray-500">
+                            {guild.setupRequired ? "Needs configuration" : "Ready to use"}
+                          </p>
+                        </div>
+                        {guild.setupRequired ? (
+                          <Settings className="h-5 w-5 text-orange-500" />
+                        ) : (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-center">
+                  <Button variant="outline" onClick={handleInviteBotPress} className="gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Add to Another Server
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -158,46 +268,66 @@ export default function SetupPage({ guilds = [] }: PageProps) {
       )}
 
       {currentStep === "configure-guild" && (
-        <div className="space-y-4">
-          <div className="rounded-lg bg-blue-50 p-4">
-            <h3 className="mb-2 font-semibold text-blue-900">Initial Setup Required</h3>
-            <p className="text-sm text-blue-700">
-              This server needs to be configured before you can use TicketsBot.
-            </p>
-          </div>
+        <div className="rounded-20 fixed left-1/2 top-1/2 z-20 w-[35rem] -translate-x-1/2 -translate-y-1/2 border bg-white p-6 shadow-lg">
+          <div className="flex flex-col gap-5">
+            <div className="text-center">
+              <h2 className="text-strong-black text-pretty text-3xl font-semibold tracking-tight">
+                Configure TicketsBot
+              </h2>
+              <p className="text-sub-gray mt-2 text-pretty tracking-tight">
+                Let's get your server set up
+              </p>
+            </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <span className="text-sm">Create support channels</span>
+            <div className="rounded-lg bg-blue-50 p-4">
+              <h3 className="mb-2 font-semibold text-blue-900">Initial Setup Required</h3>
+              <p className="text-sm text-blue-700">
+                This server needs to be configured before you can use TicketsBot.
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <span className="text-sm">Set up permissions</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <span className="text-sm">Configure ticket categories</span>
-            </div>
-          </div>
 
-          <Button onClick={handleConfigureComplete} className="w-full" size="lg">
-            Complete Setup
-          </Button>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </div>
+                <span className="text-sm text-gray-700">Create support channels</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </div>
+                <span className="text-sm text-gray-700">Set up permissions</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </div>
+                <span className="text-sm text-gray-700">Configure ticket categories</span>
+              </div>
+            </div>
+
+            <Button onClick={handleConfigureComplete} className="w-full bg-dark-faded-blue hover:bg-dark-faded-blue/95" size="lg">
+              Complete Setup
+            </Button>
+          </div>
         </div>
       )}
 
       {currentStep === "complete" && (
-        <div className="text-center">
-          <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-500" />
-          <p className="text-gray-600">Redirecting to your dashboard...</p>
-          <LoadingSpinner className="mx-auto mt-4" />
+        <div className="rounded-20 fixed left-1/2 top-1/2 z-20 w-[35rem] -translate-x-1/2 -translate-y-1/2 border bg-white p-6 shadow-lg">
+          <div className="flex flex-col items-center gap-5 text-center">
+            <CheckCircle className="h-16 w-16 text-green-500" />
+            <div>
+              <h2 className="text-strong-black text-pretty text-3xl font-semibold tracking-tight">
+                Setup Complete!
+              </h2>
+              <p className="text-sub-gray mt-2 text-pretty tracking-tight">
+                Redirecting to your dashboard...
+              </p>
+            </div>
+            <LoadingSpinner className="size-8" />
+          </div>
         </div>
       )}
     </div>

@@ -11,7 +11,10 @@ export const env = {
   authCallbackUrl: typeof window !== "undefined" ? window.location.origin : undefined,
   discordInviteUrl: `https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID}`,
 
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
+  // Use absolute URL with proxy path in development for client-side requests
+  baseUrl: process.env.NODE_ENV === "development" 
+    ? "http://localhost:3000/api/v1" 
+    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"),
   hmacSecret: process.env.API_SECRET,
 
   isDev: () => process.env.NODE_ENV === "development",

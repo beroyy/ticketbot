@@ -23,6 +23,18 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    // Only proxy in development - production uses direct API URL with proper domain cookies
+    if (process.env.NODE_ENV === "development") {
+      return [
+        {
+          source: "/api/v1/:path*",
+          destination: "http://localhost:3001/:path*",
+        },
+      ];
+    }
+    return [];
+  },
 };
 
 export default nextConfig;

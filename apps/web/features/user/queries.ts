@@ -67,6 +67,20 @@ export const teamsQueries = {
   }),
 };
 
+async function fetchUserGuilds() {
+  const res = await api.discord.guilds.$get();
+  if (!res.ok) throw new Error("Failed to fetch guilds");
+  const data = await res.json();
+  return data.guilds.map((g: any) => ({
+    id: g.id,
+    name: g.name,
+    iconUrl: g.icon,
+    connected: g.botInstalled,
+    owner: g.owner,
+    setupRequired: g.botInstalled && !g.botConfigured,
+  }));
+}
+
 async function fetchDiscordChannels(
   guildId: string,
   types?: number[],
@@ -89,6 +103,13 @@ async function fetchDiscordRoles(guildId: string) {
 }
 
 export const discordQueries = {
+  guilds: () => ({
+    queryKey: ["discord-guilds"],
+    queryFn: fetchUserGuilds,
+    staleTime: 30000, // 30 seconds
+    retry: 2,
+  }),
+
   channels: (guildId: string | null, types?: number[], includeNone: boolean = true) => ({
     queryKey: ["discord-channels", guildId, types, includeNone],
     queryFn: () => {
@@ -111,6 +132,10 @@ export const discordQueries = {
 };
 
 // Export hooks
+export function useUserGuilds() {
+  return useQuery(discordQueries.guilds());
+}
+
 export function useDiscordChannels(
   guildId: string | null,
   types?: number[],

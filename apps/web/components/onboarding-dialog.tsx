@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { FaDiscord } from "react-icons/fa6";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type OnboardingDialogProps = {
@@ -14,6 +14,8 @@ type OnboardingDialogProps = {
   buttonDisabled?: boolean;
   buttonText?: string;
   buttonClassName?: string;
+  isWaiting?: boolean;
+  onRefresh?: () => void;
 };
 
 export function OnboardingDialog({
@@ -27,7 +29,56 @@ export function OnboardingDialog({
   buttonDisabled,
   buttonText,
   buttonClassName,
+  isWaiting,
+  onRefresh,
 }: OnboardingDialogProps) {
+  // When waiting for bot to be added
+  if (isWaiting && onRefresh) {
+    return (
+      <div className="rounded-20 fixed left-1/2 top-1/2 z-20 w-[35rem] -translate-x-1/2 -translate-y-1/2 border bg-white p-6 pt-12 shadow-lg">
+        <div className="flex flex-col items-center gap-5 text-center">
+          {heroImage}
+          <div className="space-y-2">
+            <h2 className="text-strong-black text-pretty text-3xl font-semibold tracking-tight">
+              Waiting for bot to be added...
+            </h2>
+            <p className="text-sub-gray text-pretty tracking-tight">
+              Please complete the bot invitation in the Discord tab, then click refresh below
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-3">
+            <Button
+              className={cn(
+                "bg-dark-faded-blue hover:bg-dark-faded-blue/95 active:bg-dark-faded-blue/90 group flex w-full items-center justify-center gap-2 rounded-xl px-4 py-5 font-medium text-white transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4C7EDB] focus-visible:ring-offset-2 focus-visible:ring-offset-white active:scale-95",
+                buttonClassName
+              )}
+              onClick={onRefresh}
+              disabled={isLoading}
+              data-onboarding-refresh
+            >
+              {isLoading ? (
+                <LoadingSpinner className="size-5 animate-spin opacity-50" />
+              ) : (
+                <>
+                  <RefreshCw className="size-5" />
+                  Check Again
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onButtonPress}
+              className="w-full"
+            >
+              Open Discord Invite Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default state - initial invite
   return (
     <div className="rounded-20 fixed left-1/2 top-1/2 z-20 w-[35rem] -translate-x-1/2 -translate-y-1/2 border bg-white p-6 pt-12 shadow-lg">
       <div className="flex flex-col items-center gap-5 text-center">

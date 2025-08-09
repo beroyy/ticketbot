@@ -1,106 +1,96 @@
 # Web Dashboard Application
 
+## 🚨 Simplification in Progress
+
+**We are actively simplifying this application's architecture** to align with our philosophy: "explicit, straightforward code over clever abstractions." See `web-state.md` for migration examples.
+
 ## Architecture Overview
 
 Next.js 15 dashboard using pages router with:
 
 - **Feature-based organization** in `features/` directory
-- **Single global Zustand store** with atomic selectors
+- **Simple Zustand stores** - Direct usage, no abstractions
 - **TanStack Query v5** for server state management
 - **shadcn/ui components** with Tailwind CSS
 - **React Hook Form** with Zod validation
 
 ## State Management Patterns
 
-### Global App Store
+### Simple Store Pattern (Recommended)
 
-The application uses a single global Zustand store (`shared/stores/app-store.ts`) that manages all UI state:
+**Use small, focused Zustand stores with direct access:**
 
 ```typescript
-interface AppStore {
-  // Global UI state
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+// stores/app-store.ts - Small, focused
+interface AppState {
+  selectedGuildId: string | null;
+  setSelectedGuildId: (id: string | null) => void;
+}
 
-  // Feature-specific state sections
-  tickets: TicketUIState;
-  panels: PanelUIState;
-  // ... other features
+export const useAppStore = create<AppState>()((set) => ({
+  selectedGuildId: null,
+  setSelectedGuildId: (id) => set({ selectedGuildId: id }),
+}))
+
+// Usage - Direct and explicit
+function MyComponent() {
+  const guildId = useAppStore(s => s.selectedGuildId);
+  const setGuildId = useAppStore(s => s.setSelectedGuildId);
+  
+  // Or get multiple values
+  const { selectedGuildId, setSelectedGuildId } = useAppStore();
 }
 ```
 
-### Feature Hooks Pattern
+### Query Pattern (Simplified)
 
-Each feature exposes hooks that combine server and UI state:
+**Use React Query directly with simple async functions:**
 
 ```typescript
-// features/tickets/hooks/use-ticket-queries.ts
-export function useTicketQueries() {
-  const filters = useAppStore((state) => state.tickets.filters);
-
-  return useQuery({
-    queryKey: ["tickets", filters],
-    queryFn: () => api.getTickets(filters),
-    staleTime: 30 * 1000,
-  });
+// lib/api/tickets.ts - Simple functions
+export async function getTickets(guildId: string, filters?: Filters) {
+  const params = new URLSearchParams(filters as any);
+  const res = await fetch(`${API_URL}/guilds/${guildId}/tickets?${params}`);
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
 }
-```
 
-### Atomic Selectors Pattern
-
-Use atomic selectors from the global store to prevent unnecessary re-renders:
-
-```typescript
-// Atomic selectors from app store
-export const useTicketFilters = () => useAppStore((state) => state.tickets.filters);
-
-export const useTicketView = () => useAppStore((state) => state.tickets.view);
-
-export const useSelectedGuildId = () => useAppStore((state) => state.selectedGuildId);
-
-// Usage in components
+// Usage - Direct query, no wrappers
 function TicketList() {
-  const filters = useTicketFilters(); // Only re-renders on filter changes
-  const { data } = useTicketQueries();
-  // ...
+  const guildId = useAppStore(s => s.selectedGuildId);
+  
+  const { data: tickets } = useQuery({
+    queryKey: ['tickets', guildId],
+    queryFn: () => getTickets(guildId!),
+    enabled: !!guildId,
+  });
+  
+  return <div>{/* render tickets */}</div>;
 }
 ```
 
-### Query and Mutation Patterns
-
-**Queries** - Define in `features/[feature]/queries.ts`:
+### Mutations - Direct Pattern
 
 ```typescript
-export const ticketQueries = {
-  list: (guildId: string, filters?: TicketFilters) => ({
-    queryKey: ["tickets", guildId, filters],
-    queryFn: () => api.getTickets({ guildId, ...filters }),
-    staleTime: 30 * 1000,
-  }),
-
-  detail: (ticketId: string) => ({
-    queryKey: ["tickets", "detail", ticketId],
-    queryFn: () => api.getTicket(ticketId),
-  }),
-};
-```
-
-**Mutations** - Use dedicated hooks:
-
-```typescript
-// features/tickets/hooks/use-ticket-mutations.ts
-export function useCloseTicket() {
+// Direct mutation, no wrapper hooks
+function CloseTicketButton({ ticketId }: { ticketId: string }) {
   const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ ticketId, reason }: CloseTicketParams) => api.closeTicket(ticketId, reason),
-    onSuccess: (_, { ticketId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tickets"],
-      });
-      toast.success("Ticket closed successfully");
+  
+  const mutation = useMutation({
+    mutationFn: () => fetch(`${API_URL}/tickets/${ticketId}/close`, { 
+      method: 'POST' 
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      toast.success('Ticket closed');
     },
   });
+  
+  return (
+    <button onClick={() => mutation.mutate()}>
+      Close Ticket
+    </button>
+  );
 }
 ```
 
@@ -131,19 +121,23 @@ features/
 
 ## Component Patterns
 
-### Page Component
+### Page Component (Simplified)
 
 ```typescript
-// pages/tickets.tsx
+// pages/tickets.tsx - Direct and explicit
 export default function TicketsPage() {
-  const selectedGuildId = useSelectedGuildId();
-  const { data, isLoading, error } = useTicketQueries();
-  const filters = useTicketFilters();
-  const setFilters = useAppStore((state) => state.setTicketFilters);
+  const guildId = useAppStore(s => s.selectedGuildId);
+  const filters = useTicketsStore(s => s.filters);
+  const setFilters = useTicketsStore(s => s.setFilters);
+  
+  const { data: tickets, isLoading } = useQuery({
+    queryKey: ['tickets', guildId, filters],
+    queryFn: () => getTickets(guildId!, filters),
+    enabled: !!guildId,
+  });
 
-  if (!selectedGuildId) return <SelectServerModal />;
+  if (!guildId) return <SelectServerModal />;
   if (isLoading) return <LoadingSpinner />;
-  if (error) return <ErrorState error={error} />;
 
   return (
     <div className="container mx-auto p-6">
@@ -153,7 +147,7 @@ export default function TicketsPage() {
       />
       <DataTable
         columns={ticketColumns}
-        data={data.tickets}
+        data={tickets}
       />
     </div>
   );
@@ -199,11 +193,10 @@ pnpm build && pnpm start
 
 1. Create feature folder in `features/`
 2. Set up:
-   - `stores/` - UI state
-   - `queries.ts` - Server queries
-   - `hooks/` - Controller hook
+   - `stores/[feature]-store.ts` - Simple Zustand store if needed
+   - `api/[feature].ts` - Simple async functions
    - `ui/` - Components
-3. Use controller hook in page component
+3. Use stores and queries directly in components
 
 ### API Integration
 
@@ -295,12 +288,33 @@ const envSchema = z.object({
 export const env = envSchema.parse(process.env);
 ```
 
+## Simplification Philosophy
+
+> "The best code is code that doesn't need to exist. Only add abstractions when you have a real, recurring problem to solve."
+
+### Anti-Patterns to Avoid
+
+1. **Atomic selectors** - Just use the store directly
+2. **Controller hooks** - Components should call stores/queries directly  
+3. **Query factories** - Simple async functions are clearer
+4. **Global monolithic stores** - Use small, focused stores
+5. **Wrapper hooks** - Direct usage is more explicit
+
+### Patterns to Follow
+
+1. **Direct store access** - `useStore(s => s.value)`
+2. **Simple async functions** - `getTickets()` not `ticketQueries.list()`
+3. **Inline queries** - Define queries where they're used
+4. **Explicit data flow** - No hidden context or magic
+
+See `web-state.md` for detailed migration examples.
+
 ## Key Dependencies
 
 - `next` ^15.4.2 - React framework (pages router)
 - `react` ^19.1.0 - React library
 - `@tanstack/react-query` ^5.83.0 - Server state management
-- `zustand` ^5.0.6 - Client state management
+- `zustand` ^5.0.6 - Client state management (use directly, no abstractions)
 - `react-hook-form` ^7.60.0 - Form handling
 - `zod` ^4.0.5 - Schema validation
 - **Note**: Review `docs/zod-v4.md` for Zod v4 migration guide

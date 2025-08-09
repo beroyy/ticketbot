@@ -1,8 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { useTicketStats } from "@/features/tickets/hooks/use-ticket-stats";
-import { useRecentActivity } from "@/features/tickets/hooks/use-recent-activity";
-import type { RecentActivityEntry } from "@/features/tickets/queries/activity-queries";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { RiTicketLine, RiUser3Line } from "react-icons/ri";
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,14 +72,27 @@ export default function Dashboard({
 }: PageProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
 
-  const { data: ticketStats = initialTicketStats, error } = useTicketStats(
-    hasAnalyticsPermission ? selectedGuildId : null
-  );
+  const { data: ticketStats = initialTicketStats, error } = useQuery({
+    queryKey: ['ticket-stats', selectedGuildId],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets/statistics/${selectedGuildId}`);
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      return response.json();
+    },
+    enabled: hasAnalyticsPermission && !!selectedGuildId,
+    initialData: initialTicketStats,
+  });
 
-  const { data: recentActivity = initialRecentActivity, error: activityError } = useRecentActivity(
-    hasAnalyticsPermission ? selectedGuildId : null,
-    8
-  );
+  const { data: recentActivity = initialRecentActivity, error: activityError } = useQuery({
+    queryKey: ['recent-activity', selectedGuildId],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets?guildId=${selectedGuildId}&pageSize=8`);
+      if (!response.ok) throw new Error('Failed to fetch activity');
+      return response.json();
+    },
+    enabled: hasAnalyticsPermission && !!selectedGuildId,
+    initialData: initialRecentActivity,
+  });
 
   const timeframeData = (ticketStats as any)?.timeframes?.[selectedTimeframe];
   const chartData = timeframeData?.chartData || [];
@@ -342,7 +353,7 @@ export default function Dashboard({
 
             <div className="custom-scrollbar scrollbar-reserve flex-1 space-y-4 overflow-y-auto pr-2">
               {recentActivity && recentActivity.length > 0 ? (
-                recentActivity.map((activity: RecentActivityEntry, index: number) => (
+                recentActivity.map((activity: any, index: number) => (
                   <div
                     key={activity.id}
                     className={`flex items-start gap-3 pl-1 ${

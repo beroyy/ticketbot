@@ -1,9 +1,8 @@
-import { type ReactNode, useEffect } from "react";
+import type { ReactNode } from "react";
 import { type UseFormReturn, useForm, type FieldValues, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form } from "@/components/ui/form";
-import { useFormDraft, useFormActions } from "@/stores/global";
 import { toast } from "sonner";
 import { formatZodError } from "@/lib/zod-config";
 
@@ -75,43 +74,23 @@ export function FormWrapper<TFieldValues extends FieldValues = FieldValues>({
   schema,
   defaultValues,
   onSubmit,
-  formId,
+  formId: _formId,
   children,
   className = "",
   onValidationError,
 }: FormWrapperProps<TFieldValues>) {
-  // Get draft data if formId is provided
-  const draft = formId ? useFormDraft(formId) : undefined;
-  const { updateDraft, clearDraft } = useFormActions();
-
-  // Initialize form with draft data or default values
+  // Initialize form with default values
   const form = useForm<TFieldValues>({
     resolver: zodResolver(schema as any),
-    defaultValues: (draft || defaultValues || {}) as DefaultValues<TFieldValues>,
+    defaultValues: (defaultValues || {}) as DefaultValues<TFieldValues>,
     mode: "onChange", // Validate on change for better UX
   });
-
-  // Auto-save drafts when form values change
-  useEffect(() => {
-    if (!formId) return;
-
-    const subscription = form.watch((data) => {
-      updateDraft(formId, data);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form, formId, updateDraft]);
 
   // Handle form submission
   const handleSubmit = form.handleSubmit(
     async (data) => {
       try {
         await onSubmit(data);
-
-        // Clear draft on successful submission
-        if (formId) {
-          clearDraft(formId);
-        }
 
         // Reset form to default values
         form.reset(defaultValues);

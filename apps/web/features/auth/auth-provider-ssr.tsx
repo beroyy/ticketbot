@@ -1,10 +1,9 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { useRouter } from "next/router";
 import { authClient } from "@/lib/auth-client";
 import type { ServerSession, AuthState } from "@/lib/server-auth";
 import type { Guild } from "@/lib/api-server";
-import { useGlobalStore } from "@/stores/global";
-import { useHydratedStore } from "@/hooks/use-hydrated-store";
+import { useAppStore } from "@/stores/app-store";
 
 type AuthContextValue = {
   session: ServerSession | null;
@@ -45,60 +44,44 @@ export function AuthProvider({
 }: AuthProviderProps) {
   const router = useRouter();
 
-  // Use client-side session for updates, but default to server session
+  // Simple: use initial session directly, client session for updates
   const { data: clientSession } = authClient.useSession();
   const session = (clientSession as ServerSession | null) || initialSession;
 
-  // Get selected guild from store (hydrated)
-  const storeSelectedGuildId = useHydratedStore(useGlobalStore, (state) => state.selectedGuildId);
-  const setSelectedGuildIdStore = useGlobalStore((state) => state.setSelectedGuildId);
-
-  // Use store value if available, otherwise use initial
-  const selectedGuildId = storeSelectedGuildId ?? initialGuildId;
+  // Direct store access
+  const selectedGuildId = useAppStore((s) => s.selectedGuildId) ?? initialGuildId;
+  const setSelectedGuildIdStore = useAppStore((s) => s.setSelectedGuildId);
 
   const setSelectedGuildId = (guildId: string | null) => {
-    if (guildId) {
-      // Verify guild is valid
-      const guild = initialGuilds.find((g) => g.id === guildId && g.connected);
-      if (guild) {
-        setSelectedGuildIdStore(guildId);
-        // Set cookie for server-side persistence
-        document.cookie = `ticketsbot-selected-guild=${guildId}; path=/; max-age=604800`;
-      } else {
-        console.warn(`[Auth] Attempted to select invalid guild: ${guildId}`);
-        setSelectedGuildIdStore(null);
-        // Clear cookie
-        document.cookie = "ticketsbot-selected-guild=; path=/; max-age=0";
-      }
+    // Simple validation and update
+    const isValid = guildId && initialGuilds.some((g) => g.id === guildId && g.connected);
+    
+    if (isValid) {
+      setSelectedGuildIdStore(guildId);
+      document.cookie = `ticketsbot-selected-guild=${guildId}; path=/; max-age=604800`;
     } else {
       setSelectedGuildIdStore(null);
-      // Clear cookie
       document.cookie = "ticketsbot-selected-guild=; path=/; max-age=0";
     }
   };
 
-  const authState = useMemo(() => {
-    if (!session) return "unauthenticated";
-    if (!selectedGuildId) return "no-guild";
-
-    const hasValidGuild = initialGuilds.some((g) => g.id === selectedGuildId && g.connected);
-    if (!hasValidGuild) return "no-guild";
-
-    return "authenticated";
-  }, [session, selectedGuildId, initialGuilds]);
+  // Simple auth state calculation
+  const authState = !session 
+    ? "unauthenticated" 
+    : !selectedGuildId || !initialGuilds.some((g) => g.id === selectedGuildId && g.connected)
+    ? "no-guild"
+    : "authenticated";
 
   const contextValue: AuthContextValue = {
     session,
     isAuthenticated: !!session,
-    hasGuildSelected:
-      !!selectedGuildId && initialGuilds.some((g) => g.id === selectedGuildId && g.connected),
-    isLoading: false, // No loading state needed with SSR
+    hasGuildSelected: !!selectedGuildId && initialGuilds.some((g) => g.id === selectedGuildId && g.connected),
+    isLoading: false,
     selectedGuildId,
     setSelectedGuildId,
     authState,
     guilds: initialGuilds,
     refetchGuilds: async () => {
-      // Trigger a page refresh to get new data from server
       router.replace(router.asPath);
     },
   };

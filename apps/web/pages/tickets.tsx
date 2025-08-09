@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTicketUIActions, useTicketCollapsed } from "@/features/tickets/stores/tickets-ui-store";
+import { useTicketsStore } from "@/features/tickets/tickets-store";
 import { TicketDetailView } from "@/features/tickets/ui/ticket-detail-view";
 import { ActiveFilters } from "@/features/tickets/ui/active-filters";
 import { TicketsControls } from "@/features/tickets/ui/tickets-controls";
 import { TicketsList } from "@/features/tickets/ui/tickets-list";
-import { useTicketList } from "@/features/tickets/hooks/use-ticket-list";
 import { TicketsLayout } from "@/features/tickets/ui/tickets-layout";
 import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
+import { useQuery } from "@tanstack/react-query";
 import type { InferGetServerSidePropsType } from "next";
 
 export const getServerSideProps = withGuildRoute(async (context, _session, guildId, _guilds) => {
@@ -48,24 +48,34 @@ export const getServerSideProps = withGuildRoute(async (context, _session, guild
 
 type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
 
-export default function TicketsPage({ selectedGuildId }: PageProps) {
+export default function TicketsPage({ selectedGuildId, initialTickets }: PageProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"active" | "closed">("active");
+  const [isCollapsed, setCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
+  const filters = useTicketsStore((s) => s.filters);
+  const selectedTicketId = useTicketsStore((s) => s.selectedTicketId);
+  const selectTicket = useTicketsStore((s) => s.selectTicket);
+
+  // Fetch tickets directly
   const {
-    tickets,
-    selectedTicket,
+    data: tickets = initialTickets,
     isLoading,
     error,
-    filters,
-    sort,
-    searchQuery,
-    selectedTicketId,
-    activeTab,
-  } = useTicketList(selectedGuildId!);
+  } = useQuery({
+    queryKey: ["tickets", selectedGuildId, filters, activeTab],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets?guildId=${selectedGuildId}&status=${activeTab}`);
+      if (!response.ok) throw new Error("Failed to fetch tickets");
+      return response.json();
+    },
+    enabled: !!selectedGuildId,
+    initialData: initialTickets,
+  });
 
-  const { setSearchQuery, setActiveTab, setSelectedTicketId, setCollapsed } = useTicketUIActions();
-  const isCollapsed = useTicketCollapsed();
+  const selectedTicket = tickets?.find((t: any) => t.id === selectedTicketId);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -90,7 +100,7 @@ export default function TicketsPage({ selectedGuildId }: PageProps) {
         selectedTicket ? (
           <TicketDetailView
             ticket={selectedTicket}
-            onClose={() => setSelectedTicketId(null)}
+            onClose={() => selectTicket(null)}
             onCollapseToggle={() => setCollapsed(!isCollapsed)}
           />
         ) : undefined
@@ -143,8 +153,8 @@ export default function TicketsPage({ selectedGuildId }: PageProps) {
                   setIsSortOpen(!isSortOpen);
                   setIsFilterOpen(false);
                 }}
-                filters={filters}
-                sort={sort}
+                filters={filters as any}
+                sort={{ field: "createdAt" }}
                 isCompact={!!selectedTicket}
               />
               <ActiveFilters />
@@ -155,7 +165,7 @@ export default function TicketsPage({ selectedGuildId }: PageProps) {
             <TicketsList
               tickets={tickets}
               selectedTicketId={selectedTicketId}
-              onTicketSelect={setSelectedTicketId}
+              onTicketSelect={selectTicket}
               isLoading={isLoading}
               error={error}
               activeTab={activeTab}

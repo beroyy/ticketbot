@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { notify } from "@/stores/global";
+import { toast } from "sonner";
 
 /**
  * Custom error handler that extracts meaningful error messages
@@ -75,7 +75,9 @@ export function createQueryClient() {
           // Only show error notifications for certain types of errors
           if (shouldShowErrorNotification(error)) {
             const message = handleQueryError(error);
-            notify.error("Operation failed", message);
+            toast.error("Operation failed", {
+              description: message,
+            });
           } else {
             // Log Discord connection errors for debugging but don't show notifications
             console.debug("Mutation error (not showing notification):", error);
@@ -102,7 +104,7 @@ export function withSuccessNotification<
     mutationFn,
     onSuccess: (data: TData) => {
       const message = typeof successMessage === "function" ? successMessage(data) : successMessage;
-      notify.success(message);
+      toast.success(message);
     },
   };
 }

@@ -1,4 +1,4 @@
-import { useTicketUIActions, useTicketFilters } from "@/features/tickets/stores/tickets-ui-store";
+import { useTicketsStore } from "@/features/tickets/tickets-store";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, X } from "lucide-react";
 
@@ -13,30 +13,31 @@ export type FilterState = {
 };
 
 export function ActiveFilters() {
-  const filters = useTicketFilters();
-  const { setFilters } = useTicketUIActions();
+  const filters = useTicketsStore((s) => s.filters);
+  const setFilters = useTicketsStore((s) => s.setFilters);
 
   const removeFilter = (key: keyof FilterState, value: string) => {
     if (key === "dateRange") return;
 
-    const currentValues = filters[key];
-    const newValues = currentValues.filter((v) => v !== value);
-    setFilters({ [key]: newValues });
+    const currentValues = filters[key] || [];
+    const newValues = currentValues.filter((v: string) => v !== value);
+    setFilters({ ...filters, [key]: newValues });
   };
 
   const clearDateRange = () => {
     setFilters({
+      ...filters,
       dateRange: { from: null, to: null },
     });
   };
 
   const activeFilters = [
-    ...filters.status.map((status) => ({ key: "status", value: status, label: status })),
-    ...filters.type.map((type) => ({ key: "type", value: type, label: type })),
-    ...filters.assignee.map((assignee) => ({ key: "assignee", value: assignee, label: assignee })),
+    ...(filters.status || []).map((status: string) => ({ key: "status", value: status, label: status })),
+    ...(filters.type || []).map((type: string) => ({ key: "type", value: type, label: type })),
+    ...(filters.assignee || []).map((assignee: string) => ({ key: "assignee", value: assignee, label: assignee })),
   ];
 
-  const hasDateRange = filters.dateRange.from || filters.dateRange.to;
+  const hasDateRange = filters.dateRange?.from || filters.dateRange?.to;
 
   if (activeFilters.length === 0 && !hasDateRange) return null;
 

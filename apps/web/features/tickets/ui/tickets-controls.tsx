@@ -4,12 +4,7 @@ import { RiFilter3Line, RiSortDesc } from "react-icons/ri";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  useTicketFilters,
-  useTicketSort,
-  useTicketUIActions,
-} from "@/features/tickets/stores/tickets-ui-store";
-import type { FilterState } from "@/features/tickets/ui/active-filters";
+import { useTicketsStore } from "@/features/tickets/tickets-store";
 
 type TicketsControlsProps = {
   searchQuery: string;
@@ -121,24 +116,28 @@ type SortState = {
 };
 
 function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
-  const filters = useTicketFilters();
-  const { setFilters, clearFilters } = useTicketUIActions();
+  const filters = useTicketsStore((s) => s.filters);
+  const setFilters = useTicketsStore((s) => s.setFilters);
+  const clearFilters = useTicketsStore((s) => s.clearFilters);
 
-  const handleFilterChange = (key: keyof FilterState, value: string) => {
-    if (key === "dateRange") return;
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    if (key === "dateRange" || key === "search") return;
 
-    const currentValues = filters[key];
+    const currentValues = (filters[key] as string[]) || [];
     const newValues = currentValues.includes(value)
-      ? currentValues.filter((v) => v !== value)
+      ? currentValues.filter((v: string) => v !== value)
       : [...currentValues, value];
 
-    setFilters({ [key]: newValues });
+    setFilters({ ...filters, [key]: newValues });
   };
 
   const handleDateChange = (type: "from" | "to", value: string) => {
     setFilters({
+      ...filters,
       dateRange: {
         ...filters.dateRange,
+        from: filters.dateRange?.from || null,
+        to: filters.dateRange?.to || null,
         [type]: value,
       },
     });
@@ -173,7 +172,7 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
               {["OPEN", "IN_PROGRESS", "WAITING", "CLOSED"].map((status) => (
                 <Button
                   key={status}
-                  variant={filters.status.includes(status) ? "default" : "outline"}
+                  variant={filters.status?.includes(status) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleFilterChange("status", status)}
                   className="text-xs"
@@ -191,7 +190,7 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
               {["Bugs & Error", "General Support", "Dev Application"].map((type) => (
                 <Button
                   key={type}
-                  variant={filters.type.includes(type) ? "default" : "outline"}
+                  variant={filters.type?.includes(type) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleFilterChange("type", type)}
                   className="text-xs"
@@ -209,7 +208,7 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
               {["Unassigned", "Me", "Others"].map((assignee) => (
                 <Button
                   key={assignee}
-                  variant={filters.assignee.includes(assignee) ? "default" : "outline"}
+                  variant={filters.assignee?.includes(assignee) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleFilterChange("assignee", assignee)}
                   className="text-xs"
@@ -227,7 +226,7 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
               <div>
                 <Input
                   type="date"
-                  value={filters.dateRange.from || ""}
+                  value={filters.dateRange?.from || ""}
                   onChange={(e) => handleDateChange("from", e.target.value)}
                   className="text-xs"
                   placeholder="From"
@@ -236,7 +235,7 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
               <div>
                 <Input
                   type="date"
-                  value={filters.dateRange.to || ""}
+                  value={filters.dateRange?.to || ""}
                   onChange={(e) => handleDateChange("to", e.target.value)}
                   className="text-xs"
                   placeholder="To"
@@ -256,8 +255,10 @@ type SortDropdownProps = {
 };
 
 function SortDropdown({ isOpen }: SortDropdownProps) {
-  const sort = useTicketSort();
-  const { setSort } = useTicketUIActions();
+  const [sort, setSort] = React.useState<SortState>({
+    field: "createdAt",
+    direction: "desc",
+  });
 
   const handleSortChange = (field: SortState["field"]) => {
     setSort({

@@ -1,14 +1,33 @@
 import { Calendar } from "lucide-react";
-import type { ActivityLogEntry, Ticket } from "@/features/tickets/types";
-import { useActivityLog } from "@/features/tickets/hooks/use-activity-log";
+import { useQuery } from "@tanstack/react-query";
+
+// Simple type instead of importing complex types
+type ActivityLogEntry = {
+  id: string;
+  action: string;
+  timestamp: string;
+  performedBy?: {
+    username?: string;
+    global_name?: string;
+  };
+  details?: string | object;
+};
 
 type ActivityLogProps = {
-  ticket: Ticket;
+  ticketId: string;
   className?: string;
 };
 
-export function ActivityLog({ ticket, className }: ActivityLogProps) {
-  const { activityLog, isLoading, error } = useActivityLog(ticket.id);
+export function ActivityLog({ ticketId, className }: ActivityLogProps) {
+  // Direct query, no wrapper
+  const { data: activityLog = [], isLoading, error } = useQuery({
+    queryKey: ['activity-log', ticketId],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets/${ticketId}/activity`);
+      if (!response.ok) throw new Error('Failed to fetch activity log');
+      return response.json() as Promise<ActivityLogEntry[]>;
+    },
+  });
 
   return (
     <div className={className}>
@@ -16,7 +35,7 @@ export function ActivityLog({ ticket, className }: ActivityLogProps) {
         entries={activityLog}
         isLoading={isLoading}
         error={error}
-        ticketId={ticket.id}
+        ticketId={ticketId}
       />
     </div>
   );
@@ -25,11 +44,12 @@ export function ActivityLog({ ticket, className }: ActivityLogProps) {
 type ActivityLogListProps = {
   entries: ActivityLogEntry[];
   isLoading: boolean;
-  error: string | null;
+  error: Error | string | null;
   ticketId: string;
 };
 
 function ActivityLogList({ entries, isLoading, error, ticketId }: ActivityLogListProps) {
+  const errorMessage = error ? (typeof error === 'object' && 'message' in error ? error.message : String(error)) : null;
   // Clean ticket ID by removing # if present
   const cleanTicketId = ticketId.replace("#", "");
 
@@ -44,7 +64,7 @@ function ActivityLogList({ entries, isLoading, error, ticketId }: ActivityLogLis
   if (error) {
     return (
       <div className="py-8 text-center">
-        <div className="text-red-500">{error}</div>
+        <div className="text-red-500">{errorMessage}</div>
       </div>
     );
   }
@@ -61,7 +81,7 @@ function ActivityLogList({ entries, isLoading, error, ticketId }: ActivityLogLis
     <div className="divide-y divide-gray-100">
       {entries.map((entry, index) => {
         const displayName = entry.performedBy
-          ? entry.performedBy.global_name || entry.performedBy.username
+          ? entry.performedBy.global_name || entry.performedBy.username || "Unknown"
           : "System";
 
         const actionText = formatAction(entry.action, cleanTicketId, displayName);
@@ -90,7 +110,7 @@ function ActivityLogList({ entries, isLoading, error, ticketId }: ActivityLogLis
                 {actionText.includes("#") ? (
                   <>
                     {actionText.split("#")[0]}
-                    <span className="font-medium text-blue-600">#{actionText.split("#")[1]}</span>
+                    <span className="font-medium text-blue-600">#{actionText.split("#")[1] || ""}</span>
                   </>
                 ) : (
                   actionText

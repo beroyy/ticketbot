@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Ticket } from "@/features/tickets/types";
-import { useTicketMessages } from "@/features/tickets/hooks";
 import { Transcripts } from "@/features/tickets/ui/transcripts";
 import { useSmartRefetch } from "@/hooks/use-smart-refetch";
 import { useAuth } from "@/features/auth/auth-provider-ssr";
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { BiSolidArrowFromRight } from "react-icons/bi";
 import { TicketUserInfo } from "./ticket-user-info";
-import { useTicketCollapsed } from "@/features/tickets/stores/tickets-ui-store";
+import { useQuery } from "@tanstack/react-query";
 
 type TicketDetailViewProps = {
   ticket: Ticket;
@@ -18,15 +17,24 @@ type TicketDetailViewProps = {
 };
 
 export function TicketDetailView({ ticket, onClose, onCollapseToggle }: TicketDetailViewProps) {
-  const isCollapsed = useTicketCollapsed();
-  const { selectedGuildId } = useAuth();
+  const [isCollapsed, _setIsCollapsed] = useState(false);
+  const { selectedGuildId: _selectedGuildId } = useAuth();
   const smartInterval = useSmartRefetch("critical");
 
+  // Fetch messages directly
   const {
     data: messagesData,
     isLoading: messagesLoading,
     error: messagesError,
-  } = useTicketMessages(ticket.id, selectedGuildId, smartInterval);
+  } = useQuery({
+    queryKey: ['ticket-messages', ticket.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets/${ticket.id}/messages`);
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      return response.json();
+    },
+    refetchInterval: smartInterval,
+  });
 
   return (
     <div className="flex w-full py-6">
@@ -55,7 +63,7 @@ export function TicketDetailView({ ticket, onClose, onCollapseToggle }: TicketDe
             <div className="p-6">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">Activity Log</h2>
               <div className="max-h-96 overflow-y-auto">
-                <ActivityLog ticket={ticket} />
+                <ActivityLog ticketId={ticket.id} />
               </div>
             </div>
           </div>

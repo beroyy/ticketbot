@@ -67,7 +67,6 @@ export {
   type TransactionContextValue,
   TransactionContext,
   withTransaction,
-  afterTransaction,
 } from "./transaction";
 
 // Export error types

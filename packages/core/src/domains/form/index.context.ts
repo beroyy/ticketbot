@@ -5,7 +5,7 @@ import {
   type Panel as PrismaPanel,
   type FormFieldType,
 } from "@ticketsbot/db";
-import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
+import { Actor, withTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 
 type FormWithFields = PrismaForm & {
@@ -144,9 +144,7 @@ export namespace Form {
         },
       });
 
-      afterTransaction(async () => {
-        console.log(`Form ${form.id} created in guild ${guildId}`);
-      });
+      // Event logging removed - TCN will handle this automatically
 
       return formatFormForAPI(completeForm!);
     });
@@ -240,9 +238,7 @@ export namespace Form {
         },
       });
 
-      afterTransaction(async () => {
-        console.log(`Form ${formId} updated`);
-      });
+      // Event logging removed - TCN will handle this automatically
 
       return formatFormForAPI(updatedForm!);
     });
@@ -296,9 +292,7 @@ export namespace Form {
         where: { id: formId },
       });
 
-      afterTransaction(async () => {
-        console.log(`Form ${formId} deleted`);
-      });
+      // Event logging removed - TCN will handle this automatically
 
       return { success: true, deletedId: deleted.id };
     });
@@ -365,9 +359,7 @@ export namespace Form {
         },
       });
 
-      afterTransaction(async () => {
-        console.log(`Form ${formId} duplicated as ${newForm.id}`);
-      });
+      // Event logging removed - TCN will handle this automatically
 
       return formatFormForAPI(completeForm!);
     });

@@ -1,5 +1,5 @@
 import { prisma, TicketStatus, type Prisma } from "@ticketsbot/db";
-import { Actor, afterTransaction } from "../../context";
+import { Actor } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 import type { TicketQuery, UpdateTicketInput } from "./schemas";
 

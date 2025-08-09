@@ -7,7 +7,7 @@ import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 
 const closeReasonModalHandler = createModalHandler({
   pattern: "close_reason_modal",
@@ -37,7 +37,8 @@ const closeReasonModalHandler = createModalHandler({
     const userId = interaction.user.id;
 
     try {
-      await withTransaction(async () => {
+      // Close ticket in transaction
+      await prisma.$transaction(async (tx) => {
         // Close ticket using lifecycle domain
         await TicketLifecycle.close({
           ticketId: ticket.id,
@@ -46,30 +47,28 @@ const closeReasonModalHandler = createModalHandler({
           deleteChannel: false,
           notifyOpener: true,
         });
-
-        // Get guild settings
-        const settings = await getSettingsUnchecked(guild.id);
-        if (!settings) {
-          throw new Error("Guild not properly configured");
-        }
-
-        // Schedule Discord operations after transaction
-        afterTransaction(async () => {
-          try {
-            const channel = interaction.channel as TextChannel;
-
-            // Archive or delete the channel
-            const _archiveResult = await ChannelOps.ticket.archive(
-              channel,
-              guild,
-              settings,
-              userId
-            );
-          } catch (error) {
-            container.logger.error("Error in Discord operations:", error);
-          }
-        });
       });
+
+      // Get guild settings
+      const settings = await getSettingsUnchecked(guild.id);
+      if (!settings) {
+        throw new Error("Guild not properly configured");
+      }
+
+      // Discord operations after transaction
+      try {
+        const channel = interaction.channel as TextChannel;
+
+        // Archive or delete the channel
+        const _archiveResult = await ChannelOps.ticket.archive(
+          channel,
+          guild,
+          settings,
+          userId
+        );
+      } catch (error) {
+        container.logger.error("Error in Discord operations:", error);
+      }
 
       return ok(undefined);
     } catch (error) {

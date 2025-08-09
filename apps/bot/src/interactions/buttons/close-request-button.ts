@@ -14,7 +14,7 @@ import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 
 // Pattern matches both close_confirm_<id> and close_cancel_<id>
 const closeRequestPattern = /^close_(confirm|cancel)(?:_(.+))?$/;
@@ -72,7 +72,8 @@ const closeRequestHandler = createButtonHandler({
       const userId = interaction.user.id;
 
       try {
-        await withTransaction(async () => {
+        // Close ticket in transaction
+        await prisma.$transaction(async (tx) => {
           // Close ticket using lifecycle domain
           await TicketLifecycle.close({
             ticketId: ticket.id,
@@ -81,30 +82,28 @@ const closeRequestHandler = createButtonHandler({
             deleteChannel: false,
             notifyOpener: true,
           });
-
-          // Get guild settings
-          const settings = await getSettingsUnchecked(guild.id);
-          if (!settings) {
-            throw new Error("Guild not properly configured");
-          }
-
-          // Schedule Discord operations after transaction
-          afterTransaction(async () => {
-            try {
-              const channel = interaction.channel as TextChannel;
-
-              // Archive or delete the channel
-              const _archiveResult = await ChannelOps.ticket.archive(
-                channel,
-                guild,
-                settings,
-                userId
-              );
-            } catch (error) {
-              container.logger.error("Error in Discord operations:", error);
-            }
-          });
         });
+
+        // Get guild settings
+        const settings = await getSettingsUnchecked(guild.id);
+        if (!settings) {
+          throw new Error("Guild not properly configured");
+        }
+
+        // Discord operations after transaction
+        try {
+          const channel = interaction.channel as TextChannel;
+
+          // Archive or delete the channel
+          const _archiveResult = await ChannelOps.ticket.archive(
+            channel,
+            guild,
+            settings,
+            userId
+          );
+        } catch (error) {
+          container.logger.error("Error in Discord operations:", error);
+        }
       } catch (error) {
         container.logger.error("Failed to close ticket:", error);
       }

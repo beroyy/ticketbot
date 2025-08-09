@@ -5,7 +5,7 @@ import {
   type Form as PrismaForm,
   type FormField,
 } from "@ticketsbot/db";
-import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
+import { Actor, withTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 import { parseDiscordIdV4 as parseDiscordId } from "../../utils/discord-id";
 
@@ -279,11 +279,10 @@ export namespace Panel {
         },
       });
 
-      // Schedule re-deployment if channel changed
+      // Event logging removed - TCN will handle this automatically
+      // Re-deployment needed if channel changed
       if (channelId && updated.messageId) {
-        afterTransaction(async () => {
-          console.log(`Panel ${panelId} channel changed, re-deployment needed`);
-        });
+        // Panel will need re-deployment
       }
 
       return formatPanelForAPI(updated);
@@ -319,11 +318,10 @@ export namespace Panel {
         where: { id: panelId },
       });
 
-      // Schedule Discord message deletion if deployed
+      // Event logging removed - TCN will handle this automatically
+      // Discord message will need deletion if deployed
       if (panel.messageId) {
-        afterTransaction(async () => {
-          console.log(`Panel ${panelId} deleted, removing Discord message ${panel.messageId}`);
-        });
+        // Panel message will need removal from Discord
       }
 
       return { success: true, deletedId: deleted.id };
@@ -488,10 +486,7 @@ async function createSinglePanel(
     },
   });
 
-  // Schedule Discord deployment
-  afterTransaction(async () => {
-    console.log(`Panel ${panel.id} created, ready for deployment`);
-  });
+  // Event logging removed - TCN will handle this automatically
 
   return formatPanelForAPI(panel);
 }
@@ -578,10 +573,7 @@ async function createMultiPanel(
     })
   );
 
-  // Schedule Discord deployment
-  afterTransaction(async () => {
-    console.log(`Multi-panel ${parentPanel.id} created with ${childPanels.length} child panels`);
-  });
+  // Event logging removed - TCN will handle this automatically
 
   // Fetch the panel with form included
   const panelWithForm = await prisma.panel.findUniqueOrThrow({

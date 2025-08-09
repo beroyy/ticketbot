@@ -82,20 +82,9 @@ export async function withTransaction<T>(callback: () => Promise<T>): Promise<T>
   return result;
 }
 
-/**
- * Register an effect to run after the current transaction commits
- * If not in a transaction, the effect runs immediately
- */
-export function afterTransaction(effect: () => void | Promise<void>): void {
-  const ctx = TransactionContext.tryUse();
-  if (ctx) {
-    // In transaction, add to handlers
-    ctx.afterCommitHandlers.push(effect);
-  } else {
-    // Not in transaction, run immediately
-    void Promise.resolve(effect()).catch((err) => {
-      console.error("After-transaction effect failed:", err);
-    });
-  }
-}
+// afterTransaction function has been removed
+// Use explicit post-transaction code instead:
+// const result = await prisma.$transaction(async (tx) => { ... });
+// // External effects after transaction
+// await externalService.notify(result);
 

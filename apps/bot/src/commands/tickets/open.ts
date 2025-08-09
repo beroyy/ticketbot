@@ -12,7 +12,7 @@ import {
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 
 export class OpenCommand extends TicketCommandBase {
@@ -90,9 +90,10 @@ export class OpenCommand extends TicketCommandBase {
     }
 
     try {
-      await withTransaction(async () => {
+      // Create ticket in transaction
+      ticket = await prisma.$transaction(async (tx) => {
         // Create ticket using lifecycle domain with actual channel ID
-        ticket = await TicketLifecycle.create({
+        const createdTicket = await TicketLifecycle.create({
           guildId: guild.id,
           channelId: channel.id,
           openerId: userId,
@@ -103,33 +104,33 @@ export class OpenCommand extends TicketCommandBase {
           },
         });
 
-        // Update channel name with actual ticket number
-        try {
-          await channel.setName(`ticket-${ticket.number}`);
-        } catch (error) {
-          container.logger.warn("Failed to update channel name:", error);
-          // Non-critical error, continue
-        }
-
-        // Schedule Discord operations after transaction
-        afterTransaction(async () => {
-          try {
-            // Get ticket with form responses
-            const ticketWithDetails = await Ticket.getById(ticket.id);
-
-            // Send welcome message
-            const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);
-            const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
-
-            await channel.send({
-              embeds: [welcomeEmbed],
-              components: [actionButtons.toJSON()],
-            });
-          } catch (error) {
-            container.logger.error("Error in Discord operations:", error);
-          }
-        });
+        return createdTicket;
       });
+
+      // Update channel name with actual ticket number
+      try {
+        await channel.setName(`ticket-${ticket.number}`);
+      } catch (error) {
+        container.logger.warn("Failed to update channel name:", error);
+        // Non-critical error, continue
+      }
+
+      // Discord operations after transaction
+      try {
+        // Get ticket with form responses
+        const ticketWithDetails = await Ticket.getById(ticket.id);
+
+        // Send welcome message
+        const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);
+        const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
+
+        await channel.send({
+          embeds: [welcomeEmbed],
+          components: [actionButtons.toJSON()],
+        });
+      } catch (error) {
+        container.logger.error("Error in Discord operations:", error);
+      }
     } catch (error) {
       // If ticket creation fails, try to clean up the channel
       try {

@@ -4,7 +4,7 @@ import { Panel } from "@ticketsbot/core/domains/panel";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import { ChannelOps } from "./channel";
 import { MessageOps } from "./message";
 import { TranscriptOps } from "./transcript";
@@ -41,15 +41,22 @@ export const TicketOps = {
     let ticket: any;
     let channelId: string | undefined;
 
-    await withTransaction(async () => {
-      // Get panel details first
-      const panel = await Panel.getWithForm(panelId);
-      if (!panel) {
-        throw new Error("Panel not found");
-      }
+    // Get panel details first
+    const panel = await Panel.getWithForm(panelId);
+    if (!panel) {
+      throw new Error("Panel not found");
+    }
 
+    // Get guild settings
+    const settings = await getSettingsUnchecked(guild.id);
+    if (!settings) {
+      throw new Error("Guild not properly configured");
+    }
+
+    // Create ticket in transaction
+    ticket = await prisma.$transaction(async (tx) => {
       // Create ticket using lifecycle domain
-      ticket = await TicketLifecycle.create({
+      return await TicketLifecycle.create({
         guildId: guild.id,
         channelId: "", // Will be updated after channel creation
         openerId: userId,
@@ -61,53 +68,45 @@ export const TicketOps = {
           formResponses,
         },
       });
-
-      // Get guild settings
-      const settings = await getSettingsUnchecked(guild.id);
-      if (!settings) {
-        throw new Error("Guild not properly configured");
-      }
-
-      // Schedule Discord operations after transaction
-      afterTransaction(async () => {
-        try {
-          // Create Discord channel
-          const channel = await ChannelOps.ticket.createWithPermissions(
-            guild,
-            {
-              id: ticket.id,
-              number: ticket.number,
-              openerId: ticket.openerId,
-              subject: ticket.subject,
-            },
-            panel
-          );
-
-          channelId = channel.id;
-
-          // Update ticket with channel ID
-          await Ticket.updateChannelId(ticket.id, channel.id);
-
-          // Get ticket with form responses
-          const ticketWithDetails = await Ticket.getById(ticket.id);
-
-          // Send welcome message
-          const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
-          const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
-
-          const welcomeMessage = await channel.send({
-            embeds: [welcomeEmbed],
-            components: [actionButtons.toJSON()],
-          });
-
-          // Store welcome message in transcript
-          await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
-        } catch (error) {
-          container.logger.error("Error in Discord operations:", error);
-          throw error;
-        }
-      });
     });
+
+    // Discord operations after transaction
+    try {
+      // Create Discord channel
+      const channel = await ChannelOps.ticket.createWithPermissions(
+        guild,
+        {
+          id: ticket.id,
+          number: ticket.number,
+          openerId: ticket.openerId,
+          subject: ticket.subject,
+        },
+        panel
+      );
+
+      channelId = channel.id;
+
+      // Update ticket with channel ID
+      await Ticket.updateChannelId(ticket.id, channel.id);
+
+      // Get ticket with form responses
+      const ticketWithDetails = await Ticket.getById(ticket.id);
+
+      // Send welcome message
+      const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
+      const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
+
+      const welcomeMessage = await channel.send({
+        embeds: [welcomeEmbed],
+        components: [actionButtons.toJSON()],
+      });
+
+      // Store welcome message in transcript
+      await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
+    } catch (error) {
+      container.logger.error("Error in Discord operations:", error);
+      // Don't rethrow - ticket is already created
+    }
 
     return { ticket, channelId };
   },

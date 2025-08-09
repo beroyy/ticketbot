@@ -7,7 +7,7 @@ import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 
 const PANEL_CREATE_PATTERN = /^create_ticket_(\d+)$/;
 
@@ -53,9 +53,10 @@ const panelCreateHandler = createButtonHandler({
       let ticket: any;
       let channel: any;
 
-      await withTransaction(async () => {
+      // Create ticket in transaction
+      ticket = await prisma.$transaction(async (tx) => {
         // Create ticket using lifecycle domain
-        ticket = await TicketLifecycle.create({
+        return await TicketLifecycle.create({
           guildId: guild.id,
           channelId: "", // Will be updated after channel creation
           openerId: userId,
@@ -66,50 +67,48 @@ const panelCreateHandler = createButtonHandler({
             username,
           },
         });
-
-        // Get guild settings
-        const settings = await getSettingsUnchecked(guild.id);
-        if (!settings) {
-          throw new Error("Guild not properly configured");
-        }
-
-        // Schedule Discord operations after transaction
-        afterTransaction(async () => {
-          try {
-            // Create Discord channel
-            channel = await ChannelOps.ticket.createWithPermissions(
-              guild,
-              {
-                id: ticket.id,
-                number: ticket.number,
-                openerId: ticket.openerId,
-                subject: ticket.subject,
-              },
-              panel
-            );
-
-            // Update ticket with channel ID
-            await Ticket.updateChannelId(ticket.id, channel.id);
-
-            // Get ticket with form responses
-            const ticketWithDetails = await Ticket.getById(ticket.id);
-
-            // Send welcome message
-            const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
-            const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
-
-            const welcomeMessage = await channel.send({
-              embeds: [welcomeEmbed],
-              components: [actionButtons.toJSON()],
-            });
-
-            // Store welcome message in transcript
-            await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
-          } catch (error) {
-            container.logger.error("Error in Discord operations:", error);
-          }
-        });
       });
+
+      // Get guild settings
+      const settings = await getSettingsUnchecked(guild.id);
+      if (!settings) {
+        throw new Error("Guild not properly configured");
+      }
+
+      // Discord operations after transaction
+      try {
+        // Create Discord channel
+        channel = await ChannelOps.ticket.createWithPermissions(
+          guild,
+          {
+            id: ticket.id,
+            number: ticket.number,
+            openerId: ticket.openerId,
+            subject: ticket.subject,
+          },
+          panel
+        );
+
+        // Update ticket with channel ID
+        await Ticket.updateChannelId(ticket.id, channel.id);
+
+        // Get ticket with form responses
+        const ticketWithDetails = await Ticket.getById(ticket.id);
+
+        // Send welcome message
+        const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
+        const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
+
+        const welcomeMessage = await channel.send({
+          embeds: [welcomeEmbed],
+          components: [actionButtons.toJSON()],
+        });
+
+        // Store welcome message in transcript
+        await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
+      } catch (error) {
+        container.logger.error("Error in Discord operations:", error);
+      }
 
       await interaction.editReply({
         content: `✅ Your ${panel.title.toLowerCase()} ticket has been created! Please check your ticket channel.`,

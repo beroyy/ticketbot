@@ -4,7 +4,7 @@ import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
 export class CloseCommand extends TicketCommandBase {
@@ -55,39 +55,41 @@ export class CloseCommand extends TicketCommandBase {
     const guild = interaction.guild!;
     const userId = interaction.user.id;
 
-    let closedTicket: any;
     let _channelDeleted = false;
 
-    await withTransaction(async () => {
+    // Close ticket in transaction
+    const closedTicket = await prisma.$transaction(async (tx) => {
       // Close ticket using lifecycle domain
-      closedTicket = await TicketLifecycle.close({
+      return await TicketLifecycle.close({
         ticketId: ticket.id,
         closedById: userId,
         reason: reasonResult.value ?? undefined,
         deleteChannel: false, // We'll handle channel deletion separately
         notifyOpener: true,
       });
-
-      // Get guild settings
-      const settings = await getSettingsUnchecked(guild.id);
-
-      // Schedule Discord operations after transaction
-      afterTransaction(async () => {
-        const channel = (await guild.channels
-          .fetch(interaction.channelId!)
-          .catch(() => null)) as TextChannel | null;
-
-        if (channel) {
-          // Send closed embed before deleting/archiving
-          const closedEmbed = MessageOps.ticket.closedEmbed(userId, ticket.id);
-          await channel.send({ embeds: [closedEmbed] }).catch(console.error);
-
-          // Archive or delete the channel
-          const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
-          _channelDeleted = archiveResult.deleted;
-        }
-      });
     });
+
+    // Get guild settings
+    const settings = await getSettingsUnchecked(guild.id);
+
+    // Discord operations after transaction
+    try {
+      const channel = (await guild.channels
+        .fetch(interaction.channelId!)
+        .catch(() => null)) as TextChannel | null;
+
+      if (channel) {
+        // Send closed embed before deleting/archiving
+        const closedEmbed = MessageOps.ticket.closedEmbed(userId, ticket.id);
+        await channel.send({ embeds: [closedEmbed] }).catch(console.error);
+
+        // Archive or delete the channel
+        const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+        _channelDeleted = archiveResult.deleted;
+      }
+    } catch (error) {
+      console.error("Failed to handle Discord channel operations:", error);
+    }
 
     await InteractionResponse.success(
       interaction,

@@ -240,11 +240,12 @@ export namespace Role {
   /**
    * Assign a role to a user
    * Requires ROLE_ASSIGN permission
+   * Returns the member assignment and role details for Discord sync
    */
   export const assignRole = async (
     roleId: number,
     targetUserId: string
-  ): Promise<GuildRoleMember> => {
+  ): Promise<{ member: GuildRoleMember; role: { id: number; name: string; guildId: string } }> => {
     Actor.requirePermission(PermissionFlags.ROLE_ASSIGN);
     const guildId = Actor.guildId();
     const assignedById = Actor.userId();
@@ -253,14 +254,14 @@ export namespace Role {
       // Verify role belongs to guild
       const role = await tx.guildRole.findUnique({
         where: { id: roleId },
-        select: { guildId: true, name: true },
+        select: { id: true, guildId: true, name: true },
       });
 
       if (!role || role.guildId !== guildId) {
         throw new Error("Role not found");
       }
 
-      const result = await tx.guildRoleMember.upsert({
+      const member = await tx.guildRoleMember.upsert({
         where: {
           discordId_guildRoleId: {
             discordId: targetUserId,
@@ -281,15 +282,19 @@ export namespace Role {
       // TODO: Add event logging when eventLog model is available
       console.log(`Role assigned: ${role.name} to ${targetUserId} by ${assignedById}`);
 
-      return result;
+      return { member, role };
     });
   };
 
   /**
    * Remove a role from a user
    * Requires ROLE_ASSIGN permission
+   * Returns role details for Discord sync
    */
-  export const removeRole = async (roleId: number, targetUserId: string): Promise<void> => {
+  export const removeRole = async (
+    roleId: number,
+    targetUserId: string
+  ): Promise<{ removed: boolean; role: { id: number; name: string; guildId: string } }> => {
     Actor.requirePermission(PermissionFlags.ROLE_ASSIGN);
     const guildId = Actor.guildId();
     const removedById = Actor.userId();
@@ -298,38 +303,49 @@ export namespace Role {
       // Verify role belongs to guild
       const role = await tx.guildRole.findUnique({
         where: { id: roleId },
-        select: { guildId: true, name: true },
+        select: { id: true, guildId: true, name: true },
       });
 
       if (!role || role.guildId !== guildId) {
         throw new Error("Role not found");
       }
 
-      await tx.guildRoleMember.delete({
-        where: {
-          discordId_guildRoleId: {
-            discordId: targetUserId,
-            guildRoleId: roleId,
+      try {
+        await tx.guildRoleMember.delete({
+          where: {
+            discordId_guildRoleId: {
+              discordId: targetUserId,
+              guildRoleId: roleId,
+            },
           },
-        },
-      });
+        });
 
-      // TODO: Add event logging when eventLog model is available
-      console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
+        // TODO: Add event logging when eventLog model is available
+        console.log(`Role removed: ${role.name} from ${targetUserId} by ${removedById}`);
+        return { removed: true, role };
+      } catch (error) {
+        // Role assignment might not exist
+        return { removed: false, role };
+      }
     });
   };
 
   /**
    * Ensure default roles exist for the current guild
    * Requires ROLE_CREATE permission
+   * Returns created or existing role IDs
    */
-  export const ensureDefaultRoles = async (): Promise<void> => {
+  export const ensureDefaultRoles = async (): Promise<{
+    adminRoleId: number;
+    supportRoleId: number;
+    viewerRoleId: number;
+  }> => {
     Actor.requirePermission(PermissionFlags.ROLE_CREATE);
     const guildId = Actor.guildId();
 
-    await prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx) => {
       // Check if admin role exists
-      const adminRole = await tx.guildRole.findFirst({
+      let adminRole = await tx.guildRole.findFirst({
         where: {
           guildId,
           name: "admin",
@@ -338,7 +354,7 @@ export namespace Role {
       });
 
       if (!adminRole) {
-        await tx.guildRole.create({
+        adminRole = await tx.guildRole.create({
           data: {
             guildId,
             name: "admin",
@@ -351,7 +367,7 @@ export namespace Role {
       }
 
       // Check if support role exists
-      const supportRole = await tx.guildRole.findFirst({
+      let supportRole = await tx.guildRole.findFirst({
         where: {
           guildId,
           name: "support",
@@ -360,7 +376,7 @@ export namespace Role {
       });
 
       if (!supportRole) {
-        await tx.guildRole.create({
+        supportRole = await tx.guildRole.create({
           data: {
             guildId,
             name: "support",
@@ -373,7 +389,7 @@ export namespace Role {
       }
 
       // Check if viewer role exists
-      const viewerRole = await tx.guildRole.findFirst({
+      let viewerRole = await tx.guildRole.findFirst({
         where: {
           guildId,
           name: "viewer",
@@ -382,7 +398,7 @@ export namespace Role {
       });
 
       if (!viewerRole) {
-        await tx.guildRole.create({
+        viewerRole = await tx.guildRole.create({
           data: {
             guildId,
             name: "viewer",
@@ -393,6 +409,12 @@ export namespace Role {
           },
         });
       }
+
+      return {
+        adminRoleId: adminRole.id,
+        supportRoleId: supportRole.id,
+        viewerRoleId: viewerRole.id,
+      };
     });
   };
 

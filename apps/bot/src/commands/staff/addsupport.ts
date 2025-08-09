@@ -4,7 +4,7 @@ import { RoleOps } from "@bot/lib/discord-operations";
 import { Role } from "@ticketsbot/core/domains/role";
 import { User } from "@ticketsbot/core/domains/user";
 import { parseDiscordId } from "@ticketsbot/core";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const AddSupportCommand = createCommand({
@@ -52,7 +52,8 @@ export const AddSupportCommand = createCommand({
         return err("Support role not found");
       }
 
-      await withTransaction(async () => {
+      // Run database operations in transaction
+      await prisma.$transaction(async (tx) => {
         // Ensure user exists
         await User.ensure(
           userId,
@@ -65,22 +66,24 @@ export const AddSupportCommand = createCommand({
         await Role.assignRole(supportRole.id, userId, parseDiscordId(interaction.user.id));
         
         // Event logging removed - TCN will handle this automatically
-
-        // Schedule Discord role sync after transaction
-        afterTransaction(async () => {
-          const success = await RoleOps.syncTeamRoleToDiscord(
-            supportRole,
-            targetUser.id,
-            interaction.guild!,
-            "add"
-          );
-          if (!success) {
-            container.logger.warn(
-              `Could not sync Discord role for support role to user ${targetUser.id}`
-            );
-          }
-        });
       });
+
+      // Discord role sync after transaction
+      try {
+        const success = await RoleOps.syncTeamRoleToDiscord(
+          supportRole,
+          targetUser.id,
+          interaction.guild!,
+          "add"
+        );
+        if (!success) {
+          container.logger.warn(
+            `Could not sync Discord role for support role to user ${targetUser.id}`
+          );
+        }
+      } catch (error) {
+        container.logger.error("Failed to sync Discord role", error);
+      }
 
       const embed = Embed.success(
         StaffHelpers.formatRoleTitle("support", "added"),

@@ -1,4 +1,5 @@
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { withTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig, UserWithRole, SeederDependencies } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generateTicketScenario } from "./utils";
@@ -62,29 +63,28 @@ export class TicketSeeder {
             },
           });
 
-          // Claim ticket if assignee
+          // Store ticket ID for post-transaction updates
+          const ticketId = ticket.id;
+
+          // After transaction: claim and close tickets as needed
           if (assignee) {
-            afterTransaction(async () => {
-              await prisma.ticket.update({
-                where: { id: ticket.id },
-                data: {
-                  claimedById: assignee.id,
-                },
-              });
+            await prisma.ticket.update({
+              where: { id: ticketId },
+              data: {
+                claimedById: assignee.id,
+              },
             });
           }
 
           // Close ticket if scenario says so
           if (scenario.status === "CLOSED") {
-            afterTransaction(async () => {
-              await prisma.ticket.update({
-                where: { id: ticket.id },
-                data: {
-                  status: "CLOSED",
-                  closedById: assignee?.id || opener.id,
-                  closedAt: new Date(),
-                },
-              });
+            await prisma.ticket.update({
+              where: { id: ticketId },
+              data: {
+                status: "CLOSED",
+                closedById: assignee?.id || opener.id,
+                closedAt: new Date(),
+              },
             });
           }
 

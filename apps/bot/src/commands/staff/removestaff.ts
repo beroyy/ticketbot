@@ -3,7 +3,7 @@ import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
 import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId } from "@ticketsbot/core";
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const RemoveStaffCommand = createCommand({
@@ -39,33 +39,35 @@ export const RemoveStaffCommand = createCommand({
       const removedRoles: string[] = [];
       const rolesToSync = userRoles.filter((role) => role.discordRoleId);
 
-      await withTransaction(async () => {
-        // Remove all roles within transaction
+      // Remove all roles within transaction
+      await prisma.$transaction(async (tx) => {
         for (const role of userRoles) {
           await Role.removeRole(role.id, userId);
           removedRoles.push(role.name);
           
           // Event logging removed - TCN will handle this automatically
         }
-
-        // Schedule Discord role sync after transaction
-        if (rolesToSync.length > 0) {
-          afterTransaction(async () => {
-            const { failed } = await RoleOps.syncMultipleRolesToDiscord(
-              rolesToSync,
-              targetUser.id,
-              interaction.guild!,
-              "remove"
-            );
-
-            if (failed.length > 0) {
-              container.logger.warn(
-                `Failed to remove Discord roles [${failed.join(", ")}] from user ${targetUser.id}`
-              );
-            }
-          });
-        }
       });
+
+      // Discord role sync after transaction
+      if (rolesToSync.length > 0) {
+        try {
+          const { failed } = await RoleOps.syncMultipleRolesToDiscord(
+            rolesToSync,
+            targetUser.id,
+            interaction.guild!,
+            "remove"
+          );
+
+          if (failed.length > 0) {
+            container.logger.warn(
+              `Failed to remove Discord roles [${failed.join(", ")}] from user ${targetUser.id}`
+            );
+          }
+        } catch (error) {
+          container.logger.error("Failed to sync Discord roles", error);
+        }
+      }
 
       const embed = Embed.success(
         "Role Roles Removed",

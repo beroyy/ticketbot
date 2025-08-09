@@ -1,4 +1,5 @@
-import { withTransaction, afterTransaction } from "@ticketsbot/core/context";
+import { withTransaction } from "@ticketsbot/core/context";
+import { prisma } from "@ticketsbot/db";
 import { faker } from "@faker-js/faker";
 import type { SeedConfig } from "./types";
 import { ProgressLogger, SnowflakeGenerator, generatePanelData } from "./utils";
@@ -78,19 +79,17 @@ export class PanelSeeder {
         });
 
         panelIds.push(panel.id);
+      }
 
-        // Deploy first two panels
-        if (i < 2) {
-          afterTransaction(async () => {
-            await prisma.panel.update({
-              where: { id: panel.id },
-              data: {
-                messageId: this.snowflake.generate(),
-                deployedAt: new Date(),
-              },
-            });
-          });
-        }
+      // Deploy first two panels after creation
+      for (let i = 0; i < Math.min(2, panelIds.length); i++) {
+        await prisma.panel.update({
+          where: { id: panelIds[i] },
+          data: {
+            messageId: this.snowflake.generate(),
+            deployedAt: new Date(),
+          },
+        });
       }
 
       // Create additional dynamic panels using Faker

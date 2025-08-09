@@ -6,7 +6,7 @@ import {
   type GuildRole as _TeamRole,
   type Blacklist as _Blacklist,
 } from "@ticketsbot/db";
-import { Actor, withTransaction, afterTransaction, VisibleError } from "../../context";
+import { Actor, withTransaction, VisibleError } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 
 type FormattedGuildSettings = ReturnType<typeof formatGuildSettings>;
@@ -143,9 +143,7 @@ export namespace Guild {
         },
       });
 
-      afterTransaction(async () => {
-        console.log(`Guild settings updated for ${guildId}`);
-      });
+      // Event logging removed - TCN will handle this automatically
 
       return formatGuildSettings(updated);
     });
@@ -216,9 +214,7 @@ export namespace Guild {
       },
     });
 
-    afterTransaction(async () => {
-      console.log(`Blacklist entry added for ${input.targetId} in guild ${guildId}`);
-    });
+    // Event logging removed - TCN will handle this automatically
 
     return {
       id: entry.id,
@@ -245,9 +241,7 @@ export namespace Guild {
       throw new VisibleError("not_found", "Blacklist entry not found");
     }
 
-    afterTransaction(async () => {
-      console.log(`Blacklist entry removed for ${targetId} in guild ${guildId}`);
-    });
+    // Event logging removed - TCN will handle this automatically
 
     return { success: true, removed: deleted.count };
   };

@@ -19,8 +19,6 @@
     "db:generate": "dotenvx run -- pnpm --filter @ticketsbot/db db:generate",
     "db:migrate": "dotenvx run -- pnpm --filter @ticketsbot/db db:migrate",
     "db:push": "dotenvx run -- pnpm --filter @ticketsbot/db db:push",
-    "db:push:force": "dotenvx run -- pnpm --filter @ticketsbot/db db:push:force",
-    "db:seed": "dotenvx run -- tsx packages/scripts/src/db/seed.ts",
     "db:studio": "dotenvx run -- pnpm --filter @ticketsbot/db db:studio",
     "db:reset": "dotenvx run -- pnpm --filter @ticketsbot/db db:reset",
     "dev": "dotenvx run -- turbo dev",

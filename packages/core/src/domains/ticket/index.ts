@@ -13,7 +13,7 @@ export {
 } from "./schemas";
 
 // Export context-aware Ticket namespace
-export { Ticket } from "./index.context";
+export { Ticket } from "./operations";
 
 // Export static methods that don't require context (for preconditions, etc.)
 export {
@@ -24,4 +24,4 @@ export {
   getCountByStatus,
   hasOpenTickets,
   removeParticipantFromAll,
-} from "./static";
+} from "./system";

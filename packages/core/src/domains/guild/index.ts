@@ -3,7 +3,7 @@ export * from "./schemas";
 export * from "./api-schemas";
 
 // Export user-facing namespace
-export { Guild } from "./user";
+export { Guild } from "./operations";
 
 // Export system functions
 export {

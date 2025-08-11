@@ -20,4 +20,4 @@ export {
 } from "./schemas";
 
 // Export context-aware Form namespace
-export { Form } from "./index.context";
+export { Form } from "./operations";

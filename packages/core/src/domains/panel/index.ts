@@ -9,6 +9,6 @@ export {
   type PanelQuery,
 } from "./schemas";
 
-export { Panel } from "./index.context";
+export { Panel } from "./operations";
 
-export { getPanelById as findById, getPanelGuildId } from "./static";
+export { getPanelById as findById, getPanelGuildId } from "./system";

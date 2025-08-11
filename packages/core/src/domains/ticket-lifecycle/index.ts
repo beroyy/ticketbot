@@ -20,4 +20,4 @@ export {
 } from "./schemas";
 
 // Export namespace
-export { TicketLifecycle } from "./index.context";
+export { TicketLifecycle } from "./operations";

@@ -35,15 +35,14 @@ export function TicketsControls({
   isCompact = false,
 }: TicketsControlsProps) {
   const activeFilterCount =
-    filters.status.length +
-    filters.type.length +
-    filters.assignee.length +
-    (filters.dateRange.from || filters.dateRange.to ? 1 : 0);
+    (filters.status?.length || 0) +
+    (filters.type?.length || 0) +
+    (filters.assignee?.length || 0) +
+    (filters.dateRange?.from || filters.dateRange?.to ? 1 : 0);
 
   return (
     <div className="space-y-3">
       <div className={`flex items-center ${isCompact ? "space-x-2" : "space-x-3"}`}>
-        {/* Search Bar */}
         <div
           className={`nice-gray-border pointer-events-none relative flex ${
             isCompact ? "flex-1" : "w-full"
@@ -58,9 +57,7 @@ export function TicketsControls({
           />
         </div>
 
-        {/* Filter and Sort Buttons */}
         <div className={`relative flex ${isCompact ? "space-x-2" : "space-x-3"}`} data-dropdown>
-          {/* Filter Button */}
           <div className="relative flex-1">
             <Button
               variant="ghost"
@@ -80,7 +77,6 @@ export function TicketsControls({
             <FilterDropdown isOpen={isFilterOpen} onToggle={onFilterToggle} />
           </div>
 
-          {/* Sort Button */}
           <div className="relative flex-1">
             <Button
               variant="ghost"
@@ -117,30 +113,18 @@ type SortState = {
 
 function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
   const filters = useTicketsStore((s) => s.filters);
-  const setFilters = useTicketsStore((s) => s.setFilters);
+  const toggleFilterValue = useTicketsStore((s) => s.toggleFilterValue);
+  const updateDateRange = useTicketsStore((s) => s.updateDateRange);
   const clearFilters = useTicketsStore((s) => s.clearFilters);
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     if (key === "dateRange" || key === "search") return;
 
-    const currentValues = (filters[key] as string[]) || [];
-    const newValues = currentValues.includes(value)
-      ? currentValues.filter((v: string) => v !== value)
-      : [...currentValues, value];
-
-    setFilters({ ...filters, [key]: newValues });
+    toggleFilterValue(key as "status" | "assignee" | "type", value);
   };
 
   const handleDateChange = (type: "from" | "to", value: string) => {
-    setFilters({
-      ...filters,
-      dateRange: {
-        ...filters.dateRange,
-        from: filters.dateRange?.from || null,
-        to: filters.dateRange?.to || null,
-        [type]: value,
-      },
-    });
+    updateDateRange(type, value);
   };
 
   const handleClearAll = () => {
@@ -165,7 +149,6 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
         </div>
 
         <div className="space-y-4">
-          {/* Status Filter */}
           <div>
             <label className="mb-2 block text-xs font-medium text-gray-700">Status</label>
             <div className="flex flex-wrap gap-2">
@@ -183,7 +166,6 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
             </div>
           </div>
 
-          {/* Type Filter */}
           <div>
             <label className="mb-2 block text-xs font-medium text-gray-700">Type</label>
             <div className="flex flex-wrap gap-2">
@@ -201,7 +183,6 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
             </div>
           </div>
 
-          {/* Assignee Filter */}
           <div>
             <label className="mb-2 block text-xs font-medium text-gray-700">Assignee</label>
             <div className="flex flex-wrap gap-2">
@@ -219,7 +200,6 @@ function FilterDropdown({ isOpen }: { isOpen: boolean; onToggle: () => void }) {
             </div>
           </div>
 
-          {/* Date Range Filter */}
           <div>
             <label className="mb-2 block text-xs font-medium text-gray-700">Date Range</label>
             <div className="grid grid-cols-2 gap-2">

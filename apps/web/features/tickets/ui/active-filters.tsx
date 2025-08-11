@@ -14,27 +14,33 @@ export type FilterState = {
 
 export function ActiveFilters() {
   const filters = useTicketsStore((s) => s.filters);
+  const toggleFilterValue = useTicketsStore((s) => s.toggleFilterValue);
   const setFilters = useTicketsStore((s) => s.setFilters);
 
   const removeFilter = (key: keyof FilterState, value: string) => {
     if (key === "dateRange") return;
 
-    const currentValues = filters[key] || [];
-    const newValues = currentValues.filter((v: string) => v !== value);
-    setFilters({ ...filters, [key]: newValues });
+    toggleFilterValue(key as "status" | "assignee" | "type", value);
   };
 
   const clearDateRange = () => {
-    setFilters({
-      ...filters,
-      dateRange: { from: null, to: null },
+    setFilters((filters) => {
+      filters.dateRange = { from: null, to: null };
     });
   };
 
   const activeFilters = [
-    ...(filters.status || []).map((status: string) => ({ key: "status", value: status, label: status })),
+    ...(filters.status || []).map((status: string) => ({
+      key: "status",
+      value: status,
+      label: status,
+    })),
     ...(filters.type || []).map((type: string) => ({ key: "type", value: type, label: type })),
-    ...(filters.assignee || []).map((assignee: string) => ({ key: "assignee", value: assignee, label: assignee })),
+    ...(filters.assignee || []).map((assignee: string) => ({
+      key: "assignee",
+      value: assignee,
+      label: assignee,
+    })),
   ];
 
   const hasDateRange = filters.dateRange?.from || filters.dateRange?.to;

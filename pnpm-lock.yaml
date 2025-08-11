@@ -403,40 +403,6 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
-  packages/scripts:
-    dependencies:
-      '@faker-js/faker':
-        specifier: ^9.9.0
-        version: 9.9.0
-      '@prisma/client':
-        specifier: ^6.12.0
-        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
-      '@ticketsbot/core':
-        specifier: workspace:*
-        version: link:../core
-      '@types/node':
-        specifier: ^24.0.14
-        version: 24.0.14
-      commander:
-        specifier: ^12.1.0
-        version: 12.1.0
-      dotenv:
-        specifier: ^17.2.0
-        version: 17.2.0
-      tsx:
-        specifier: ^4.20.3
-        version: 4.20.3
-    devDependencies:
-      '@ticketsbot/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@ticketsbot/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-
   packages/tsconfig:
     devDependencies:
       '@types/node':
@@ -783,10 +749,6 @@ packages:
   '@eslint/plugin-kit@0.3.4':
     resolution: {integrity: sha512-Ul5l+lHEcw3L5+k8POx6r74mxEYKG5kOb6Xpy2gCRW6zweT6TEhAf8vhxGgjhqrd/VO/Dirhsb+1hNpD1ue9hw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@faker-js/faker@9.9.0':
-    resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
-    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
   '@floating-ui/core@1.7.2':
     resolution: {integrity: sha512-wNB5ooIKHQc+Kui96jE/n69rHFWAVoxn5CAzL1Xdd8FG03cgY3MLO+GF9U3W737fYDSgPWA6MReKhBQBop6Pcw==}
@@ -2455,10 +2417,6 @@ packages:
   commander@11.1.0:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
-
-  commander@12.1.0:
-    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
-    engines: {node: '>=18'}
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -4352,8 +4310,6 @@ snapshots:
       '@eslint/core': 0.15.1
       levn: 0.4.1
 
-  '@faker-js/faker@9.9.0': {}
-
   '@floating-ui/core@1.7.2':
     dependencies:
       '@floating-ui/utils': 0.2.10
@@ -6059,8 +6015,6 @@ snapshots:
       delayed-stream: 1.0.0
 
   commander@11.1.0: {}
-
-  commander@12.1.0: {}
 
   concat-map@0.0.1: {}
 

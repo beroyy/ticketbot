@@ -10,7 +10,6 @@ import { userRoutes } from "./routes/user";
 import { discordRoutes } from "./routes/discord";
 import { panelRoutes } from "./routes/panels";
 import { settingsRoutes } from "./routes/settings";
-import { formRoutes } from "./routes/forms";
 import { guildRoutes } from "./routes/guilds";
 import { ticketRoutes } from "./routes/tickets";
 import { permissionRoutes } from "./routes/permissions";
@@ -66,7 +65,6 @@ const _routes = app
   .route("/discord", discordRoutes)
   .route("/panels", panelRoutes)
   .route("/settings", settingsRoutes)
-  .route("/forms", formRoutes)
   .route("/guilds", guildRoutes)
   .route("/tickets", ticketRoutes)
   .route("/permissions", permissionRoutes);

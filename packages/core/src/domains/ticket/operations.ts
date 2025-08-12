@@ -3,24 +3,6 @@ import { Actor } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 import type { TicketQuery, UpdateTicketInput } from "./schemas";
 
-// Export only core schemas
-export {
-  TicketCoreSchema,
-  UpdateTicketSchema,
-  TicketQuerySchema,
-  FindByChannelSchema,
-  type TicketCore,
-  type UpdateTicketInput,
-  type TicketQuery,
-  type FindByChannelInput,
-} from "./schemas";
-
-/**
- * Core Ticket domain methods - slimmed down to essential operations
- * Lifecycle operations have been moved to TicketLifecycle domain
- * Message/content operations have been moved to Transcripts domain
- * Statistics operations have been moved to Analytics domain
- */
 export namespace Ticket {
   /**
    * Get a ticket by ID

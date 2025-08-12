@@ -10,33 +10,7 @@ import type {
   ReopenTicketInput,
 } from "./schemas";
 
-// Export schemas
-export {
-  CreateTicketSchema,
-  ClaimTicketSchema,
-  UnclaimTicketSchema,
-  CloseTicketSchema,
-  ReopenTicketSchema,
-  TicketStateTransitionSchema,
-  LifecycleEventSchema,
-  LifecycleHistoryQuerySchema,
-  type CreateTicketInput,
-  type ClaimTicketInput,
-  type UnclaimTicketInput,
-  type CloseTicketInput,
-  type ReopenTicketInput,
-  type TicketStateTransition,
-  type LifecycleEvent,
-  type LifecycleHistoryQuery,
-} from "./schemas";
-
-/**
- * TicketLifecycle domain - handles all ticket state transitions and lifecycle events
- */
 export namespace TicketLifecycle {
-  /**
-   * Create a new ticket with all necessary validations and business logic
-   */
   export const create = async (input: CreateTicketInput): Promise<any> => {
     const { CreateTicketSchema } = await import("./schemas");
     const parsed = CreateTicketSchema.parse(input);

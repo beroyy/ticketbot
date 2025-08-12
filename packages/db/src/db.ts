@@ -36,6 +36,7 @@ import {
   getHistory,
   submitFeedback,
 } from "./operations";
+import * as ticketLifecycle from "./operations/ticket-lifecycle";
 import {
   getGuildById,
   updateGuild,
@@ -117,4 +118,5 @@ export const db = {
     getHistory: getHistory,
     submitFeedback: submitFeedback,
   },
+  ticketLifecycle: ticketLifecycle,
 };

@@ -1,6 +1,5 @@
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction, TextChannel } from "discord.js";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
@@ -36,7 +35,7 @@ const closeReasonModalHandler = createModalHandler({
 
     try {
       await prisma.$transaction(async (_tx) => {
-        await TicketLifecycle.close({
+        await db.ticketLifecycle.close({
           ticketId: ticket.id,
           closedById: userId,
           reason,

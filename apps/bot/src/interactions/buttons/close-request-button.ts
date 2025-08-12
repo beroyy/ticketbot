@@ -9,7 +9,6 @@ import {
 } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { prisma } from "@ticketsbot/db";
@@ -68,7 +67,7 @@ const closeRequestHandler = createButtonHandler({
 
       try {
         await prisma.$transaction(async (_tx) => {
-          await TicketLifecycle.close({
+          await db.ticketLifecycle.close({
             ticketId: ticket.id,
             closedById: userId,
             reason: "Close request approved by opener",
@@ -94,7 +93,7 @@ const closeRequestHandler = createButtonHandler({
       }
     } else {
       try {
-        await TicketLifecycle.cancelCloseRequest(ticket.id, parseDiscordId(interaction.user.id));
+        await db.ticketLifecycle.cancelCloseRequest(ticket.id, parseDiscordId(interaction.user.id));
 
         await interaction.update({
           content: MessageOps.closeRequest.deniedMessage(),

@@ -2,11 +2,6 @@ import { Discord } from "./index";
 import type { TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
 
-const getTicketLifecycle = async () => {
-  const { TicketLifecycle } = await import("../domains/ticket-lifecycle");
-  return TicketLifecycle;
-};
-
 export const createTicketFromPanel = async (data: {
   guildId: string;
   userId: string;
@@ -16,8 +11,6 @@ export const createTicketFromPanel = async (data: {
   useThreads?: boolean;
   parentChannelId?: string;
 }): Promise<{ ticketId: number; channelId: string }> => {
-  const TicketLifecycle = await getTicketLifecycle();
-
   const channelName = `ticket-${Date.now().toString(36)}`;
 
   const { channelId } = await Discord.createTicketChannel({
@@ -29,7 +22,7 @@ export const createTicketFromPanel = async (data: {
     parentChannelId: data.parentChannelId,
   });
 
-  const ticket = await TicketLifecycle.create({
+  const ticket = await db.ticketLifecycle.create({
     guildId: data.guildId,
     channelId,
     openerId: data.userId,
@@ -50,12 +43,10 @@ export const closeTicket = async (data: {
   reason?: string;
   deleteChannel?: boolean;
 }): Promise<void> => {
-  const TicketLifecycle = await getTicketLifecycle();
-
   const ticket = await db.ticket.getByIdUnchecked(data.ticketId);
   if (!ticket) throw new Error("Ticket not found");
 
-  await TicketLifecycle.close({
+  await db.ticketLifecycle.close({
     ticketId: data.ticketId,
     closedById: data.closedById,
     reason: data.reason,

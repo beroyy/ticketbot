@@ -9,7 +9,6 @@ import {
   err,
   TicketValidation,
 } from "@bot/lib/discord-utils";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -89,7 +88,7 @@ export class OpenCommand extends TicketCommandBase {
       // Create ticket in transaction
       ticket = await prisma.$transaction(async (_tx) => {
         // Create ticket using lifecycle domain with actual channel ID
-        const createdTicket = await TicketLifecycle.create({
+        const createdTicket = await db.ticketLifecycle.create({
           guildId: guild.id,
           channelId: channel.id,
           openerId: userId,

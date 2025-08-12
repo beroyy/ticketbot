@@ -3,7 +3,6 @@ import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { prisma } from "@ticketsbot/db";
@@ -44,7 +43,7 @@ const closeConfirmHandler = createButtonHandler({
       // Close ticket in transaction
       await prisma.$transaction(async (_tx) => {
         // Close ticket using lifecycle domain
-        await TicketLifecycle.close({
+        await db.ticketLifecycle.close({
           ticketId: ticket.id,
           closedById: userId,
           deleteChannel: false,

@@ -1,8 +1,8 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { type Result, ok, err } from "@bot/lib/discord-utils";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import type { ChatInputCommandInteraction } from "discord.js";
+import { db } from "@ticketsbot/db";
 
 export class ClaimCommand extends TicketCommandBase {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -26,7 +26,7 @@ export class ClaimCommand extends TicketCommandBase {
   ): Promise<Result<void>> {
     // Check if already claimed
     try {
-      const currentClaim = await TicketLifecycle.getCurrentClaim(ticket.id);
+      const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
       if (currentClaim) {
         return err(`This ticket is already claimed by <@${currentClaim.claimedById}>.`);
       }
@@ -35,7 +35,7 @@ export class ClaimCommand extends TicketCommandBase {
     }
 
     // Claim the ticket - context is already provided by BaseCommand
-    await TicketLifecycle.claim({
+    await db.ticketLifecycle.claim({
       ticketId: ticket.id,
       claimerId: interaction.user.id,
       force: false,

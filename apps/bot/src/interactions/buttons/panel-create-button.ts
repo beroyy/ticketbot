@@ -1,7 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
@@ -48,7 +47,7 @@ const panelCreateHandler = createButtonHandler({
       let channel: any;
 
       const ticket = await prisma.$transaction(async (_tx) => {
-        return await TicketLifecycle.create({
+        return await db.ticketLifecycle.create({
           guildId: guild.id,
           channelId: "", // is updated after channel creation
           openerId: userId,

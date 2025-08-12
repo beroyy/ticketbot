@@ -3,7 +3,6 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { MessageOps } from "@bot/lib/discord-operations";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
 
 const ticketClaimHandler = createButtonHandler({
@@ -19,7 +18,7 @@ const ticketClaimHandler = createButtonHandler({
     }
 
     // Check if already claimed
-    const currentClaim = await TicketLifecycle.getCurrentClaim(ticket.id);
+    const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
     if (currentClaim) {
       await interaction.reply(ErrorResponses.ticketAlreadyClaimed(currentClaim.claimedById));
       return err("Ticket already claimed");
@@ -33,7 +32,7 @@ const ticketClaimHandler = createButtonHandler({
     );
 
     // Claim ticket using lifecycle domain
-    await TicketLifecycle.claim({
+    await db.ticketLifecycle.claim({
       ticketId: ticket.id,
       claimerId: interaction.user.id,
       force: false,

@@ -2,7 +2,6 @@ import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
@@ -60,7 +59,7 @@ export class CloseCommand extends TicketCommandBase {
     // Close ticket in transaction
     const closedTicket = await prisma.$transaction(async (_tx) => {
       // Close ticket using lifecycle domain
-      return await TicketLifecycle.close({
+      return await db.ticketLifecycle.close({
         ticketId: ticket.id,
         closedById: userId,
         reason: reasonResult.value ?? undefined,

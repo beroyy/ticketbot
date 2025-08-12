@@ -1,5 +1,4 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 import { db } from "@ticketsbot/db";
@@ -37,7 +36,7 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
     await Actor.Context.provideAsync(actor, async () => {
       try {
         // Close the ticket (this updates the ticket record and logs to Event table)
-        await TicketLifecycle.close({
+        await db.ticketLifecycle.close({
           ticketId: ticket.id,
           closedById: channel.client.user.id,
           reason: "Channel was deleted",

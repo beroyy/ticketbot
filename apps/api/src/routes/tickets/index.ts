@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, TicketStatusSchema, PermissionFlags } from "@ticketsbot/core";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { db } from "@ticketsbot/db";
 import { createRoute } from "../../factory";
@@ -110,8 +109,7 @@ export const ticketRoutes = createRoute()
     const input = c.req.valid("json");
 
     try {
-      const { TicketLifecycle } = await import("@ticketsbot/core/domains/ticket-lifecycle");
-      const ticket = await TicketLifecycle.create({
+      const ticket = await db.ticketLifecycle.create({
         guildId: input.guildId,
         channelId: "",
         openerId: input.openerId,
@@ -186,7 +184,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        await TicketLifecycle.close({
+        await db.ticketLifecycle.close({
           ticketId,
           closedById: user.discordUserId || user.id,
           reason: body?.reason,
@@ -221,7 +219,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        await TicketLifecycle.claim({
+        await db.ticketLifecycle.claim({
           ticketId,
           claimerId: user.discordUserId || user.id,
           force: false,
@@ -253,7 +251,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        await TicketLifecycle.unclaim({
+        await db.ticketLifecycle.unclaim({
           ticketId,
           performedById: user.discordUserId || user.id,
         });
@@ -285,7 +283,7 @@ export const ticketRoutes = createRoute()
 
       try {
         const [lifecycleHistory, transcriptHistory] = await Promise.all([
-          TicketLifecycle.getHistory(ticketId),
+          db.ticketLifecycle.getHistory(ticketId),
           db.transcript.getHistory(ticketId),
         ]);
 

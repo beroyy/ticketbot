@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { DiscordGuildIdSchema, DiscordChannelIdSchema, TicketStatusSchema } from "@ticketsbot/core";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { ApiErrors } from "../../utils/error-handler";
 
@@ -114,7 +113,7 @@ export const formatTicketForDashboard = async (
       progress = 100;
     } else {
       try {
-        const currentClaim = await TicketLifecycle.getCurrentClaim(ticket.id);
+        const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
         progress = currentClaim ? 75 : 25;
       } catch {
         progress = 25;

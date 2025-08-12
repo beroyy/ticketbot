@@ -2,7 +2,6 @@ import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
 import { Role } from "@ticketsbot/core/domains/role";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { PermissionFlags } from "@ticketsbot/core";
@@ -59,18 +58,18 @@ export class TransferCommand extends TicketCommandBase {
     }
 
     // Check if ticket is currently claimed
-    const currentClaim = await TicketLifecycle.getCurrentClaim(ticket.id);
+    const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
 
     // If currently claimed, unclaim it first
     if (currentClaim) {
-      await TicketLifecycle.unclaim({
+      await db.ticketLifecycle.unclaim({
         ticketId: ticket.id,
         performedById: interaction.user.id,
       });
     }
 
     // Then claim it for the target user
-    await TicketLifecycle.claim({
+    await db.ticketLifecycle.claim({
       ticketId: ticket.id,
       claimerId: targetUser.id,
       force: true, // Force claim for transfer

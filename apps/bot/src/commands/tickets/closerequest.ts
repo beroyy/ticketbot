@@ -9,7 +9,6 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
   ActionRowBuilder,
@@ -74,7 +73,7 @@ export class CloseRequestCommand extends TicketCommandBase {
 
     try {
       // Request close with optional auto-close scheduling
-      const { closeRequestId } = await TicketLifecycle.requestClose({
+      const { closeRequestId } = await db.ticketLifecycle.requestClose({
         ticketId: ticket.id,
         requestedById: discordId,
         reason: reason || undefined,

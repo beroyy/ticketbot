@@ -1,6 +1,5 @@
 import type { Guild } from "discord.js";
 import { container } from "@sapphire/framework";
-import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
 import { ChannelOps } from "./channel";
@@ -48,7 +47,7 @@ export const TicketOps = {
     }
 
     const ticket = await prisma.$transaction(async (_tx) => {
-      return await TicketLifecycle.create({
+      return await db.ticketLifecycle.create({
         guildId: guild.id,
         channelId: "", // updated after channel creation
         openerId: userId,

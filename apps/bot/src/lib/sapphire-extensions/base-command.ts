@@ -1,6 +1,6 @@
 import { Command } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
+import { BotContext } from "@bot/lib/context";
 import { parseDiscordId } from "@ticketsbot/core";
 
 /**
@@ -43,26 +43,23 @@ export abstract class BaseCommand extends Command {
       );
     }
 
-    // Create Discord actor context
-    const actor: DiscordActor = {
-      type: "discord_user",
-      properties: {
-        userId: parseDiscordId(interaction.user.id),
-        username: interaction.user.username,
-        guildId: interaction.guild ? parseDiscordId(interaction.guild.id) : "",
-        channelId: interaction.channelId ? parseDiscordId(interaction.channelId) : undefined,
-        permissions,
-        locale: interaction.locale,
-      },
+    // Create bot context from Discord interaction
+    const context: BotContext = {
+      userId: parseDiscordId(interaction.user.id),
+      username: interaction.user.username,
+      guildId: interaction.guild ? parseDiscordId(interaction.guild.id) : "",
+      channelId: interaction.channelId ? parseDiscordId(interaction.channelId) : undefined,
+      permissions,
+      locale: interaction.locale,
     };
 
-    // Execute the command within Discord context
-    return Actor.Context.provideAsync(actor, () => this.chatInputRunWithContext(interaction));
+    // Execute the command within bot context
+    return BotContext.provideAsync(context, () => this.chatInputRunWithContext(interaction));
   }
 
   /**
    * Subclasses implement this method instead of chatInputRun
-   * The context will be automatically available via Actor.use()
+   * The context will be automatically available via BotContext.get()
    */
   public abstract chatInputRunWithContext(
     interaction: ChatInputCommandInteraction

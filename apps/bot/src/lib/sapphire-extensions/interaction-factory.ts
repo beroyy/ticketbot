@@ -6,7 +6,7 @@ import type {
   Interaction,
 } from "discord.js";
 import type { Result } from "@bot/lib/discord-utils/result";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
+import { BotContext } from "@bot/lib/context";
 import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 
@@ -32,21 +32,18 @@ async function withContext<T extends Interaction, R>(
     }
   }
 
-  // Create Discord actor context
-  const actor: DiscordActor = {
-    type: "discord_user",
-    properties: {
-      userId: parseDiscordId(interaction.user.id),
-      username: interaction.user.username,
-      guildId: interaction.guild ? parseDiscordId(interaction.guild.id) : "",
-      channelId: interaction.channelId ? parseDiscordId(interaction.channelId) : undefined,
-      permissions,
-      locale: interaction.locale,
-    },
+  // Create bot context from Discord interaction
+  const context: BotContext = {
+    userId: parseDiscordId(interaction.user.id),
+    username: interaction.user.username,
+    guildId: interaction.guild ? parseDiscordId(interaction.guild.id) : "",
+    channelId: interaction.channelId ? parseDiscordId(interaction.channelId) : undefined,
+    permissions,
+    locale: interaction.locale,
   };
 
-  // Execute the handler within Discord context
-  return Actor.Context.provideAsync(actor, () => handler(interaction));
+  // Execute the handler within bot context
+  return BotContext.provideAsync(context, () => handler(interaction));
 }
 
 /**

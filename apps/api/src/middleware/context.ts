@@ -1,7 +1,7 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import type { AuthSession } from "@ticketsbot/core/auth";
 import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
-import { Actor, VisibleError } from "@ticketsbot/core/context";
+import { ApiContext, PermissionDeniedError } from "../lib/context";
 import { env } from "../env";
 import { nanoid } from "nanoid";
 
@@ -38,17 +38,14 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
         c.set("guildId", guildId);
       }
 
-      return Actor.provide(
+      return ApiContext.provide(
         {
-          type: "web_user",
-          properties: {
-            userId: sessionData.user.id,
-            email: sessionData.user.email,
-            discordId: sessionData.user.discordUserId || undefined,
-            selectedGuildId: guildId,
-            permissions: BigInt(sessionData.permissions || 0),
-            session: sessionData,
-          },
+          userId: sessionData.user.id,
+          email: sessionData.user.email,
+          discordId: sessionData.user.discordUserId || undefined,
+          selectedGuildId: guildId,
+          permissions: BigInt(sessionData.permissions || 0),
+          session: sessionData,
         },
         () => next()
       );
@@ -110,17 +107,14 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
       c.set("guildId", guildId);
     }
 
-    return Actor.provide(
+    return ApiContext.provide(
       {
-        type: "web_user",
-        properties: {
-          userId: sessionData.user.id,
-          email: sessionData.user.email,
-          discordId: sessionData.user.discordUserId || undefined,
-          selectedGuildId: guildId,
-          permissions: BigInt(sessionData.permissions || 0),
-          session: sessionData.session,
-        },
+        userId: sessionData.user.id,
+        email: sessionData.user.email,
+        discordId: sessionData.user.discordUserId || undefined,
+        selectedGuildId: guildId,
+        permissions: BigInt(sessionData.permissions || 0),
+        session: sessionData.session,
       },
       () => next()
     );
@@ -158,28 +152,27 @@ export const requirePermission = (permission: bigint) => {
   return async (c: Context<{ Variables: Variables }>, next: Next) => {
     const checkPermissionAndProceed = async () => {
       try {
-        Actor.requirePermission(permission);
+        ApiContext.requirePermission(permission);
 
         if (env.isDev()) {
-          const actor = Actor.use();
+          const ctx = ApiContext.get();
           logger.debug("Permission check passed", {
             required: permission.toString(16),
-            user: actor.type === "web_user" ? actor.properties.email : "unknown",
-            hasPermission: Actor.hasPermission(permission),
+            user: ctx.email,
+            hasPermission: ApiContext.hasPermission(permission),
           });
         }
 
         await next();
       } catch (error) {
-        if (error instanceof VisibleError) {
+        if (error instanceof PermissionDeniedError) {
           const response = env.isDev()
             ? {
                 error: error.message,
-                code: error.code,
                 required: permission.toString(16),
                 details: "Missing required permission flag",
               }
-            : { error: error.message, code: error.code };
+            : { error: "Permission denied" };
 
           c.status(403);
           c.json(response);

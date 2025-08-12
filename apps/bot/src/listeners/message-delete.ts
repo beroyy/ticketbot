@@ -3,7 +3,7 @@ import type { Message, PartialMessage } from "discord.js";
 import { TranscriptOps } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
+import { BotContext } from "@bot/lib/context";
 
 export const MessageDeleteListener = ListenerFactory.on(
   "messageDelete",
@@ -19,17 +19,14 @@ export const MessageDeleteListener = ListenerFactory.on(
       const ticket = await db.ticket.get(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
-      const actor: DiscordActor = {
-        type: "discord_user",
-        properties: {
-          userId: message.client.user.id,
-          username: message.client.user.username,
-          guildId: message.guildId!,
-          permissions: 0n,
-        },
+      const context: BotContext = {
+        userId: message.client.user.id,
+        username: message.client.user.username,
+        guildId: message.guildId!,
+        permissions: 0n,
       };
 
-      await Actor.Context.provideAsync(actor, async () => {
+      await BotContext.provideAsync(context, async () => {
         // Mark the message as deleted in our transcript
         // We handle both bot and user message deletions
         await TranscriptOps.delete(message.id);

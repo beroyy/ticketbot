@@ -13,7 +13,13 @@ import {
   ChannelType,
   type User,
 } from "discord.js";
-import { VisibleError } from "@ticketsbot/core/context";
+// Custom error for visible user-facing errors
+export class VisibleError extends Error {
+  constructor(public readonly code: string, message: string) {
+    super(message);
+    this.name = "VisibleError";
+  }
+}
 
 type PanelData = {
   id: number;

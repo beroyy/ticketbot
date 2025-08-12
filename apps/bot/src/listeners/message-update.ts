@@ -3,7 +3,7 @@ import { container } from "@sapphire/framework";
 import type { Message, PartialMessage } from "discord.js";
 import { TranscriptOps } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
+import { BotContext } from "@bot/lib/context";
 
 export const MessageUpdateListener = ListenerFactory.on(
   "messageUpdate",
@@ -28,17 +28,14 @@ export const MessageUpdateListener = ListenerFactory.on(
       const ticket = await db.ticket.get(newMessage.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
-      const actor: DiscordActor = {
-        type: "discord_user",
-        properties: {
-          userId: newMessage.client.user.id,
-          username: newMessage.client.user.username,
-          guildId: newMessage.guildId!,
-          permissions: 0n,
-        },
+      const context: BotContext = {
+        userId: newMessage.client.user.id,
+        username: newMessage.client.user.username,
+        guildId: newMessage.guildId!,
+        permissions: 0n,
       };
 
-      await Actor.Context.provideAsync(actor, async () => {
+      await BotContext.provideAsync(context, async () => {
         // Update the stored message in transcript
         // We update both bot and user messages
         await TranscriptOps.update(newMessage.id, newMessage.content || "", newMessage.embeds);

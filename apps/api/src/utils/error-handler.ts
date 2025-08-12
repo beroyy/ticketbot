@@ -2,14 +2,30 @@ import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z, ZodError } from "zod";
 import { createLogger } from "@ticketsbot/core";
-import {
-  Actor,
-  VisibleError,
-  TransactionError,
-  ContextNotFoundError,
-  PermissionDeniedError,
-} from "@ticketsbot/core/context";
+import { ApiContext, PermissionDeniedError } from "../lib/context";
 import { env } from "../env";
+
+// Custom error classes
+export class VisibleError extends Error {
+  constructor(public readonly code: string, message: string, public readonly details?: unknown) {
+    super(message);
+    this.name = "VisibleError";
+  }
+}
+
+export class TransactionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TransactionError";
+  }
+}
+
+export class ContextNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ContextNotFoundError";
+  }
+}
 
 const logger = createLogger("api:error-handler");
 
@@ -40,7 +56,7 @@ const getStatusCode = (error: unknown) => {
   if (error instanceof ContextNotFoundError) return 500 as const;
   if (error instanceof TransactionError) return 500 as const;
   if (error instanceof VisibleError) {
-    switch (error.code) {
+    switch ((error as VisibleError).code) {
       case "not_found":
         return 404 as const;
       case "validation_error":
@@ -61,9 +77,8 @@ const getStatusCode = (error: unknown) => {
 };
 
 const formatError = async (error: unknown): Promise<ErrorResponse> => {
-  const actor = Actor.maybeUse();
-  const requestId =
-    actor && actor.type === "web_user" ? actor.properties.session.session.id : undefined;
+  const context = ApiContext.tryGet();
+  const requestId = context?.session?.session?.id;
 
   if (error instanceof HTTPException) {
     const response = error.getResponse();
@@ -103,9 +118,9 @@ const formatError = async (error: unknown): Promise<ErrorResponse> => {
 
   if (error instanceof VisibleError) {
     return {
-      error: error.message,
-      code: error.code,
-      details: error.details,
+      error: (error as VisibleError).message,
+      code: (error as VisibleError).code,
+      details: (error as VisibleError).details,
       requestId,
     };
   }

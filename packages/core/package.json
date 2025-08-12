@@ -34,7 +34,6 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./discord": "./src/discord/index.ts",
-    "./context": "./src/context/index.ts",
     "./auth": "./src/auth/index.ts",
     "./auth/services/user-linking": "./src/auth/services/user-linking.ts"
   },

@@ -1,6 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
-import { Actor, type DiscordActor } from "@ticketsbot/core/context";
+import { BotContext } from "@bot/lib/context";
 import { db } from "@ticketsbot/db";
 
 export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (channel) => {
@@ -23,17 +23,14 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
       return;
     }
 
-    const actor: DiscordActor = {
-      type: "discord_user",
-      properties: {
-        userId: channel.client.user.id,
-        username: channel.client.user.username,
-        guildId: channel.guild.id,
-        permissions: 0n,
-      },
+    const context: BotContext = {
+      userId: channel.client.user.id,
+      username: channel.client.user.username,
+      guildId: channel.guild.id,
+      permissions: 0n,
     };
 
-    await Actor.Context.provideAsync(actor, async () => {
+    await BotContext.provideAsync(context, async () => {
       try {
         // Close the ticket (this updates the ticket record and logs to Event table)
         await db.ticketLifecycle.close({

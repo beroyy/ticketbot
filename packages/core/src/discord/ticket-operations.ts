@@ -7,11 +7,6 @@ const getTicketLifecycle = async () => {
   return TicketLifecycle;
 };
 
-const getTranscripts = async () => {
-  const { Transcripts } = await import("../domains/transcripts");
-  return Transcripts;
-};
-
 export const createTicketFromPanel = async (data: {
   guildId: string;
   userId: string;
@@ -83,8 +78,7 @@ export const sendTicketMessage = async (
   const { messageId } = await Discord.sendMessage(ticket.guildId, ticket.channelId, content);
 
   if (typeof content === "string") {
-    const Transcripts = await getTranscripts();
-    await Transcripts.storeMessage({
+    await db.transcript.storeMessage({
       ticketId,
       messageId,
       authorId: "system",

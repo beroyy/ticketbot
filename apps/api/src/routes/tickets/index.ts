@@ -2,7 +2,6 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, TicketStatusSchema, PermissionFlags } from "@ticketsbot/core";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { db } from "@ticketsbot/db";
 import { createRoute } from "../../factory";
@@ -287,7 +286,7 @@ export const ticketRoutes = createRoute()
       try {
         const [lifecycleHistory, transcriptHistory] = await Promise.all([
           TicketLifecycle.getHistory(ticketId),
-          Transcripts.getHistory(ticketId),
+          db.transcript.getHistory(ticketId),
         ]);
 
         const combinedActivity = [
@@ -344,7 +343,7 @@ export const ticketRoutes = createRoute()
       const ticketId = parseTicketId(id);
 
       try {
-        const messages = await Transcripts.getMessages(ticketId);
+        const messages = await db.transcript.getMessages(ticketId);
 
         const formattedMessages = await Promise.all(
           messages.map(async (message) => {
@@ -403,7 +402,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        const message = await Transcripts.storeMessage({
+        const message = await db.transcript.storeMessage({
           ticketId,
           messageId: "",
           authorId: user.discordUserId || user.id,

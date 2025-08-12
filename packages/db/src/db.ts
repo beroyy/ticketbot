@@ -28,6 +28,13 @@ import {
   updateChannelId,
   list as listTickets,
   update as updateTicket,
+  storeMessage,
+  updateMessage,
+  deleteMessage,
+  getMessages,
+  addHistoryEntry,
+  getHistory,
+  submitFeedback,
 } from "./operations";
 import {
   getGuildById,
@@ -100,5 +107,14 @@ export const db = {
     removeParticipantFromAll: removeParticipantFromAll,
     updateChannelId: updateChannelId,
     isTicketChannel: isTicketChannel,
+  },
+  transcript: {
+    storeMessage: storeMessage,
+    updateMessage: updateMessage,
+    deleteMessage: deleteMessage,
+    getMessages: getMessages,
+    addHistoryEntry: addHistoryEntry,
+    getHistory: getHistory,
+    submitFeedback: submitFeedback,
   },
 };

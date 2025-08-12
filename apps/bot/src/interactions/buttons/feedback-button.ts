@@ -1,7 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
   err,
@@ -38,7 +37,7 @@ const feedbackHandler = createButtonHandler({
 
     try {
       // Submit feedback using Transcripts domain
-      await Transcripts.submitFeedback({
+      await db.transcript.submitFeedback({
         ticketId,
         rating,
         submittedById: parseDiscordId(interaction.user.id),

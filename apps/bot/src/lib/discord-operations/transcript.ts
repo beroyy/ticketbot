@@ -1,6 +1,5 @@
 import type { Message } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 
 // Helper to serialize embeds
@@ -37,7 +36,7 @@ export const TranscriptOps = {
           message.author.displayAvatarURL()
         );
 
-        await Transcripts.storeMessage({
+        await db.transcript.storeMessage({
           ticketId: ticket.id,
           messageId: parseDiscordId(message.id),
           authorId: discordId,
@@ -64,7 +63,7 @@ export const TranscriptOps = {
           message.author.displayAvatarURL()
         );
 
-        await Transcripts.storeMessage({
+        await db.transcript.storeMessage({
           ticketId: ticket.id,
           messageId: parseDiscordId(message.id),
           authorId: discordId,
@@ -93,7 +92,7 @@ export const TranscriptOps = {
           ? JSON.stringify(newEmbeds.map((embed) => embed.toJSON()))
           : null;
 
-      await Transcripts.updateMessage(parseDiscordId(messageId), {
+      await db.transcript.updateMessage(parseDiscordId(messageId), {
         content: newContent || "",
         editedAt: new Date(),
       });
@@ -104,14 +103,14 @@ export const TranscriptOps = {
 
   delete: async (messageId: string) => {
     try {
-      await Transcripts.deleteMessage(parseDiscordId(messageId));
+      await db.transcript.deleteMessage(parseDiscordId(messageId));
     } catch (error) {
       console.error("Error deleting message:", error);
     }
   },
 
   generateData: async (ticketId: number) => {
-    const messages = await Transcripts.getMessages(ticketId);
+    const messages = await db.transcript.getMessages(ticketId);
 
     return messages.map((msg: any) => ({
       id: msg.messageId.toString(),

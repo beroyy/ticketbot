@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DiscordGuildIdSchema, DiscordChannelIdSchema, TicketStatusSchema } from "@ticketsbot/core";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
+import { db } from "@ticketsbot/db";
 import { ApiErrors } from "../../utils/error-handler";
 
 export const _TicketDashboardResponse = z.object({
@@ -124,7 +124,7 @@ export const formatTicketForDashboard = async (
 
   let messageCount = 0;
   try {
-    const messages = await Transcripts.getMessages(ticket.id);
+    const messages = await db.transcript.getMessages(ticket.id);
     messageCount = messages.length;
   } catch {
     messageCount = 0;

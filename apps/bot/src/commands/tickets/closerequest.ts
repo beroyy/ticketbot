@@ -9,7 +9,6 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
@@ -83,7 +82,7 @@ export class CloseRequestCommand extends TicketCommandBase {
       });
 
       // Log the close request
-      await Transcripts.addHistoryEntry(
+      await db.transcript.addHistoryEntry(
         ticket.id,
         "close_requested",
         interaction.user.id,

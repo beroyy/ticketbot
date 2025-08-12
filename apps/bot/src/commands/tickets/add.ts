@@ -3,7 +3,6 @@ import type { Command } from "@sapphire/framework";
 import { ChannelOps } from "@bot/lib/discord-operations";
 import { type Result, ok } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
-import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
 export class AddCommand extends TicketCommandBase {
@@ -55,7 +54,7 @@ export class AddCommand extends TicketCommandBase {
     );
 
     // Log the action
-    await Transcripts.addHistoryEntry(
+    await db.transcript.addHistoryEntry(
       ticket.id,
       "user_added",
       interaction.user.id,

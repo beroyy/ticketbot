@@ -3,17 +3,9 @@ import {
   deleteTag,
   ensureDiscordUser,
   getDiscordUser,
-  ensureGuild,
-  getGuildById,
   getTag,
   listTags,
-  updateGuild,
   updateTag,
-  ensureGuildWithDefaults,
-  getGuildSettings,
-  syncGuildBotInstalledStatus,
-  checkGuildBlacklistEntry,
-  toggleGuildBlacklistEntry,
   hasOpenTickets,
   getCountByStatus,
   removeParticipantFromAll,
@@ -24,6 +16,21 @@ import {
   getByIdUnchecked,
   getByIds,
 } from "./operations";
+import {
+  getGuildById,
+  updateGuild,
+  getGuildSettings,
+  getTeamRoles,
+} from "./operations/guild/queries";
+import {
+  ensureGuild,
+  ensureGuildWithDefaults,
+  syncGuildBotInstalledStatus,
+  checkGuildBlacklistEntry,
+  toggleGuildBlacklistEntry,
+  updateGuildSettings,
+} from "./operations/guild/mutations";
+
 import { getActiveMembersForRole } from "./operations/role";
 
 export const db = {
@@ -36,10 +43,12 @@ export const db = {
     ensureWithDefaults: ensureGuildWithDefaults,
     get: getGuildById,
     update: updateGuild,
+    updateSettings: updateGuildSettings,
     syncBotInstalledStatus: syncGuildBotInstalledStatus,
     getSettings: getGuildSettings,
     toggleBlacklistEntry: toggleGuildBlacklistEntry,
     checkBlacklistEntry: checkGuildBlacklistEntry,
+    getTeamRoles: getTeamRoles,
   },
   panel: {
     get: getPanelById,

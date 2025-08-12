@@ -1,4 +1,5 @@
-import { prisma, TicketStatus } from "@ticketsbot/db";
+import { prisma } from "../client";
+import { TicketStatus } from "..";
 
 /**
  * Static ticket methods that don't require actor context
@@ -13,7 +14,7 @@ import { prisma, TicketStatus } from "@ticketsbot/db";
  * No permission checks - use carefully
  * Returns tickets of any status
  */
-export const findByChannelId = async (channelId: string): Promise<any> => {
+export const getTicketByChannelId = async (channelId: string): Promise<any> => {
   return prisma.ticket.findFirst({
     where: {
       channelId,

@@ -2,7 +2,6 @@ import { BaseCommand } from "./base-command";
 import type { ChatInputCommandInteraction, User as DiscordUser } from "discord.js";
 import { type Result, ok, err, match, flatMap } from "@bot/lib/discord-utils/result";
 import { InteractionResponse, InteractionEdit } from "@bot/lib/discord-utils/responses";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -59,7 +58,7 @@ export abstract class TicketCommandBase extends BaseCommand {
       return err("No channel ID available");
     }
 
-    const ticket = await findByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
     if (!ticket) {
       return err("This is not a ticket channel.");
     }

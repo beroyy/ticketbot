@@ -8,7 +8,6 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -29,7 +28,7 @@ const closeRequestHandler = createButtonHandler({
     const action = match[1] as "confirm" | "cancel";
     const requestId = match[2] || null;
 
-    const ticket = await Ticket.findByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
     if (!ticket) {
       await interaction.reply(ErrorResponses.notTicketChannel());
       return err("Not a ticket channel");

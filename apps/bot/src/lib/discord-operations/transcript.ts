@@ -1,6 +1,5 @@
 import type { Message } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 
@@ -27,7 +26,7 @@ export const TranscriptOps = {
   store: {
     userMessage: async (message: Message) => {
       try {
-        const ticket = await Ticket.findByChannelId(parseDiscordId(message.channelId));
+        const ticket = await db.ticket.get(parseDiscordId(message.channelId));
         if (!ticket || (ticket.status !== "OPEN" && ticket.status !== "CLAIMED")) return;
 
         const discordId = parseDiscordId(message.author.id);

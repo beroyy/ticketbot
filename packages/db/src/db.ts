@@ -14,8 +14,16 @@ import {
   syncGuildBotInstalledStatus,
   checkGuildBlacklistEntry,
   toggleGuildBlacklistEntry,
+  hasOpenTickets,
+  getCountByStatus,
+  removeParticipantFromAll,
+  getPanelById,
+  getPanelGuildId,
+  getTicketByChannelId,
+  isTicketChannel,
+  getByIdUnchecked,
+  getByIds,
 } from "./operations";
-import { getPanelById, getPanelGuildId } from "./operations/panel";
 
 export const db = {
   discordUser: {
@@ -42,5 +50,14 @@ export const db = {
     get: getTag,
     list: listTags,
     update: updateTag,
+  },
+  ticket: {
+    get: getTicketByChannelId,
+    getByIdUnchecked: getByIdUnchecked,
+    getByIds: getByIds,
+    getCountByStatus: getCountByStatus,
+    hasOpenTickets: hasOpenTickets,
+    removeParticipantFromAll: removeParticipantFromAll,
+    isTicketChannel: isTicketChannel,
   },
 };

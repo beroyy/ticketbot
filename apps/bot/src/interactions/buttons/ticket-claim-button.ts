@@ -4,7 +4,6 @@ import { MessageOps } from "@bot/lib/discord-operations";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { parseDiscordId } from "@ticketsbot/core";
 
 const ticketClaimHandler = createButtonHandler({
@@ -13,7 +12,7 @@ const ticketClaimHandler = createButtonHandler({
   handler: async (interaction: ButtonInteraction) => {
     if (!interaction.channel) return err("No channel");
 
-    const ticket = await findByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
     if (!ticket) {
       await interaction.reply(ErrorResponses.notTicketChannel());
       return err("Not a ticket channel");

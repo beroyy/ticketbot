@@ -1,7 +1,7 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import type { Message, PartialMessage } from "discord.js";
 import { TranscriptOps } from "@bot/lib/discord-operations";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 
@@ -16,7 +16,7 @@ export const MessageDeleteListener = ListenerFactory.on(
 
     try {
       // Check if this is a ticket channel
-      const ticket = await Ticket.findByChannelId(message.channelId);
+      const ticket = await db.ticket.get(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
       const actor: DiscordActor = {

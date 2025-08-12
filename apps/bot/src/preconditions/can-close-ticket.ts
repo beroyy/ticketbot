@@ -1,6 +1,6 @@
 import { Precondition } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
@@ -16,8 +16,7 @@ export const CanCloseTicketPrecondition = class extends Precondition {
       });
     }
 
-    // Check if we're in a ticket channel
-    const ticket = await findByChannelId(parseDiscordId(interaction.channel.id));
+    const ticket = await db.ticket.get(parseDiscordId(interaction.channel.id));
 
     if (!ticket) {
       return this.error({

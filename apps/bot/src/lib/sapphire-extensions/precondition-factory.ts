@@ -8,7 +8,7 @@ import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
 import { Role } from "@ticketsbot/core/domains/role";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
 
 /**
@@ -213,7 +213,7 @@ export const createTicketPrecondition = (config: TicketPreconditionConfig): any 
       }
 
       // Check if we're in a ticket channel
-      const ticket = await findByChannelId(parseDiscordId(interaction.channel.id));
+      const ticket = await db.ticket.get(parseDiscordId(interaction.channel.id));
 
       if (!ticket) {
         return this.error({

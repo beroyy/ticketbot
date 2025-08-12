@@ -2,7 +2,7 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { MessageOps } from "@bot/lib/discord-operations";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
@@ -12,7 +12,7 @@ const ticketCloseHandler = createButtonHandler({
   handler: async (interaction: ButtonInteraction) => {
     if (!interaction.channel) return err("No channel");
 
-    const ticket = await findByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",

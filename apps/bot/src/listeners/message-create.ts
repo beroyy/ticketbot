@@ -1,5 +1,5 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import type { Message } from "discord.js";
 import { prisma } from "@ticketsbot/db";
@@ -29,8 +29,7 @@ export const MessageCreateListener = ListenerFactory.on(
     if (message.system || !message.guild) return;
 
     try {
-      // Check if this is a ticket channel
-      const ticket = await findByChannelId(message.channelId);
+      const ticket = await db.ticket.get(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
       const messageId = parseDiscordId(message.id);

@@ -1,8 +1,8 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
-import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { container } from "@sapphire/framework";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
+import { db } from "@ticketsbot/db";
 
 export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (channel) => {
   // Type guard to ensure it's a guild channel
@@ -11,14 +11,14 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
 
   try {
     // Use static method to avoid context overhead
-    const ticket = await findByChannelId(channel.id);
-    
+    const ticket = await db.ticket.get(channel.id);
+
     // Early return if no ticket found or already closed
     if (!ticket) {
       container.logger.debug(`No ticket found for deleted channel ${channel.id}`);
       return;
     }
-    
+
     if (ticket.status === "CLOSED") {
       container.logger.debug(`Ticket #${ticket.number} already closed, skipping`);
       return;
@@ -44,7 +44,7 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
           deleteChannel: false, // Already deleted
           notifyOpener: false, // Can't notify since channel is gone
         });
-        
+
         container.logger.info(`Auto-closed ticket #${ticket.number} due to channel deletion`);
       } catch (closeError: any) {
         // Handle "already closed" as success (idempotent operation)
@@ -54,7 +54,7 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
           );
           return;
         }
-        
+
         // Re-throw other errors
         throw closeError;
       }

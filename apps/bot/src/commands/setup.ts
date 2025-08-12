@@ -13,7 +13,7 @@ import {
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import {
   ChannelType,
   PermissionFlagsBits,

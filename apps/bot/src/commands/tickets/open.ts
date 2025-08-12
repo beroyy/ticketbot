@@ -1,7 +1,7 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { container } from "@sapphire/framework";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import {
   InteractionResponse,
   type Result,

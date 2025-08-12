@@ -3,7 +3,7 @@ import type { ModalSubmitInteraction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
 
 const closeReasonModalHandler = createModalHandler({

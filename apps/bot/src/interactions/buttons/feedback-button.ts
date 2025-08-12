@@ -9,7 +9,7 @@ import {
   ErrorResponses,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
 
 const feedbackHandler = createButtonHandler({

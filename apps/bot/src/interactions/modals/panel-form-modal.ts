@@ -2,7 +2,7 @@ import { err, ok, createModalErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/disco
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
 
 const PANEL_FORM_PATTERN = /^panel_form_(\d+)$/;

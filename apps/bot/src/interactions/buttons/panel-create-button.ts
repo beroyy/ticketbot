@@ -2,7 +2,7 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
 
 const PANEL_CREATE_PATTERN = /^create_ticket_(\d+)$/;

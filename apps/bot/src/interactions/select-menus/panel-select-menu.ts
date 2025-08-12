@@ -2,7 +2,7 @@ import { createSelectHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { err, ok, createSelectErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { StringSelectMenuInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
 
 const panelSelectHandler = createSelectHandler({

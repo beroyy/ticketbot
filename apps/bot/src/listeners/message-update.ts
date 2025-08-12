@@ -1,7 +1,7 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Message, PartialMessage } from "discord.js";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { db } from "@ticketsbot/db";
 import { BotContext } from "@bot/lib/context";
 

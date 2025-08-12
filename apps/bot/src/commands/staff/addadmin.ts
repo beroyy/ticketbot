@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
-import { bot } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/bot";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -22,17 +22,11 @@ export const AddAdminCommand = createCommand({
 
     try {
       // Use high-level role assignment operation
-      const result = await db.role.assignUserToRole(
-        guildId,
-        userId,
-        "admin",
-        undefined,
-        {
-          username: targetUser.username,
-          discriminator: targetUser.discriminator,
-          avatarUrl: targetUser.displayAvatarURL(),
-        }
-      );
+      const result = await db.role.assignUserToRole(guildId, userId, "admin", undefined, {
+        username: targetUser.username,
+        discriminator: targetUser.discriminator,
+        avatarUrl: targetUser.displayAvatarURL(),
+      });
 
       if (result.alreadyHasRole) {
         await InteractionResponse.error(

@@ -4,9 +4,9 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
 import { prisma } from "@ticketsbot/db";
-import { User } from "../domains/user";
-import { Account } from "../domains/account";
+import { ensureDiscordUser, getDiscordUser } from "@ticketsbot/db";
 import { getDiscordAvatarUrl } from "./services/discord-api";
+import { getBetterAuthUser, updateDiscordUserId, getDiscordAccount } from "./services/user-linking";
 import type { User as AuthUser, Session } from "./types";
 
 type AuthContext = {
@@ -221,11 +221,11 @@ export const auth = betterAuth({
         return { session, user };
       }
 
-      const fullUser = await User.getBetterAuthUser(user.id);
+      const fullUser = await getBetterAuthUser(user.id);
 
       let discordUser = null;
       if (fullUser?.discordUserId) {
-        discordUser = await User.getDiscordUser(fullUser.discordUserId);
+        discordUser = await getDiscordUser(fullUser.discordUserId);
         if (process.env.NODE_ENV === "development") {
           logger.debug("[Auth] Fetched Discord user", {
             discordUserId: fullUser.discordUserId,
@@ -247,7 +247,7 @@ export const auth = betterAuth({
             userId: user.id,
           });
         }
-        const discordAccount = await Account.getDiscordAccount(user.id);
+        const discordAccount = await getDiscordAccount(user.id);
         if (process.env.NODE_ENV === "development") {
           logger.debug("[Auth] Discord OAuth account lookup result", {
             userId: user.id,
@@ -259,7 +259,7 @@ export const auth = betterAuth({
         if (discordAccount?.accountId) {
           discordUserId = discordAccount.accountId;
 
-          await User.ensure(
+          await ensureDiscordUser(
             discordAccount.accountId,
             `User_${discordAccount.accountId.slice(-6)}`,
             undefined,
@@ -267,13 +267,13 @@ export const auth = betterAuth({
             { source: "customSession" }
           );
 
-          await User.updateDiscordUserId(user.id, discordAccount.accountId);
+          await updateDiscordUserId(user.id, discordAccount.accountId);
           logger.info("[Auth] Updated user with Discord ID from OAuth account", {
             userId: user.id,
             discordUserId: discordAccount.accountId,
           });
 
-          discordUser = await User.getDiscordUser(discordAccount.accountId);
+          discordUser = await getDiscordUser(discordAccount.accountId);
         }
       }
 
@@ -314,7 +314,7 @@ export const auth = betterAuth({
         logger.debug("User found after Discord callback:", user.id);
 
         try {
-          const account = await Account.getDiscordAccount(user.id);
+          const account = await getDiscordAccount(user.id);
 
           logger.debug("Discord account found:", account?.accountId);
 
@@ -344,7 +344,7 @@ export const auth = betterAuth({
               discordProfile.discriminator || "0"
             );
 
-            await User.ensure(
+            await ensureDiscordUser(
               account.accountId,
               discordProfile.username,
               discordProfile.discriminator || undefined,

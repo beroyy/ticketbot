@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { auth } from "@ticketsbot/core/auth";
-import { User } from "@ticketsbot/core/domains/user";
+import { Role } from "@ticketsbot/core/domains/role";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow POST requests
@@ -10,25 +10,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Get session using Better Auth
-    const sessionData = await auth.api.getSession({ 
+    const sessionData = await auth.api.getSession({
       headers: new Headers({
         cookie: req.headers.cookie || "",
-      })
+      }),
     });
 
-    if (!sessionData || typeof sessionData !== 'object' || !('user' in sessionData)) {
+    if (!sessionData || typeof sessionData !== "object" || !("user" in sessionData)) {
       return res.status(401).json({ error: "No valid session" });
     }
 
     const session = sessionData as any;
-    
+
     // Calculate permissions if guildId is provided
     let permissions = "0";
     const guildId = req.body?.guildId;
-    
+
     if (guildId && session.user?.discordUserId) {
       try {
-        const perms = await User.getPermissions(guildId, session.user.discordUserId);
+        const perms = await Role.getUserPermissions(guildId, session.user.discordUserId);
         permissions = perms.toString();
       } catch {
         // Ignore permission errors

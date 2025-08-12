@@ -1,6 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ButtonInteraction } from "discord.js";
-import { User as UserDomain } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
 import {
@@ -29,8 +29,7 @@ const feedbackHandler = createButtonHandler({
       return err("Invalid rating");
     }
 
-    // Ensure user exists
-    await UserDomain.ensure(
+    await ensureDiscordUser(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,

@@ -37,7 +37,6 @@
     "./domains/*": "./src/domains/*/index.ts",
     "./domains/*/client": "./src/domains/*/client.ts",
     "./discord": "./src/discord/index.ts",
-    "./domains/account": "./src/domains/account/index.ts",
     "./domains/analytics": "./src/domains/analytics/index.ts",
     "./domains/form": "./src/domains/form/index.ts",
     "./domains/guild": "./src/domains/guild/index.ts",
@@ -54,9 +53,9 @@
     "./domains/ticket/system": "./src/domains/ticket/system.ts",
     "./domains/ticket-lifecycle": "./src/domains/ticket-lifecycle/index.ts",
     "./domains/transcripts": "./src/domains/transcripts/index.ts",
-    "./domains/user": "./src/domains/user/index.ts",
     "./context": "./src/context/index.ts",
     "./auth": "./src/auth/index.ts",
+    "./auth/services/user-linking": "./src/auth/services/user-linking.ts",
     "./analytics": "./src/analytics/index.ts"
   },
   "prisma": {

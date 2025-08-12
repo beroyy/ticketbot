@@ -8,7 +8,7 @@ import {
   ok,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { User } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -66,7 +66,7 @@ export class CloseRequestCommand extends TicketCommandBase {
     const discordId = parseDiscordId(interaction.user.id);
 
     // Ensure user exists
-    await User.ensure(
+    await ensureDiscordUser(
       discordId,
       interaction.user.username,
       interaction.user.discriminator,

@@ -1,5 +1,5 @@
 import type { Message } from "discord.js";
-import { User as UserDomain } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -31,7 +31,7 @@ export const TranscriptOps = {
         if (!ticket || (ticket.status !== "OPEN" && ticket.status !== "CLAIMED")) return;
 
         const discordId = parseDiscordId(message.author.id);
-        await UserDomain.ensure(
+        await ensureDiscordUser(
           discordId,
           message.author.username,
           message.author.discriminator,
@@ -58,7 +58,7 @@ export const TranscriptOps = {
     botMessage: async (message: Message, ticket: { id: number }) => {
       try {
         const discordId = parseDiscordId(message.author.id);
-        await UserDomain.ensure(
+        await ensureDiscordUser(
           discordId,
           message.author.username,
           message.author.discriminator,

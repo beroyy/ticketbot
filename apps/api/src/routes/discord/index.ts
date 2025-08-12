@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
 import { Role } from "@ticketsbot/core/domains/role";
-import { User } from "@ticketsbot/core/domains/user";
+import { getDiscordUser } from "@ticketsbot/db";
 import { getGuildById as findGuildById } from "@ticketsbot/core/domains/guild";
 import { ensureGuild as ensureGuild } from "@ticketsbot/core/domains/guild";
 import { createLogger } from "@ticketsbot/core";
@@ -11,7 +11,12 @@ import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions } from "../../middleware/context";
 import type { GuildsListResponse, GuildSyncResponse, GuildDetailResponse } from "./schemas";
-import { getDiscordAccount, fetchDiscordAPI, MANAGE_GUILD_PERMISSION } from "./helpers";
+import {
+  getDiscordAccount,
+  fetchDiscordAPI,
+  MANAGE_GUILD_PERMISSION,
+  updateUserGuildsCache,
+} from "./helpers";
 
 const logger = createLogger("api:discord");
 
@@ -57,7 +62,7 @@ export const discordRoutes = createRoute()
 
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
 
-    const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
+    const discordUser = await getDiscordUser(effectiveDiscordUserId);
 
     let allGuilds: any[] = [];
     const CACHE_TTL = 5 * 60 * 1000;
@@ -106,7 +111,7 @@ export const discordRoutes = createRoute()
           (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION,
       }));
 
-      await User.updateGuildsCache(effectiveDiscordUserId, allGuilds);
+      await updateUserGuildsCache(effectiveDiscordUserId, allGuilds);
 
       logger.debug("Fetched and cached guilds from Discord", {
         totalGuilds: guilds.length,
@@ -183,7 +188,7 @@ export const discordRoutes = createRoute()
 
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
 
-    const discordUser = await User.getDiscordUser(effectiveDiscordUserId);
+    const discordUser = await getDiscordUser(effectiveDiscordUserId);
     let allGuilds: any[] = [];
 
     if (discordUser?.guilds && typeof discordUser.guilds === "object") {
@@ -225,7 +230,7 @@ export const discordRoutes = createRoute()
           (BigInt(guild.permissions) & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION,
       }));
 
-      await User.updateGuildsCache(effectiveDiscordUserId, allGuilds);
+      await updateUserGuildsCache(effectiveDiscordUserId, allGuilds);
     }
 
     const adminGuilds = allGuilds.filter((g) => g.isAdmin);

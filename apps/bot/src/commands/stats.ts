@@ -12,9 +12,9 @@ import {
 } from "@bot/lib/discord-utils";
 import { Role } from "@ticketsbot/core/domains/role";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
-import { User } from "@ticketsbot/core/domains/user";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
+import { getDiscordUser } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const StatsCommand = createCommand({
@@ -68,7 +68,7 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
 
   try {
     // Check if user exists
-    const discordUser = await User.getDiscordUser(discordUserId);
+    const discordUser = await getDiscordUser(discordUserId);
     if (!discordUser) {
       await InteractionResponse.error(interaction, "User not found in database");
       return err("User not found");

@@ -23,6 +23,7 @@
     "@sapphire/plugin-logger": "^4.1.0",
     "@sapphire/plugin-subcommands": "^7.0.1",
     "@ticketsbot/core": "workspace:*",
+    "@ticketsbot/db": "workspace:*",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.0",
     "zod": "^4.0.5"

@@ -8,7 +8,7 @@ import {
   err,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { User } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -52,7 +52,7 @@ export class AutoCloseCommand extends TicketCommandBase {
 
       const performerDiscordId = parseDiscordId(interaction.user.id);
 
-      await User.ensure(
+      await ensureDiscordUser(
         performerDiscordId,
         interaction.user.username,
         interaction.user.discriminator,

@@ -9,7 +9,7 @@ import {
 } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
-import { User } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -52,7 +52,7 @@ const closeRequestHandler = createButtonHandler({
       return err("Invalid close request");
     }
 
-    await User.ensure(
+    await ensureDiscordUser(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,
@@ -95,12 +95,7 @@ const closeRequestHandler = createButtonHandler({
           const channel = interaction.channel as TextChannel;
 
           // Archive or delete the channel
-          const _archiveResult = await ChannelOps.ticket.archive(
-            channel,
-            guild,
-            settings,
-            userId
-          );
+          const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
         } catch (error) {
           container.logger.error("Error in Discord operations:", error);
         }

@@ -1,5 +1,6 @@
 import { createLogger } from "@ticketsbot/core";
-import { Account } from "@ticketsbot/core/domains/account";
+import { getDiscordAccount as _getDiscordAccount } from "@ticketsbot/core/auth/services/user-linking";
+import { prisma, type Prisma } from "@ticketsbot/db";
 import { ApiErrors } from "../../utils/error-handler";
 
 const logger = createLogger("api:discord");
@@ -9,7 +10,7 @@ const DISCORD_API_BASE = "https://discord.com/api/v10";
 const USER_AGENT = "ticketsbot.ai (https://github.com/yourusername/ticketsbot-ai, 1.0.0)";
 
 export const getDiscordAccount = async (userId: string) => {
-  const account = await Account.getDiscordAccount(userId);
+  const account = await _getDiscordAccount(userId);
 
   if (!account?.accessToken) {
     return { error: "Discord account not connected", code: "DISCORD_NOT_CONNECTED" };
@@ -80,4 +81,31 @@ export const fetchDiscordAPI = async (path: string, accessToken: string) => {
     });
     throw error;
   }
+};
+
+/**
+ * Update the cached Discord guilds for a user
+ * This caches the user's guild list to avoid repeated Discord API calls
+ */
+export const updateUserGuildsCache = async (
+  discordUserId: string,
+  guilds: Array<{
+    id: string;
+    name: string;
+    icon: string | null;
+    owner: boolean;
+    permissions: string;
+    features: string[];
+    isAdmin: boolean;
+  }>
+): Promise<void> => {
+  await prisma.discordUser.update({
+    where: { id: discordUserId },
+    data: {
+      guilds: {
+        data: guilds,
+        fetchedAt: new Date().toISOString(),
+      } as Prisma.InputJsonValue,
+    },
+  });
 };

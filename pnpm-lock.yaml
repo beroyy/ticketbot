@@ -60,6 +60,9 @@ importers:
       '@ticketsbot/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@ticketsbot/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       discord.js:
         specifier: ^14.21.0
         version: 14.21.0(bufferutil@4.0.9)
@@ -109,6 +112,9 @@ importers:
       '@ticketsbot/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@ticketsbot/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       discord.js:
         specifier: ^14.21.0
         version: 14.21.0(bufferutil@4.0.9)

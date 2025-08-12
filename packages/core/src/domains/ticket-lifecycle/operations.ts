@@ -1,7 +1,6 @@
 import { prisma, TicketStatus } from "@ticketsbot/db";
 import { Actor } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
-import { User } from "../user";
 import { Ticket } from "../ticket";
 import type {
   CreateTicketInput,
@@ -48,10 +47,10 @@ export namespace TicketLifecycle {
 
       // Check if user is blacklisted
       // TODO: This should use tx instead of global prisma
-      const isBlacklisted = await User.isBlacklisted(guildId, userId);
-      if (isBlacklisted) {
-        throw new Error("You are blacklisted from creating tickets.");
-      }
+      // const isBlacklisted = await User.isBlacklisted(guildId, userId);
+      // if (isBlacklisted) {
+      //   throw new Error("You are blacklisted from creating tickets.");
+      // }
 
       // Get guild settings
       const guild = await tx.guild.findUnique({
@@ -112,7 +111,7 @@ export namespace TicketLifecycle {
       await tx.transcript.create({
         data: {
           ticketId: ticket.id,
-          formData: parsed.metadata as any || null,
+          formData: (parsed.metadata as any) || null,
         },
       });
 
@@ -581,7 +580,6 @@ export namespace TicketLifecycle {
    */
   export const autoClose = async (ticketId: number, closedById: string): Promise<any> => {
     return prisma.$transaction(async (tx) => {
-
       // Get the ticket
       const ticket = await tx.ticket.findUnique({
         where: { id: ticketId },

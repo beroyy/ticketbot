@@ -12,7 +12,7 @@ import {
 } from "@bot/lib/discord-utils";
 import { ensureGuild, updateGuild, ensureGuildWithDefaults } from "@ticketsbot/core/domains/guild";
 import { Role } from "@ticketsbot/core/domains/role";
-import { User } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { Panel } from "@ticketsbot/core/domains/panel";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -310,7 +310,7 @@ Do you want to proceed?`
     // Assign admin role to invoker
     const adminTeamRole = await Role.getRoleByName(guildId, "admin");
     if (adminTeamRole) {
-      await User.ensure(
+      await ensureDiscordUser(
         parseDiscordId(interaction.user.id),
         interaction.user.username,
         interaction.user.discriminator,

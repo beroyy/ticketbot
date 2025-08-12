@@ -2,7 +2,7 @@ import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
 import { Role } from "@ticketsbot/core/domains/role";
-import { User } from "@ticketsbot/core/domains/user";
+import { ensureDiscordUser } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
@@ -47,7 +47,7 @@ export const AddAdminCommand = createCommand({
       // Run database operations in transaction
       await prisma.$transaction(async (tx) => {
         // Ensure user exists
-        await User.ensure(
+        await ensureDiscordUser(
           userId,
           targetUser.username,
           targetUser.discriminator,
@@ -58,7 +58,7 @@ export const AddAdminCommand = createCommand({
 
         // Assign role
         await Role.assignRole(adminRole.id, userId, undefined, { tx });
-        
+
         // Event logging removed - TCN will handle this automatically
       });
 

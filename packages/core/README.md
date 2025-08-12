@@ -218,7 +218,7 @@ const result = await withTransaction(async () => {
 Create if not exists:
 
 ```typescript
-const user = await User.ensure(discordId, userData);
+const user = await ensureDiscordUser(discordId, userData);
 const guild = await Guild.ensure(guildId);
 ```
 

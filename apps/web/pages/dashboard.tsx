@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
-import { User } from "@ticketsbot/core/domains/user";
+import { Role } from "@ticketsbot/core/domains/role";
 import { PermissionFlags } from "@ticketsbot/core";
 
 export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
@@ -19,7 +19,7 @@ export const getServerSideProps = withGuildRoute(async (context, session, guildI
   try {
     // Check permissions first
     if (session.user.discordUserId) {
-      const permissions = await User.getPermissions(guildId, session.user.discordUserId);
+      const permissions = await Role.getUserPermissions(guildId, session.user.discordUserId);
       hasAnalyticsPermission =
         (permissions & PermissionFlags.ANALYTICS_VIEW) === PermissionFlags.ANALYTICS_VIEW;
     }
@@ -73,10 +73,10 @@ export default function Dashboard({
   const [selectedTimeframe, setSelectedTimeframe] = useState<"1D" | "1W" | "1M" | "3M">("1M");
 
   const { data: ticketStats = initialTicketStats, error } = useQuery({
-    queryKey: ['ticket-stats', selectedGuildId],
+    queryKey: ["ticket-stats", selectedGuildId],
     queryFn: async () => {
       const response = await fetch(`/api/tickets/statistics/${selectedGuildId}`);
-      if (!response.ok) throw new Error('Failed to fetch stats');
+      if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },
     enabled: hasAnalyticsPermission && !!selectedGuildId,
@@ -84,10 +84,10 @@ export default function Dashboard({
   });
 
   const { data: recentActivity = initialRecentActivity, error: activityError } = useQuery({
-    queryKey: ['recent-activity', selectedGuildId],
+    queryKey: ["recent-activity", selectedGuildId],
     queryFn: async () => {
       const response = await fetch(`/api/tickets?guildId=${selectedGuildId}&pageSize=8`);
-      if (!response.ok) throw new Error('Failed to fetch activity');
+      if (!response.ok) throw new Error("Failed to fetch activity");
       return response.json();
     },
     enabled: hasAnalyticsPermission && !!selectedGuildId,

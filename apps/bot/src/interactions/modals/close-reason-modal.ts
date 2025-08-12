@@ -3,7 +3,7 @@ import type { ModalSubmitInteraction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
-import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
 const closeReasonModalHandler = createModalHandler({
@@ -22,7 +22,7 @@ const closeReasonModalHandler = createModalHandler({
 
     const reason = interaction.fields.getTextInputValue("close_reason") || undefined;
 
-    const embed = MessageOps.ticket.closedEmbed(interaction.user.id, ticket.id);
+    const embed = bot.message.ticket.closedEmbed(interaction.user.id, ticket.id);
     if (reason) {
       embed.addFields({ name: "Reason", value: reason, inline: false });
     }
@@ -49,7 +49,7 @@ const closeReasonModalHandler = createModalHandler({
       try {
         const channel = interaction.channel as TextChannel;
 
-        const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+        const _archiveResult = await bot.channel.ticket.archive(channel, guild, settings, userId);
       } catch (error) {
         container.logger.error("Error in Discord operations:", error);
       }

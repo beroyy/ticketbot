@@ -29,8 +29,8 @@ type PanelInfo = {
   textSections?: any;
 };
 
-export const MessageOps = {
-  ticket: {
+// Ticket message operations
+export const ticket = {
     welcomeEmbed: (ticket: TicketInfo, panel?: PanelInfo): EmbedBuilder => {
       const title = panel?.introTitle || "Support Ticket";
       const description =
@@ -113,9 +113,10 @@ export const MessageOps = {
         color: COLORS.ERROR,
         footer: `Ticket ID: ${ticketId}`,
       }),
-  },
+};
 
-  confirmation: {
+// Confirmation message operations
+export const confirmation = {
     closeEmbed: () =>
       createEmbed({
         title: "Close Confirmation",
@@ -131,9 +132,10 @@ export const MessageOps = {
           .setLabel("✔︎ Close")
           .setStyle(ButtonStyle.Primary)
       ),
-  },
+};
 
-  feedback: {
+// Feedback message operations
+export const feedback = {
     sendDM: async (user: User, ticket: TicketInfo, guildName: string): Promise<boolean> => {
       try {
         const embed = createEmbed({
@@ -177,9 +179,10 @@ export const MessageOps = {
         color: COLORS.SUCCESS,
       });
     },
-  },
+};
 
-  closeRequest: {
+// Close request message operations
+export const closeRequest = {
     approvedEmbed: (ticketId: number) =>
       createEmbed({
         title: "Ticket Closed",
@@ -190,9 +193,10 @@ export const MessageOps = {
       }),
 
     deniedMessage: () => "❌ Ticket closure request denied by the opener.",
-  },
+};
 
-  claim: {
+// Claim message operations
+export const claim = {
     successEmbed: (claimedBy: string, ticketId: number) =>
       createEmbed({
         title: "Ticket Claimed",
@@ -200,9 +204,10 @@ export const MessageOps = {
         color: COLORS.SUCCESS,
         footer: `Ticket ID: ${ticketId}`,
       }),
-  },
+};
 
-  utils: {
+// Utility functions
+export const utils = {
     buildMentions: (mentionRoles: string | null, openerId: string): string => {
       if (!mentionRoles) return "";
 
@@ -226,5 +231,4 @@ export const MessageOps = {
         return "";
       }
     },
-  },
-} as const;
+};

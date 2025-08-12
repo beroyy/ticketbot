@@ -1,5 +1,5 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
-import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
@@ -29,7 +29,7 @@ const closeConfirmHandler = createButtonHandler({
     );
 
     // Update with closing status
-    const embed = MessageOps.ticket.closedEmbed(interaction.user.id, ticket.id);
+    const embed = bot.message.ticket.closedEmbed(interaction.user.id, ticket.id);
     await interaction.update({
       embeds: [embed],
       components: [],
@@ -57,7 +57,7 @@ const closeConfirmHandler = createButtonHandler({
         const channel = interaction.channel as TextChannel;
 
         // Archive or delete the channel
-        const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+        const _archiveResult = await bot.channel.ticket.archive(channel, guild, settings, userId);
       } catch (error) {
         container.logger.error("Error in Discord operations:", error);
       }

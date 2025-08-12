@@ -65,7 +65,6 @@ export {
   formatDuration,
   parseDiscordId,
   formatDiscordId,
-  createTicketChannelName,
   createTicketThreadName,
   validateEnvironmentVariables,
 } from "./utils";

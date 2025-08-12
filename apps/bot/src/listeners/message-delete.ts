@@ -1,6 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import type { Message, PartialMessage } from "discord.js";
-import { TranscriptOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import { BotContext } from "@bot/lib/context";
@@ -29,7 +29,7 @@ export const MessageDeleteListener = ListenerFactory.on(
       await BotContext.provideAsync(context, async () => {
         // Mark the message as deleted in our transcript
         // We handle both bot and user message deletions
-        await TranscriptOps.delete(message.id);
+        await bot.transcript.deleteMessage(message.id);
       });
     } catch (error) {
       container.logger.error(`Failed to delete message in ticket ${message.channelId}:`, error);

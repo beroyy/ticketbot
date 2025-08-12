@@ -1,6 +1,6 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
-import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
@@ -74,12 +74,12 @@ export class CloseCommand extends TicketCommandBase {
 
       if (channel) {
         // Send closed embed before deleting/archiving
-        const closedEmbed = MessageOps.ticket.closedEmbed(userId, ticket.id);
+        const closedEmbed = bot.message.ticket.closedEmbed(userId, ticket.id);
         await channel.send({ embeds: [closedEmbed] }).catch(console.error);
 
         // Archive or delete the channel if settings exist
         if (settings) {
-          const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+          const archiveResult = await bot.channel.ticket.archive(channel, guild, settings, userId);
           _channelDeleted = archiveResult.deleted;
         } else {
           // Fallback: delete the channel if no settings found

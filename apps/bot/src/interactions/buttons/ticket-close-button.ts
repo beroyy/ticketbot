@@ -1,5 +1,5 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
-import { MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
@@ -22,8 +22,8 @@ const ticketCloseHandler = createButtonHandler({
     }
 
     // Show confirmation
-    const embed = MessageOps.confirmation.closeEmbed();
-    const button = MessageOps.confirmation.closeButton();
+    const embed = bot.message.confirmation.closeEmbed();
+    const button = bot.message.confirmation.closeButton();
 
     await interaction.reply({
       embeds: [embed],

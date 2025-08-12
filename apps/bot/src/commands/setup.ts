@@ -13,8 +13,7 @@ import {
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
-import { RoleOps } from "@bot/lib/discord-operations/roles";
-import { ChannelOps } from "@bot/lib/discord-operations/channel";
+import { bot } from "@bot/lib/discord-operations";
 import {
   ChannelType,
   PermissionFlagsBits,
@@ -51,7 +50,7 @@ const createDefaultRoles = async (guild: DiscordGuild) => {
   return { adminRole, supportRole };
 };
 
-// Helper to create default categories using ChannelOps
+// Helper to create default categories using bot operations
 const createDefaultCategories = async (
   guild: DiscordGuild,
   adminRole: DiscordRole,
@@ -78,12 +77,12 @@ const createDefaultCategories = async (
     },
   ];
 
-  // Use ChannelOps.utils for category creation
-  const ticketsCategory = (await ChannelOps.utils.createCategoryIfNeeded(
+  // Use bot.channel.utils for category creation
+  const ticketsCategory = (await bot.channel.utils.createCategoryIfNeeded(
     guild,
     "Tickets"
   )) as CategoryChannel;
-  const supportCategory = (await ChannelOps.utils.createCategoryIfNeeded(
+  const supportCategory = (await bot.channel.utils.createCategoryIfNeeded(
     guild,
     "Support"
   )) as CategoryChannel;
@@ -320,8 +319,8 @@ Do you want to proceed?`
       // Update team role with Discord role ID
       await db.role.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
 
-      // Assign Discord role using RoleOps
-      await RoleOps.assignDiscordRole(member, adminRole.id);
+      // Assign Discord role using bot operations
+      await bot.role.assignDiscordRole(member, adminRole.id);
     }
 
     // Update support role

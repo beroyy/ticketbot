@@ -1,7 +1,7 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
 import type { Message, PartialMessage } from "discord.js";
-import { TranscriptOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { BotContext } from "@bot/lib/context";
 
@@ -38,7 +38,7 @@ export const MessageUpdateListener = ListenerFactory.on(
       await BotContext.provideAsync(context, async () => {
         // Update the stored message in transcript
         // We update both bot and user messages
-        await TranscriptOps.update(newMessage.id, newMessage.content || "", newMessage.embeds);
+        await bot.transcript.update(newMessage.id, newMessage.content || "", newMessage.embeds);
       });
     } catch (error) {
       container.logger.error(`Failed to update message in ticket ${newMessage.channelId}:`, error);

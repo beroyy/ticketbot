@@ -1,5 +1,5 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
-import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import {
   err,
   ok,
@@ -54,7 +54,7 @@ const closeRequestHandler = createButtonHandler({
 
     if (action === "confirm") {
       // Approved - close ticket
-      const closeEmbed = MessageOps.closeRequest.approvedEmbed(ticket.id);
+      const closeEmbed = bot.message.closeRequest.approvedEmbed(ticket.id);
 
       await interaction.update({
         embeds: [closeEmbed],
@@ -81,7 +81,7 @@ const closeRequestHandler = createButtonHandler({
         try {
           const channel = interaction.channel as TextChannel;
 
-          const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+          const _archiveResult = await bot.channel.ticket.archive(channel, guild, settings, userId);
         } catch (error) {
           container.logger.error("Error in Discord operations:", error);
         }
@@ -93,7 +93,7 @@ const closeRequestHandler = createButtonHandler({
         await db.ticket.cancelCloseRequest(ticket.id, parseDiscordId(interaction.user.id));
 
         await interaction.update({
-          content: MessageOps.closeRequest.deniedMessage(),
+          content: bot.message.closeRequest.deniedMessage(),
           embeds: [],
           components: [],
         });

@@ -43,8 +43,8 @@ const getButtonStyle = (color?: string | null): ButtonStyle => {
   return colorMap[color?.toLowerCase() ?? ""] ?? ButtonStyle.Primary;
 };
 
-export const PanelOps = {
-  embed: {
+// Panel embed operations
+export const embed = {
     create: (panel: PanelData) =>
       createEmbed({
         title: panel.title,
@@ -52,9 +52,10 @@ export const PanelOps = {
         color: COLORS.PRIMARY,
         footer: "Click the button below to create a ticket",
       }),
-  },
+};
 
-  button: {
+// Panel button operations
+export const button = {
     create: (panel: PanelData) => {
       const button = new ButtonBuilder()
         .setCustomId(`create_ticket_${panel.id}`)
@@ -67,9 +68,10 @@ export const PanelOps = {
 
       return new ActionRowBuilder<ButtonBuilder>().addComponents(button);
     },
-  },
+};
 
-  modal: {
+// Panel modal operations
+export const modal = {
     create: (panelId: number, panelTitle: string, formFields: FormField[]) => {
       const modal = new ModalBuilder().setCustomId(`panel_form_${panelId}`).setTitle(panelTitle);
 
@@ -104,15 +106,15 @@ export const PanelOps = {
           }
         })
         .filter((response): response is { fieldId: number; value: string } => response !== null),
-  },
+};
 
-  deploy: async (channel: TextChannel, panel: PanelData) => {
-    const embed = PanelOps.embed.create(panel);
-    const button = PanelOps.button.create(panel);
+// Deploy panel to channel
+export const deploy = async (channel: TextChannel, panel: PanelData) => {
+    const embedMessage = embed.create(panel);
+    const buttonRow = button.create(panel);
 
     await channel.send({
-      embeds: [embed],
-      components: [button.toJSON()],
+      embeds: [embedMessage],
+      components: [buttonRow.toJSON()],
     });
-  },
-} as const;
+};

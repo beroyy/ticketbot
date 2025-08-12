@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
-import { RoleOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
@@ -47,7 +47,7 @@ export const RemoveStaffCommand = createCommand({
 
       if (rolesToSync.length > 0) {
         try {
-          const { failed } = await RoleOps.syncMultipleRolesToDiscord(
+          const { failed } = await bot.role.syncMultipleRolesToDiscord(
             rolesToSync,
             targetUser.id,
             interaction.guild!,

@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
-import { RoleOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -46,7 +46,7 @@ export const AddAdminCommand = createCommand({
 
       // Sync Discord role
       try {
-        const success = await RoleOps.syncTeamRoleToDiscord(
+        const success = await bot.role.syncTeamRoleToDiscord(
           adminRole,
           targetUser.id,
           interaction.guild!,
@@ -66,7 +66,7 @@ export const AddAdminCommand = createCommand({
         `<@${targetUser.id}> has been added as a bot administrator.
 
 **Admin Permissions:**
-${RoleOps.formatRolePermissions("admin")}`
+${bot.role.formatRolePermissions("admin")}`
       );
 
       await InteractionResponse.reply(interaction, { embeds: [embed] });

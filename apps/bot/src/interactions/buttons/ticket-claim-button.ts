@@ -1,6 +1,6 @@
 import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
-import { MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -39,7 +39,7 @@ const ticketClaimHandler = createButtonHandler({
     });
 
     // Send success
-    const embed = MessageOps.claim.successEmbed(interaction.user.id, ticket.id);
+    const embed = bot.message.claim.successEmbed(interaction.user.id, ticket.id);
 
     await interaction.reply({ embeds: [embed] });
     return ok(undefined);

@@ -2,7 +2,7 @@ import { err, ok, createModalErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/disco
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { TicketOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
 const PANEL_FORM_PATTERN = /^panel_form_(\d+)$/;
@@ -36,12 +36,12 @@ const panelFormModalHandler = createModalHandler({
 
     // Collect form responses using the shared helper
     const formResponses = panel.form
-      ? TicketOps.parseFormResponses(interaction, panel.form.formFields)
+      ? bot.ticket.parseFormResponses(interaction, panel.form.formFields)
       : [];
 
     try {
       // Use shared ticket creation logic
-      const { ticket } = await TicketOps.createFromPanel({
+      const { ticket } = await bot.ticket.createFromPanel({
         panelId,
         userId: interaction.user.id,
         username: interaction.user.username,

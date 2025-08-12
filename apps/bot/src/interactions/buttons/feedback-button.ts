@@ -9,7 +9,7 @@ import {
   ErrorResponses,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
 const feedbackHandler = createButtonHandler({
@@ -44,7 +44,7 @@ const feedbackHandler = createButtonHandler({
       });
 
       // Update message with success embed
-      const successEmbed = MessageOps.feedback.successEmbed(rating);
+      const successEmbed = bot.message.feedback.successEmbed(rating);
       await interaction.update({
         embeds: [successEmbed],
         components: [],

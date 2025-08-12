@@ -1,7 +1,7 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { container } from "@sapphire/framework";
-import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import {
   InteractionResponse,
   type Result,
@@ -77,7 +77,7 @@ export class OpenCommand extends TicketCommandBase {
     };
 
     try {
-      channel = await ChannelOps.ticket.createWithPermissions(guild, tempTicketData);
+      channel = await bot.channel.ticket.createWithPermissions(guild, tempTicketData);
     } catch (error) {
       container.logger.error("Failed to create ticket channel:", error);
       return err("Failed to create ticket channel. Please try again.");
@@ -110,8 +110,8 @@ export class OpenCommand extends TicketCommandBase {
         const ticketWithDetails = await db.ticket.getById(ticket.id);
 
         // Send welcome message
-        const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);
-        const actionButtons = MessageOps.ticket.actionButtons(settings?.showClaimButton ?? false);
+        const welcomeEmbed = bot.message.ticket.welcomeEmbed(ticketWithDetails);
+        const actionButtons = bot.message.ticket.actionButtons(settings?.showClaimButton ?? false);
 
         await channel.send({
           embeds: [welcomeEmbed],

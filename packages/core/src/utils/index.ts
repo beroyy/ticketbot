@@ -42,25 +42,6 @@ export function formatDiscordId(id: string): string {
   return id;
 }
 
-export function createTicketChannelName(
-  ticketId: number,
-  username: string,
-  panelChannelPrefix?: string,
-  ticketNameFormat?: string
-): string {
-  if (panelChannelPrefix) {
-    return `${panelChannelPrefix}-${username.toLowerCase()}`;
-  }
-
-  // Use guild ticket name format setting
-  if (ticketNameFormat === "ticket-{username}") {
-    return `ticket-${username.toLowerCase()}`;
-  }
-
-  // Default to "ticket-{number}" pattern
-  return `ticket-${ticketId.toString()}`;
-}
-
 export function createTicketThreadName(ticketId: number, username: string): string {
   return `Ticket #${ticketId.toString()} - ${username}`;
 }

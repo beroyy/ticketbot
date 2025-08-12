@@ -2,7 +2,7 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
 const PANEL_CREATE_PATTERN = /^create_ticket_(\d+)$/;
@@ -31,7 +31,7 @@ const panelCreateHandler = createButtonHandler({
     }
 
     if (panel.form && panel.form.formFields.length > 0) {
-      const modal = PanelOps.modal.create(panelId, panel.title, panel.form.formFields);
+      const modal = bot.panel.modal.create(panelId, panel.title, panel.form.formFields);
       await interaction.showModal(modal);
       return ok(undefined);
     }
@@ -63,7 +63,7 @@ const panelCreateHandler = createButtonHandler({
       }
 
       try {
-        channel = await ChannelOps.ticket.createWithPermissions(
+        channel = await bot.channel.ticket.createWithPermissions(
           guild,
           {
             id: ticket.id,
@@ -78,15 +78,15 @@ const panelCreateHandler = createButtonHandler({
 
         const ticketWithDetails = await db.ticket.getById(ticket.id);
 
-        const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
-        const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
+        const welcomeEmbed = bot.message.ticket.welcomeEmbed(ticketWithDetails, panel);
+        const actionButtons = bot.message.ticket.actionButtons(settings.showClaimButton);
 
         const welcomeMessage = await channel.send({
           embeds: [welcomeEmbed],
           components: [actionButtons.toJSON()],
         });
 
-        await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
+        await bot.transcript.store.botMessage(welcomeMessage, { id: ticket.id });
       } catch (error) {
         container.logger.error("Error in Discord operations:", error);
       }

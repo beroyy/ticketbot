@@ -2,7 +2,7 @@ import { createSelectHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { err, ok, createSelectErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { StringSelectMenuInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { PanelOps, TicketOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
 const panelSelectHandler = createSelectHandler({
@@ -29,7 +29,7 @@ const panelSelectHandler = createSelectHandler({
 
     // If panel has a form, show the form modal
     if (panel.form && panel.form.formFields.length > 0) {
-      const modal = PanelOps.modal.create(panelId, panel.title, panel.form.formFields);
+      const modal = bot.panel.modal.create(panelId, panel.title, panel.form.formFields);
       await interaction.showModal(modal);
       return ok(undefined);
     }
@@ -39,7 +39,7 @@ const panelSelectHandler = createSelectHandler({
 
     try {
       // Use shared ticket creation logic
-      const { ticket } = await TicketOps.createFromPanel({
+      const { ticket } = await bot.ticket.createFromPanel({
         panelId,
         userId: interaction.user.id,
         username: interaction.user.username,

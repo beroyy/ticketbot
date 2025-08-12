@@ -1,6 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
-import { RoleOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
@@ -56,7 +56,7 @@ export const AddSupportCommand = createCommand({
 
       // Sync Discord role
       try {
-        const success = await RoleOps.syncTeamRoleToDiscord(
+        const success = await bot.role.syncTeamRoleToDiscord(
           supportRole,
           targetUser.id,
           interaction.guild!,
@@ -76,7 +76,7 @@ export const AddSupportCommand = createCommand({
         `<@${targetUser.id}> has been added as support staff.
 
 **Support Permissions:**
-${RoleOps.formatRolePermissions("support")}`
+${bot.role.formatRolePermissions("support")}`
       );
 
       await InteractionResponse.reply(interaction, { embeds: [embed] });

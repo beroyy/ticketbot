@@ -25,9 +25,8 @@ const getRatingColor = (rating: number) => {
   return COLORS.ERROR;
 };
 
-// Feedback operations namespace
-export const FeedbackOps = {
-  send: {
+// Feedback send operations
+export const send = {
     request: async (user: User, ticket: TicketInfo, guildName: string): Promise<boolean> => {
       try {
         const subject = ticket.subject ? ` (${ticket.subject})` : "";
@@ -37,7 +36,7 @@ export const FeedbackOps = {
           color: COLORS.PRIMARY,
         });
 
-        const buttons = FeedbackOps.create.buttons(ticket.id);
+        const buttons = create.buttons(ticket.id);
 
         await user.send({ embeds: [embed], components: [buttons.toJSON()] });
         return true;
@@ -74,9 +73,10 @@ export const FeedbackOps = {
         return false;
       }
     },
-  },
+};
 
-  create: {
+// Feedback create operations
+export const create = {
     buttons: (ticketId: number) => {
       const buttons = [1, 2, 3, 4, 5].map((rating) =>
         new ButtonBuilder()
@@ -96,5 +96,4 @@ export const FeedbackOps = {
         color: COLORS.SUCCESS,
       });
     },
-  },
-} as const;
+};

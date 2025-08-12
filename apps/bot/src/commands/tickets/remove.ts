@@ -1,6 +1,6 @@
 import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
-import { ChannelOps } from "@bot/lib/discord-operations";
+import { bot } from "@bot/lib/discord-operations";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
@@ -61,7 +61,7 @@ export class RemoveCommand extends TicketCommandBase {
 
     // Update Discord permissions
     const channel = interaction.channel as TextChannel;
-    await ChannelOps.permissions.remove(channel, targetUser.id);
+    await bot.channel.permissions.remove(channel, targetUser.id);
 
     // Send success message
     await InteractionEdit.edit(interaction, {

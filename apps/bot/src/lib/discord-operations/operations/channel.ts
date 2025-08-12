@@ -7,7 +7,7 @@ import {
   type OverwriteResolvable,
 } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { createTicketChannelName } from "@ticketsbot/core";
+import { createTicketChannelName } from "@bot/lib/discord-utils/channel-helpers";
 
 type TicketInfo = {
   id: number;
@@ -24,9 +24,9 @@ type GuildSettings = {
   defaultCategoryId?: string | null;
 };
 
-export const ChannelOps = {
-  ticket: {
-    create: async (
+// Ticket channel operations
+export const ticket = {
+  create: async (
       guild: Guild,
       ticket: TicketInfo,
       settings: GuildSettings
@@ -163,7 +163,7 @@ export const ChannelOps = {
 
       const childCount = guild.channels.cache.filter((c) => c.parentId === archiveCategory.id).size;
       if (childCount >= 50) {
-        const overflowCategory = await ChannelOps.utils.createOverflowCategory(
+        const overflowCategory = await utils.createOverflowCategory(
           guild,
           archiveCategory.name
         );
@@ -178,7 +178,7 @@ export const ChannelOps = {
         });
       }
 
-      await ChannelOps.utils.lockArchivedChannel(channel);
+      await utils.lockArchivedChannel(channel);
 
       return { archived: true, deleted: false };
     },
@@ -196,9 +196,10 @@ export const ChannelOps = {
         return false;
       }
     },
-  },
+};
 
-  permissions: {
+// Permission management operations
+export const permissions = {
     update: async (
       channel: TextChannel,
       userId: string,
@@ -228,21 +229,22 @@ export const ChannelOps = {
     },
 
     add: async (channel: TextChannel, userId: string) =>
-      ChannelOps.permissions.update(channel, userId, {
+      permissions.update(channel, userId, {
         view: true,
         send: true,
         history: true,
       }),
 
     revoke: async (channel: TextChannel, userId: string) =>
-      ChannelOps.permissions.update(channel, userId, {
+      permissions.update(channel, userId, {
         view: false,
         send: false,
         history: false,
       }),
-  },
+};
 
-  utils: {
+// Utility functions
+export const utils = {
     isTicketChannel: (channel: TextChannel) => channel.topic?.includes("Ticket #") ?? false,
 
     getTicketNumberFromTopic: (channel: TextChannel) => {
@@ -297,5 +299,4 @@ export const ChannelOps = {
         console.error("Failed to lock archived channel:", error);
       }
     },
-  },
-} as const;
+};

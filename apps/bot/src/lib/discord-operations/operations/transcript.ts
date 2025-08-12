@@ -20,10 +20,9 @@ const serializeAttachments = (attachments: Map<string, any>) =>
       )
     : null;
 
-// Transcript operations namespace
-export const TranscriptOps = {
-  store: {
-    userMessage: async (message: Message) => {
+// Transcript storage operations
+export const store = {
+  userMessage: async (message: Message) => {
       try {
         const ticket = await db.ticket.getByChannelId(parseDiscordId(message.channelId));
         if (!ticket || (ticket.status !== "OPEN" && ticket.status !== "CLAIMED")) return;
@@ -78,14 +77,15 @@ export const TranscriptOps = {
       } catch (error) {
         console.error("Error storing bot message:", error);
       }
-    },
-  },
+    }
+};
 
-  update: async (
-    messageId: string,
-    newContent: string,
-    newEmbeds?: Array<{ toJSON(): unknown }>
-  ) => {
+// Update a transcript message
+export const update = async (
+  messageId: string,
+  newContent: string,
+  newEmbeds?: Array<{ toJSON(): unknown }>
+) => {
     try {
       const _embeds =
         newEmbeds && newEmbeds.length > 0
@@ -99,17 +99,19 @@ export const TranscriptOps = {
     } catch (error) {
       console.error("Error updating message:", error);
     }
-  },
+  };
 
-  delete: async (messageId: string) => {
+// Delete a transcript message
+export const deleteMessage = async (messageId: string) => {
     try {
       await db.transcript.deleteMessage(parseDiscordId(messageId));
     } catch (error) {
       console.error("Error deleting message:", error);
     }
-  },
+  };
 
-  generateData: async (ticketId: number) => {
+// Generate transcript data
+export const generateData = async (ticketId: number) => {
     const messages = await db.transcript.getMessages(ticketId);
 
     return messages.map((msg: any) => ({
@@ -129,5 +131,4 @@ export const TranscriptOps = {
       editedAt: msg.editedAt,
       deletedAt: msg.deletedAt,
     }));
-  },
-} as const;
+};

@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MdOutlineArrowDropDown } from "react-icons/md";
-import { useAuth } from "@/features/auth/auth-provider-ssr";
+import { useAuth } from "@/features/auth";
 import { usePermissions, PermissionFlags } from "@/features/permissions/hooks/use-permissions";
 import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";

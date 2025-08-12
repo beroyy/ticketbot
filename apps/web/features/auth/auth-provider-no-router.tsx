@@ -1,5 +1,4 @@
-import { createContext, useContext, type ReactNode, useCallback } from "react";
-import { useRouter } from "next/router";
+import { createContext, useContext, type ReactNode, useCallback, useMemo } from "react";
 import { authClient } from "@/lib/auth-client";
 import type { ServerSession, AuthState } from "@/lib/server-auth";
 import type { Guild } from "@/lib/api-server";
@@ -35,16 +34,13 @@ interface AuthProviderProps {
   initialGuilds?: Guild[];
 }
 
-export function AuthProvider({
+export function AuthProviderNoRouter({
   children,
   initialSession = null,
   initialAuthState: _initialAuthState = "unauthenticated",
   initialGuildId = null,
   initialGuilds = [],
 }: AuthProviderProps) {
-  // Always call hooks at the top level
-  const router = useRouter();
-
   // Simple: use initial session directly, client session for updates
   const { data: clientSession } = authClient.useSession();
   const session = (clientSession as ServerSession | null) || initialSession;
@@ -71,17 +67,20 @@ export function AuthProvider({
   }, [initialGuilds, setSelectedGuildIdStore]);
 
   // Simple auth state calculation
-  const authState = !session 
-    ? "unauthenticated" 
-    : !selectedGuildId || !initialGuilds.some((g) => g.id === selectedGuildId && g.connected)
-    ? "no-guild"
-    : "authenticated";
+  const authState = useMemo(() => {
+    if (!session) return "unauthenticated";
+    if (!selectedGuildId || !initialGuilds.some((g) => g.id === selectedGuildId && g.connected)) {
+      return "no-guild";
+    }
+    return "authenticated";
+  }, [session, selectedGuildId, initialGuilds]);
 
   const refetchGuilds = useCallback(async () => {
-    if (router.isReady) {
-      await router.replace(router.asPath);
+    // Client-side only - reload the page to refetch
+    if (typeof window !== 'undefined') {
+      window.location.reload();
     }
-  }, [router]);
+  }, []);
 
   const contextValue: AuthContextValue = {
     session,

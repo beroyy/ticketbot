@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query-client";
 import { UserProvider } from "@/features/user/ui/user-provider";
-import { AuthProvider } from "@/features/auth/auth-provider-ssr";
+import { AuthProviderNoRouter } from "@/features/auth/auth-provider-no-router";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthErrorBoundary } from "@/components/auth-error-boundary";
@@ -54,7 +54,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <QueryClientProvider client={queryClient}>
           <UserProvider>
             <AuthErrorBoundary>
-              <AuthProvider
+              <AuthProviderNoRouter
                 initialSession={session}
                 initialAuthState={authState}
                 initialGuildId={selectedGuildId}
@@ -63,7 +63,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <Navbar />
                 <Component {...restProps} />
                 <Toaster />
-              </AuthProvider>
+              </AuthProviderNoRouter>
             </AuthErrorBoundary>
           </UserProvider>
           {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />}

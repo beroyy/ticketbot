@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { useAuth } from "@/features/auth/auth-provider-ssr";
+import { useAuth } from "@/features/auth";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ExternalLink, Settings, AlertCircle } from "lucide-react";

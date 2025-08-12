@@ -25,7 +25,7 @@ const panelFormModalHandler = createModalHandler({
     container.logger.debug(`Handling form submission for panel ${panelId}`);
 
     // Get panel with form
-    const panel = await db.panel.getWithForm(panelId);
+    const panel = await db.panel.getPanelWithForm(panelId);
     if (!panel) {
       container.logger.error(`Panel not found with ID: ${panelId}`);
       await interaction.editReply({

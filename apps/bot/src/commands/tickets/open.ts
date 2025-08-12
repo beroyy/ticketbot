@@ -67,7 +67,7 @@ export class OpenCommand extends TicketCommandBase {
     let ticket: any;
     let channel: any;
 
-    const settings = await db.guild.getSettings(guild.id);
+    const settings = await db.guild.getGuildSettings(guild.id);
 
     const tempTicketData = {
       id: 0, // Will be replaced with actual ID

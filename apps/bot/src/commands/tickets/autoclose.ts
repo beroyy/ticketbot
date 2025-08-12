@@ -51,7 +51,7 @@ export class AutoCloseCommand extends TicketCommandBase {
 
       const performerDiscordId = parseDiscordId(interaction.user.id);
 
-      await db.discordUser.ensure(
+      await db.discordUser.ensureDiscordUser(
         performerDiscordId,
         interaction.user.username,
         interaction.user.discriminator,

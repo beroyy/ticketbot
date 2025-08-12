@@ -11,7 +11,7 @@ export const MessageCreateListener = ListenerFactory.on(
     if (message.system || !message.guild) return;
 
     try {
-      const ticket = await db.ticket.get(message.channelId);
+      const ticket = await db.ticket.getByChannelId(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
       const messageId = parseDiscordId(message.id);

@@ -94,7 +94,7 @@ export const ChannelOps = {
       panel?: { categoryId?: string | null },
       teamRoleIds: string[] = []
     ): Promise<TextChannel> => {
-      const settings = await db.guild.getSettings(guild.id);
+      const settings = await db.guild.getGuildSettings(guild.id);
       const categoryId = panel?.categoryId || settings?.defaultCategoryId || null;
 
       const channelName = createTicketChannelName(ticket.number, ticket.openerId.toString());

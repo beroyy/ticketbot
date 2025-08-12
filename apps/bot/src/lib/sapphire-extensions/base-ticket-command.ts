@@ -58,7 +58,7 @@ export abstract class TicketCommandBase extends BaseCommand {
       return err("No channel ID available");
     }
 
-    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
     if (!ticket) {
       return err("This is not a ticket channel.");
     }
@@ -94,7 +94,7 @@ export abstract class TicketCommandBase extends BaseCommand {
    */
   protected async ensureUser(user: DiscordUser): Promise<string> {
     const discordId = parseDiscordId(user.id);
-    await db.discordUser.ensure(
+    await db.discordUser.ensureDiscordUser(
       discordId,
       user.username,
       user.discriminator,

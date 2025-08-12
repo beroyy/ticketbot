@@ -25,11 +25,11 @@ export const TranscriptOps = {
   store: {
     userMessage: async (message: Message) => {
       try {
-        const ticket = await db.ticket.get(parseDiscordId(message.channelId));
+        const ticket = await db.ticket.getByChannelId(parseDiscordId(message.channelId));
         if (!ticket || (ticket.status !== "OPEN" && ticket.status !== "CLAIMED")) return;
 
         const discordId = parseDiscordId(message.author.id);
-        await db.discordUser.ensure(
+        await db.discordUser.ensureDiscordUser(
           discordId,
           message.author.username,
           message.author.discriminator,
@@ -56,7 +56,7 @@ export const TranscriptOps = {
     botMessage: async (message: Message, ticket: { id: number }) => {
       try {
         const discordId = parseDiscordId(message.author.id);
-        await db.discordUser.ensure(
+        await db.discordUser.ensureDiscordUser(
           discordId,
           message.author.username,
           message.author.discriminator,

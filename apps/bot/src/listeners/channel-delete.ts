@@ -10,7 +10,7 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
 
   try {
     // Use static method to avoid context overhead
-    const ticket = await db.ticket.get(channel.id);
+    const ticket = await db.ticket.getByChannelId(channel.id);
 
     // Early return if no ticket found or already closed
     if (!ticket) {

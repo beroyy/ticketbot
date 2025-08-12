@@ -59,7 +59,7 @@ export const discordRoutes = createRoute()
 
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
 
-    const discordUser = await db.discordUser.get(effectiveDiscordUserId);
+    const discordUser = await db.discordUser.getDiscordUser(effectiveDiscordUserId);
 
     let allGuilds: any[] = [];
     const CACHE_TTL = 5 * 60 * 1000;
@@ -130,7 +130,7 @@ export const discordRoutes = createRoute()
 
     const guildsWithBotStatus = await Promise.all(
       adminGuilds.map(async (guild) => {
-        const dbGuild = await db.guild.get(guild.id);
+        const dbGuild = await db.guild.getGuildById(guild.id);
         const botInstalled = dbGuild?.botInstalled || false;
         const botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
 
@@ -185,7 +185,7 @@ export const discordRoutes = createRoute()
 
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
 
-    const discordUser = await db.discordUser.get(effectiveDiscordUserId);
+    const discordUser = await db.discordUser.getDiscordUser(effectiveDiscordUserId);
     let allGuilds: any[] = [];
 
     if (discordUser?.guilds && typeof discordUser.guilds === "object") {
@@ -242,7 +242,7 @@ export const discordRoutes = createRoute()
 
     for (const guild of adminGuilds) {
       try {
-        const dbGuild = await db.guild.get(guild.id);
+        const dbGuild = await db.guild.getGuildById(guild.id);
 
         if (!dbGuild?.botInstalled) {
           logger.debug(`Skipping guild ${guild.id} - bot not installed`, {
@@ -263,7 +263,7 @@ export const discordRoutes = createRoute()
           effectiveDiscordUserId &&
           dbGuild.ownerDiscordId !== effectiveDiscordUserId
         ) {
-          await db.guild.ensure(guild.id, guild.name, effectiveDiscordUserId);
+          await db.guild.ensureGuild(guild.id, guild.name, effectiveDiscordUserId);
           logger.info(`Updated ownership for guild ${guild.id}`, {
             guildName: guild.name,
             ownerId: effectiveDiscordUserId,
@@ -338,7 +338,7 @@ export const discordRoutes = createRoute()
 
       const guild = result.data as DiscordGuild;
 
-      const dbGuild = await db.guild.get(guildId);
+      const dbGuild = await db.guild.getGuildById(guildId);
       const botInstalled = dbGuild?.botInstalled || false;
       const botConfigured = !!(dbGuild && dbGuild.defaultCategoryId);
 
@@ -361,7 +361,7 @@ export const discordRoutes = createRoute()
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 
-      const dbGuild = await db.guild.get(guildId);
+      const dbGuild = await db.guild.getGuildById(guildId);
       if (!dbGuild) {
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
@@ -389,7 +389,7 @@ export const discordRoutes = createRoute()
       const { id: guildId } = c.req.valid("param");
       const { includeNone } = c.req.valid("query");
 
-      const dbGuild = await db.guild.get(guildId);
+      const dbGuild = await db.guild.getGuildById(guildId);
       if (!dbGuild) {
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
@@ -419,7 +419,7 @@ export const discordRoutes = createRoute()
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 
-      const dbGuild = await db.guild.get(guildId);
+      const dbGuild = await db.guild.getGuildById(guildId);
       if (!dbGuild) {
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }

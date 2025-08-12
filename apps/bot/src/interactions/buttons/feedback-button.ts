@@ -28,7 +28,7 @@ const feedbackHandler = createButtonHandler({
       return err("Invalid rating");
     }
 
-    await db.discordUser.ensure(
+    await db.discordUser.ensureDiscordUser(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,

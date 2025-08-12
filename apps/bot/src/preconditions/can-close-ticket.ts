@@ -15,7 +15,7 @@ export const CanCloseTicketPrecondition = class extends Precondition {
       });
     }
 
-    const ticket = await db.ticket.get(parseDiscordId(interaction.channel.id));
+    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channel.id));
 
     if (!ticket) {
       return this.error({

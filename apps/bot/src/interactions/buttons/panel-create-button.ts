@@ -21,7 +21,7 @@ const panelCreateHandler = createButtonHandler({
 
     container.logger.debug(`Handling panel button click: ${interaction.customId}`);
 
-    const panel = await db.panel.getWithForm(panelId);
+    const panel = await db.panel.getPanelWithForm(panelId);
     if (!panel) {
       await interaction.reply({
         content: "❌ Panel not found.",
@@ -57,7 +57,7 @@ const panelCreateHandler = createButtonHandler({
         },
       });
 
-      const settings = await db.guild.getSettings(guild.id);
+      const settings = await db.guild.getGuildSettings(guild.id);
       if (!settings) {
         throw new Error("Guild not properly configured");
       }

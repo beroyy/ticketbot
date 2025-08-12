@@ -17,10 +17,10 @@ export const InteractionCreateListener = ListenerFactory.on(
     ) {
       try {
         if (interaction.guild) {
-          await db.guild.ensure(parseDiscordId(interaction.guild.id), interaction.guild.name);
+          await db.guild.ensureGuild(parseDiscordId(interaction.guild.id), interaction.guild.name);
         }
 
-        await db.discordUser.ensure(
+        await db.discordUser.ensureDiscordUser(
           parseDiscordId(interaction.user.id),
           interaction.user.username,
           interaction.user.discriminator,

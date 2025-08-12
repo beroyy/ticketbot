@@ -1,33 +1,33 @@
-import { prisma } from "../client";
-import { TicketStatus } from "../../generated/prisma";
+import { prisma } from "../../client";
+import { TicketStatus } from "../../../generated/prisma";
 
-interface DateRange {
+type DateRange = {
   start: Date;
   end: Date;
-}
+};
 
-interface TicketStatisticsOptions {
+type TicketStatisticsOptions = {
   guildId: string;
   dateRange?: DateRange;
   includeDeleted?: boolean;
-}
+};
 
-interface StaffPerformanceOptions {
+type StaffPerformanceOptions = {
   guildId: string;
   staffId: string;
   dateRange?: DateRange;
-}
+};
 
-interface TicketStatistics {
+type TicketStatistics = {
   totalCreated: number;
   totalOpen: number;
   totalClosed: number;
   avgResolutionTime: number | null;
   closureRate: number;
   groupedStats: any;
-}
+};
 
-interface StaffPerformance {
+type StaffPerformance = {
   ticketsClosed: number;
   ticketsClaimed: number;
   claimedCount: number;
@@ -37,7 +37,7 @@ interface StaffPerformance {
   totalActions: number;
   satisfactionRating: number | null;
   feedbackCount: number;
-}
+};
 
 /**
  * Get ticket statistics for a guild
@@ -46,22 +46,22 @@ export const getTicketStatistics = async (
   options: TicketStatisticsOptions
 ): Promise<TicketStatistics> => {
   const { guildId, dateRange, includeDeleted = false } = options;
-  
+
   const whereClause: any = {
     guildId,
   };
-  
+
   if (dateRange) {
     whereClause.createdAt = {
       gte: dateRange.start,
       lte: dateRange.end,
     };
   }
-  
+
   const [totalCreated, openTickets, closedTickets, avgResolutionData] = await Promise.all([
     // Total created tickets
     prisma.ticket.count({ where: whereClause }),
-    
+
     // Open tickets
     prisma.ticket.count({
       where: {
@@ -69,7 +69,7 @@ export const getTicketStatistics = async (
         status: TicketStatus.OPEN,
       },
     }),
-    
+
     // Closed tickets
     prisma.ticket.count({
       where: {
@@ -77,7 +77,7 @@ export const getTicketStatistics = async (
         status: TicketStatus.CLOSED,
       },
     }),
-    
+
     // Average resolution time (in hours)
     prisma.ticket.aggregate({
       where: {
@@ -90,14 +90,14 @@ export const getTicketStatistics = async (
       },
     }),
   ]);
-  
+
   // Calculate average resolution time
   // For now, we'll return a placeholder since we need closedAt - createdAt calculation
   const avgResolutionTime = null; // TODO: Implement proper calculation
-  
+
   // Calculate closure rate
   const closureRate = totalCreated > 0 ? (closedTickets / totalCreated) * 100 : 0;
-  
+
   return {
     totalCreated,
     totalOpen: openTickets,
@@ -115,18 +115,18 @@ export const getStaffPerformance = async (
   options: StaffPerformanceOptions
 ): Promise<StaffPerformance> => {
   const { guildId, staffId, dateRange } = options;
-  
+
   const whereClause: any = {
     guildId,
   };
-  
+
   if (dateRange) {
     whereClause.createdAt = {
       gte: dateRange.start,
       lte: dateRange.end,
     };
   }
-  
+
   // Get tickets closed by this staff member
   // Since closedBy is not directly on ticket, we need to look at lifecycle events
   const closedByUser = await prisma.ticketLifecycleEvent.count({
@@ -136,7 +136,7 @@ export const getStaffPerformance = async (
       ticket: whereClause,
     },
   });
-  
+
   // Get tickets currently claimed by this staff member
   const currentlyClaimed = await prisma.ticket.count({
     where: {
@@ -145,7 +145,7 @@ export const getStaffPerformance = async (
       claimedById: staffId,
     },
   });
-  
+
   // Get all tickets ever claimed by this staff member
   const everClaimed = await prisma.ticket.count({
     where: {
@@ -153,19 +153,19 @@ export const getStaffPerformance = async (
       claimedById: staffId,
     },
   });
-  
+
   // For transfers, we would need to look at events/audit logs
   // For now, we'll return 0 for these
   const transfersGiven = 0;
   const transfersReceived = 0;
-  
+
   // Calculate total actions
   const totalActions = closedByUser + everClaimed;
-  
+
   // Satisfaction rating would come from feedback system
   const satisfactionRating = null;
   const feedbackCount = 0;
-  
+
   return {
     ticketsClosed: closedByUser,
     ticketsClaimed: everClaimed,
@@ -192,7 +192,7 @@ export const getUserTicketStats = async (
       openerId: userId,
     },
   });
-  
+
   return {
     openedCount: tickets,
     averageResponseTimeMinutes: 0, // TODO: Implement response time calculation

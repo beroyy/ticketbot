@@ -17,7 +17,7 @@ export const settingsRoutes = createRoute()
       const { guildId } = c.req.valid("param");
 
       try {
-        const settings = await db.guild.getSettings(guildId);
+        const settings = await db.guild.getGuildSettings(guildId);
         return c.json(settings);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
@@ -39,7 +39,7 @@ export const settingsRoutes = createRoute()
       const input = c.req.valid("json");
 
       try {
-        const updatedSettings = await db.guild.updateSettings(guildId, input);
+        const updatedSettings = await db.guild.updateGuildSettings(guildId, input);
         return c.json(updatedSettings);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {

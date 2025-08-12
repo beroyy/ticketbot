@@ -31,7 +31,7 @@ export const linkDiscordAccount = async (
   }
 ): Promise<void> => {
   // Ensure the Discord user exists
-  await db.discordUser.ensure(
+  await db.discordUser.ensureDiscordUser(
     discordId,
     userData?.username || "Unknown",
     userData?.discriminator || undefined,

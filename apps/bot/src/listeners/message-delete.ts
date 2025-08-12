@@ -16,7 +16,7 @@ export const MessageDeleteListener = ListenerFactory.on(
 
     try {
       // Check if this is a ticket channel
-      const ticket = await db.ticket.get(message.channelId);
+      const ticket = await db.ticket.getByChannelId(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
       const context: BotContext = {

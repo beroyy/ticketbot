@@ -100,7 +100,7 @@ const handleAddTag = async (interaction: ChatInputCommandInteraction) => {
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
-    const newTag = await db.tag.create({ guildId, name, content });
+    const newTag = await db.tag.createTag({ guildId, name, content });
 
     const embed = Embed.success(
       "Tag Created",
@@ -134,14 +134,14 @@ const handleDeleteTag = async (interaction: ChatInputCommandInteraction) => {
 
   try {
     // Get tag details before deletion
-    const tag = await db.tag.get(tagId, guildId);
+    const tag = await db.tag.getTag(tagId, guildId);
     if (!tag) {
       await InteractionResponse.error(interaction, `Tag with ID ${tagId} not found.`);
       return err("Tag not found");
     }
 
     // Delete the tag
-    await db.tag.delete(tagId, guildId);
+    await db.tag.deleteTag(tagId, guildId);
 
     const embed = Embed.success(
       "Tag Deleted",
@@ -161,7 +161,7 @@ const handleListTags = async (interaction: ChatInputCommandInteraction) => {
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
-    const tags = await db.tag.list(guildId, {
+    const tags = await db.tag.listTags(guildId, {
       orderBy: "id",
       order: "asc",
     });
@@ -219,7 +219,7 @@ const handleEditTag = async (interaction: ChatInputCommandInteraction) => {
   }
 
   try {
-    const updatedTag = await db.tag.update(tagId, guildId, {
+    const updatedTag = await db.tag.updateTag(tagId, guildId, {
       ...(newName && { name: newName }),
       ...(newContent && { content: newContent }),
     });

@@ -64,7 +64,7 @@ export class CloseRequestCommand extends TicketCommandBase {
     const discordId = parseDiscordId(interaction.user.id);
 
     // Ensure user exists
-    await db.discordUser.ensure(
+    await db.discordUser.ensureDiscordUser(
       discordId,
       interaction.user.username,
       interaction.user.discriminator,

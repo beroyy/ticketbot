@@ -32,7 +32,7 @@ export const TagCommand = createCommand({
     const guildId = parseDiscordId(guild.id);
 
     try {
-      const tag = await db.tag.get(tagId, guildId);
+      const tag = await db.tag.getTag(tagId, guildId);
 
       if (!tag) {
         await InteractionResponse.error(interaction, `Tag with ID ${tagId} not found.`);

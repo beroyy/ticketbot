@@ -56,7 +56,7 @@ export const BlacklistCommand = createCommand({
         const targetId = parseDiscordId(target.id);
 
         try {
-          const isNowBlacklisted = await db.guild.toggleBlacklistEntry(
+          const isNowBlacklisted = await db.guild.toggleGuildBlacklistEntry(
             guildId,
             targetId,
             target.isRole

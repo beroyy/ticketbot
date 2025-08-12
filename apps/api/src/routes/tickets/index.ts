@@ -347,7 +347,7 @@ export const ticketRoutes = createRoute()
             let author = null;
             if (message.authorId) {
               try {
-                const user = await db.discordUser.get(message.authorId);
+                const user = await db.discordUser.getDiscordUser(message.authorId);
                 if (user) {
                   author = {
                     id: user.id.toString(),

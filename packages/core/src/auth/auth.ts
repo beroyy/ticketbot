@@ -225,7 +225,7 @@ export const auth = betterAuth({
 
       let discordUser = null;
       if (fullUser?.discordUserId) {
-        discordUser = await db.discordUser.get(fullUser.discordUserId);
+        discordUser = await db.discordUser.getDiscordUser(fullUser.discordUserId);
         if (process.env.NODE_ENV === "development") {
           logger.debug("[Auth] Fetched Discord user", {
             discordUserId: fullUser.discordUserId,
@@ -259,7 +259,7 @@ export const auth = betterAuth({
         if (discordAccount?.accountId) {
           discordUserId = discordAccount.accountId;
 
-          await db.discordUser.ensure(
+          await db.discordUser.ensureDiscordUser(
             discordAccount.accountId,
             `User_${discordAccount.accountId.slice(-6)}`,
             undefined,
@@ -273,7 +273,7 @@ export const auth = betterAuth({
             discordUserId: discordAccount.accountId,
           });
 
-          discordUser = await db.discordUser.get(discordAccount.accountId);
+          discordUser = await db.discordUser.getDiscordUser(discordAccount.accountId);
         }
       }
 
@@ -344,7 +344,7 @@ export const auth = betterAuth({
               discordProfile.discriminator || "0"
             );
 
-            await db.discordUser.ensure(
+            await db.discordUser.ensureDiscordUser(
               account.accountId,
               discordProfile.username,
               discordProfile.discriminator || undefined,
@@ -432,7 +432,7 @@ export const auth = betterAuth({
 
               for (const guild of adminGuilds) {
                 try {
-                  const dbGuild = await db.guild.get(guild.id);
+                  const dbGuild = await db.guild.getGuildById(guild.id);
 
                   if (dbGuild?.botInstalled) {
                     logger.debug(
@@ -440,7 +440,7 @@ export const auth = betterAuth({
                     );
 
                     if (guild.owner && dbGuild.ownerDiscordId !== account.accountId) {
-                      await db.guild.ensure(guild.id, guild.name, account.accountId);
+                      await db.guild.ensureGuild(guild.id, guild.name, account.accountId);
                       logger.debug(`Updated ownership for guild ${guild.id}`);
                     }
 

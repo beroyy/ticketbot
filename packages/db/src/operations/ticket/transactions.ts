@@ -1,5 +1,5 @@
-import { prisma } from "../client";
-import { TicketStatus } from "..";
+import { prisma } from "../../client";
+import { TicketStatus } from "../..";
 
 /**
  * Create a new ticket with lifecycle tracking
@@ -269,29 +269,6 @@ export const unclaim = async (data: {
 };
 
 /**
- * Get current claim for a ticket (checks if ticket is claimed)
- */
-export const getCurrentClaim = async (ticketId: number): Promise<any> => {
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
-    select: {
-      claimedById: true,
-      claimedBy: true,
-      status: true,
-    },
-  });
-
-  if (!ticket || !ticket.claimedById || ticket.status !== TicketStatus.CLAIMED) {
-    return null;
-  }
-
-  return {
-    claimedById: ticket.claimedById,
-    claimedBy: ticket.claimedBy,
-  };
-};
-
-/**
  * Request to close a ticket
  */
 export const requestClose = async (data: {
@@ -367,36 +344,40 @@ export const cancelCloseRequest = async (
 };
 
 /**
- * Get ticket lifecycle history
+ * Update auto-close exclusion for a ticket
  */
-export const getHistory = async (ticketId: number): Promise<any[]> => {
-  const events = await prisma.ticketLifecycleEvent.findMany({
-    where: { ticketId },
-    orderBy: { timestamp: "desc" },
-    include: {
-      performedBy: true,
-      claimedBy: true,
-      closedBy: true,
-    },
-  });
+export const updateAutoClose = async (
+  ticketId: number,
+  exclude: boolean,
+  performedById: string
+): Promise<any> => {
+  return prisma.$transaction(async (tx) => {
+    // Update the exclusion status
+    const updated = await tx.ticket.update({
+      where: { id: ticketId },
+      data: {
+        excludeFromAutoclose: exclude,
+      },
+      include: {
+        opener: true,
+        panel: true,
+        guild: true,
+      },
+    });
 
-  return events.map((event: any) => ({
-    id: event.id,
-    timestamp: event.timestamp.toISOString(),
-    action: event.action,
-    details: event.details,
-    performedBy: event.performedBy ? {
-      id: event.performedBy.id,
-      username: event.performedBy.username,
-      global_name: event.performedBy.username,
-    } : null,
-    claimedBy: event.claimedBy ? {
-      id: event.claimedBy.id,
-      username: event.claimedBy.username,
-    } : null,
-    closedBy: event.closedBy ? {
-      id: event.closedBy.id,
-      username: event.closedBy.username,
-    } : null,
-  }));
+    // Log the change
+    await tx.ticketLifecycleEvent.create({
+      data: {
+        ticketId: ticketId,
+        action: exclude ? "auto_close_excluded" : "auto_close_included",
+        performedById: performedById,
+        details: {
+          message: `Auto-close ${exclude ? "disabled" : "enabled"} by support staff`,
+        },
+        timestamp: new Date(),
+      },
+    });
+
+    return updated;
+  });
 };

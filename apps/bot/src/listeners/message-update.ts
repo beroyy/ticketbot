@@ -25,7 +25,7 @@ export const MessageUpdateListener = ListenerFactory.on(
     }
 
     try {
-      const ticket = await db.ticket.get(newMessage.channelId);
+      const ticket = await db.ticket.getByChannelId(newMessage.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
       const context: BotContext = {

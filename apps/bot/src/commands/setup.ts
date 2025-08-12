@@ -307,7 +307,7 @@ Do you want to proceed?`
     // Assign admin role to invoker
     const adminTeamRole = await db.role.getRoleByName(guildId, "admin");
     if (adminTeamRole) {
-      await db.discordUser.ensure(
+      await db.discordUser.ensureDiscordUser(
         parseDiscordId(interaction.user.id),
         interaction.user.username,
         interaction.user.discriminator,
@@ -331,7 +331,7 @@ Do you want to proceed?`
     }
 
     // Update guild settings
-    await db.guild.ensureWithDefaults({
+    await db.guild.ensureGuildWithDefaults({
       guildId,
       guildName: guild.name,
       defaultCategoryId: parseDiscordId(ticketsCategory.id),
@@ -394,7 +394,7 @@ const handleLimitSetup = async (
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
-    await db.guild.ensure(guildId, interaction.guild!.name);
+    await db.guild.ensureGuild(guildId, interaction.guild!.name);
 
     const message =
       limit === 0
@@ -432,11 +432,11 @@ const handleTranscriptsSetup = async (
 
   try {
     await db.guild
-      .update(guildId, {
+      .updateGuild(guildId, {
         transcriptsChannel: parseDiscordId(channel.id),
       })
       .catch(async () => {
-        await db.guild.ensureWithDefaults({
+        await db.guild.ensureGuildWithDefaults({
           guildId,
           guildName: interaction.guild!.name,
           transcriptsChannel: parseDiscordId(channel.id),
@@ -459,7 +459,7 @@ const handlePanelsSetup = async (
 ): Promise<Result<void>> => {
   try {
     // Get panels for the guild
-    const panels = await db.panel.listByGuildId(interaction.guildId!, "title", "asc");
+    const panels = await db.panel.listPanelsByGuildId(interaction.guildId!, "title", "asc");
 
     if (panels.length === 0) {
       await InteractionResponse.warning(
@@ -529,12 +529,12 @@ const handleFeedbackSetup = async (
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
-    await db.guild.update(guildId, { feedbackEnabled: enabled }).catch(async () => {
-      await db.guild.ensureWithDefaults({
+    await db.guild.updateGuild(guildId, { feedbackEnabled: enabled }).catch(async () => {
+      await db.guild.ensureGuildWithDefaults({
         guildId,
         guildName: interaction.guild!.name,
       });
-      await db.guild.update(guildId, { feedbackEnabled: enabled });
+      await db.guild.updateGuild(guildId, { feedbackEnabled: enabled });
     });
 
     const embed = Embed.info(

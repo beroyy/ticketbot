@@ -18,7 +18,7 @@ const closeWithReasonHandler = createButtonHandler({
   handler: async (interaction: ButtonInteraction) => {
     if (!interaction.channel) return err("No channel");
 
-    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",

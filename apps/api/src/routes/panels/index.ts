@@ -19,7 +19,7 @@ export const panelRoutes = createRoute()
     if (!guildId) {
       throw ApiErrors.badRequest("Guild ID is required");
     }
-    const panels = await db.panel.list(guildId);
+    const panels = await db.panel.listPanelsByGuildId(guildId);
     return c.json(panels);
   })
 
@@ -36,7 +36,7 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        const panel = await db.panel.getById(id);
+        const panel = await db.panel.getPanelById(id);
         return c.json(panel);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -63,7 +63,7 @@ export const panelRoutes = createRoute()
       const domainInput = transformApiPanelToDomain(input);
 
       try {
-        const panel = await db.panel.create(domainInput);
+        const panel = await db.panel.createPanel(domainInput);
         return c.json(panel, 201);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -95,7 +95,7 @@ export const panelRoutes = createRoute()
       const input = c.req.valid("json");
 
       try {
-        await db.panel.getById(id);
+        await db.panel.getPanelById(id);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
           throw ApiErrors.notFound("Panel");
@@ -106,7 +106,7 @@ export const panelRoutes = createRoute()
       const updateData = transformUpdateData(input);
 
       try {
-        const panel = await db.panel.update(id, updateData);
+        const panel = await db.panel.updatePanel(id, updateData);
         return c.json(panel);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -136,7 +136,7 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        const result = await db.panel.remove(id);
+        const result = await db.panel.deletePanel(id);
         return c.json(result);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -166,7 +166,7 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        const panelData = await db.panel.deploy(id);
+        const panelData = await db.panel.deployPanel(id);
 
         const result = await Discord.deployPanel(panelData);
 
@@ -210,7 +210,7 @@ export const panelRoutes = createRoute()
       const { messageId } = c.req.valid("json");
 
       try {
-        const panelData = await db.panel.deploy(id);
+        const panelData = await db.panel.deployPanel(id);
 
         const result = await Discord.updatePanel(panelData, messageId);
 

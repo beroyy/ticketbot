@@ -64,7 +64,7 @@ export class CloseCommand extends TicketCommandBase {
       notifyOpener: true,
     });
 
-    const settings = await db.guild.getSettings(guild.id);
+    const settings = await db.guild.getGuildSettings(guild.id);
 
     // Discord operations after transaction
     try {

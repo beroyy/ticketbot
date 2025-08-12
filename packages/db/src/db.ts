@@ -1,148 +1,38 @@
-import {
-  createTag,
-  deleteTag,
-  ensureDiscordUser,
-  getDiscordUser,
-  getTag,
-  listTags,
-  updateTag,
-  hasOpenTickets,
-  getCountByStatus,
-  removeParticipantFromAll,
-  getPanelById,
-  getPanelGuildId,
-  getPanelWithForm,
-  listPanelsByGuildId,
-  createPanel,
-  updatePanel,
-  deletePanel,
-  deployPanel,
-  getTicketByChannelId,
-  isTicketChannel,
-  getByIdUnchecked,
-  getByIds,
-  getById as getTicketById,
-  getUserOpenCount,
-  addParticipant,
-  removeParticipant,
-  updateChannelId,
-  list as listTickets,
-  update as updateTicket,
-  // Lifecycle operations now in ticket.ts
-  create as createTicket,
-  close as closeTicket,
-  claim as claimTicket,
-  unclaim as unclaimTicket,
-  requestClose as requestCloseTicket,
-  cancelCloseRequest as cancelCloseRequestTicket,
-  updateAutoClose as updateAutoCloseTicket,
-  getCurrentClaim as getCurrentClaimTicket,
-  getLifecycleHistory as getTicketLifecycleHistory,
-  storeMessage,
-  updateMessage,
-  deleteMessage,
-  getMessages,
-  addHistoryEntry,
-  getHistory,
-  submitFeedback,
-  recordMessage,
-} from "./operations";
-import {
-  getGuildById,
-  updateGuild,
-  getGuildSettings,
-  getTeamRoles,
-} from "./operations/guild/queries";
-import {
-  ensureGuild,
-  ensureGuildWithDefaults,
-  syncGuildBotInstalledStatus,
-  checkGuildBlacklistEntry,
-  toggleGuildBlacklistEntry,
-  updateGuildSettings,
-  initialize as initializeGuild,
-  cleanupMember as cleanupGuildMember,
-} from "./operations/guild/mutations";
+import { prisma } from "./client";
 
-import * as roleOps from "./operations/role";
 import * as analyticsOps from "./operations/analytics";
+import * as discordUserOps from "./operations/discord-user";
+import * as guildOps from "./operations/guild";
+import * as panelOps from "./operations/panel";
+import * as roleOps from "./operations/role";
+import * as tagOps from "./operations/tag";
+import * as ticketOps from "./operations/ticket";
+import * as transcriptOps from "./operations/transcript";
 
 export const db = {
-  discordUser: {
-    ensure: ensureDiscordUser,
-    get: getDiscordUser,
-  },
-  guild: {
-    ensure: ensureGuild,
-    ensureWithDefaults: ensureGuildWithDefaults,
-    get: getGuildById,
-    update: updateGuild,
-    updateSettings: updateGuildSettings,
-    syncBotInstalledStatus: syncGuildBotInstalledStatus,
-    getSettings: getGuildSettings,
-    toggleBlacklistEntry: toggleGuildBlacklistEntry,
-    checkBlacklistEntry: checkGuildBlacklistEntry,
-    getTeamRoles: getTeamRoles,
-    // New high-level operations
-    initialize: initializeGuild,
-    cleanupMember: cleanupGuildMember,
-  },
-  panel: {
-    get: getPanelById,
-    getById: getPanelById,
-    getGuildId: getPanelGuildId,
-    getWithForm: getPanelWithForm,
-    list: listPanelsByGuildId,
-    listByGuildId: listPanelsByGuildId,
-    create: createPanel,
-    update: updatePanel,
-    remove: deletePanel,
-    deploy: deployPanel,
-  },
-  role: roleOps,
-  tag: {
-    create: createTag,
-    delete: deleteTag,
-    get: getTag,
-    list: listTags,
-    update: updateTag,
-  },
-  ticket: {
-    // CRUD operations
-    get: getTicketByChannelId,
-    getById: getTicketById,
-    getByIdUnchecked: getByIdUnchecked,
-    getByIds: getByIds,
-    list: listTickets,
-    update: updateTicket,
-    getCountByStatus: getCountByStatus,
-    hasOpenTickets: hasOpenTickets,
-    getUserOpenCount: getUserOpenCount,
-    addParticipant: addParticipant,
-    removeParticipant: removeParticipant,
-    removeParticipantFromAll: removeParticipantFromAll,
-    updateChannelId: updateChannelId,
-    isTicketChannel: isTicketChannel,
-    // Lifecycle operations (consolidated from ticketLifecycle)
-    create: createTicket,
-    close: closeTicket,
-    claim: claimTicket,
-    unclaim: unclaimTicket,
-    requestClose: requestCloseTicket,
-    cancelCloseRequest: cancelCloseRequestTicket,
-    updateAutoClose: updateAutoCloseTicket,
-    getCurrentClaim: getCurrentClaimTicket,
-    getLifecycleHistory: getTicketLifecycleHistory,
-  },
-  transcript: {
-    storeMessage: storeMessage,
-    updateMessage: updateMessage,
-    deleteMessage: deleteMessage,
-    getMessages: getMessages,
-    addHistoryEntry: addHistoryEntry,
-    getHistory: getHistory,
-    submitFeedback: submitFeedback,
-    recordMessage: recordMessage,
-  },
   analytics: analyticsOps,
+  discordUser: discordUserOps,
+  guild: guildOps,
+  panel: panelOps,
+  role: roleOps,
+  tag: tagOps,
+  ticket: ticketOps,
+  transcript: transcriptOps,
+
+  tx: prisma.$transaction.bind(prisma),
+
+  utils: {
+    disconnect: () => prisma.$disconnect(),
+    connect: () => prisma.$connect(),
+    healthCheck: async () => {
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  },
 };
+
+export type dbClient = typeof db;

@@ -35,12 +35,12 @@ export const TicketOps = {
 
     let channelId: string | undefined;
 
-    const panel = await db.panel.getWithForm(panelId);
+    const panel = await db.panel.getPanelWithForm(panelId);
     if (!panel) {
       throw new Error("Panel not found");
     }
 
-    const settings = await db.guild.getSettings(guild.id);
+    const settings = await db.guild.getGuildSettings(guild.id);
     if (!settings) {
       throw new Error("Guild not properly configured");
     }

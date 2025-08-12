@@ -18,7 +18,7 @@ const panelSelectHandler = createSelectHandler({
     const panelId = parseInt(selectedValue.replace("panel_", ""));
 
     // Get the panel with its form
-    const panel = await db.panel.getWithForm(panelId);
+    const panel = await db.panel.getPanelWithForm(panelId);
     if (!panel) {
       await interaction.reply({
         content: "❌ Panel not found.",

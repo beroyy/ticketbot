@@ -26,7 +26,7 @@ const closeRequestHandler = createButtonHandler({
     const action = match[1] as "confirm" | "cancel";
     const requestId = match[2] || null;
 
-    const ticket = await db.ticket.get(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
     if (!ticket) {
       await interaction.reply(ErrorResponses.notTicketChannel());
       return err("Not a ticket channel");
@@ -45,7 +45,7 @@ const closeRequestHandler = createButtonHandler({
       return err("Invalid close request");
     }
 
-    await db.discordUser.ensure(
+    await db.discordUser.ensureDiscordUser(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,
@@ -73,7 +73,7 @@ const closeRequestHandler = createButtonHandler({
           notifyOpener: true,
         });
 
-        const settings = await db.guild.getSettings(guild.id);
+        const settings = await db.guild.getGuildSettings(guild.id);
         if (!settings) {
           throw new Error("Guild not properly configured");
         }

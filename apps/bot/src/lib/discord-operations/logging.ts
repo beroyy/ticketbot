@@ -10,7 +10,7 @@ import type { EmbedBuilder, TextChannel } from "discord.js";
  */
 export const sendToLogChannel = async (guildId: string, embed: EmbedBuilder): Promise<boolean> => {
   try {
-    const settings = await db.guild.getSettings(guildId);
+    const settings = await db.guild.getGuildSettings(guildId);
     if (!settings?.settings?.logChannel) {
       container.logger.debug(`No log channel configured for guild ${guildId}`);
       return false;

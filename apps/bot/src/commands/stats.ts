@@ -64,7 +64,7 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
   try {
-    const discordUser = await db.discordUser.get(discordUserId);
+    const discordUser = await db.discordUser.getDiscordUser(discordUserId);
     if (!discordUser) {
       await InteractionResponse.error(interaction, "User not found in database");
       return err("User not found");

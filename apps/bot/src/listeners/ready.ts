@@ -19,7 +19,7 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
 
   try {
     const guildIds = client.guilds.cache.map((guild) => parseDiscordId(guild.id));
-    await db.guild.syncBotInstalledStatus(guildIds);
+    await db.guild.syncGuildBotInstalledStatus(guildIds);
     logger.info(`✅ Synced bot installation status for ${guildIds.length} guilds`);
   } catch (error) {
     logger.error("❌ Failed to sync bot installation status:", error);

@@ -121,7 +121,7 @@ export function requirePanelPermission(
       const panelId = c.req.param("id") || c.req.param("panelId");
       if (panelId) {
         try {
-          const panelGuildId = await db.panel.getGuildId(parseInt(panelId));
+          const panelGuildId = await db.panel.getPanelGuildId(parseInt(panelId));
 
           if (!panelGuildId) {
             return c.json({ error: "Panel not found" }, 404);

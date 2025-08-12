@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema, DiscordChannelIdSchema, TicketStatusSchema } from "@ticketsbot/core";
-import { db } from "@ticketsbot/db";
+import { db, TicketStatusSchema } from "@ticketsbot/db";
 import { ApiErrors } from "../../utils/error-handler";
 
 export const _TicketDashboardResponse = z.object({
@@ -67,11 +66,11 @@ export const _TicketStatistics = z.object({
 });
 
 export const CreateTicketSchema = z.object({
-  guildId: DiscordGuildIdSchema,
+  guildId: z.string(),
   panelId: z.number().positive().optional(),
   subject: z.string().min(1).max(100),
-  categoryId: DiscordChannelIdSchema.optional(),
-  openerId: DiscordGuildIdSchema,
+  categoryId: z.string().optional(),
+  openerId: z.string(),
   initialMessage: z.string().optional(),
   formResponses: z.record(z.string(), z.string()).optional(),
 });
@@ -80,7 +79,7 @@ export const UpdateTicketSchema = z.object({
   subject: z.string().min(1).max(100).optional(),
   status: TicketStatusSchema.optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
-  categoryId: DiscordChannelIdSchema.optional(),
+  categoryId: z.string().optional(),
   sentimentScore: z.number().min(0).max(100).optional(),
   summary: z.string().optional(),
 });

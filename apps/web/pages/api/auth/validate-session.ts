@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { auth } from "@ticketsbot/core/auth";
+import { auth } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

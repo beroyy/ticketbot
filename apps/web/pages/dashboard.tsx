@@ -8,7 +8,7 @@ import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
 import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 
 export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
   const api = await createServerApiClient(context.req, guildId);

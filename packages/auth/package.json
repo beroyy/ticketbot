@@ -1,8 +1,10 @@
 {
-  "name": "@ticketsbot/core",
+  "name": "@ticketsbot/auth",
   "version": "0.0.1",
-  "description": "Core schemas, validation, utilities, and database layer for TicketsBot",
   "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "dev": "tsc --watch --noEmit",
     "build": "tsc --project tsconfig.json --noEmit",
@@ -29,14 +31,5 @@
     "eslint": "^9.31.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
-  },
-  "exports": {
-    ".": "./src/index.ts",
-    "./client": "./src/client.ts",
-    "./auth": "./src/auth/index.ts",
-    "./auth/services/user-linking": "./src/auth/services/user-linking.ts"
-  },
-  "prisma": {
-    "schema": "./prisma/"
   }
 }

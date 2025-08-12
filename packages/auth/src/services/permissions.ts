@@ -1,3 +1,89 @@
+import { BitField } from "@sapphire/bitfield";
+
+export const AuthPermissionUtils = {
+  isAdmin: (permissions: bigint): boolean => permissions === ALL_PERMISSIONS,
+
+  hasAdminFlags: (permissions: bigint): boolean =>
+    PermissionUtils.hasAnyPermission(
+      permissions,
+      PermissionFlags.GUILD_SETTINGS_EDIT,
+      PermissionFlags.ROLE_CREATE,
+      PermissionFlags.ROLE_DELETE
+    ),
+
+  canManageTickets: (permissions: bigint): boolean =>
+    PermissionUtils.hasAnyPermission(
+      permissions,
+      PermissionFlags.TICKET_CLOSE_ANY,
+      PermissionFlags.TICKET_ASSIGN
+    ),
+
+  canViewAllTickets: (permissions: bigint): boolean =>
+    PermissionUtils.hasPermission(permissions, PermissionFlags.TICKET_VIEW_ALL),
+
+  canManagePanels: (permissions: bigint): boolean =>
+    PermissionUtils.hasAnyPermission(
+      permissions,
+      PermissionFlags.PANEL_CREATE,
+      PermissionFlags.PANEL_EDIT,
+      PermissionFlags.PANEL_DELETE
+    ),
+
+  getPermissionLevel: (permissions: bigint): string => {
+    if (permissions === ALL_PERMISSIONS) return "Admin";
+    if (AuthPermissionUtils.hasAdminFlags(permissions)) return "Manager";
+    if (AuthPermissionUtils.canManageTickets(permissions)) return "Support";
+    if (AuthPermissionUtils.canViewAllTickets(permissions)) return "Viewer";
+    return "User";
+  },
+} as const;
+
+const createBitField = () => new BitField(PermissionFlags);
+
+export const PermissionUtils = {
+  hasPermission: (permissions: bigint, flag: bigint): boolean => (permissions & flag) === flag,
+
+  hasAnyPermission: (permissions: bigint, ...flags: bigint[]): boolean =>
+    flags.some((flag) => PermissionUtils.hasPermission(permissions, flag)),
+
+  hasAllPermissions: (permissions: bigint, ...flags: bigint[]): boolean =>
+    flags.every((flag) => PermissionUtils.hasPermission(permissions, flag)),
+
+  addPermissions: (permissions: bigint, ...flags: bigint[]): bigint =>
+    flags.reduce((acc, flag) => acc | flag, permissions),
+
+  removePermissions: (permissions: bigint, ...flags: bigint[]): bigint =>
+    flags.reduce((acc, flag) => acc & ~flag, permissions),
+
+  getCumulativePermissions: (permissions: bigint[]): bigint =>
+    permissions.reduce((acc, perm) => acc | perm, 0n),
+
+  getIntersection: (...permissions: bigint[]): bigint =>
+    permissions.reduce((acc, perm) => acc & perm, ALL_PERMISSIONS),
+
+  getComplement: (permissions: bigint): bigint => ALL_PERMISSIONS & ~permissions,
+
+  getPermissionNames: (permissions: bigint): PermissionFlag[] => {
+    const bitfield = createBitField();
+    return bitfield.toArray(permissions);
+  },
+
+  fromNames: (names: PermissionFlag[]): bigint =>
+    names.reduce((acc, name) => acc | PermissionFlags[name], 0n),
+
+  toHexString: (permissions: bigint): string => permissions.toString(16),
+
+  fromHexString: (hex: string): bigint => BigInt(`0x${hex}`),
+
+  getDescription: (flag: bigint): string | undefined => {
+    const entry = Object.entries(PermissionFlags).find(([_, value]) => value === flag);
+    return entry?.[0]
+      .split("_")
+      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(" ");
+  },
+} as const;
+
 export const PermissionFlags = {
   PANEL_CREATE: 1n << 0n,
   PANEL_EDIT: 1n << 1n,

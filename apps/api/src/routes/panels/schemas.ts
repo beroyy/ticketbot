@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema, DiscordChannelIdSchema } from "@ticketsbot/core";
 
 export const PanelQuestionSchema = z
   .object({
@@ -27,11 +26,11 @@ export const SinglePanelConfigSchema = z
       .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color (e.g., #5865F2)")
       .optional()
       .describe("Button color"),
-    categoryId: DiscordChannelIdSchema.optional().describe("Ticket category channel"),
+    categoryId: z.string().optional().describe("Ticket category channel"),
     questions: z.array(PanelQuestionSchema).max(10).optional(),
-    mentionOnOpen: DiscordChannelIdSchema.optional().describe("Role to mention"),
+    mentionOnOpen: z.string().optional().describe("Role to mention"),
     hideMentions: z.boolean().optional().default(false),
-    ticketCategory: DiscordChannelIdSchema.optional(),
+    ticketCategory: z.string().optional(),
     largeImageUrl: z.url().optional().describe("Banner image URL"),
     smallImageUrl: z.url().optional().describe("Thumbnail image URL"),
     textSections: z.array(TextSectionSchema).max(5).optional(),
@@ -42,7 +41,7 @@ export const SinglePanelConfigSchema = z
     accessControl: z
       .object({
         allowEveryone: z.boolean().optional(),
-        roles: z.array(DiscordChannelIdSchema).optional(),
+        roles: z.array(z.string()).optional(),
       })
       .optional(),
   })
@@ -63,7 +62,7 @@ export const MultiPanelOptionSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().max(200).optional(),
   emoji: z.string().max(4).optional(),
-  categoryId: DiscordChannelIdSchema.optional(),
+  categoryId: z.string().optional(),
   introTitle: z.string().max(100).optional(),
   introDescription: z.string().max(500).optional(),
   channelPrefix: z
@@ -71,7 +70,7 @@ export const MultiPanelOptionSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Must be lowercase with hyphens only")
     .max(20)
     .optional(),
-  mentionOnOpen: z.array(DiscordChannelIdSchema).optional(),
+  mentionOnOpen: z.array(z.string()).optional(),
   hideMentions: z.boolean().optional().default(false),
   questions: z.array(PanelQuestionSchema).max(10).optional(),
 });
@@ -95,8 +94,8 @@ export const MultiPanelConfigSchema = z
 export const CreatePanelSchema = z
   .object({
     type: z.enum(["SINGLE", "MULTI"]).optional().default("SINGLE"),
-    guildId: DiscordGuildIdSchema,
-    channelId: DiscordChannelIdSchema,
+    guildId: z.string(),
+    channelId: z.string(),
     welcomeMessage: z
       .object({
         title: z.string().optional(),

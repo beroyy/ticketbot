@@ -1,7 +1,7 @@
 import { Precondition } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 import { PreconditionErrors } from "@bot/lib/utils/error-handlers";
 
 export const CanCloseTicketPrecondition = class extends Precondition {

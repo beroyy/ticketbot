@@ -1,5 +1,5 @@
 import { createPermissionPrecondition } from "@bot/lib/sapphire";
-import { PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 
 export const AdminOnlyPrecondition = createPermissionPrecondition({
   name: "admin-only",

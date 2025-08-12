@@ -1,8 +1,3 @@
-/**
- * Centralized logger utility for the TicketsBot monorepo.
- * Respects LOG_LEVEL environment variable for filtering output.
- */
-
 export type LogLevel = "error" | "warn" | "info" | "debug";
 
 const LOG_LEVELS: Record<LogLevel, number> = {

@@ -1,5 +1,5 @@
 import { env } from "./env";
-import { createLogger } from "@ticketsbot/core";
+import { createLogger } from "./lib/utils/logger";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";

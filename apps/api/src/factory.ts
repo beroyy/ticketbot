@@ -1,5 +1,5 @@
 import { createFactory } from "hono/factory";
-import type { AuthSession } from "@ticketsbot/core/auth";
+import type { AuthSession } from "@ticketsbot/auth";
 import type { Guild, Ticket } from "@ticketsbot/db";
 
 export type AppEnv = {

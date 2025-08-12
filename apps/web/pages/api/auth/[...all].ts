@@ -1,5 +1,5 @@
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "@ticketsbot/core/auth";
+import { auth } from "@ticketsbot/auth";
 
 export default toNodeHandler(auth.handler);
 

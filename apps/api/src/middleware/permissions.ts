@@ -1,7 +1,8 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { db } from "@ticketsbot/db";
-import { PermissionUtils, createLogger } from "@ticketsbot/core";
-import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
+import { PermissionUtils } from "@ticketsbot/auth";
+import { createLogger } from "../lib/utils/logger";
+import { getSessionFromContext, type AuthSession } from "@ticketsbot/auth";
 
 const logger = createLogger("api:permissions");
 

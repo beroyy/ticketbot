@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import dynamic from "next/dynamic";
 import { useAuth } from "@/features/auth";
 import { usePermissions } from "@/features/permissions/hooks/use-permissions";
 

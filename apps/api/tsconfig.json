@@ -5,18 +5,8 @@
     "outDir": "./dist",
     "module": "ESNext",
     "paths": {
-      "@ticketsbot/core": ["packages/core/src/index.ts"],
-      "@ticketsbot/core/auth": ["packages/core/src/auth/index.ts"],
-      "@ticketsbot/core/auth/client": ["packages/core/src/auth/client.ts"],
-      "@ticketsbot/core/auth/services/user-linking": ["packages/core/src/auth/services/user-linking.ts"],
-      "@ticketsbot/core/env": ["packages/core/src/env/index.ts"],
-      "@ticketsbot/core/domains": ["packages/core/src/domains/index.ts"],
-      "@ticketsbot/core/domains/*": ["packages/core/src/domains/*/index.ts"],
-      "@ticketsbot/core/context": ["packages/core/src/context/index.ts"],
-      "@ticketsbot/core/discord": ["packages/core/src/discord/index.ts"],
-      "@ticketsbot/db": ["packages/db/src/index.ts"],
-      "@ticketsbot/discord": ["packages/discord/src/index.ts"],
-      "@ticketsbot/discord/*": ["packages/discord/src/*"]
+      "@ticketsbot/auth": ["packages/auth/src/index.ts"],
+      "@ticketsbot/db": ["packages/db/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

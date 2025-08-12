@@ -1,5 +1,5 @@
 import type { IncomingMessage } from "http";
-import { auth } from "@ticketsbot/core/auth";
+import { auth } from "@ticketsbot/auth";
 
 export type ServerSession = {
   user: {

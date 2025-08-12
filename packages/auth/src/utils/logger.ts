@@ -66,3 +66,10 @@ class AuthLogger {
 }
 
 export const logger = new AuthLogger();
+
+// Export a factory function for compatibility
+export function createLogger(_prefix: string): AuthLogger {
+  // For now, just return the singleton logger
+  // Could be enhanced to support prefixes in the future
+  return logger;
+}

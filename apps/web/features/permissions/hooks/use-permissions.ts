@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import { PermissionUtils } from "@ticketsbot/core/client";
+import { PermissionUtils } from "@ticketsbot/auth";
 import { useAuth } from "@/features/auth";
 import { permissionQueries } from "../queries";
 
@@ -81,4 +81,4 @@ export function usePermissions(guildIdOverride?: string): UsePermissionsReturn {
 }
 
 // Re-export permission flags for convenience
-export { PermissionFlags } from "@ticketsbot/core/client";
+export { PermissionFlags } from "@ticketsbot/auth";

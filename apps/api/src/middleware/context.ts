@@ -1,7 +1,8 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
-import type { AuthSession } from "@ticketsbot/core/auth";
-import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
+import type { AuthSession } from "@ticketsbot/auth";
+import { z } from "zod";
 import { ApiContext, PermissionDeniedError } from "../lib/context";
+import { createLogger } from "../lib/utils/logger";
 import { env } from "../env";
 import { nanoid } from "nanoid";
 
@@ -127,7 +128,7 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
 const extractGuildId = (c: Context): string | undefined => {
   const paramGuildId = c.req.param("guildId");
   if (paramGuildId) {
-    const result = DiscordGuildIdSchema.safeParse(paramGuildId);
+    const result = z.string().safeParse(paramGuildId);
     if (result.success) {
       return result.data;
     }
@@ -137,7 +138,7 @@ const extractGuildId = (c: Context): string | undefined => {
 
   const query = c.req.query();
   if (query.guildId) {
-    const result = DiscordGuildIdSchema.safeParse(query.guildId);
+    const result = z.string().safeParse(query.guildId);
     if (result.success) {
       return result.data;
     }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
@@ -11,7 +11,7 @@ export const settingsRoutes = createRoute()
   .get(
     "/:guildId",
     ...compositions.authenticated,
-    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ guildId: z.string() })),
     requirePermission(PermissionFlags.GUILD_SETTINGS_VIEW),
     async (c) => {
       const { guildId } = c.req.valid("param");
@@ -31,7 +31,7 @@ export const settingsRoutes = createRoute()
   .put(
     "/:guildId",
     ...compositions.authenticated,
-    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ guildId: z.string() })),
     zValidator("json", UpdateSettingsSchema),
     requirePermission(PermissionFlags.GUILD_SETTINGS_EDIT),
     async (c) => {
@@ -58,7 +58,7 @@ export const settingsRoutes = createRoute()
   .get(
     "/:guildId/team-roles",
     ...compositions.authenticated,
-    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ guildId: z.string() })),
     async (c) => {
       const { guildId } = c.req.valid("param");
       const roles = await db.guild.getTeamRoles(guildId);
@@ -69,7 +69,7 @@ export const settingsRoutes = createRoute()
   .get(
     "/:guildId/permissions",
     ...compositions.authenticated,
-    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ guildId: z.string() })),
     async (c) => {
       const { guildId } = c.req.valid("param");
       const user = c.get("user");

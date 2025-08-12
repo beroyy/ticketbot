@@ -1,7 +1,7 @@
 import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z, ZodError } from "zod";
-import { createLogger } from "@ticketsbot/core";
+import { createLogger } from "../lib/utils/logger";
 import { ApiContext, PermissionDeniedError } from "../lib/context";
 import { env } from "../env";
 

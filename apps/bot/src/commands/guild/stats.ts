@@ -10,7 +10,7 @@ import {
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
 } from "@bot/lib/utils";
-import { PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 

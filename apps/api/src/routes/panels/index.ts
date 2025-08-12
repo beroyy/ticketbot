@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions, requirePermission } from "../../middleware/context";

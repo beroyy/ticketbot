@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DiscordChannelIdSchema } from "@ticketsbot/core";
 
 export const defaultSettings = (guildId: string) => ({
   id: guildId,
@@ -37,10 +36,10 @@ export const defaultSettings = (guildId: string) => ({
 export const UpdateSettingsSchema = z.object({
   settings: z
     .object({
-      transcriptsChannel: DiscordChannelIdSchema.nullable().optional(),
-      logChannel: DiscordChannelIdSchema.nullable().optional(),
+      transcriptsChannel: z.string().nullable().optional(),
+      logChannel: z.string().nullable().optional(),
       defaultTicketMessage: z.string().max(1000).nullable().optional(),
-      ticketCategories: z.array(DiscordChannelIdSchema).optional(),
+      ticketCategories: z.array(z.string()).optional(),
       supportRoles: z.array(z.string()).optional(),
       ticketNameFormat: z.string().max(100).optional(),
       allowUserClose: z.boolean().optional(),

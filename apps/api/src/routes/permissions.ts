@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
+import { createLogger } from "../lib/utils/logger";
 import { db } from "@ticketsbot/db";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
@@ -19,7 +19,7 @@ type PermissionsResponse = z.infer<typeof PermissionsResponseSchema>;
 export const permissionRoutes = createRoute().get(
   "/:guildId",
   ...compositions.authenticated,
-  zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+  zValidator("param", z.object({ guildId: z.string() })),
   async (c) => {
     const { guildId } = c.req.valid("param");
     const user = c.get("user");

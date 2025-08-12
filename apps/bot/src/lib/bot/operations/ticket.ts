@@ -54,7 +54,7 @@ export async function createFromPanel(options: TicketCreationOptions): Promise<T
     },
   });
 
-  const ticketInfo = {
+  const _ticketInfo = {
     id: ticket.id,
     number: ticket.number,
     openerId: ticket.openerId,

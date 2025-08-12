@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
-import { createLogger } from "@ticketsbot/core";
+import { createLogger } from "../../lib/utils/logger";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions } from "../../middleware/context";
@@ -318,7 +317,7 @@ export const discordRoutes = createRoute()
   .get(
     "/guild/:id",
     ...compositions.authenticated,
-    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       const { id: guildId } = c.req.valid("param");
       const user = c.get("user");
@@ -357,7 +356,7 @@ export const discordRoutes = createRoute()
   .get(
     "/guild/:id/roles",
     ...compositions.authenticated,
-    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 
@@ -374,7 +373,7 @@ export const discordRoutes = createRoute()
   .get(
     "/guild/:id/channels",
     ...compositions.authenticated,
-    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ id: z.string() })),
     zValidator(
       "query",
       z.object({
@@ -415,7 +414,7 @@ export const discordRoutes = createRoute()
   .get(
     "/guild/:id/categories",
     ...compositions.authenticated,
-    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 
@@ -432,7 +431,7 @@ export const discordRoutes = createRoute()
   .get(
     "/guild/:id/permissions",
     ...compositions.authenticated,
-    zValidator("param", z.object({ id: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       const { id: guildId } = c.req.valid("param");
 

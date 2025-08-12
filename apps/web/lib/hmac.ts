@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { createLogger } from "@ticketsbot/core";
+import { createLogger } from "./logger";
 
 const logger = createLogger("web:hmac");
 

@@ -6,7 +6,7 @@ import {
 } from "@sapphire/framework";
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
-import { PermissionUtils } from "@ticketsbot/core";
+import { PermissionUtils } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
 import { PreconditionErrors } from "@bot/lib/utils/error-handlers";
 

@@ -2,7 +2,7 @@ import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/auth";
 import type { ChatInputCommandInteraction } from "discord.js";
 
 export class TransferCommand extends TicketCommandBase {

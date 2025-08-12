@@ -1,5 +1,5 @@
-import { createLogger } from "@ticketsbot/core";
-import { getDiscordAccount as _getDiscordAccount } from "@ticketsbot/core/auth/services/user-linking";
+import { createLogger } from "../../lib/utils/logger";
+import { getDiscordAccount as _getDiscordAccount } from "@ticketsbot/auth";
 import { prisma, type Prisma } from "@ticketsbot/db";
 import { ApiErrors } from "../../utils/error-handler";
 

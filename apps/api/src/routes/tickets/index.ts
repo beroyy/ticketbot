@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { DiscordGuildIdSchema, TicketStatusSchema, PermissionFlags } from "@ticketsbot/core";
-import { db } from "@ticketsbot/db";
+import { db, TicketStatusSchema } from "@ticketsbot/db";
+import { PermissionFlags } from "@ticketsbot/auth";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions, requirePermission } from "../../middleware/context";
@@ -24,7 +24,7 @@ export const ticketRoutes = createRoute()
     zValidator(
       "query",
       z.object({
-        guildId: DiscordGuildIdSchema,
+        guildId: z.string(),
         status: TicketStatusSchema.optional(),
         page: z.coerce.number().int().positive().default(1),
         pageSize: z.coerce.number().int().positive().max(100).default(50),
@@ -55,7 +55,7 @@ export const ticketRoutes = createRoute()
     zValidator(
       "query",
       z.object({
-        guildId: DiscordGuildIdSchema,
+        guildId: z.string(),
         limit: z.coerce.number().int().positive().max(50).default(10),
       })
     ),
@@ -441,7 +441,7 @@ export const ticketRoutes = createRoute()
   .get(
     "/statistics/:guildId",
     ...compositions.authenticated,
-    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+    zValidator("param", z.object({ guildId: z.string() })),
     requirePermission(PermissionFlags.ANALYTICS_VIEW),
     async (c) => {
       const { guildId } = c.req.valid("param");

@@ -11,7 +11,6 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { bot } from "@bot/lib/bot";
 import {
@@ -266,7 +265,7 @@ Do you want to proceed?`
     });
 
     const guild = interaction.guild!;
-    const guildId = parseDiscordId(guild.id);
+    const guildId = guild.id;
     const member = await guild.members.fetch(interaction.user.id);
 
     // Create roles
@@ -307,17 +306,17 @@ Do you want to proceed?`
     const adminTeamRole = await db.role.getRoleByName(guildId, "admin");
     if (adminTeamRole) {
       await db.discordUser.ensureDiscordUser(
-        parseDiscordId(interaction.user.id),
+        interaction.user.id,
         interaction.user.username,
         interaction.user.discriminator,
         interaction.user.displayAvatarURL()
       );
 
       // Assign team role
-      await db.role.assignRole(adminTeamRole.id, parseDiscordId(interaction.user.id));
+      await db.role.assignRole(adminTeamRole.id, interaction.user.id);
 
       // Update team role with Discord role ID
-      await db.role.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
+      await db.role.updateRoleDiscordId(adminTeamRole.id, adminRole.id);
 
       // Assign Discord role using bot operations
       await bot.role.assignDiscordRole(member, adminRole.id);
@@ -326,16 +325,16 @@ Do you want to proceed?`
     // Update support role
     const supportTeamRole = await db.role.getRoleByName(guildId, "support");
     if (supportTeamRole) {
-      await db.role.updateRoleDiscordId(supportTeamRole.id, parseDiscordId(supportRole.id));
+      await db.role.updateRoleDiscordId(supportTeamRole.id, supportRole.id);
     }
 
     // Update guild settings
     await db.guild.ensureGuildWithDefaults({
       guildId,
       guildName: guild.name,
-      defaultCategoryId: parseDiscordId(ticketsCategory.id),
-      supportCategoryId: parseDiscordId(supportCategory.id),
-      transcriptsChannel: parseDiscordId(transcriptChannel.id),
+      defaultCategoryId: ticketsCategory.id,
+      supportCategoryId: supportCategory.id,
+      transcriptsChannel: transcriptChannel.id,
     });
 
     const successEmbed = Embed.success(
@@ -390,7 +389,7 @@ const handleLimitSetup = async (
   interaction: ChatInputCommandInteraction
 ): Promise<Result<void>> => {
   const limit = interaction.options.getInteger("number", true);
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   try {
     await db.guild.ensureGuild(guildId, interaction.guild!.name);
@@ -412,7 +411,7 @@ const handleTranscriptsSetup = async (
   interaction: ChatInputCommandInteraction
 ): Promise<Result<void>> => {
   const channel = interaction.options.getChannel("channel", true) as TextChannel;
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   // Validate channel permissions
   const botMember = interaction.guild!.members.me;
@@ -432,13 +431,13 @@ const handleTranscriptsSetup = async (
   try {
     await db.guild
       .updateGuild(guildId, {
-        transcriptsChannel: parseDiscordId(channel.id),
+        transcriptsChannel: channel.id,
       })
       .catch(async () => {
         await db.guild.ensureGuildWithDefaults({
           guildId,
           guildName: interaction.guild!.name,
-          transcriptsChannel: parseDiscordId(channel.id),
+          transcriptsChannel: channel.id,
         });
       });
 
@@ -525,7 +524,7 @@ const handleFeedbackSetup = async (
   interaction: ChatInputCommandInteraction
 ): Promise<Result<void>> => {
   const enabled = interaction.options.getBoolean("enabled", true);
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   try {
     await db.guild.updateGuild(guildId, { feedbackEnabled: enabled }).catch(async () => {

@@ -6,26 +6,20 @@ import {
 } from "@sapphire/framework";
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
-import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
+import { PermissionUtils } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { PreconditionErrors } from "@bot/lib/utils/error-handlers";
 
-/**
- * Base precondition configuration
- */
-export interface PreconditionConfig {
+export type PreconditionConfig = {
   name: string;
   check: (
     interaction: ChatInputCommandInteraction,
     command: ChatInputCommand,
     context: PreconditionContext
   ) => Promise<AsyncPreconditionResult>;
-}
+};
 
-/**
- * Guild precondition configuration
- */
-export interface GuildPreconditionConfig {
+export type GuildPreconditionConfig = {
   name: string;
   check?: (
     interaction: ChatInputCommandInteraction & {
@@ -35,12 +29,9 @@ export interface GuildPreconditionConfig {
     command: ChatInputCommand,
     context: PreconditionContext
   ) => Promise<AsyncPreconditionResult>;
-}
+};
 
-/**
- * Permission precondition configuration
- */
-export interface PermissionPreconditionConfig {
+export type PermissionPreconditionConfig = {
   name: string;
   permission?: bigint;
   getPermission?: (context: PreconditionContext) => bigint;
@@ -51,12 +42,9 @@ export interface PermissionPreconditionConfig {
     guildId: string,
     userId: string
   ) => Promise<boolean>;
-}
+};
 
-/**
- * Ticket precondition configuration
- */
-export interface TicketPreconditionConfig {
+export type TicketPreconditionConfig = {
   name: string;
   storeTicket?: boolean;
   check?: (
@@ -66,11 +54,8 @@ export interface TicketPreconditionConfig {
     context: PreconditionContext,
     precondition: Precondition
   ) => AsyncPreconditionResult;
-}
+};
 
-/**
- * Create a basic precondition
- */
 export const createPrecondition = (config: PreconditionConfig): any => {
   return class GeneratedPrecondition extends Precondition {
     public static override readonly name = config.name;
@@ -85,9 +70,6 @@ export const createPrecondition = (config: PreconditionConfig): any => {
   };
 };
 
-/**
- * Create a guild-only precondition
- */
 export const createGuildPrecondition = (config: GuildPreconditionConfig): any => {
   return class GeneratedGuildPrecondition extends Precondition {
     public static override readonly name = config.name;
@@ -104,12 +86,10 @@ export const createGuildPrecondition = (config: GuildPreconditionConfig): any =>
         });
       }
 
-      // If no custom check, just validate guild presence
       if (!config.check) {
         return this.ok();
       }
 
-      // Cast to proper type for the check function
       const guildInteraction = interaction as ChatInputCommandInteraction & {
         guild: NonNullable<ChatInputCommandInteraction["guild"]>;
         member: GuildMember;
@@ -120,9 +100,6 @@ export const createGuildPrecondition = (config: GuildPreconditionConfig): any =>
   };
 };
 
-/**
- * Create a permission-based precondition
- */
 export const createPermissionPrecondition = (config: PermissionPreconditionConfig): any => {
   return class GeneratedPermissionPrecondition extends Precondition {
     public static override readonly name = config.name;
@@ -140,15 +117,13 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
       }
 
       const member = interaction.member as GuildMember;
-      const guildId = parseDiscordId(interaction.guild.id);
-      const userId = parseDiscordId(interaction.user.id);
+      const guildId = interaction.guild.id;
+      const userId = interaction.user.id;
 
-      // Check if user is guild owner (if allowed)
       if (config.allowGuildOwner !== false && interaction.guild.ownerId === interaction.user.id) {
         return this.ok();
       }
 
-      // Custom permission check
       if (config.customCheck) {
         const hasPermission = await config.customCheck(interaction, guildId, userId);
         if (hasPermission) {
@@ -156,7 +131,6 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
         }
       }
 
-      // Standard permission check
       if (config.permission !== undefined || config.getPermission) {
         const permission = config.getPermission?.(context) ?? config.permission!;
         const hasPermission = await db.role.hasPermission(guildId, userId, permission);
@@ -166,7 +140,6 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
         }
       }
 
-      // Discord admin fallback (if allowed)
       if (
         config.allowDiscordAdmin !== false &&
         member.permissions.has(PermissionFlagsBits.Administrator)
@@ -174,7 +147,6 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
         return this.ok();
       }
 
-      // Get permission names for error message
       const permission = config.getPermission?.(context) ?? config.permission;
       if (permission) {
         const permissionNames = PermissionUtils.getPermissionNames(permission);
@@ -192,9 +164,6 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
   };
 };
 
-/**
- * Create a ticket-based precondition
- */
 export const createTicketPrecondition = (config: TicketPreconditionConfig): any => {
   return class GeneratedTicketPrecondition extends Precondition {
     public static override readonly name = config.name;
@@ -211,8 +180,7 @@ export const createTicketPrecondition = (config: TicketPreconditionConfig): any 
         });
       }
 
-      // Check if we're in a ticket channel
-      const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channel.id));
+      const ticket = await db.ticket.getByChannelId(interaction.channel.id);
 
       if (!ticket) {
         return this.error({
@@ -221,12 +189,10 @@ export const createTicketPrecondition = (config: TicketPreconditionConfig): any 
         });
       }
 
-      // Store ticket for command use if requested
       if (config.storeTicket !== false) {
         Reflect.set(interaction, "ticket", ticket);
       }
 
-      // If no custom check, just validate ticket presence
       if (!config.check) {
         return this.ok();
       }
@@ -236,9 +202,6 @@ export const createTicketPrecondition = (config: TicketPreconditionConfig): any 
   };
 };
 
-/**
- * Declare module augmentation for all factory-created preconditions
- */
 declare module "@sapphire/framework" {
   interface Preconditions {
     "guild-only": never;

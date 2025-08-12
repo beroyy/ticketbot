@@ -3,43 +3,29 @@ import type { ChatInputCommandInteraction, User as DiscordUser } from "discord.j
 import { type Result, ok, err, match, flatMap } from "@bot/lib/utils/result";
 import { InteractionResponse, InteractionEdit } from "@bot/lib/utils/responses";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { EPHEMERAL_FLAG } from "../utils/constants";
 
-/**
- * Base class for ticket-related commands with common functionality
- */
 export abstract class TicketCommandBase extends BaseCommand {
-  /**
-   * Execute the command with automatic ticket context
-   * Subclasses should implement executeTicketCommand instead
-   */
   public override async chatInputRunWithContext(interaction: ChatInputCommandInteraction) {
-    // Handle deferral if needed
     if (this.shouldDefer(interaction)) {
       await interaction.deferReply({
         flags: this.deferEphemeral(interaction) ? EPHEMERAL_FLAG : undefined,
       });
     }
 
-    // For non-ticket channel commands, execute directly
     if (!this.requiresTicketChannel()) {
       return this.executeCommand(interaction);
     }
 
-    // Get ticket from channel
     const ticketResult = await this.getTicketFromChannel(interaction);
 
     await match(ticketResult, {
       ok: async (ticket) => {
-        // Store ticket on interaction for preconditions compatibility
         Reflect.set(interaction, "ticket", ticket);
 
-        // Execute the ticket command
         const result = await this.executeTicketCommand(interaction, ticket);
 
-        // Handle result with standard pattern
         await this.handleResult(interaction, result);
       },
       err: async (error) => {
@@ -48,9 +34,6 @@ export abstract class TicketCommandBase extends BaseCommand {
     });
   }
 
-  /**
-   * Get ticket from the current channel
-   */
   protected async getTicketFromChannel(
     interaction: ChatInputCommandInteraction
   ): Promise<Result<any>> {
@@ -58,7 +41,7 @@ export abstract class TicketCommandBase extends BaseCommand {
       return err("No channel ID available");
     }
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(interaction.channelId);
     if (!ticket) {
       return err("This is not a ticket channel.");
     }
@@ -66,9 +49,6 @@ export abstract class TicketCommandBase extends BaseCommand {
     return ok(ticket);
   }
 
-  /**
-   * Handle command result with standard success/error pattern
-   */
   protected async handleResult<T>(
     interaction: ChatInputCommandInteraction,
     result: Result<T>
@@ -89,11 +69,8 @@ export abstract class TicketCommandBase extends BaseCommand {
     });
   }
 
-  /**
-   * Ensure a Discord user exists in the database
-   */
   protected async ensureUser(user: DiscordUser): Promise<string> {
-    const discordId = parseDiscordId(user.id);
+    const discordId = user.id;
     await db.discordUser.ensureDiscordUser(
       discordId,
       user.username,
@@ -103,9 +80,6 @@ export abstract class TicketCommandBase extends BaseCommand {
     return discordId;
   }
 
-  /**
-   * Validate and transform an option value with a validator function
-   */
   protected validateOption<T>(
     value: T | null,
     validator: (value: T) => Result<T>
@@ -114,9 +88,6 @@ export abstract class TicketCommandBase extends BaseCommand {
     return validator(value);
   }
 
-  /**
-   * Reply with a formatted ticket response
-   */
   protected async replyTicketSuccess(
     interaction: ChatInputCommandInteraction,
     title: string,
@@ -130,9 +101,6 @@ export abstract class TicketCommandBase extends BaseCommand {
     );
   }
 
-  /**
-   * Reply with a formatted ticket info
-   */
   protected async replyTicketInfo(
     interaction: ChatInputCommandInteraction,
     title: string,
@@ -146,30 +114,18 @@ export abstract class TicketCommandBase extends BaseCommand {
     );
   }
 
-  /**
-   * Check if user is ticket opener
-   */
   protected isTicketOpener(ticket: any, userId: string): boolean {
     return ticket.openerId.toString() === userId;
   }
 
-  /**
-   * Check if ticket is claimed
-   */
   protected isTicketClaimed(ticket: any): boolean {
     return !!ticket.claimedById;
   }
 
-  /**
-   * Check if user has claimed the ticket
-   */
   protected isClaimedBy(ticket: any, userId: string): boolean {
     return ticket.claimedById?.toString() === userId;
   }
 
-  /**
-   * Compose multiple validation steps
-   */
   protected composeValidations<T>(
     value: T,
     ...validators: Array<(value: T) => Result<T>>
@@ -180,50 +136,28 @@ export abstract class TicketCommandBase extends BaseCommand {
     );
   }
 
-  /**
-   * Override to specify if command should defer reply
-   */
   protected shouldDefer(_interaction: ChatInputCommandInteraction): boolean {
     return true;
   }
 
-  /**
-   * Override to specify if deferral should be ephemeral
-   */
   protected deferEphemeral(_interaction: ChatInputCommandInteraction): boolean {
     return false;
   }
 
-  /**
-   * Override to specify if command requires ticket channel
-   */
   protected requiresTicketChannel(): boolean {
     return true;
   }
 
-  /**
-   * Success handler - override for custom success behavior
-   */
   protected async onSuccess<T>(
     _interaction: ChatInputCommandInteraction,
     _result: T
-  ): Promise<void> {
-    // Default: no action, subclasses should handle their own success
-  }
+  ): Promise<void> {}
 
-  /**
-   * Execute command for non-ticket channel commands
-   * Used when requiresTicketChannel() returns false
-   */
   protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     const result = await this.executeTicketCommand(interaction, null);
     await this.handleResult(interaction, result);
   }
 
-  /**
-   * Subclasses must implement this method
-   * @param ticket - The ticket if in ticket channel, null otherwise
-   */
   protected abstract executeTicketCommand(
     interaction: ChatInputCommandInteraction,
     ticket: any | null

@@ -1,6 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId, PermissionUtils, createLogger } from "@ticketsbot/core";
+import { PermissionUtils, createLogger } from "@ticketsbot/core";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
 
 const logger = createLogger("api:permissions");
@@ -33,7 +33,7 @@ export const validateSession: MiddlewareHandler<{ Variables: Variables }> = asyn
 function extractGuildId(c: Context): string | null {
   const paramGuildId = c.req.param("guildId");
   if (paramGuildId) {
-    return parseDiscordId(paramGuildId);
+    return paramGuildId;
   }
 
   const panelId = c.req.param("id") || c.req.param("panelId");

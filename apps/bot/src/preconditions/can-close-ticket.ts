@@ -1,7 +1,7 @@
 import { Precondition } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/core";
 import { PreconditionErrors } from "@bot/lib/utils/error-handlers";
 
 export const CanCloseTicketPrecondition = class extends Precondition {
@@ -15,7 +15,7 @@ export const CanCloseTicketPrecondition = class extends Precondition {
       });
     }
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channel.id));
+    const ticket = await db.ticket.getByChannelId(interaction.channel.id);
 
     if (!ticket) {
       return this.error({
@@ -35,8 +35,8 @@ export const CanCloseTicketPrecondition = class extends Precondition {
 
     // Check if user has permission to close any ticket
     const hasCloseAnyPermission = await db.role.hasPermission(
-      parseDiscordId(interaction.guild!.id),
-      parseDiscordId(interaction.user.id),
+      interaction.guild!.id,
+      interaction.user.id,
       PermissionFlags.TICKET_CLOSE_ANY
     );
 
@@ -45,7 +45,7 @@ export const CanCloseTicketPrecondition = class extends Precondition {
     }
 
     // Check if user has claimed the ticket
-    const isClaimer = ticket.claimedById === parseDiscordId(interaction.user.id);
+    const isClaimer = ticket.claimedById === interaction.user.id;
     if (isClaimer) {
       return this.ok();
     }

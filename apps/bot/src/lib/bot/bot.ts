@@ -91,17 +91,21 @@ export const bot = {
   // Validation utilities
   validate: {
     snowflake: (id: string): boolean => /^\d{17,19}$/.test(id),
-    
+
     permissions: (member: GuildMember, permissions: bigint): boolean => {
       return member.permissions.has(permissions);
     },
-    
+
     botPermissions: (guild: Guild, permissions: bigint): boolean => {
       const botMember = guild.members.me;
       return botMember?.permissions.has(permissions) ?? false;
     },
-    
-    channelPermissions: (channel: TextChannel, member: GuildMember, permissions: bigint): boolean => {
+
+    channelPermissions: (
+      channel: TextChannel,
+      member: GuildMember,
+      permissions: bigint
+    ): boolean => {
       return channel.permissionsFor(member)?.has(permissions) ?? false;
     },
   },
@@ -109,7 +113,14 @@ export const bot = {
   // Utility functions
   utils: {
     isReady: (): boolean => container.client.isReady(),
-    
+
+    parseId: (id: string): string => {
+      if (!/^\d+$/.test(id)) {
+        throw new Error(`Invalid Discord ID format: "${id}". Discord IDs must be numeric.`);
+      }
+      return id;
+    },
+
     // Format utilities
     mention: {
       user: (id: string): string => `<@${id}>`,
@@ -117,7 +128,7 @@ export const bot = {
       role: (id: string): string => `<@&${id}>`,
       command: (name: string, id: string): string => `</${name}:${id}>`,
     },
-    
+
     // Common error codes and their meanings
     errorCode: {
       isUnknownChannel: (code: number): boolean => code === 10003,
@@ -127,25 +138,39 @@ export const bot = {
       isInvalidFormBody: (code: number): boolean => code === 50035,
       isReactionBlocked: (code: number): boolean => code === 90001,
     },
-    
+
     // Error handling
     handleError: (error: unknown): { error: string; code?: number } => {
       if (error instanceof Error) {
         // Handle Discord API errors
-        if ('code' in error) {
+        if ("code" in error) {
           const discordError = error as any;
           switch (discordError.code) {
-            case 10003: return { error: "Unknown channel", code: 10003 };
-            case 10004: return { error: "Unknown guild", code: 10004 };
-            case 10007: return { error: "Unknown member", code: 10007 };
-            case 10008: return { error: "Unknown message", code: 10008 };
-            case 10011: return { error: "Unknown role", code: 10011 };
-            case 10013: return { error: "Unknown user", code: 10013 };
-            case 50001: return { error: "Missing access", code: 50001 };
-            case 50013: return { error: "Missing permissions", code: 50013 };
-            case 50035: return { error: "Invalid form body", code: 50035 };
-            case 90001: return { error: "Reaction blocked", code: 90001 };
-            default: return { error: discordError.message || "Unknown Discord error", code: discordError.code };
+            case 10003:
+              return { error: "Unknown channel", code: 10003 };
+            case 10004:
+              return { error: "Unknown guild", code: 10004 };
+            case 10007:
+              return { error: "Unknown member", code: 10007 };
+            case 10008:
+              return { error: "Unknown message", code: 10008 };
+            case 10011:
+              return { error: "Unknown role", code: 10011 };
+            case 10013:
+              return { error: "Unknown user", code: 10013 };
+            case 50001:
+              return { error: "Missing access", code: 50001 };
+            case 50013:
+              return { error: "Missing permissions", code: 50013 };
+            case 50035:
+              return { error: "Invalid form body", code: 50035 };
+            case 90001:
+              return { error: "Reaction blocked", code: 90001 };
+            default:
+              return {
+                error: discordError.message || "Unknown Discord error",
+                code: discordError.code,
+              };
           }
         }
         return { error: error.message };
@@ -180,7 +205,7 @@ export const bot = {
       const results = await Promise.allSettled(
         messages.map(async ({ channelId, content }) => {
           const channel = await bot.fetch.channel(channelId);
-          if (channel?.isTextBased() && 'send' in channel) {
+          if (channel?.isTextBased() && "send" in channel) {
             return await channel.send(content);
           }
           throw new Error(`Channel ${channelId} is not text-based or cannot send messages`);
@@ -192,7 +217,7 @@ export const bot = {
     // Delete multiple messages
     deleteMessages: async (channelId: string, messageIds: string[]): Promise<void> => {
       const channel = await bot.fetch.channel(channelId);
-      if (channel?.isTextBased() && 'bulkDelete' in channel) {
+      if (channel?.isTextBased() && "bulkDelete" in channel) {
         await channel.bulkDelete(messageIds);
       } else {
         throw new Error("Cannot bulk delete in this channel");
@@ -200,10 +225,13 @@ export const bot = {
     },
 
     // Fetch multiple members
-    fetchMembers: async (guildId: string, userIds: string[]): Promise<Map<string, GuildMember | null>> => {
+    fetchMembers: async (
+      guildId: string,
+      userIds: string[]
+    ): Promise<Map<string, GuildMember | null>> => {
       const guild = await bot.fetch.guild(guildId);
       if (!guild) return new Map();
-      
+
       const results = new Map<string, GuildMember | null>();
       await Promise.all(
         userIds.map(async (userId) => {
@@ -234,7 +262,7 @@ export const bot = {
         const ping = client.ws.ping;
         const ready = client.isReady();
         const guilds = client.guilds.cache.size;
-        
+
         return {
           healthy: ready && ping > 0,
           ping,
@@ -255,7 +283,9 @@ export const bot = {
     },
 
     // Check specific guild health
-    guildHealth: async (guildId: string): Promise<{
+    guildHealth: async (
+      guildId: string
+    ): Promise<{
       available: boolean;
       memberCount?: number;
       channelCount?: number;
@@ -265,7 +295,7 @@ export const bot = {
       try {
         const guild = await bot.fetch.guild(guildId);
         if (!guild) return { available: false };
-        
+
         return {
           available: true,
           memberCount: guild.memberCount,

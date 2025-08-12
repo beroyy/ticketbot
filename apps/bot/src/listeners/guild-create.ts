@@ -1,7 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
-import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 
 export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guild: Guild) => {
@@ -9,18 +8,13 @@ export const GuildCreateListener = ListenerFactory.on("guildCreate", async (guil
   logger.info(`Joined new guild: ${guild.name} (${guild.id})`);
 
   try {
-    const guildId = parseDiscordId(guild.id);
-    const ownerId = parseDiscordId(guild.ownerId);
-
-    // Fetch owner info first (Discord API call)
     const owner = await guild.fetchOwner();
     logger.info(`📋 Fetched owner information for ${owner.user.tag}`);
 
-    // Use high-level guild initialization operation
     await db.guild.initialize({
-      guildId,
+      guildId: guild.id,
       guildName: guild.name,
-      ownerId,
+      ownerId: guild.ownerId,
       ownerData: {
         username: owner.user.username,
         discriminator: owner.user.discriminator,

@@ -2,7 +2,6 @@ import { ListenerFactory } from "@bot/lib/sapphire";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import type { Message } from "discord.js";
-import { parseDiscordId } from "@ticketsbot/core";
 
 export const MessageCreateListener = ListenerFactory.on(
   "messageCreate",
@@ -13,10 +12,9 @@ export const MessageCreateListener = ListenerFactory.on(
       const ticket = await db.ticket.getByChannelId(message.channelId);
       if (!ticket || ticket.status === "CLOSED") return;
 
-      const messageId = parseDiscordId(message.id);
-      const authorId = parseDiscordId(message.author.id);
+      const messageId = message.id;
+      const authorId = message.author.id;
 
-      // Use high-level transcript operation
       await db.transcript.recordMessage({
         ticketId: ticket.id,
         messageId,
@@ -30,9 +28,7 @@ export const MessageCreateListener = ListenerFactory.on(
         content: message.content,
         embeds: message.embeds,
         attachments: message.attachments,
-        referenceId: message.reference?.messageId
-          ? parseDiscordId(message.reference.messageId)
-          : null,
+        referenceId: message.reference?.messageId ? message.reference.messageId : null,
       });
     } catch (error) {
       container.logger.error(`Failed to handle message in ticket ${message.channelId}:`, error);

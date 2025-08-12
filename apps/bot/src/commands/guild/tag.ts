@@ -1,6 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire";
 import { InteractionResponse, err, ok } from "@bot/lib/utils";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { db } from "@ticketsbot/db";
 
@@ -29,7 +28,7 @@ export const TagCommand = createCommand({
     const tagId = interaction.options.getInteger("tag_id", true);
     const mentionUser = interaction.options.getUser("user");
     const guild = interaction.guild!;
-    const guildId = parseDiscordId(guild.id);
+    const guildId = guild.id;
 
     try {
       const tag = await db.tag.getTag(tagId, guildId);

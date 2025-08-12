@@ -1,7 +1,6 @@
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import type { ModalSubmitInteraction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/utils";
 import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
@@ -14,7 +13,7 @@ const closeReasonModalHandler = createModalHandler({
       return err("No channel or guild");
     }
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(interaction.channelId);
     if (!ticket) {
       await interaction.reply(ErrorResponses.notTicketChannel());
       return err("Not a ticket channel");

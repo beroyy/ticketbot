@@ -1,7 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createButtonErrorHandler, ErrorResponses, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { bot } from "@bot/lib/bot";
 import { container } from "@sapphire/framework";
@@ -23,7 +22,7 @@ const feedbackHandler = createButtonHandler({
     }
 
     await db.discordUser.ensureDiscordUser(
-      parseDiscordId(interaction.user.id),
+      interaction.user.id,
       interaction.user.username,
       interaction.user.discriminator,
       interaction.user.displayAvatarURL()
@@ -34,7 +33,7 @@ const feedbackHandler = createButtonHandler({
       await db.transcript.submitFeedback({
         ticketId,
         rating,
-        submittedById: parseDiscordId(interaction.user.id),
+        submittedById: interaction.user.id,
       });
 
       // Update message with success embed

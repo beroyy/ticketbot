@@ -3,7 +3,6 @@ import { bot } from "@bot/lib/bot";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
 const closeConfirmHandler = createButtonHandler({
@@ -12,7 +11,7 @@ const closeConfirmHandler = createButtonHandler({
   handler: async (interaction: ButtonInteraction) => {
     if (!interaction.channel || !interaction.guild) return err("No channel or guild");
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(interaction.channelId);
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",
@@ -22,7 +21,7 @@ const closeConfirmHandler = createButtonHandler({
     }
 
     await db.discordUser.ensureDiscordUser(
-      parseDiscordId(interaction.user.id),
+      interaction.user.id,
       interaction.user.username,
       interaction.user.discriminator,
       interaction.user.displayAvatarURL()

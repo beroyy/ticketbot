@@ -10,7 +10,7 @@ import {
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
 } from "@bot/lib/utils";
-import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
+import { PermissionFlags } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
@@ -58,8 +58,8 @@ export const StatsCommand = createCommand({
 const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
   const targetUser = interaction.options.getUser("user", true);
   const guild = interaction.guild!;
-  const guildId = parseDiscordId(guild.id);
-  const discordUserId = parseDiscordId(targetUser.id);
+  const guildId = guild.id;
+  const discordUserId = targetUser.id;
 
   await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
@@ -161,7 +161,7 @@ const displayRegularUserStats = async (
 
 const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
   const guild = interaction.guild!;
-  const guildId = parseDiscordId(guild.id);
+  const guildId = guild.id;
 
   await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
@@ -246,7 +246,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
 
 const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
   const guild = interaction.guild!;
-  const guildId = parseDiscordId(guild.id);
+  const guildId = guild.id;
 
   await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 

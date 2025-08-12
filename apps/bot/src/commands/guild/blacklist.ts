@@ -1,7 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, type Result, err, ok, match } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
 const validateTarget = (
@@ -52,8 +51,8 @@ export const BlacklistCommand = createCommand({
 
     return match(targetResult, {
       ok: async (target) => {
-        const guildId = parseDiscordId(interaction.guild!.id);
-        const targetId = parseDiscordId(target.id);
+        const guildId = interaction.guild!.id;
+        const targetId = target.id;
 
         try {
           const isNowBlacklisted = await db.guild.toggleGuildBlacklistEntry(

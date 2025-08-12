@@ -28,27 +28,3 @@ export type SuccessResponse<T = unknown> = {
 export function successResponse<T>(data?: T): SuccessResponse<T> {
   return { success: true, data };
 }
-
-export function parseDiscordId(id: string): bigint {
-  try {
-    const parsed = BigInt(id);
-    if (parsed < 0n) {
-      throw new Error("Invalid Discord ID");
-    }
-    return parsed;
-  } catch {
-    throw new Error("Invalid Discord ID format");
-  }
-}
-
-export function parseTicketId(id: string): bigint {
-  return parseDiscordId(id);
-}
-
-export function parseGuildId(id: string): bigint {
-  return parseDiscordId(id);
-}
-
-export function parseUserId(id: string): bigint {
-  return parseDiscordId(id);
-}

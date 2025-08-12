@@ -1,7 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, err, ok } from "@bot/lib/utils";
 import { bot } from "@bot/lib/bot";
-import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
@@ -20,8 +19,8 @@ export const RemoveStaffCommand = createCommand({
 
   execute: async (interaction) => {
     const targetUser = interaction.options.getUser("user", true);
-    const guildId = parseDiscordId(interaction.guild!.id);
-    const userId = parseDiscordId(targetUser.id);
+    const guildId = interaction.guild!.id;
+    const userId = targetUser.id;
 
     try {
       const userRoles = await db.role.getUserRoles(guildId, userId);

@@ -1,7 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
-import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 
 export const GuildDeleteListener = ListenerFactory.on("guildDelete", async (guild: Guild) => {
@@ -9,8 +8,7 @@ export const GuildDeleteListener = ListenerFactory.on("guildDelete", async (guil
   logger.info(`Left guild: ${guild.name} (${guild.id})`);
 
   try {
-    const guildId = parseDiscordId(guild.id);
-    await db.guild.updateGuild(guildId, { botInstalled: false });
+    await db.guild.updateGuild(guild.id, { botInstalled: false });
 
     logger.info(`✅ Updated guild ${guild.name} with botInstalled = false`);
 

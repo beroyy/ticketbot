@@ -3,7 +3,6 @@ import { container } from "@sapphire/framework";
 import type { Client } from "discord.js";
 import { isDevelopment } from "@bot/config";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 
 export const ReadyListener = ListenerFactory.once("ready", async (client: Client<true>) => {
   const { logger } = container;
@@ -18,7 +17,7 @@ export const ReadyListener = ListenerFactory.once("ready", async (client: Client
   });
 
   try {
-    const guildIds = client.guilds.cache.map((guild) => parseDiscordId(guild.id));
+    const guildIds = client.guilds.cache.map((guild) => guild.id);
     await db.guild.syncGuildBotInstalledStatus(guildIds);
     logger.info(`✅ Synced bot installation status for ${guildIds.length} guilds`);
   } catch (error) {

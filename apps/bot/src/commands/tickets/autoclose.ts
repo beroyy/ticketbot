@@ -2,7 +2,6 @@ import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionResponse, type Result, ok, err, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { container } from "@sapphire/framework";
 
@@ -42,7 +41,7 @@ export class AutoCloseCommand extends TicketCommandBase {
     if (subcommand === "exclude") {
       const newExclusionStatus = !ticket.excludeFromAutoclose;
 
-      const performerDiscordId = parseDiscordId(interaction.user.id);
+      const performerDiscordId = interaction.user.id;
 
       await db.discordUser.ensureDiscordUser(
         performerDiscordId,

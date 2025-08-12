@@ -1,6 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, err, ok, StaffHelpers, EPHEMERAL_FLAG } from "@bot/lib/utils";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { db } from "@ticketsbot/db";
 
@@ -10,7 +9,7 @@ export const ViewStaffCommand = createCommand({
   preconditions: ["guild-only", "team-only"],
 
   execute: async (interaction) => {
-    const guildId = parseDiscordId(interaction.guild!.id);
+    const guildId = interaction.guild!.id;
 
     try {
       const roles = await db.role.getRoles(guildId);

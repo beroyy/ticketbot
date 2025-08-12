@@ -3,7 +3,6 @@ import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire
 import { bot } from "@bot/lib/bot";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 
 const ticketClaimHandler = createButtonHandler({
   pattern: "ticket_claim",
@@ -11,7 +10,7 @@ const ticketClaimHandler = createButtonHandler({
   handler: async (interaction: ButtonInteraction) => {
     if (!interaction.channel) return err("No channel");
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(interaction.channelId);
     if (!ticket) {
       await interaction.reply(ErrorResponses.notTicketChannel());
       return err("Not a ticket channel");
@@ -25,7 +24,7 @@ const ticketClaimHandler = createButtonHandler({
     }
 
     await db.discordUser.ensureDiscordUser(
-      parseDiscordId(interaction.user.id),
+      interaction.user.id,
       interaction.user.username,
       interaction.user.discriminator,
       interaction.user.displayAvatarURL()

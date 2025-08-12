@@ -3,7 +3,6 @@ import { bot } from "@bot/lib/bot";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
 const ticketCloseHandler = createButtonHandler({
@@ -12,7 +11,7 @@ const ticketCloseHandler = createButtonHandler({
   handler: async (interaction: ButtonInteraction) => {
     if (!interaction.channel) return err("No channel");
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(interaction.channelId);
     if (!ticket) {
       await interaction.reply({
         content: "❌ This is not an active ticket channel.",

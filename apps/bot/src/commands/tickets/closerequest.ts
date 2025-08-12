@@ -2,7 +2,6 @@ import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionResponse, type Result, err, ok, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -54,7 +53,7 @@ export class CloseRequestCommand extends TicketCommandBase {
     const reason = interaction.options.getString("reason");
     const delay = interaction.options.getInteger("delay") || 0;
 
-    const discordId = parseDiscordId(interaction.user.id);
+    const discordId = interaction.user.id;
 
     // Ensure user exists
     await db.discordUser.ensureDiscordUser(

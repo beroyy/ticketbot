@@ -1,6 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, err, ok, EPHEMERAL_FLAG } from "@bot/lib/utils";
-import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
@@ -97,7 +96,7 @@ export const ManageTagsCommand = createCommand({
 const handleAddTag = async (interaction: ChatInputCommandInteraction) => {
   const name = interaction.options.getString("name", true);
   const content = interaction.options.getString("content", true);
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   try {
     const newTag = await db.tag.createTag({ guildId, name, content });
@@ -130,7 +129,7 @@ Use \`/tag ${newTag.id}\` to send this tag.`
 
 const handleDeleteTag = async (interaction: ChatInputCommandInteraction) => {
   const tagId = interaction.options.getInteger("tag_id", true);
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   try {
     // Get tag details before deletion
@@ -158,7 +157,7 @@ const handleDeleteTag = async (interaction: ChatInputCommandInteraction) => {
 };
 
 const handleListTags = async (interaction: ChatInputCommandInteraction) => {
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   try {
     const tags = await db.tag.listTags(guildId, {
@@ -208,7 +207,7 @@ const handleEditTag = async (interaction: ChatInputCommandInteraction) => {
   const tagId = interaction.options.getInteger("tag_id", true);
   const newName = interaction.options.getString("name");
   const newContent = interaction.options.getString("content");
-  const guildId = parseDiscordId(interaction.guild!.id);
+  const guildId = interaction.guild!.id;
 
   if (!newName && !newContent) {
     await InteractionResponse.error(

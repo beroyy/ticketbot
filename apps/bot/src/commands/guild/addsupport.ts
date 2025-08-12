@@ -2,7 +2,6 @@ import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/utils";
 import { bot } from "@bot/lib/bot";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
 export const AddSupportCommand = createCommand({
@@ -17,8 +16,8 @@ export const AddSupportCommand = createCommand({
 
   execute: async (interaction) => {
     const targetUser = interaction.options.getUser("user", true);
-    const guildId = parseDiscordId(interaction.guild!.id);
-    const userId = parseDiscordId(targetUser.id);
+    const guildId = interaction.guild!.id;
+    const userId = targetUser.id;
 
     try {
       // Check if user already has admin role
@@ -36,7 +35,7 @@ export const AddSupportCommand = createCommand({
         guildId,
         userId,
         "support",
-        parseDiscordId(interaction.user.id),
+        interaction.user.id,
         {
           username: targetUser.username,
           discriminator: targetUser.discriminator,

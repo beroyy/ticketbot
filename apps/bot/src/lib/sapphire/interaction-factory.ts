@@ -7,57 +7,40 @@ import type {
 } from "discord.js";
 import type { Result } from "@bot/lib/utils/result";
 import { BotContext } from "@bot/lib/context";
-import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 
-/**
- * Helper to wrap handler execution with Discord context
- */
 async function withContext<T extends Interaction, R>(
   interaction: T,
   handler: (interaction: T) => Promise<R>
 ): Promise<R> {
-  // Get user permissions for the guild
   let permissions = 0n;
 
   if (interaction.guild) {
     try {
-      permissions = await db.role.getUserPermissions(
-        parseDiscordId(interaction.user.id),
-        parseDiscordId(interaction.guild.id)
-      );
+      permissions = await db.role.getUserPermissions(interaction.user.id, interaction.guild.id);
     } catch (error) {
-      // Log but don't fail - permissions default to 0n
       console.error("Error getting user permissions:", error);
     }
   }
 
-  // Create bot context from Discord interaction
   const context: BotContext = {
-    userId: parseDiscordId(interaction.user.id),
+    userId: interaction.user.id,
     username: interaction.user.username,
-    guildId: interaction.guild ? parseDiscordId(interaction.guild.id) : "",
-    channelId: interaction.channelId ? parseDiscordId(interaction.channelId) : undefined,
+    guildId: interaction.guild ? interaction.guild.id : "",
+    channelId: interaction.channelId ? interaction.channelId : undefined,
     permissions,
     locale: interaction.locale,
   };
 
-  // Execute the handler within bot context
   return BotContext.provideAsync(context, () => handler(interaction));
 }
 
-/**
- * Handler function types
- */
 export type ButtonHandler<T = void> = (interaction: ButtonInteraction) => Promise<Result<T>>;
 export type ModalHandler<T = void> = (interaction: ModalSubmitInteraction) => Promise<Result<T>>;
 export type SelectHandler<T = void> = (
   interaction: StringSelectMenuInteraction
 ) => Promise<Result<T>>;
 
-/**
- * Handler configuration
- */
 export interface HandlerConfig<T = void> {
   pattern: string | RegExp;
   handler: ButtonHandler<T> | ModalHandler<T> | SelectHandler<T>;
@@ -65,9 +48,6 @@ export interface HandlerConfig<T = void> {
   preconditions?: Array<(interaction: Interaction) => Promise<Result<void>>>;
 }
 
-/**
- * Create a button handler with pattern matching and automatic context
- */
 export const createButtonHandler = <T = void>(config: HandlerConfig<T>) => {
   const matches = (customId: string) =>
     typeof config.pattern === "string"
@@ -75,7 +55,6 @@ export const createButtonHandler = <T = void>(config: HandlerConfig<T>) => {
       : config.pattern.test(customId);
 
   const handle = async (interaction: ButtonInteraction): Promise<Result<T>> => {
-    // Run preconditions
     if (config.preconditions) {
       for (const precondition of config.preconditions) {
         const result = await precondition(interaction);
@@ -83,7 +62,6 @@ export const createButtonHandler = <T = void>(config: HandlerConfig<T>) => {
       }
     }
 
-    // Wrap handler execution with context
     return withContext(interaction, config.handler as ButtonHandler<T>);
   };
 
@@ -94,9 +72,6 @@ export const createButtonHandler = <T = void>(config: HandlerConfig<T>) => {
   };
 };
 
-/**
- * Create a modal handler with pattern matching and automatic context
- */
 export const createModalHandler = <T = void>(config: HandlerConfig<T>) => {
   const matches = (customId: string) =>
     typeof config.pattern === "string"
@@ -104,7 +79,6 @@ export const createModalHandler = <T = void>(config: HandlerConfig<T>) => {
       : config.pattern.test(customId);
 
   const handle = async (interaction: ModalSubmitInteraction): Promise<Result<T>> => {
-    // Run preconditions
     if (config.preconditions) {
       for (const precondition of config.preconditions) {
         const result = await precondition(interaction);
@@ -112,7 +86,6 @@ export const createModalHandler = <T = void>(config: HandlerConfig<T>) => {
       }
     }
 
-    // Wrap handler execution with context
     return withContext(interaction, config.handler as ModalHandler<T>);
   };
 
@@ -123,9 +96,6 @@ export const createModalHandler = <T = void>(config: HandlerConfig<T>) => {
   };
 };
 
-/**
- * Create a select menu handler with pattern matching and automatic context
- */
 export const createSelectHandler = <T = void>(config: HandlerConfig<T>) => {
   const matches = (customId: string) =>
     typeof config.pattern === "string"
@@ -133,7 +103,6 @@ export const createSelectHandler = <T = void>(config: HandlerConfig<T>) => {
       : config.pattern.test(customId);
 
   const handle = async (interaction: StringSelectMenuInteraction): Promise<Result<T>> => {
-    // Run preconditions
     if (config.preconditions) {
       for (const precondition of config.preconditions) {
         const result = await precondition(interaction);
@@ -141,7 +110,6 @@ export const createSelectHandler = <T = void>(config: HandlerConfig<T>) => {
       }
     }
 
-    // Wrap handler execution with context
     return withContext(interaction, config.handler as SelectHandler<T>);
   };
 
@@ -152,9 +120,6 @@ export const createSelectHandler = <T = void>(config: HandlerConfig<T>) => {
   };
 };
 
-/**
- * Extract ID from custom ID using pattern
- */
 export const withIdExtraction = (pattern: RegExp) => {
   return (customId: string): string | null => {
     const match = customId.match(pattern);
@@ -162,9 +127,6 @@ export const withIdExtraction = (pattern: RegExp) => {
   };
 };
 
-/**
- * Create a Sapphire InteractionHandler from handler configs
- */
 export const createInteractionHandler = (
   name: string,
   handlers: Array<

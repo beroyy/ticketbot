@@ -2,7 +2,6 @@ import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 import type { Interaction } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { InteractionResponse } from "@bot/lib/utils/responses";
 import { canReply } from "@bot/lib/utils/error-handlers";
 
@@ -17,11 +16,11 @@ export const InteractionCreateListener = ListenerFactory.on(
     ) {
       try {
         if (interaction.guild) {
-          await db.guild.ensureGuild(parseDiscordId(interaction.guild.id), interaction.guild.name);
+          await db.guild.ensureGuild(interaction.guild.id, interaction.guild.name);
         }
 
         await db.discordUser.ensureDiscordUser(
-          parseDiscordId(interaction.user.id),
+          interaction.user.id,
           interaction.user.username,
           interaction.user.discriminator,
           interaction.user.displayAvatarURL()

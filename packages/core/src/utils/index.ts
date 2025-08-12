@@ -30,18 +30,6 @@ export function formatDuration(seconds: number): string {
   }
 }
 
-export function parseDiscordId(id: string): string {
-  // Validate that the ID is numeric
-  if (!/^\d+$/.test(id)) {
-    throw new Error(`Invalid Discord ID format: "${id}". Discord IDs must be numeric.`);
-  }
-  return id;
-}
-
-export function formatDiscordId(id: string): string {
-  return id;
-}
-
 export function createTicketThreadName(ticketId: number, username: string): string {
   return `Ticket #${ticketId.toString()} - ${username}`;
 }

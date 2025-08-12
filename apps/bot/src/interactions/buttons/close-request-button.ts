@@ -3,7 +3,6 @@ import { bot } from "@bot/lib/bot";
 import { err, ok, createButtonErrorHandler, ErrorResponses, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
-import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
 const closeRequestPattern = /^close_(confirm|cancel)(?:_(.+))?$/;
@@ -20,7 +19,7 @@ const closeRequestHandler = createButtonHandler({
     const action = match[1] as "confirm" | "cancel";
     const requestId = match[2] || null;
 
-    const ticket = await db.ticket.getByChannelId(parseDiscordId(interaction.channelId));
+    const ticket = await db.ticket.getByChannelId(interaction.channelId);
     if (!ticket) {
       await interaction.reply(ErrorResponses.notTicketChannel());
       return err("Not a ticket channel");
@@ -40,7 +39,7 @@ const closeRequestHandler = createButtonHandler({
     }
 
     await db.discordUser.ensureDiscordUser(
-      parseDiscordId(interaction.user.id),
+      interaction.user.id,
       interaction.user.username,
       interaction.user.discriminator,
       interaction.user.displayAvatarURL()
@@ -84,7 +83,7 @@ const closeRequestHandler = createButtonHandler({
       }
     } else {
       try {
-        await db.ticket.cancelCloseRequest(ticket.id, parseDiscordId(interaction.user.id));
+        await db.ticket.cancelCloseRequest(ticket.id, interaction.user.id);
 
         await interaction.update({
           content: bot.message.closeRequest.deniedMessage(),

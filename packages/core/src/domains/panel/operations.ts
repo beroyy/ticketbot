@@ -18,18 +18,6 @@ type PanelWithForm = PrismaPanel & {
     | null;
 };
 
-// Export schemas
-export {
-  PanelTypeSchema,
-  CreatePanelSchema,
-  UpdatePanelSchema,
-  PanelQuerySchema,
-  type PanelType,
-  type CreatePanelInput,
-  type UpdatePanelInput,
-  type PanelQuery,
-} from "./schemas";
-
 /**
  * Context-aware Panel domain methods
  * These methods automatically use actor context for permissions and guild context
@@ -179,7 +167,9 @@ export namespace Panel {
         if (!input.singlePanel) {
           throw new VisibleError("validation_error", "singlePanel is required for SINGLE type");
         }
-        return createSinglePanel(guildId, channelId, input.singlePanel, input.welcomeMessage, { tx });
+        return createSinglePanel(guildId, channelId, input.singlePanel, input.welcomeMessage, {
+          tx,
+        });
       } else {
         if (!input.multiPanel) {
           throw new VisibleError("validation_error", "multiPanel is required for MULTI type");
@@ -420,7 +410,7 @@ async function createSinglePanel(
   options?: { tx?: any }
 ) {
   const client = options?.tx || prisma;
-  
+
   // Create form if questions provided
   let formId: number | undefined;
   if (input.questions && input.questions.length > 0) {
@@ -502,7 +492,7 @@ async function createMultiPanel(
   options?: { tx?: any }
 ) {
   const client = options?.tx || prisma;
-  
+
   // Create parent panel
   const parentPanel = await client.panel.create({
     data: {
@@ -600,7 +590,7 @@ async function createMultiPanel(
 
 async function updatePanelForm(formId: number, questions: Question[], options?: { tx?: any }) {
   const db = options?.tx || prisma;
-  
+
   // Delete existing fields
   await db.formField.deleteMany({
     where: { formId },

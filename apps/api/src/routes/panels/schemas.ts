@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { DiscordGuildIdSchema, DiscordChannelIdSchema } from "@ticketsbot/core";
-import { UpdatePanelSchema } from "@ticketsbot/core/domains/panel";
 
 export const PanelQuestionSchema = z
   .object({
@@ -127,6 +126,10 @@ export const CreatePanelSchema = z
     { message: "Panel configuration must match the panel type" }
   );
 
+export const UpdatePanelSchema = CreatePanelSchema.partial().extend({
+  id: z.number().int(),
+});
+
 export const UpdatePanelApiSchema = UpdatePanelSchema.omit({ id: true }).extend({
   channel: z.string().optional(),
   questions: z
@@ -184,18 +187,42 @@ export const transformApiPanelToDomain = (apiPanel: any) => {
 export const transformUpdateData = (input: z.infer<typeof UpdatePanelApiSchema>) => {
   const updateData: Record<string, any> = {};
 
-  if (input.title !== undefined) updateData.title = input.title;
-  if (input.content !== undefined) updateData.content = input.content;
+  // Handle top-level fields
+  if (input.type !== undefined) updateData.type = input.type;
+  if (input.guildId !== undefined) updateData.guildId = input.guildId;
+  if (input.channelId !== undefined) updateData.channelId = input.channelId;
   if (input.channel !== undefined) updateData.channelId = input.channel;
   if (input.category !== undefined) updateData.categoryId = input.category;
-  if (input.emoji !== undefined) updateData.emoji = input.emoji;
-  if (input.buttonText !== undefined) updateData.buttonText = input.buttonText;
-  if (input.color !== undefined) updateData.color = input.color;
   if (input.welcomeMessage !== undefined) updateData.welcomeMessage = input.welcomeMessage;
-  if (input.introTitle !== undefined) updateData.introTitle = input.introTitle;
-  if (input.introDescription !== undefined) updateData.introDescription = input.introDescription;
-  if (input.channelPrefix !== undefined) updateData.channelPrefix = input.channelPrefix;
-  if (input.type !== undefined) updateData.type = input.type;
+  if (input.questions !== undefined) updateData.questions = input.questions;
+
+  // Handle single panel fields
+  if (input.singlePanel) {
+    const sp = input.singlePanel;
+    if (sp.title !== undefined) updateData.title = sp.title;
+    if (sp.emoji !== undefined) updateData.emoji = sp.emoji;
+    if (sp.buttonText !== undefined) updateData.buttonText = sp.buttonText;
+    if (sp.buttonColor !== undefined) updateData.color = sp.buttonColor;
+    if (sp.categoryId !== undefined) updateData.categoryId = sp.categoryId;
+    if (sp.questions !== undefined) updateData.questions = sp.questions;
+    if (sp.mentionOnOpen !== undefined) updateData.mentionOnOpen = sp.mentionOnOpen;
+    if (sp.hideMentions !== undefined) updateData.hideMentions = sp.hideMentions;
+    if (sp.ticketCategory !== undefined) updateData.ticketCategory = sp.ticketCategory;
+    if (sp.largeImageUrl !== undefined) updateData.largeImageUrl = sp.largeImageUrl;
+    if (sp.smallImageUrl !== undefined) updateData.smallImageUrl = sp.smallImageUrl;
+    if (sp.textSections !== undefined) updateData.textSections = sp.textSections;
+    if (sp.accessControl !== undefined) updateData.accessControl = sp.accessControl;
+  }
+
+  // Handle multi panel fields
+  if (input.multiPanel) {
+    const mp = input.multiPanel;
+    if (mp.title !== undefined) updateData.title = mp.title;
+    if (mp.description !== undefined) updateData.content = mp.description;
+    if (mp.selectMenuTitle !== undefined) updateData.introTitle = mp.selectMenuTitle;
+    if (mp.selectMenuPlaceholder !== undefined) updateData.introDescription = mp.selectMenuPlaceholder;
+    if (mp.panels !== undefined) updateData.panels = mp.panels;
+  }
 
   return updateData;
 };

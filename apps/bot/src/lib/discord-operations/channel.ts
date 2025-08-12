@@ -6,7 +6,6 @@ import {
   PermissionFlagsBits,
   type OverwriteResolvable,
 } from "discord.js";
-import { Role } from "@ticketsbot/core/domains/role";
 import { db } from "@ticketsbot/db";
 import { createTicketChannelName } from "@ticketsbot/core";
 
@@ -73,7 +72,7 @@ export const ChannelOps = {
         ],
       });
 
-      const teamRoles = await Role.getRoles(guild.id);
+      const teamRoles = await db.role.getRoles(guild.id);
       for (const role of teamRoles) {
         if (role.discordRoleId) {
           await channel.permissionOverwrites.create(role.discordRoleId, {

@@ -427,8 +427,6 @@ export const auth = betterAuth({
               // const guildModule = await import("../domains/guild/system");
               // const findGuildById = guildModule.getGuildById;
               // const ensureGuild = guildModule.ensureGuild;
-              const roleModule = await import("../domains/role");
-              const Role = roleModule.Role;
 
               const adminGuilds = guildsWithAdminStatus.filter((g) => g.isAdmin);
 
@@ -446,18 +444,18 @@ export const auth = betterAuth({
                       logger.debug(`Updated ownership for guild ${guild.id}`);
                     }
 
-                    await Role.ensureDefaultRoles(guild.id);
+                    await db.role.ensureDefaultRoles(guild.id);
 
                     if (guild.owner) {
-                      const adminRole = await Role.getRoleByName(guild.id, "admin");
+                      const adminRole = await db.role.getRoleByName(guild.id, "admin");
                       if (adminRole) {
-                        await Role.assignRole(adminRole.id, account.accountId);
+                        await db.role.assignRole(adminRole.id, account.accountId);
                         logger.info(`Assigned admin role to guild owner in guild ${guild.id}`);
                       }
                     } else {
-                      const viewerRole = await Role.getRoleByName(guild.id, "viewer");
+                      const viewerRole = await db.role.getRoleByName(guild.id, "viewer");
                       if (viewerRole) {
-                        await Role.assignRole(viewerRole.id, account.accountId);
+                        await db.role.assignRole(viewerRole.id, account.accountId);
                         logger.info(`Assigned viewer role to admin user in guild ${guild.id}`);
                       }
                     }

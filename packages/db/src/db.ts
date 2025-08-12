@@ -52,7 +52,7 @@ import {
   updateGuildSettings,
 } from "./operations/guild/mutations";
 
-import { getActiveMembersForRole } from "./operations/role";
+import * as roleOps from "./operations/role";
 
 export const db = {
   discordUser: {
@@ -83,9 +83,7 @@ export const db = {
     remove: deletePanel,
     deploy: deployPanel,
   },
-  role: {
-    getActiveMembers: getActiveMembersForRole,
-  },
+  role: roleOps,
   tag: {
     create: createTag,
     delete: deleteTag,

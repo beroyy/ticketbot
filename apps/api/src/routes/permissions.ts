@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, createLogger } from "@ticketsbot/core";
-import { Role } from "@ticketsbot/core/domains/role";
+import { db } from "@ticketsbot/db";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
 
@@ -39,7 +39,7 @@ export const permissionRoutes = createRoute().get(
       } satisfies PermissionsResponse);
     }
 
-    const permissions = await Role.getUserPermissions(guildId, discordUserId);
+    const permissions = await db.role.getUserPermissions(guildId, discordUserId);
 
     logger.debug("Calculated permissions", {
       guildId,

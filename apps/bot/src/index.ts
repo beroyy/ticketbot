@@ -8,7 +8,7 @@ import { container } from "@sapphire/framework";
 import { join as _join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { Role } from "@ticketsbot/core/domains/role";
+import { db } from "@ticketsbot/db";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,7 +22,7 @@ class TicketsBotClient extends BaseBotClient {
 
 // Simple adapter for Role domain to implement PermissionProvider interface
 configurePermissionProvider({
-  getUserPermissions: Role.getUserPermissions,
+  getUserPermissions: db.role.getUserPermissions,
 });
 
 const client = new TicketsBotClient({

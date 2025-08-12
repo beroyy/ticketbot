@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { auth } from "@ticketsbot/core/auth";
-import { Role } from "@ticketsbot/core/domains/role";
+import { db } from "@ticketsbot/db";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow POST requests
@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (guildId && session.user?.discordUserId) {
       try {
-        const perms = await Role.getUserPermissions(guildId, session.user.discordUserId);
+        const perms = await db.role.getUserPermissions(guildId, session.user.discordUserId);
         permissions = perms.toString();
       } catch {
         // Ignore permission errors

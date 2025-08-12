@@ -1,9 +1,8 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId } from "@ticketsbot/core";
-import { prisma } from "@ticketsbot/db";
+import { prisma, db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const RemoveStaffCommand = createCommand({
@@ -25,7 +24,7 @@ export const RemoveStaffCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      const userRoles = await Role.getUserRoles(guildId, userId);
+      const userRoles = await db.role.getUserRoles(guildId, userId);
 
       if (userRoles.length === 0) {
         await InteractionResponse.error(
@@ -36,11 +35,11 @@ export const RemoveStaffCommand = createCommand({
       }
 
       const removedRoles: string[] = [];
-      const rolesToSync = userRoles.filter((role) => role.discordRoleId);
+      const rolesToSync = userRoles.filter((role: any) => role.discordRoleId);
 
       await prisma.$transaction(async (_tx) => {
         for (const role of userRoles) {
-          await Role.removeRole(role.id, userId);
+          await db.role.removeRole(role.id, userId);
           removedRoles.push(role.name);
         }
       });

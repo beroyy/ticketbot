@@ -8,7 +8,7 @@ import type {
 import type { Result } from "@bot/lib/discord-utils/result";
 import { Actor, type DiscordActor } from "@ticketsbot/core/context";
 import { parseDiscordId } from "@ticketsbot/core";
-import { Role as TeamDomain } from "@ticketsbot/core/domains/role";
+import { db } from "@ticketsbot/db";
 
 /**
  * Helper to wrap handler execution with Discord context
@@ -22,9 +22,9 @@ async function withContext<T extends Interaction, R>(
 
   if (interaction.guild) {
     try {
-      permissions = await TeamDomain.getUserPermissions(
-        parseDiscordId(interaction.guild.id),
-        parseDiscordId(interaction.user.id)
+      permissions = await db.role.getUserPermissions(
+        parseDiscordId(interaction.user.id),
+        parseDiscordId(interaction.guild.id)
       );
     } catch (error) {
       // Log but don't fail - permissions default to 0n

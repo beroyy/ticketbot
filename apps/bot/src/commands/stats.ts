@@ -10,7 +10,6 @@ import {
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { Role } from "@ticketsbot/core/domains/role";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
@@ -72,7 +71,7 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
       return err("User not found");
     }
 
-    const hasTeamPermissions = await Role.hasPermission(
+    const hasTeamPermissions = await db.role.hasPermission(
       guildId,
       discordUserId,
       PermissionFlags.TICKET_VIEW_ALL
@@ -104,7 +103,7 @@ const displayTeamMemberStats = async (
       guildId,
       staffId: discordUserId,
     }),
-    Role.getUserRoles(guildId, discordUserId),
+    db.role.getUserRoles(guildId, discordUserId),
   ]);
 
   const embed = Embed.info(
@@ -185,7 +184,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
         },
         includeDeleted: false,
       }),
-      Role.getActiveMembers(guildId),
+      db.role.getActiveMembers(guildId),
     ]);
 
     // Map to expected format
@@ -253,7 +252,7 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
   try {
-    const teamMembers = await Role.getActiveMembersWithDetails(guildId);
+    const teamMembers = await db.role.getActiveMembersWithDetails(guildId);
 
     if (teamMembers.length === 0) {
       await InteractionEdit.edit(interaction, {
@@ -269,13 +268,13 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
 
     // Get stats for all team members
     const staffStats = await Promise.all(
-      teamMembers.map(async (member: Role.RoleMemberWithDetails) => {
+      teamMembers.map(async (member: any) => {
         const [performanceStats, memberRoles] = await Promise.all([
           Analytics.getStaffPerformance({
             guildId,
             staffId: member.discordId,
           }),
-          Role.getUserRoles(guildId, member.discordId),
+          db.role.getUserRoles(guildId, member.discordId),
         ]);
 
         // Extract first staff member stats (since we're querying by specific ID)

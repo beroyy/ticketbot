@@ -7,7 +7,6 @@ import {
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
-import { Role } from "@ticketsbot/core/domains/role";
 import { db } from "@ticketsbot/db";
 import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
 
@@ -160,7 +159,7 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
       // Standard permission check
       if (config.permission !== undefined || config.getPermission) {
         const permission = config.getPermission?.(context) ?? config.permission!;
-        const hasPermission = await Role.hasPermission(guildId, userId, permission);
+        const hasPermission = await db.role.hasPermission(guildId, userId, permission);
 
         if (hasPermission) {
           return this.ok();

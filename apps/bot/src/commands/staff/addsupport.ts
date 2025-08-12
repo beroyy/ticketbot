@@ -1,7 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Role } from "@ticketsbot/core/domains/role";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/db";
@@ -23,9 +22,9 @@ export const AddSupportCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      await Role.ensureDefaultRoles(guildId);
+      await db.role.ensureDefaultRoles(guildId);
 
-      const userRoles = await Role.getUserRoles(guildId, userId);
+      const userRoles = await db.role.getUserRoles(guildId, userId);
 
       if (StaffHelpers.hasRole(userRoles, "support")) {
         await InteractionResponse.error(
@@ -43,7 +42,7 @@ export const AddSupportCommand = createCommand({
         return err("User is admin");
       }
 
-      const supportRole = await Role.getRoleByName(guildId, "support");
+      const supportRole = await db.role.getRoleByName(guildId, "support");
       if (!supportRole) {
         await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("support"));
         return err("Support role not found");
@@ -57,7 +56,7 @@ export const AddSupportCommand = createCommand({
           targetUser.displayAvatarURL()
         );
 
-        await Role.assignRole(supportRole.id, userId, parseDiscordId(interaction.user.id));
+        await db.role.assignRole(supportRole.id, userId, parseDiscordId(interaction.user.id));
       });
 
       try {

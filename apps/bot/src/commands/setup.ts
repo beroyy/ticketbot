@@ -11,7 +11,6 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
-import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { RoleOps } from "@bot/lib/discord-operations/roles";
@@ -303,10 +302,10 @@ Do you want to proceed?`
     });
 
     // Ensure default team roles exist
-    await Role.ensureDefaultRoles(guildId);
+    await db.role.ensureDefaultRoles(guildId);
 
     // Assign admin role to invoker
-    const adminTeamRole = await Role.getRoleByName(guildId, "admin");
+    const adminTeamRole = await db.role.getRoleByName(guildId, "admin");
     if (adminTeamRole) {
       await db.discordUser.ensure(
         parseDiscordId(interaction.user.id),
@@ -316,19 +315,19 @@ Do you want to proceed?`
       );
 
       // Assign team role
-      await Role.assignRole(adminTeamRole.id, parseDiscordId(interaction.user.id));
+      await db.role.assignRole(adminTeamRole.id, parseDiscordId(interaction.user.id));
 
       // Update team role with Discord role ID
-      await Role.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
+      await db.role.updateRoleDiscordId(adminTeamRole.id, parseDiscordId(adminRole.id));
 
       // Assign Discord role using RoleOps
       await RoleOps.assignDiscordRole(member, adminRole.id);
     }
 
     // Update support role
-    const supportTeamRole = await Role.getRoleByName(guildId, "support");
+    const supportTeamRole = await db.role.getRoleByName(guildId, "support");
     if (supportTeamRole) {
-      await Role.updateRoleDiscordId(supportTeamRole.id, parseDiscordId(supportRole.id));
+      await db.role.updateRoleDiscordId(supportTeamRole.id, parseDiscordId(supportRole.id));
     }
 
     // Update guild settings

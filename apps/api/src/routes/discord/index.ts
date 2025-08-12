@@ -2,7 +2,6 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
-import { Role } from "@ticketsbot/core/domains/role";
 import { db } from "@ticketsbot/db";
 import { createLogger } from "@ticketsbot/core";
 import { createRoute } from "../../factory";
@@ -271,21 +270,21 @@ export const discordRoutes = createRoute()
           });
         }
 
-        await Role.ensureDefaultRoles(guild.id);
+        await db.role.ensureDefaultRoles(guild.id);
 
         if (effectiveDiscordUserId) {
           if (guild.owner) {
-            const adminRole = await Role.getRoleByName(guild.id, "admin");
+            const adminRole = await db.role.getRoleByName(guild.id, "admin");
             if (adminRole) {
-              await Role.assignRole(adminRole.id, effectiveDiscordUserId);
+              await db.role.assignRole(adminRole.id, effectiveDiscordUserId);
               logger.debug(`Assigned admin role to owner in guild ${guild.id}`, {
                 discordUserId: effectiveDiscordUserId,
               });
             }
           } else {
-            const viewerRole = await Role.getRoleByName(guild.id, "viewer");
+            const viewerRole = await db.role.getRoleByName(guild.id, "viewer");
             if (viewerRole) {
-              await Role.assignRole(viewerRole.id, effectiveDiscordUserId);
+              await db.role.assignRole(viewerRole.id, effectiveDiscordUserId);
               logger.debug(`Assigned viewer role to admin in guild ${guild.id}`, {
                 discordUserId: effectiveDiscordUserId,
               });

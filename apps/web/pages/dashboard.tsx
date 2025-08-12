@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
-import { Role } from "@ticketsbot/core/domains/role";
+import { db } from "@ticketsbot/db";
 import { PermissionFlags } from "@ticketsbot/core";
 
 export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
@@ -19,7 +19,7 @@ export const getServerSideProps = withGuildRoute(async (context, session, guildI
   try {
     // Check permissions first
     if (session.user.discordUserId) {
-      const permissions = await Role.getUserPermissions(guildId, session.user.discordUserId);
+      const permissions = await db.role.getUserPermissions(guildId, session.user.discordUserId);
       hasAnalyticsPermission =
         (permissions & PermissionFlags.ANALYTICS_VIEW) === PermissionFlags.ANALYTICS_VIEW;
     }

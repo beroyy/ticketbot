@@ -2,7 +2,6 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
-import { Role } from "@ticketsbot/core/domains/role";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions, requirePermission } from "../../middleware/context";
@@ -87,8 +86,8 @@ export const settingsRoutes = createRoute()
       }
 
       const [permissions, roles] = await Promise.all([
-        Role.getUserPermissions(guildId, user.discordUserId),
-        Role.getUserRoles(guildId, user.discordUserId),
+        db.role.getUserPermissions(guildId, user.discordUserId),
+        db.role.getUserRoles(guildId, user.discordUserId),
       ]);
 
       return c.json({

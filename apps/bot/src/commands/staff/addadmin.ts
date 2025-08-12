@@ -1,7 +1,6 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
-import { Role } from "@ticketsbot/core/domains/role";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/db";
@@ -23,9 +22,9 @@ export const AddAdminCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      await Role.ensureDefaultRoles(guildId);
+      await db.role.ensureDefaultRoles(guildId);
 
-      const userRoles = await Role.getUserRoles(guildId, userId);
+      const userRoles = await db.role.getUserRoles(guildId, userId);
 
       if (StaffHelpers.hasRole(userRoles, "admin")) {
         await InteractionResponse.error(
@@ -35,7 +34,7 @@ export const AddAdminCommand = createCommand({
         return err("User already admin");
       }
 
-      const adminRole = await Role.getRoleByName(guildId, "admin");
+      const adminRole = await db.role.getRoleByName(guildId, "admin");
       if (!adminRole) {
         await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("admin"));
         return err("Admin role not found");
@@ -51,7 +50,7 @@ export const AddAdminCommand = createCommand({
           { tx }
         );
 
-        await Role.assignRole(adminRole.id, userId, undefined, { tx });
+        await db.role.assignRole(adminRole.id, userId, undefined, { tx });
       });
 
       try {

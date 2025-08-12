@@ -7,9 +7,9 @@ import {
   StaffHelpers,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { Role } from "@ticketsbot/core/domains/role";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
+import { db } from "@ticketsbot/db";
 
 export const ViewStaffCommand = createCommand({
   name: "viewstaff",
@@ -20,7 +20,7 @@ export const ViewStaffCommand = createCommand({
     const guildId = parseDiscordId(interaction.guild!.id);
 
     try {
-      const roles = await Role.getRoles(guildId);
+      const roles = await db.role.getRoles(guildId);
 
       if (roles.length === 0) {
         const embed = Embed.info(
@@ -34,10 +34,10 @@ export const ViewStaffCommand = createCommand({
       const embed = Embed.info("Role Members", "Role members and their roles:");
 
       for (const role of roles) {
-        const members = await Role.getRoleMembers(role.id);
+        const members = await db.role.getRoleMembers(role.id);
 
         if (members.length > 0) {
-          const memberList = members.map((member) => `<@${member.discordId}>`).join("\n");
+          const memberList = members.map((member: any) => `<@${member.discordId}>`).join("\n");
           const roleEmoji = StaffHelpers.getRoleEmoji(role.name);
           const roleName = role.name.charAt(0).toUpperCase() + role.name.slice(1);
 

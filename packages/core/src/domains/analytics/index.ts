@@ -1,4 +1,4 @@
-import { prisma, TicketStatus, Prisma, type TicketLifecycleEvent } from "@ticketsbot/db";
+import { prisma, TicketStatus, type TicketLifecycleEvent, Prisma } from "@ticketsbot/db";
 import { Actor } from "../../context";
 
 // Date utility functions
@@ -28,40 +28,17 @@ const differenceInMinutes = (date1: Date, date2: Date): number => {
   return Math.abs(date1.getTime() - date2.getTime()) / (1000 * 60);
 };
 
-// Import types
-import type {
-  TicketStatsQuery,
-  StaffPerformanceQuery,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  TicketTrends,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  RealtimeStats,
-  GenerateReportInput,
-} from "./schemas";
+import type { TicketStatsQuery, StaffPerformanceQuery, GenerateReportInput } from "./schemas";
 
-// Export schemas
 export {
-  AnalyticsSnapshotSchema,
   TicketStatsQuerySchema,
-  CrossEntityStatsQuerySchema,
   StaffPerformanceQuerySchema,
-  PanelPerformanceSchema,
-  TicketTrendsSchema,
-  RealtimeStatsSchema,
   GenerateReportSchema,
-  type AnalyticsSnapshot,
   type TicketStatsQuery,
-  type CrossEntityStatsQuery,
   type StaffPerformanceQuery,
-  type PanelPerformance,
-  type TicketTrends,
-  type RealtimeStats,
   type GenerateReportInput,
 } from "./schemas";
 
-/**
- * Analytics domain - handles statistics, reporting, and performance metrics
- */
 export namespace Analytics {
   /**
    * Get ticket statistics for a guild

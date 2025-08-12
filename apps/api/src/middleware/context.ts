@@ -31,7 +31,7 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
   if (cached && cached.expires > Date.now()) {
     logger.debug("Using cached session validation");
     const sessionData = cached.data;
-    
+
     if (sessionData) {
       c.set("user", sessionData.user);
       c.set("session", sessionData);
@@ -62,7 +62,7 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
   try {
     const guildId = extractGuildId(c);
     const webUrl = env.WEB_URL || "http://localhost:3000";
-    
+
     const response = await fetch(`${webUrl}/api/auth/validate-session`, {
       method: "POST",
       headers: {
@@ -77,8 +77,8 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const result = await response.json() as { 
-      valid: boolean; 
+    const result = (await response.json()) as {
+      valid: boolean;
       session?: AuthSession & { permissions: string };
     };
     if (!result.valid || !result.session) {
@@ -160,20 +160,6 @@ const extractGuildId = (c: Context): string | undefined => {
   return undefined;
 };
 
-// Legacy context middleware - no longer used
-// All authentication now goes through withHmacContext which handles both cookies and HMAC
-
-export const requireAuth: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
-  // Check if we already have a session from withHmacContext
-  const existingSession = c.get("session");
-  if (existingSession) {
-    return next();
-  }
-
-  // If not, this shouldn't happen as withHmacContext should handle all auth
-  return c.json({ error: "Authentication required" }, 401);
-};
-
 export const requirePermission = (permission: bigint) => {
   return async (c: Context<{ Variables: Variables }>, next: Next) => {
     const checkPermissionAndProceed = async () => {
@@ -210,29 +196,6 @@ export const requirePermission = (permission: bigint) => {
     };
 
     await checkPermissionAndProceed();
-  };
-};
-
-export const requireAnyPermission = (...permissions: bigint[]) => {
-  return async (c: Context<{ Variables: Variables }>, next: Next) => {
-    const checkPermissionsAndProceed = async () => {
-      try {
-        const hasAny = permissions.some((p) => Actor.hasPermission(p));
-        if (!hasAny) {
-          throw new VisibleError("permission_denied", "Missing required permissions");
-        }
-        await next();
-      } catch (error) {
-        if (error instanceof VisibleError) {
-          c.status(403);
-          c.json({ error: error.message, code: error.code });
-          return;
-        }
-        throw error;
-      }
-    };
-
-    await checkPermissionsAndProceed();
   };
 };
 

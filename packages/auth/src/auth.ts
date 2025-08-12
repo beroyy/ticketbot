@@ -8,6 +8,7 @@ import { db } from "@ticketsbot/db";
 import { getDiscordAvatarUrl } from "./services/discord-api";
 import { getBetterAuthUser, updateDiscordUserId, getDiscordAccount } from "./services/user-linking";
 import type { User as AuthUser, Session } from "./types";
+import { env } from "./env";
 
 type AuthContext = {
   newSession?: {
@@ -39,42 +40,6 @@ type SessionData = {
   };
 };
 
-function getEnvVar(key: string, fallback?: string): string {
-  return process.env[key] || fallback || "";
-}
-
-const getOrigins = () => {
-  const webOrigin = getEnvVar("WEB_URL", "http://localhost:3000");
-
-  if (!getOrigins.logged) {
-    logger.info("Auth trusted origins:", {
-      webOrigin,
-      envWebUrl: process.env.WEB_URL,
-    });
-    getOrigins.logged = true;
-  }
-
-  return { webOrigin };
-};
-getOrigins.logged = false;
-
-// No longer using Redis for secondary storage - database only
-
-const authSecret = getEnvVar("BETTER_AUTH_SECRET");
-if (!authSecret) {
-  logger.error("BETTER_AUTH_SECRET is not set! Sessions will not work properly.");
-}
-
-const discordClientId = getEnvVar("DISCORD_CLIENT_ID");
-const discordClientSecret = getEnvVar("DISCORD_CLIENT_SECRET");
-
-if (!discordClientId || !discordClientSecret) {
-  logger.warn("Discord OAuth credentials not set. OAuth login will not work.", {
-    clientIdSet: !!discordClientId,
-    clientSecretSet: !!discordClientSecret,
-  });
-}
-
 type AuthInstance = {
   handler: (request: Request) => Promise<Response>;
   api: {
@@ -85,34 +50,21 @@ type AuthInstance = {
   [key: string]: unknown;
 };
 
-const { webOrigin } = getOrigins();
-
-const cookieDomain = process.env.NODE_ENV === "production" ? ".ticketsbot.co" : "localhost";
-
-if (process.env.NODE_ENV !== "development") {
-  logger.info("[Auth] Creating Better Auth instance", {
-    discordConfigured: !!discordClientId && !!discordClientSecret,
-    redirectURI: `${webOrigin}/api/auth/callback/discord`,
-    discordClientId: discordClientId?.substring(0, 6) + "...",
-    nodeEnv: process.env["NODE_ENV"],
-  });
-}
-
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
-  secret: authSecret,
+  secret: env.BETTER_AUTH_SECRET,
   session: {
     storeSessionInDatabase: true,
+    expiresIn: 60 * 60 * 24 * 7,
     cookieCache: {
       enabled: true,
-      maxAge: 3600, // 1 hour cache
+      maxAge: 3600,
     },
-    expiresIn: 60 * 60 * 24 * 7,
   },
   rateLimit: {
-    enabled: process.env["NODE_ENV"] === "production",
+    enabled: env.isProd(),
     window: 60,
     max: 100,
     storage: "memory",
@@ -125,15 +77,15 @@ export const auth = betterAuth({
       "/api/auth/me": { window: 60, max: 30 },
     },
   },
-  trustedOrigins: [webOrigin],
+  trustedOrigins: [env.WEB_URL, env.API_URL],
   advanced: {
     // cookiePrefix: "ticketsbot",
-    useSecureCookies: process.env["NODE_ENV"] === "production",
+    useSecureCookies: env.isProd(),
     crossSubDomainCookies: {
       enabled: true,
-      domain: cookieDomain,
+      domain: env.COOKIE_DOMAIN,
     },
-    disableCSRFCheck: process.env["NODE_ENV"] === "development",
+    disableCSRFCheck: env.isDev(),
     cookies: {
       session_token: {
         name: "session_token",
@@ -141,8 +93,8 @@ export const auth = betterAuth({
           sameSite: "lax",
           secure: process.env["NODE_ENV"] === "production",
           httpOnly: true,
-          domain: cookieDomain,
-          path: "/",
+          domain: env.COOKIE_DOMAIN,
+          // path: "/",
         },
       },
       session_data: {
@@ -151,8 +103,8 @@ export const auth = betterAuth({
           sameSite: "lax",
           secure: process.env["NODE_ENV"] === "production",
           httpOnly: true,
-          domain: cookieDomain,
-          path: "/",
+          domain: env.COOKIE_DOMAIN,
+          // path: "/",
         },
       },
     },
@@ -165,8 +117,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     discord: {
-      clientId: discordClientId,
-      clientSecret: discordClientSecret,
+      clientId: env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
+      clientSecret: env.DISCORD_CLIENT_SECRET,
       scope: ["identify", "guilds"],
       mapProfileToUser: (profile: any) => {
         logger.debug("Discord OAuth profile received:", {

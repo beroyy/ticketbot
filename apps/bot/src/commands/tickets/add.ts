@@ -2,7 +2,7 @@ import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { ChannelOps } from "@bot/lib/discord-operations";
 import { type Result, ok } from "@bot/lib/discord-utils";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
@@ -37,7 +37,7 @@ export class AddCommand extends TicketCommandBase {
     const targetDiscordId = await this.ensureUser(targetUser);
 
     // Add user as a participant in the ticket
-    await Ticket.addParticipant(ticket.id, targetDiscordId, "participant");
+    await db.ticket.addParticipant(ticket.id, targetDiscordId, "participant");
 
     // Update Discord permissions
     const channel = interaction.channel as TextChannel;

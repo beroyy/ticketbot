@@ -1,1 +1,0 @@
-export { Ticket } from "./operations";

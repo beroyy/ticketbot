@@ -11,7 +11,6 @@ import {
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
 import { Role } from "@ticketsbot/core/domains/role";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
@@ -134,7 +133,7 @@ const displayRegularUserStats = async (
   discordUserId: string
 ) => {
   // For regular users, we just need their open ticket count
-  const openCount = await Ticket.getUserOpenCount(discordUserId);
+  const openCount = await db.ticket.getUserOpenCount(discordUserId);
 
   // TODO: Get user's total ticket stats from Analytics domain
   const stats = { openedCount: 0, averageResponseTimeMinutes: 0 };

@@ -1,6 +1,5 @@
 import type { Guild } from "discord.js";
 import { container } from "@sapphire/framework";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
@@ -77,9 +76,9 @@ export const TicketOps = {
 
       channelId = channel.id;
 
-      await Ticket.updateChannelId(ticket.id, channel.id);
+      await db.ticket.updateChannelId(ticket.id, channel.id);
 
-      const ticketWithDetails = await Ticket.getById(ticket.id);
+      const ticketWithDetails = await db.ticket.getById(ticket.id);
 
       const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
       const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);

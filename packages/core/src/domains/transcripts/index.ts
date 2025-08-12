@@ -1,6 +1,5 @@
-import { prisma } from "@ticketsbot/db";
+import { prisma, db } from "@ticketsbot/db";
 import { Actor } from "../../context";
-import { Ticket } from "../ticket";
 
 import type {
   CreateTicketMessageInput,
@@ -41,7 +40,7 @@ export namespace Transcripts {
   export const getTranscript = async (ticketId: number): Promise<any> => {
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -64,7 +63,7 @@ export namespace Transcripts {
     const parsed = CreateTicketMessageSchema.parse(data);
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -167,7 +166,7 @@ export namespace Transcripts {
     const parsedQuery = query ? MessageQuerySchema.parse(query) : undefined;
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -193,7 +192,7 @@ export namespace Transcripts {
     const parsed = StoreFieldResponseSchema.parse(data);
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -214,7 +213,7 @@ export namespace Transcripts {
     const parsed = SubmitFeedbackSchema.parse(data);
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -247,7 +246,7 @@ export namespace Transcripts {
   export const getHistory = async (ticketId: number): Promise<any[]> => {
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -271,7 +270,7 @@ export namespace Transcripts {
   ): Promise<any> => {
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -293,7 +292,7 @@ export namespace Transcripts {
     const parsed = ExportTranscriptSchema.parse(data);
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(parsed.ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -333,7 +332,7 @@ export namespace Transcripts {
   export const getFullTranscript = async (ticketId: number): Promise<any> => {
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -360,7 +359,7 @@ export namespace Transcripts {
   ): Promise<any> => {
     const guildId = Actor.guildId();
 
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }

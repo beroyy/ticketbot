@@ -1,5 +1,6 @@
 import { Discord } from "./index";
 import type { TextChannel } from "discord.js";
+import { db } from "@ticketsbot/db";
 
 const getTicketLifecycle = async () => {
   const { TicketLifecycle } = await import("../domains/ticket-lifecycle");
@@ -9,11 +10,6 @@ const getTicketLifecycle = async () => {
 const getTranscripts = async () => {
   const { Transcripts } = await import("../domains/transcripts");
   return Transcripts;
-};
-
-const getTicket = async () => {
-  const { Ticket } = await import("../domains/ticket");
-  return Ticket;
 };
 
 export const createTicketFromPanel = async (data: {
@@ -60,9 +56,8 @@ export const closeTicket = async (data: {
   deleteChannel?: boolean;
 }): Promise<void> => {
   const TicketLifecycle = await getTicketLifecycle();
-  const Ticket = await getTicket();
 
-  const ticket = await Ticket.getByIdUnchecked(data.ticketId);
+  const ticket = await db.ticket.getByIdUnchecked(data.ticketId);
   if (!ticket) throw new Error("Ticket not found");
 
   await TicketLifecycle.close({
@@ -82,9 +77,7 @@ export const sendTicketMessage = async (
   ticketId: number,
   content: string | object
 ): Promise<void> => {
-  const Ticket = await getTicket();
-
-  const ticket = await Ticket.getByIdUnchecked(ticketId);
+  const ticket = await db.ticket.getByIdUnchecked(ticketId);
   if (!ticket || !ticket.channelId) throw new Error("Ticket or channel not found");
 
   const { messageId } = await Discord.sendMessage(ticket.guildId, ticket.channelId, content);
@@ -112,10 +105,9 @@ export const updateTicketPermissions = async (
     deniedUsers?: string[];
   }
 ): Promise<void> => {
-  const Ticket = await getTicket();
   const client = await Discord.getDiscordClient();
 
-  const ticket = await Ticket.getByIdUnchecked(ticketId);
+  const ticket = await db.ticket.getByIdUnchecked(ticketId);
   if (!ticket || !ticket.channelId) throw new Error("Ticket or channel not found");
 
   const guild = await client.guilds.fetch(ticket.guildId);

@@ -21,6 +21,13 @@ import {
   isTicketChannel,
   getByIdUnchecked,
   getByIds,
+  getById as getTicketById,
+  getUserOpenCount,
+  addParticipant,
+  removeParticipant,
+  updateChannelId,
+  list as listTickets,
+  update as updateTicket,
 } from "./operations";
 import {
   getGuildById,
@@ -80,11 +87,18 @@ export const db = {
   },
   ticket: {
     get: getTicketByChannelId,
+    getById: getTicketById,
     getByIdUnchecked: getByIdUnchecked,
     getByIds: getByIds,
+    list: listTickets,
+    update: updateTicket,
     getCountByStatus: getCountByStatus,
     hasOpenTickets: hasOpenTickets,
+    getUserOpenCount: getUserOpenCount,
+    addParticipant: addParticipant,
+    removeParticipant: removeParticipant,
     removeParticipantFromAll: removeParticipantFromAll,
+    updateChannelId: updateChannelId,
     isTicketChannel: isTicketChannel,
   },
 };

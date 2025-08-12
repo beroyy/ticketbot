@@ -1,7 +1,6 @@
-import { prisma, TicketStatus } from "@ticketsbot/db";
+import { prisma, TicketStatus, db } from "@ticketsbot/db";
 import { Actor } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
-import { Ticket } from "../ticket";
 import type {
   CreateTicketInput,
   ClaimTicketInput,
@@ -258,7 +257,7 @@ export namespace TicketLifecycle {
       const closedById = parsed.closedById || Actor.userId();
 
       // Get the ticket
-      const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
+      const ticket = await db.ticket.getByIdUnchecked(parsed.ticketId);
 
       if (!ticket || ticket.guildId !== guildId) {
         throw new Error("Ticket not found");
@@ -317,7 +316,7 @@ export namespace TicketLifecycle {
       const reopenedById = parsed.reopenedById || Actor.userId();
 
       // Get the ticket
-      const ticket = await Ticket.getByIdUnchecked(parsed.ticketId);
+      const ticket = await db.ticket.getByIdUnchecked(parsed.ticketId);
 
       if (!ticket || ticket.guildId !== guildId) {
         throw new Error("Ticket not found");
@@ -368,7 +367,7 @@ export namespace TicketLifecycle {
     const guildId = Actor.guildId();
 
     // Verify ticket belongs to guild
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }
@@ -393,7 +392,7 @@ export namespace TicketLifecycle {
     const guildId = Actor.guildId();
 
     // Verify ticket belongs to guild
-    const ticket = await Ticket.getByIdUnchecked(ticketId);
+    const ticket = await db.ticket.getByIdUnchecked(ticketId);
     if (!ticket || ticket.guildId !== guildId) {
       throw new Error("Ticket not found");
     }

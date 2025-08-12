@@ -1,7 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
@@ -79,9 +78,9 @@ const panelCreateHandler = createButtonHandler({
           panel
         );
 
-        await Ticket.updateChannelId(ticket.id, channel.id);
+        await db.ticket.updateChannelId(ticket.id, channel.id);
 
-        const ticketWithDetails = await Ticket.getById(ticket.id);
+        const ticketWithDetails = await db.ticket.getById(ticket.id);
 
         const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
         const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);

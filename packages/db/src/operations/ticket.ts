@@ -172,3 +172,120 @@ export const removeParticipantFromAll = async (
 
   return result.count;
 };
+
+/**
+ * Get ticket by ID with all relations
+ * Same as getByIdUnchecked but with consistent naming
+ */
+export const getById = async (ticketId: number): Promise<any> => {
+  return getByIdUnchecked(ticketId);
+};
+
+/**
+ * Get count of open tickets for a user
+ */
+export const getUserOpenCount = async (userId: string): Promise<number> => {
+  return prisma.ticket.count({
+    where: {
+      openerId: userId,
+      status: TicketStatus.OPEN,
+      deletedAt: null,
+    },
+  });
+};
+
+/**
+ * Add a participant to a ticket
+ */
+export const addParticipant = async (
+  ticketId: number,
+  userId: string,
+  role: "participant" | "support" = "participant"
+): Promise<any> => {
+  return prisma.ticketParticipant.upsert({
+    where: {
+      ticketId_userId: {
+        ticketId,
+        userId,
+      },
+    },
+    update: {
+      role,
+    },
+    create: {
+      ticketId,
+      userId,
+      role,
+    },
+  });
+};
+
+/**
+ * Remove a participant from a ticket
+ */
+export const removeParticipant = async (ticketId: number, userId: string): Promise<any> => {
+  return prisma.ticketParticipant.delete({
+    where: {
+      ticketId_userId: {
+        ticketId,
+        userId,
+      },
+    },
+  });
+};
+
+/**
+ * Update ticket's channel ID
+ */
+export const updateChannelId = async (ticketId: number, channelId: string): Promise<any> => {
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: { channelId },
+  });
+};
+
+/**
+ * List tickets with filters
+ */
+export const list = async (filters: {
+  guildId?: string;
+  status?: string;
+  openerId?: string;
+  assignedTo?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<any[]> => {
+  const where: any = {
+    deletedAt: null,
+  };
+
+  if (filters.guildId) where.guildId = filters.guildId;
+  if (filters.status) where.status = filters.status;
+  if (filters.openerId) where.openerId = filters.openerId;
+  if (filters.assignedTo) where.assignedTo = filters.assignedTo;
+
+  return prisma.ticket.findMany({
+    where,
+    take: filters.limit,
+    skip: filters.offset,
+    orderBy: { createdAt: "desc" },
+    include: {
+      opener: true,
+      panel: true,
+    },
+  });
+};
+
+/**
+ * Update ticket data
+ */
+export const update = async (ticketId: number, data: any): Promise<any> => {
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data,
+    include: {
+      opener: true,
+      panel: true,
+    },
+  });
+};

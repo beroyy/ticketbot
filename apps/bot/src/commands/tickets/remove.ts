@@ -2,7 +2,7 @@ import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
 import type { Command } from "@sapphire/framework";
 import { ChannelOps } from "@bot/lib/discord-operations";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
+import { db } from "@ticketsbot/db";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
@@ -46,7 +46,7 @@ export class RemoveCommand extends TicketCommandBase {
 
     // Remove user from ticket participants
     try {
-      await Ticket.removeParticipant(ticket.id, targetDiscordId);
+      await db.ticket.removeParticipant(ticket.id, targetDiscordId);
     } catch (error) {
       // If they're not a participant, continue anyway to remove Discord permissions
       if (error instanceof Error && !error.message.includes("Cannot remove ticket opener")) {

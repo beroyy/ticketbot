@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, TicketStatusSchema, PermissionFlags } from "@ticketsbot/core";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
@@ -38,10 +37,11 @@ export const ticketRoutes = createRoute()
     async (c) => {
       const { guildId, status, page, pageSize } = c.req.valid("query");
 
-      const tickets = await Ticket.list({
+      const tickets = await db.ticket.list({
         guildId,
         status,
-        pagination: { page, pageSize },
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
       });
 
       const formattedTickets = await Promise.all(
@@ -95,7 +95,7 @@ export const ticketRoutes = createRoute()
       const ticketId = parseTicketId(id);
 
       try {
-        const ticket = await Ticket.getById(ticketId);
+        const ticket = await db.ticket.getById(ticketId);
         const formatted = await formatTicketForDashboard(ticket);
         return c.json(formatted);
       } catch (error) {
@@ -151,7 +151,7 @@ export const ticketRoutes = createRoute()
       const ticketId = parseTicketId(id);
 
       try {
-        const ticket = await Ticket.update(ticketId, input);
+        const ticket = await db.ticket.update(ticketId, input);
         const formatted = await formatTicketForDashboard(ticket);
         return c.json(formatted);
       } catch (error) {
@@ -194,7 +194,7 @@ export const ticketRoutes = createRoute()
           deleteChannel: false,
           notifyOpener: true,
         });
-        const ticket = await Ticket.getById(ticketId);
+        const ticket = await db.ticket.getById(ticketId);
         const formatted = await formatTicketForDashboard(ticket);
         return c.json(formatted);
       } catch (error) {
@@ -227,7 +227,7 @@ export const ticketRoutes = createRoute()
           claimerId: user.discordUserId || user.id,
           force: false,
         });
-        const ticket = await Ticket.getById(ticketId);
+        const ticket = await db.ticket.getById(ticketId);
         const formatted = await formatTicketForDashboard(ticket);
         return c.json(formatted);
       } catch (error) {
@@ -258,7 +258,7 @@ export const ticketRoutes = createRoute()
           ticketId,
           performedById: user.discordUserId || user.id,
         });
-        const ticket = await Ticket.getById(ticketId);
+        const ticket = await db.ticket.getById(ticketId);
         const formatted = await formatTicketForDashboard(ticket);
         return c.json(formatted);
       } catch (error) {

@@ -9,7 +9,6 @@ import {
   err,
   TicketValidation,
 } from "@bot/lib/discord-utils";
-import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
@@ -115,7 +114,7 @@ export class OpenCommand extends TicketCommandBase {
       // Discord operations after transaction
       try {
         // Get ticket with form responses
-        const ticketWithDetails = await Ticket.getById(ticket.id);
+        const ticketWithDetails = await db.ticket.getById(ticket.id);
 
         // Send welcome message
         const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);

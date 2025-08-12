@@ -1,5 +1,5 @@
-import { prisma } from "./client";
-import { type DiscordUser, Prisma } from "../generated/prisma";
+import { prisma } from "../client";
+import { type DiscordUser, Prisma } from "../../generated/prisma";
 
 export const ensureDiscordUser = async (
   discordId: string,

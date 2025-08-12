@@ -5,7 +5,6 @@ import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { prisma } from "@ticketsbot/db";
@@ -54,7 +53,7 @@ const closeConfirmHandler = createButtonHandler({
         });
       });
 
-      const settings = await getSettingsUnchecked(guild.id);
+      const settings = await db.guild.getSettings(guild.id);
       if (!settings) {
         throw new Error("Guild not properly configured");
       }

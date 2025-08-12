@@ -3,7 +3,7 @@ import type { Command } from "@sapphire/framework";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
@@ -69,8 +69,7 @@ export class CloseCommand extends TicketCommandBase {
       });
     });
 
-    // Get guild settings
-    const settings = await getSettingsUnchecked(guild.id);
+    const settings = await db.guild.getSettings(guild.id);
 
     // Discord operations after transaction
     try {
@@ -83,9 +82,15 @@ export class CloseCommand extends TicketCommandBase {
         const closedEmbed = MessageOps.ticket.closedEmbed(userId, ticket.id);
         await channel.send({ embeds: [closedEmbed] }).catch(console.error);
 
-        // Archive or delete the channel
-        const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
-        _channelDeleted = archiveResult.deleted;
+        // Archive or delete the channel if settings exist
+        if (settings) {
+          const archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
+          _channelDeleted = archiveResult.deleted;
+        } else {
+          // Fallback: delete the channel if no settings found
+          await channel.delete("Ticket closed").catch(console.error);
+          _channelDeleted = true;
+        }
       }
     } catch (error) {
       console.error("Failed to handle Discord channel operations:", error);

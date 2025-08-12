@@ -424,9 +424,9 @@ export const auth = betterAuth({
                 discordUserId: account.accountId,
               });
 
-              const guildModule = await import("../domains/guild/system");
-              const findGuildById = guildModule.getGuildById;
-              const ensureGuild = guildModule.ensureGuild;
+              // const guildModule = await import("../domains/guild/system");
+              // const findGuildById = guildModule.getGuildById;
+              // const ensureGuild = guildModule.ensureGuild;
               const roleModule = await import("../domains/role");
               const Role = roleModule.Role;
 
@@ -434,7 +434,7 @@ export const auth = betterAuth({
 
               for (const guild of adminGuilds) {
                 try {
-                  const dbGuild = await findGuildById(guild.id);
+                  const dbGuild = await db.guild.get(guild.id);
 
                   if (dbGuild?.botInstalled) {
                     logger.debug(
@@ -442,7 +442,7 @@ export const auth = betterAuth({
                     );
 
                     if (guild.owner && dbGuild.ownerDiscordId !== account.accountId) {
-                      await ensureGuild(guild.id, guild.name, account.accountId);
+                      await db.guild.ensure(guild.id, guild.name, account.accountId);
                       logger.debug(`Updated ownership for guild ${guild.id}`);
                     }
 

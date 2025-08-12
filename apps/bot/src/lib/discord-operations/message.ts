@@ -8,7 +8,7 @@ import {
 
 import { createEmbed, COLORS } from "@bot/lib/discord-utils";
 
-interface TicketInfo {
+type TicketInfo = {
   id: number;
   number: number;
   openerId: string;
@@ -18,18 +18,17 @@ interface TicketInfo {
     field: { label: string };
     value: string;
   }>;
-}
+};
 
-interface PanelInfo {
+type PanelInfo = {
   title: string;
   introTitle?: string | null;
   introMessage?: string | null;
   mentionRoles?: string | null;
   hideMentions?: boolean;
   textSections?: any;
-}
+};
 
-// Message operations namespace
 export const MessageOps = {
   ticket: {
     welcomeEmbed: (ticket: TicketInfo, panel?: PanelInfo): EmbedBuilder => {
@@ -53,7 +52,6 @@ export const MessageOps = {
         });
       }
 
-      // Add form responses if present
       if (ticket.formResponses && ticket.formResponses.length > 0) {
         for (const response of ticket.formResponses) {
           embed.addFields({
@@ -64,7 +62,6 @@ export const MessageOps = {
         }
       }
 
-      // Add text sections if present
       if (panel?.textSections) {
         try {
           const textSections = panel.textSections as Array<{ name: string; value: string }>;

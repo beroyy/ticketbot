@@ -1,10 +1,6 @@
-import { prisma } from "@ticketsbot/db";
+import { prisma } from "../client";
 
-export const ensureGuild = async (
-  guildId: string,
-  name?: string,
-  ownerId?: string
-): Promise<any> => {
+export async function ensureGuild(guildId: string, name?: string, ownerId?: string) {
   return prisma.guild.upsert({
     where: { id: guildId },
     update: {
@@ -17,9 +13,9 @@ export const ensureGuild = async (
       ownerDiscordId: ownerId || null,
     },
   });
-};
+}
 
-export const updateGuild = async (
+export async function updateGuild(
   guildId: string,
   data: {
     name?: string;
@@ -27,20 +23,20 @@ export const updateGuild = async (
     feedbackEnabled?: boolean;
     [key: string]: any;
   }
-): Promise<any> => {
+) {
   return prisma.guild.update({
     where: { id: guildId },
     data,
   });
-};
+}
 
-export const getGuildById = async (guildId: string): Promise<any> => {
+export async function getGuildById(guildId: string) {
   return prisma.guild.findUnique({
     where: { id: guildId },
   });
-};
+}
 
-export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
+export async function getGuildSettings(guildId: string) {
   const guild = await prisma.guild.findUnique({
     where: { id: guildId },
   });
@@ -72,16 +68,16 @@ export const getSettingsUnchecked = async (guildId: string): Promise<any> => {
       updatedAt: guild.updatedAt,
     },
   };
-};
+}
 
-export const ensureGuildWithDefaults = async (data: {
+export async function ensureGuildWithDefaults(data: {
   guildId: string;
   guildName: string;
   ownerId?: string;
   defaultCategoryId?: string;
   supportCategoryId?: string;
   transcriptsChannel?: string;
-}): Promise<any> => {
+}) {
   // Create or update guild
   const guild = await prisma.guild.upsert({
     where: { id: data.guildId },
@@ -120,76 +116,59 @@ export const ensureGuildWithDefaults = async (data: {
   }
 
   return guild;
-};
+}
 
-export const syncBotInstallStatus = async (currentGuildIds: string[]): Promise<void> => {
-  // First, set all guilds to botInstalled = false
+export async function syncGuildBotInstalledStatus(currentGuildIds: string[]) {
   await prisma.guild.updateMany({
     where: {},
     data: { botInstalled: false },
   });
 
-  // Then set current guilds to botInstalled = true
   if (currentGuildIds.length > 0) {
     await prisma.guild.updateMany({
       where: { id: { in: currentGuildIds } },
       data: { botInstalled: true },
     });
   }
-};
+}
 
-export const Blacklist = {
-  toggle: async (guildId: string, targetId: string, isRole: boolean): Promise<boolean> => {
-    // Check if already blacklisted
-    const existing = await prisma.blacklist.findFirst({
-      where: {
+export async function toggleGuildBlacklistEntry(
+  guildId: string,
+  targetId: string,
+  isRole: boolean
+) {
+  const existing = await prisma.blacklist.findFirst({
+    where: {
+      guildId,
+      targetId,
+      isRole,
+    },
+  });
+
+  if (existing) {
+    await prisma.blacklist.delete({
+      where: { id: existing.id },
+    });
+  } else {
+    await prisma.blacklist.create({
+      data: {
         guildId,
         targetId,
         isRole,
       },
     });
+  }
 
-    if (existing) {
-      // Remove from blacklist
-      await prisma.blacklist.delete({
-        where: { id: existing.id },
-      });
-      return false;
-    } else {
-      // Add to blacklist
-      await prisma.blacklist.create({
-        data: {
-          guildId,
-          targetId,
-          isRole,
-        },
-      });
-      return true;
-    }
-  },
+  return !existing;
+}
 
-  isBlacklisted: async (guildId: string, userId: string): Promise<boolean> => {
-    const entry = await prisma.blacklist.findFirst({
-      where: {
-        guildId,
-        targetId: userId,
-        isRole: false,
-      },
-    });
-    return !!entry;
-  },
-};
-
-export const getAccessibleGuilds = async (discordUserId: string): Promise<string[]> => {
-  const guilds = await prisma.guild.findMany({
+export async function checkGuildBlacklistEntry(guildId: string, userId: string) {
+  const entry = await prisma.blacklist.findFirst({
     where: {
-      OR: [
-        { ownerDiscordId: discordUserId },
-        { guildMemberPermissions: { some: { discordId: discordUserId } } },
-      ],
+      guildId,
+      targetId: userId,
+      isRole: false,
     },
-    select: { id: true },
   });
-
-  return guilds.map((g) => g.id);
-};
+  return Boolean(entry);
+}

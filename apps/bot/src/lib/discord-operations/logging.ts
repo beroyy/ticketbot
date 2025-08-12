@@ -1,5 +1,5 @@
 import { container } from "@sapphire/framework";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import type { EmbedBuilder, TextChannel } from "discord.js";
 
 /**
@@ -10,21 +10,18 @@ import type { EmbedBuilder, TextChannel } from "discord.js";
  */
 export const sendToLogChannel = async (guildId: string, embed: EmbedBuilder): Promise<boolean> => {
   try {
-    // Get guild settings to find log channel
-    const settings = await getSettingsUnchecked(guildId);
+    const settings = await db.guild.getSettings(guildId);
     if (!settings?.settings?.logChannel) {
       container.logger.debug(`No log channel configured for guild ${guildId}`);
       return false;
     }
 
-    // Get the guild
     const guild = container.client.guilds.cache.get(guildId);
     if (!guild) {
       container.logger.debug(`Guild ${guildId} not in cache`);
       return false;
     }
 
-    // Get the log channel
     const logChannel = guild.channels.cache.get(settings.settings.logChannel) as TextChannel;
     if (!logChannel?.isTextBased()) {
       container.logger.debug(
@@ -33,7 +30,6 @@ export const sendToLogChannel = async (guildId: string, embed: EmbedBuilder): Pr
       return false;
     }
 
-    // Add guild footer if not already set
     if (!embed.data.footer) {
       embed.setFooter({
         text: guild.name,
@@ -41,7 +37,6 @@ export const sendToLogChannel = async (guildId: string, embed: EmbedBuilder): Pr
       });
     }
 
-    // Send the embed
     await logChannel.send({ embeds: [embed] });
     return true;
   } catch (error) {

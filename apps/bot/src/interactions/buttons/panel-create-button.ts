@@ -4,7 +4,7 @@ import type { ButtonInteraction } from "discord.js";
 import { Panel } from "@ticketsbot/core/domains/panel";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 import { prisma } from "@ticketsbot/db";
@@ -25,7 +25,6 @@ const panelCreateHandler = createButtonHandler({
 
     container.logger.debug(`Handling panel button click: ${interaction.customId}`);
 
-    // Get panel with form
     const panel = await Panel.getWithForm(panelId);
     if (!panel) {
       await interaction.reply({
@@ -35,14 +34,12 @@ const panelCreateHandler = createButtonHandler({
       return err("Panel not found");
     }
 
-    // Show form modal if panel has fields
     if (panel.form && panel.form.formFields.length > 0) {
       const modal = PanelOps.modal.create(panelId, panel.title, panel.form.formFields);
       await interaction.showModal(modal);
       return ok(undefined);
     }
 
-    // No form - create ticket directly
     await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
     const guild = interaction.guild;
@@ -52,12 +49,10 @@ const panelCreateHandler = createButtonHandler({
     try {
       let channel: any;
 
-      // Create ticket in transaction
       const ticket = await prisma.$transaction(async (_tx) => {
-        // Create ticket using lifecycle domain
         return await TicketLifecycle.create({
           guildId: guild.id,
-          channelId: "", // Will be updated after channel creation
+          channelId: "", // is updated after channel creation
           openerId: userId,
           subject: panel.title,
           panelId,
@@ -68,15 +63,12 @@ const panelCreateHandler = createButtonHandler({
         });
       });
 
-      // Get guild settings
-      const settings = await getSettingsUnchecked(guild.id);
+      const settings = await db.guild.getSettings(guild.id);
       if (!settings) {
         throw new Error("Guild not properly configured");
       }
 
-      // Discord operations after transaction
       try {
-        // Create Discord channel
         channel = await ChannelOps.ticket.createWithPermissions(
           guild,
           {
@@ -88,13 +80,10 @@ const panelCreateHandler = createButtonHandler({
           panel
         );
 
-        // Update ticket with channel ID
         await Ticket.updateChannelId(ticket.id, channel.id);
 
-        // Get ticket with form responses
         const ticketWithDetails = await Ticket.getById(ticket.id);
 
-        // Send welcome message
         const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails, panel);
         const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
 
@@ -103,7 +92,6 @@ const panelCreateHandler = createButtonHandler({
           components: [actionButtons.toJSON()],
         });
 
-        // Store welcome message in transcript
         await TranscriptOps.store.botMessage(welcomeMessage, { id: ticket.id });
       } catch (error) {
         container.logger.error("Error in Discord operations:", error);

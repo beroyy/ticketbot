@@ -2,7 +2,7 @@ import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-
 import type { ModalSubmitInteraction, TextChannel } from "discord.js";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
@@ -25,7 +25,6 @@ const closeReasonModalHandler = createModalHandler({
 
     const reason = interaction.fields.getTextInputValue("close_reason") || undefined;
 
-    // Create close embed with reason
     const embed = MessageOps.ticket.closedEmbed(interaction.user.id, ticket.id);
     if (reason) {
       embed.addFields({ name: "Reason", value: reason, inline: false });
@@ -37,9 +36,7 @@ const closeReasonModalHandler = createModalHandler({
     const userId = interaction.user.id;
 
     try {
-      // Close ticket in transaction
       await prisma.$transaction(async (_tx) => {
-        // Close ticket using lifecycle domain
         await TicketLifecycle.close({
           ticketId: ticket.id,
           closedById: userId,
@@ -49,23 +46,15 @@ const closeReasonModalHandler = createModalHandler({
         });
       });
 
-      // Get guild settings
-      const settings = await getSettingsUnchecked(guild.id);
+      const settings = await db.guild.getSettings(guild.id);
       if (!settings) {
         throw new Error("Guild not properly configured");
       }
 
-      // Discord operations after transaction
       try {
         const channel = interaction.channel as TextChannel;
 
-        // Archive or delete the channel
-        const _archiveResult = await ChannelOps.ticket.archive(
-          channel,
-          guild,
-          settings,
-          userId
-        );
+        const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
       } catch (error) {
         container.logger.error("Error in Discord operations:", error);
       }

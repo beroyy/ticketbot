@@ -11,7 +11,7 @@ import {
 } from "@bot/lib/discord-utils";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 
@@ -70,10 +70,8 @@ export class OpenCommand extends TicketCommandBase {
     let ticket: any;
     let channel: any;
 
-    // Get guild settings first
-    const settings = await getSettingsUnchecked(guild.id);
+    const settings = await db.guild.getSettings(guild.id);
 
-    // Create a temporary ticket data for channel creation
     const tempTicketData = {
       id: 0, // Will be replaced with actual ID
       number: 0, // Will be replaced with actual number
@@ -82,7 +80,6 @@ export class OpenCommand extends TicketCommandBase {
     };
 
     try {
-      // Create Discord channel first (outside transaction to avoid holding DB locks)
       channel = await ChannelOps.ticket.createWithPermissions(guild, tempTicketData);
     } catch (error) {
       container.logger.error("Failed to create ticket channel:", error);
@@ -122,7 +119,7 @@ export class OpenCommand extends TicketCommandBase {
 
         // Send welcome message
         const welcomeEmbed = MessageOps.ticket.welcomeEmbed(ticketWithDetails);
-        const actionButtons = MessageOps.ticket.actionButtons(settings.showClaimButton);
+        const actionButtons = MessageOps.ticket.actionButtons(settings?.showClaimButton ?? false);
 
         await channel.send({
           embeds: [welcomeEmbed],

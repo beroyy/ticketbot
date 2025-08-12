@@ -11,12 +11,10 @@ import type { ButtonInteraction, TextChannel } from "discord.js";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { prisma } from "@ticketsbot/db";
 
-// Pattern matches both close_confirm_<id> and close_cancel_<id>
 const closeRequestPattern = /^close_(confirm|cancel)(?:_(.+))?$/;
 
 const closeRequestHandler = createButtonHandler({
@@ -37,13 +35,11 @@ const closeRequestHandler = createButtonHandler({
       return err("Not a ticket channel");
     }
 
-    // Verify opener only
     if (interaction.user.id !== ticket.openerId.toString()) {
       await interaction.reply(ErrorResponses.notTicketOpener(action));
       return err("Not ticket opener");
     }
 
-    // Verify close request exists if request ID provided
     if (requestId && ticket.closeRequestId !== requestId) {
       await interaction.reply({
         content: "❌ This close request is no longer valid.",
@@ -72,9 +68,7 @@ const closeRequestHandler = createButtonHandler({
       const userId = interaction.user.id;
 
       try {
-        // Close ticket in transaction
         await prisma.$transaction(async (_tx) => {
-          // Close ticket using lifecycle domain
           await TicketLifecycle.close({
             ticketId: ticket.id,
             closedById: userId,
@@ -84,17 +78,14 @@ const closeRequestHandler = createButtonHandler({
           });
         });
 
-        // Get guild settings
-        const settings = await getSettingsUnchecked(guild.id);
+        const settings = await db.guild.getSettings(guild.id);
         if (!settings) {
           throw new Error("Guild not properly configured");
         }
 
-        // Discord operations after transaction
         try {
           const channel = interaction.channel as TextChannel;
 
-          // Archive or delete the channel
           const _archiveResult = await ChannelOps.ticket.archive(channel, guild, settings, userId);
         } catch (error) {
           container.logger.error("Error in Discord operations:", error);
@@ -103,7 +94,6 @@ const closeRequestHandler = createButtonHandler({
         container.logger.error("Failed to close ticket:", error);
       }
     } else {
-      // Denied - cancel close request
       try {
         await TicketLifecycle.cancelCloseRequest(ticket.id, parseDiscordId(interaction.user.id));
 

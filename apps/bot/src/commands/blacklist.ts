@@ -1,10 +1,9 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, type Result, err, ok, match } from "@bot/lib/discord-utils";
-import { Blacklist as GuildBlacklist } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 
-// Validation helper for target selection
 const validateTarget = (
   targetUser: any,
   targetRole: any
@@ -49,7 +48,6 @@ export const BlacklistCommand = createCommand({
     const targetUser = interaction.options.getUser("user");
     const targetRole = interaction.options.getRole("role");
 
-    // Validate target selection
     const targetResult = validateTarget(targetUser, targetRole);
 
     return match(targetResult, {
@@ -58,8 +56,11 @@ export const BlacklistCommand = createCommand({
         const targetId = parseDiscordId(target.id);
 
         try {
-          // Toggle blacklist status - context is already provided by BaseCommand
-          const isNowBlacklisted = await GuildBlacklist.toggle(guildId, targetId, target.isRole);
+          const isNowBlacklisted = await db.guild.toggleBlacklistEntry(
+            guildId,
+            targetId,
+            target.isRole
+          );
 
           const targetMention = targetUser ? `<@${target.id}>` : `@${target.name}`;
 

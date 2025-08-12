@@ -7,25 +7,24 @@ import {
   type OverwriteResolvable,
 } from "discord.js";
 import { Role } from "@ticketsbot/core/domains/role";
-import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
+import { db } from "@ticketsbot/db";
 import { createTicketChannelName } from "@ticketsbot/core";
 
-interface TicketInfo {
+type TicketInfo = {
   id: number;
   number: number;
   openerId: string;
   subject?: string | null;
-}
+};
 
-interface GuildSettings {
+type GuildSettings = {
   ticketCategoryId?: string | null;
   ticketNameFormat?: string | null;
   archiveMode?: string | null;
   archiveCategoryId?: string | null;
   defaultCategoryId?: string | null;
-}
+};
 
-// Channel operations namespace
 export const ChannelOps = {
   ticket: {
     create: async (
@@ -33,7 +32,6 @@ export const ChannelOps = {
       ticket: TicketInfo,
       settings: GuildSettings
     ): Promise<TextChannel> => {
-      // Get the opener's username for channel naming
       const opener = await guild.members.fetch(ticket.openerId).catch(() => null);
       const username = opener?.user.username || "unknown";
 
@@ -44,7 +42,6 @@ export const ChannelOps = {
         settings.ticketNameFormat ?? undefined
       );
 
-      // Find or create ticket category
       let categoryId = settings.ticketCategoryId;
       if (!categoryId) {
         const category = await guild.channels.create({
@@ -54,7 +51,6 @@ export const ChannelOps = {
         categoryId = category.id;
       }
 
-      // Create the channel with proper permissions
       const channel = await guild.channels.create({
         name: channelName,
         type: ChannelType.GuildText,
@@ -77,7 +73,6 @@ export const ChannelOps = {
         ],
       });
 
-      // Add team role permissions
       const teamRoles = await Role.getRoles(guild.id);
       for (const role of teamRoles) {
         if (role.discordRoleId) {
@@ -100,12 +95,11 @@ export const ChannelOps = {
       panel?: { categoryId?: string | null },
       teamRoleIds: string[] = []
     ): Promise<TextChannel> => {
-      const settings = await getSettingsUnchecked(guild.id);
+      const settings = await db.guild.getSettings(guild.id);
       const categoryId = panel?.categoryId || settings?.defaultCategoryId || null;
 
       const channelName = createTicketChannelName(ticket.number, ticket.openerId.toString());
 
-      // Build permission overwrites
       const overwrites: OverwriteResolvable[] = [
         {
           id: guild.roles.everyone.id,
@@ -123,7 +117,6 @@ export const ChannelOps = {
         },
       ];
 
-      // Add team role permissions
       for (const roleId of teamRoleIds) {
         overwrites.push({
           id: roleId,
@@ -156,7 +149,6 @@ export const ChannelOps = {
       closedBy: string
     ): Promise<{ archived: boolean; deleted: boolean }> => {
       if (settings.archiveMode !== "archive") {
-        // Delete mode
         await channel.delete(`Ticket closed by ${closedBy}`);
         return { archived: false, deleted: true };
       }
@@ -165,16 +157,13 @@ export const ChannelOps = {
         throw new Error("Archive category not configured");
       }
 
-      // Fetch archive category
       const archiveCategory = await guild.channels.fetch(settings.archiveCategoryId);
       if (!archiveCategory || archiveCategory.type !== ChannelType.GuildCategory) {
         throw new Error("Archive category not found or invalid");
       }
 
-      // Check if archive category is full (50 channel limit)
       const childCount = guild.channels.cache.filter((c) => c.parentId === archiveCategory.id).size;
       if (childCount >= 50) {
-        // Create overflow category
         const overflowCategory = await ChannelOps.utils.createOverflowCategory(
           guild,
           archiveCategory.name
@@ -190,7 +179,6 @@ export const ChannelOps = {
         });
       }
 
-      // Lock the channel
       await ChannelOps.utils.lockArchivedChannel(channel);
 
       return { archived: true, deleted: false };
@@ -240,7 +228,6 @@ export const ChannelOps = {
       await channel.permissionOverwrites.delete(userId);
     },
 
-    // Helper to add a user to channel
     add: async (channel: TextChannel, userId: string) =>
       ChannelOps.permissions.update(channel, userId, {
         view: true,
@@ -248,7 +235,6 @@ export const ChannelOps = {
         history: true,
       }),
 
-    // Helper to remove all permissions
     revoke: async (channel: TextChannel, userId: string) =>
       ChannelOps.permissions.update(channel, userId, {
         view: false,
@@ -257,7 +243,6 @@ export const ChannelOps = {
       }),
   },
 
-  // Helper utilities
   utils: {
     isTicketChannel: (channel: TextChannel) => channel.topic?.includes("Ticket #") ?? false,
 

@@ -15,17 +15,14 @@ type Variables = {
   startTime: number;
 };
 
-// Simple in-memory cache for session validation
 const sessionCache = new Map<string, { data: any; expires: number }>();
 
 const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
-  // Get cookies from request
   const cookieHeader = c.req.header("cookie");
   if (!cookieHeader) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  // Check cache first
   const cacheKey = cookieHeader;
   const cached = sessionCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) {
@@ -58,7 +55,6 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
     }
   }
 
-  // Call validation endpoint
   try {
     const guildId = extractGuildId(c);
     const webUrl = env.WEB_URL || "http://localhost:3000";
@@ -87,13 +83,11 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
 
     const sessionData = result.session;
 
-    // Cache the result for 60 seconds
     sessionCache.set(cacheKey, {
       data: sessionData,
       expires: Date.now() + 60 * 1000,
     });
 
-    // Clean up old cache entries periodically
     if (sessionCache.size > 100) {
       const now = Date.now();
       for (const [key, value] of sessionCache.entries()) {

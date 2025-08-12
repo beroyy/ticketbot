@@ -1,5 +1,3 @@
-export { actorMiddleware, requireAuth, requirePermission } from "./hono";
-
 export {
   withApiContext,
   withServerSidePropsContext,

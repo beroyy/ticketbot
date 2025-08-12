@@ -4,7 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
 import { prisma } from "@ticketsbot/db";
-import { ensureDiscordUser, getDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { getDiscordAvatarUrl } from "./services/discord-api";
 import { getBetterAuthUser, updateDiscordUserId, getDiscordAccount } from "./services/user-linking";
 import type { User as AuthUser, Session } from "./types";
@@ -225,7 +225,7 @@ export const auth = betterAuth({
 
       let discordUser = null;
       if (fullUser?.discordUserId) {
-        discordUser = await getDiscordUser(fullUser.discordUserId);
+        discordUser = await db.discordUser.get(fullUser.discordUserId);
         if (process.env.NODE_ENV === "development") {
           logger.debug("[Auth] Fetched Discord user", {
             discordUserId: fullUser.discordUserId,
@@ -259,7 +259,7 @@ export const auth = betterAuth({
         if (discordAccount?.accountId) {
           discordUserId = discordAccount.accountId;
 
-          await ensureDiscordUser(
+          await db.discordUser.ensure(
             discordAccount.accountId,
             `User_${discordAccount.accountId.slice(-6)}`,
             undefined,
@@ -273,7 +273,7 @@ export const auth = betterAuth({
             discordUserId: discordAccount.accountId,
           });
 
-          discordUser = await getDiscordUser(discordAccount.accountId);
+          discordUser = await db.discordUser.get(discordAccount.accountId);
         }
       }
 
@@ -344,7 +344,7 @@ export const auth = betterAuth({
               discordProfile.discriminator || "0"
             );
 
-            await ensureDiscordUser(
+            await db.discordUser.ensure(
               account.accountId,
               discordProfile.username,
               discordProfile.discriminator || undefined,

@@ -3,7 +3,7 @@ import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
-import { ensureDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -25,7 +25,7 @@ const closeConfirmHandler = createButtonHandler({
       return err("Not a ticket channel");
     }
 
-    await ensureDiscordUser(
+    await db.discordUser.ensure(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,

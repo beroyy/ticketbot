@@ -2,7 +2,7 @@ import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/disc
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { MessageOps } from "@bot/lib/discord-operations";
 import type { ButtonInteraction } from "discord.js";
-import { ensureDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -26,7 +26,7 @@ const ticketClaimHandler = createButtonHandler({
       return err("Ticket already claimed");
     }
 
-    await ensureDiscordUser(
+    await db.discordUser.ensure(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,

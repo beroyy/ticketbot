@@ -1,6 +1,6 @@
 import { prisma } from "@ticketsbot/db";
 import { logger } from "../utils/logger";
-import { ensureDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 
 /**
  * Auth-specific user operations for linking BetterAuth users with Discord accounts
@@ -31,7 +31,7 @@ export const linkDiscordAccount = async (
   }
 ): Promise<void> => {
   // Ensure the Discord user exists
-  await ensureDiscordUser(
+  await db.discordUser.ensure(
     discordId,
     userData?.username || "Unknown",
     userData?.discriminator || undefined,

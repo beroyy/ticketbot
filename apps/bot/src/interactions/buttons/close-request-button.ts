@@ -9,7 +9,7 @@ import {
 } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, TextChannel } from "discord.js";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
-import { ensureDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { getSettingsUnchecked } from "@ticketsbot/core/domains/guild";
 import { parseDiscordId } from "@ticketsbot/core";
@@ -52,7 +52,7 @@ const closeRequestHandler = createButtonHandler({
       return err("Invalid close request");
     }
 
-    await ensureDiscordUser(
+    await db.discordUser.ensure(
       parseDiscordId(interaction.user.id),
       interaction.user.username,
       interaction.user.discriminator,

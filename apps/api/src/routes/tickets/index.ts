@@ -5,7 +5,7 @@ import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { Transcripts } from "@ticketsbot/core/domains/transcripts";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
-import { getDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions, requirePermission } from "../../middleware/context";
@@ -351,7 +351,7 @@ export const ticketRoutes = createRoute()
             let author = null;
             if (message.authorId) {
               try {
-                const user = await getDiscordUser(message.authorId);
+                const user = await db.discordUser.get(message.authorId);
                 if (user) {
                   author = {
                     id: user.id.toString(),

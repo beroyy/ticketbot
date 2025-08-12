@@ -1,7 +1,7 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
-import { Tag } from "@ticketsbot/core/domains/tag";
 import { parseDiscordId } from "@ticketsbot/core";
+import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import type { ChatInputCommandInteraction } from "discord.js";
 
@@ -100,7 +100,7 @@ const handleAddTag = async (interaction: ChatInputCommandInteraction) => {
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
-    const newTag = await Tag.create({ guildId, name, content });
+    const newTag = await db.tag.create({ guildId, name, content });
 
     const embed = Embed.success(
       "Tag Created",
@@ -134,14 +134,14 @@ const handleDeleteTag = async (interaction: ChatInputCommandInteraction) => {
 
   try {
     // Get tag details before deletion
-    const tag = await Tag.findById(tagId, guildId);
+    const tag = await db.tag.get(tagId, guildId);
     if (!tag) {
       await InteractionResponse.error(interaction, `Tag with ID ${tagId} not found.`);
       return err("Tag not found");
     }
 
     // Delete the tag
-    await Tag.deleteTag(tagId, guildId);
+    await db.tag.delete(tagId, guildId);
 
     const embed = Embed.success(
       "Tag Deleted",
@@ -161,7 +161,7 @@ const handleListTags = async (interaction: ChatInputCommandInteraction) => {
   const guildId = parseDiscordId(interaction.guild!.id);
 
   try {
-    const tags = await Tag.listForGuild(guildId, {
+    const tags = await db.tag.list(guildId, {
       orderBy: "id",
       order: "asc",
     });
@@ -175,7 +175,6 @@ const handleListTags = async (interaction: ChatInputCommandInteraction) => {
       return ok(undefined);
     }
 
-    // Show first 10 tags
     const maxTagsPerPage = 10;
     const displayTags = tags.slice(0, maxTagsPerPage);
 
@@ -220,7 +219,7 @@ const handleEditTag = async (interaction: ChatInputCommandInteraction) => {
   }
 
   try {
-    const updatedTag = await Tag.update(tagId, guildId, {
+    const updatedTag = await db.tag.update(tagId, guildId, {
       ...(newName && { name: newName }),
       ...(newContent && { content: newContent }),
     });

@@ -2,7 +2,7 @@ import { createCommand } from "@bot/lib/sapphire-extensions";
 import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/discord-utils";
 import { RoleOps } from "@bot/lib/discord-operations";
 import { Role } from "@ticketsbot/core/domains/role";
-import { ensureDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { prisma } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
@@ -55,7 +55,7 @@ export const AddSupportCommand = createCommand({
       // Run database operations in transaction
       await prisma.$transaction(async (_tx) => {
         // Ensure user exists
-        await ensureDiscordUser(
+        await db.discordUser.ensure(
           userId,
           targetUser.username,
           targetUser.discriminator,

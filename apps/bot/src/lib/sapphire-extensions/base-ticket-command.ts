@@ -3,7 +3,7 @@ import type { ChatInputCommandInteraction, User as DiscordUser } from "discord.j
 import { type Result, ok, err, match, flatMap } from "@bot/lib/discord-utils/result";
 import { InteractionResponse, InteractionEdit } from "@bot/lib/discord-utils/responses";
 import { findByChannelId } from "@ticketsbot/core/domains/ticket";
-import { ensureDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { EPHEMERAL_FLAG } from "../discord-utils/constants";
@@ -95,7 +95,12 @@ export abstract class TicketCommandBase extends BaseCommand {
    */
   protected async ensureUser(user: DiscordUser): Promise<string> {
     const discordId = parseDiscordId(user.id);
-    await ensureDiscordUser(discordId, user.username, user.discriminator, user.displayAvatarURL());
+    await db.discordUser.ensure(
+      discordId,
+      user.username,
+      user.discriminator,
+      user.displayAvatarURL()
+    );
     return discordId;
   }
 

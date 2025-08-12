@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
 import { Discord } from "@ticketsbot/core/discord";
 import { Role } from "@ticketsbot/core/domains/role";
-import { getDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { getGuildById as findGuildById } from "@ticketsbot/core/domains/guild";
 import { ensureGuild as ensureGuild } from "@ticketsbot/core/domains/guild";
 import { createLogger } from "@ticketsbot/core";
@@ -62,7 +62,7 @@ export const discordRoutes = createRoute()
 
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
 
-    const discordUser = await getDiscordUser(effectiveDiscordUserId);
+    const discordUser = await db.discordUser.get(effectiveDiscordUserId);
 
     let allGuilds: any[] = [];
     const CACHE_TTL = 5 * 60 * 1000;
@@ -188,7 +188,7 @@ export const discordRoutes = createRoute()
 
     const effectiveDiscordUserId = user.discordUserId || accountResult.account.accountId;
 
-    const discordUser = await getDiscordUser(effectiveDiscordUserId);
+    const discordUser = await db.discordUser.get(effectiveDiscordUserId);
     let allGuilds: any[] = [];
 
     if (discordUser?.guilds && typeof discordUser.guilds === "object") {

@@ -1,8 +1,8 @@
 import { createCommand } from "@bot/lib/sapphire-extensions";
 import { InteractionResponse, err, ok } from "@bot/lib/discord-utils";
-import { Tag } from "@ticketsbot/core/domains/tag";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
+import { db } from "@ticketsbot/db";
 
 export const TagCommand = createCommand({
   name: "tag",
@@ -32,8 +32,7 @@ export const TagCommand = createCommand({
     const guildId = parseDiscordId(guild.id);
 
     try {
-      // Find the tag
-      const tag = await Tag.findById(tagId, guildId);
+      const tag = await db.tag.get(tagId, guildId);
 
       if (!tag) {
         await InteractionResponse.error(interaction, `Tag with ID ${tagId} not found.`);

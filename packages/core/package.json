@@ -47,7 +47,6 @@
     "./domains/panel/user": "./src/domains/panel/user.ts",
     "./domains/panel/system": "./src/domains/panel/system.ts",
     "./domains/role": "./src/domains/role/index.ts",
-    "./domains/tag": "./src/domains/tag/index.ts",
     "./domains/ticket": "./src/domains/ticket/index.ts",
     "./domains/ticket/user": "./src/domains/ticket/user.ts",
     "./domains/ticket/system": "./src/domains/ticket/system.ts",

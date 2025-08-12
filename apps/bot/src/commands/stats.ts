@@ -14,7 +14,7 @@ import { Role } from "@ticketsbot/core/domains/role";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
-import { getDiscordUser } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const StatsCommand = createCommand({
@@ -67,14 +67,12 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
   await interaction.deferReply({ flags: EPHEMERAL_FLAG });
 
   try {
-    // Check if user exists
-    const discordUser = await getDiscordUser(discordUserId);
+    const discordUser = await db.discordUser.get(discordUserId);
     if (!discordUser) {
       await InteractionResponse.error(interaction, "User not found in database");
       return err("User not found");
     }
 
-    // Check if user is a team member
     const hasTeamPermissions = await Role.hasPermission(
       guildId,
       discordUserId,

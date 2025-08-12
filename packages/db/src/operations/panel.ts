@@ -1,4 +1,4 @@
-import { prisma } from "@ticketsbot/db";
+import { prisma } from "../client";
 
 export const getPanelById = async (panelId: number): Promise<any> => {
   return prisma.panel.findUnique({

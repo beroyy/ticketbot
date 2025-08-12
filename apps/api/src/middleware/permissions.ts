@@ -1,6 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { Role } from "@ticketsbot/core/domains/role";
-import { getPanelGuildId } from "@ticketsbot/core/domains/panel";
+import { db } from "@ticketsbot/db";
 import { parseDiscordId, PermissionUtils, createLogger } from "@ticketsbot/core";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/core/auth";
 
@@ -122,7 +122,7 @@ export function requirePanelPermission(
       const panelId = c.req.param("id") || c.req.param("panelId");
       if (panelId) {
         try {
-          const panelGuildId = await getPanelGuildId(parseInt(panelId));
+          const panelGuildId = await db.panel.getGuildId(parseInt(panelId));
 
           if (!panelGuildId) {
             return c.json({ error: "Panel not found" }, 404);

@@ -15,6 +15,7 @@ import {
   checkGuildBlacklistEntry,
   toggleGuildBlacklistEntry,
 } from "./operations";
+import { getPanelById, getPanelGuildId } from "./operations/panel";
 
 export const db = {
   discordUser: {
@@ -30,6 +31,10 @@ export const db = {
     getSettings: getGuildSettings,
     toggleBlacklistEntry: toggleGuildBlacklistEntry,
     checkBlacklistEntry: checkGuildBlacklistEntry,
+  },
+  panel: {
+    get: getPanelById,
+    getGuildId: getPanelGuildId,
   },
   tag: {
     create: createTag,

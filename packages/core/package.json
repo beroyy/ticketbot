@@ -49,8 +49,7 @@
     "./domains/transcripts": "./src/domains/transcripts/index.ts",
     "./context": "./src/context/index.ts",
     "./auth": "./src/auth/index.ts",
-    "./auth/services/user-linking": "./src/auth/services/user-linking.ts",
-    "./analytics": "./src/analytics/index.ts"
+    "./auth/services/user-linking": "./src/auth/services/user-linking.ts"
   },
   "prisma": {
     "schema": "./prisma/"

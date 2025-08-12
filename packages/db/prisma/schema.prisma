@@ -1,6 +1,7 @@
+
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
   previewFeatures = ["driverAdapters", "postgresqlExtensions"]
 }
 
@@ -37,7 +38,6 @@ enum GuildRoleStatus {
   INACTIVE
 }
 
-
 model User {
   id            String   @id @default(cuid())
   name          String
@@ -47,45 +47,44 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  discordUserId String?  @unique
-  discordUser   DiscordUser? @relation(fields: [discordUserId], references: [id])
-  
-  sessions      Session[]
-  accounts      Account[]
-  
+  discordUserId    String?           @unique
+  discordUser      DiscordUser?      @relation(fields: [discordUserId], references: [id])
+  sessions         Session[]
+  accounts         Account[]
+
   @@map("user")
 }
 
 model Session {
-  id            String   @id @default(cuid())
-  userId        String
-  expiresAt     DateTime
-  token         String   @unique
-  ipAddress     String?
-  userAgent     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
 }
 
 model Account {
-  id                     String    @id @default(cuid())
-  userId                 String
-  accountId              String
-  providerId             String
-  accessToken            String?
-  refreshToken           String?
-  idToken                String?
-  expiresAt              DateTime?
-  accessTokenExpiresAt   DateTime?
-  refreshTokenExpiresAt  DateTime?
-  scope                  String?
-  password               String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  expiresAt             DateTime?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
   @@map("account")
@@ -103,32 +102,29 @@ model Verification {
 }
 
 model DiscordUser {
-  id            String   @id
-  username      String   @db.VarChar(32)
-  discriminator String?  @db.VarChar(5)
-  avatarUrl     String?  @map("avatar_url")
-  metadata      Json?
-  guilds        Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  webUser       User?
-  
-  openedTickets           Ticket[]          @relation("TicketOpener")
-  claimedTickets          Ticket[]          @relation("TicketClaimer")
-  ticketParticipants      TicketParticipant[]
-  ticketHistory           TicketHistory[]
-  ticketMessages          TicketMessage[]
-  ticketFeedback          TicketFeedback[]
-  
-  performedLifecycleEvents    TicketLifecycleEvent[] @relation("LifecyclePerformedBy")
-  claimedLifecycleEvents      TicketLifecycleEvent[] @relation("LifecycleClaimer")
-  closedLifecycleEvents       TicketLifecycleEvent[] @relation("LifecycleCloser")
+  id                       String                  @id
+  username                 String                  @db.VarChar(32)
+  discriminator            String?                 @db.VarChar(5)
+  avatarUrl                String?                 @map("avatar_url")
+  metadata                 Json?
+  guilds                   Json?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  webUser                  User?
+  openedTickets            Ticket[]                @relation("TicketOpener")
+  claimedTickets           Ticket[]                @relation("TicketClaimer")
+  ticketParticipants       TicketParticipant[]
+  ticketHistory            TicketHistory[]
+  ticketMessages           TicketMessage[]
+  ticketFeedback           TicketFeedback[]
+  performedLifecycleEvents TicketLifecycleEvent[]  @relation("LifecyclePerformedBy")
+  claimedLifecycleEvents   TicketLifecycleEvent[]  @relation("LifecycleClaimer")
+  closedLifecycleEvents    TicketLifecycleEvent[]  @relation("LifecycleCloser")
   guildRoleMembers         GuildRoleMember[]
   guildMemberPermissions   GuildMemberPermission[]
-  assignedRoles           GuildRoleMember[]  @relation("RoleAssignments")
-  grantedPermissions      GuildMemberPermission[] @relation("PermissionGrants")
-  
+  assignedRoles            GuildRoleMember[]       @relation("RoleAssignments")
+  grantedPermissions       GuildMemberPermission[] @relation("PermissionGrants")
+
   @@map("discord_users")
 }
 
@@ -147,87 +143,82 @@ model Blacklist {
   @@map("blacklist")
 }
 
-
 model Form {
-  id         Int      @id @default(autoincrement())
-  guildId    String   @map("guild_id")
-  name       String   @db.VarChar(100)
-  createdAt  DateTime @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  guildId   String   @map("guild_id")
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
 
-  guild         Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  formFields    FormField[]
-  panels        Panel[]
-  panelOptions  PanelOption[]
+  guild        Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  formFields   FormField[]
+  panels       Panel[]
+  panelOptions PanelOption[]
 
   @@index([guildId])
   @@map("forms")
 }
 
 model FormField {
-  id                Int     @id @default(autoincrement())
-  formId            Int     @map("form_id")
-  label             String  @db.VarChar(100)
-  type              FormFieldType
-  placeholder       String?
-  required          Boolean @default(false)
-  orderIndex        Int     @default(0) @map("order_index")
-  validationRules   String? @map("validation_rules")
-  conditionalLogic  String? @map("conditional_logic")
-  options           String?
+  id               Int           @id @default(autoincrement())
+  formId           Int           @map("form_id")
+  label            String        @db.VarChar(100)
+  type             FormFieldType
+  placeholder      String?
+  required         Boolean       @default(false)
+  orderIndex       Int           @default(0) @map("order_index")
+  validationRules  String?       @map("validation_rules")
+  conditionalLogic String?       @map("conditional_logic")
+  options          String?
 
-  form                    Form                    @relation(fields: [formId], references: [id], onDelete: Cascade)
-  ticketFieldResponses    TicketFieldResponse[]
+  form                 Form                  @relation(fields: [formId], references: [id], onDelete: Cascade)
+  ticketFieldResponses TicketFieldResponse[]
 
   @@map("form_fields")
 }
 
 model Guild {
-  id                      String   @id @map("id")
+  id                      String    @id @map("id")
   name                    String?
-  ownerDiscordId          String?  @map("owner_discord_id")
-  defaultCategoryId       String?  @map("default_category_id")
-  supportCategoryId       String?  @map("support_category_id")
-  maxTicketsPerUser       Int      @default(0) @map("max_tickets_per_user")
-  autoCloseEnabled        Boolean  @default(false) @map("auto_close_enabled")
-  autoCloseHours          Int      @default(0) @map("auto_close_hours")
-  showClaimButton         Boolean  @default(true) @map("show_claim_button")
-  feedbackEnabled         Boolean  @default(true) @map("feedback_enabled")
-  
-  language                String?  @default("en")
-  ticketCloseConfirmation Boolean? @default(true) @map("ticket_close_confirmation")
-  anonymousDashboard      Boolean? @default(false) @map("anonymous_dashboard")
-  
-  openCommandsEnabled     Boolean? @default(true) @map("open_commands_enabled")
-  channelCategory         String?  @default("Server Stats") @map("channel_category")
-  welcomeMessage          String?  @default("Thank you for contacting support.\nplease describe your issue and await a response.") @map("welcome_message")
-  
-  botInstalled            Boolean  @default(false) @map("bot_installed")
-  memberCount             Int      @default(0) @map("member_count")
-  
-  colorScheme             Json?    @map("color_scheme")
+  ownerDiscordId          String?   @map("owner_discord_id")
+  defaultCategoryId       String?   @map("default_category_id")
+  supportCategoryId       String?   @map("support_category_id")
+  maxTicketsPerUser       Int       @default(0) @map("max_tickets_per_user")
+  autoCloseEnabled        Boolean   @default(false) @map("auto_close_enabled")
+  autoCloseHours          Int       @default(0) @map("auto_close_hours")
+  showClaimButton         Boolean   @default(true) @map("show_claim_button")
+  feedbackEnabled         Boolean   @default(true) @map("feedback_enabled")
+  language                String?   @default("en")
+  ticketCloseConfirmation Boolean?  @default(true) @map("ticket_close_confirmation")
+  anonymousDashboard      Boolean?  @default(false) @map("anonymous_dashboard")
+  openCommandsEnabled     Boolean?  @default(true) @map("open_commands_enabled")
+  channelCategory         String?   @default("Server Stats") @map("channel_category")
+  welcomeMessage          String?   @default("Thank you for contacting support.\nplease describe your issue and await a response.") @map("welcome_message")
+  botInstalled            Boolean   @default(false) @map("bot_installed")
+  memberCount             Int       @default(0) @map("member_count")
+  colorScheme             Json?     @map("color_scheme")
   branding                Json?
-  footerText              String?  @map("footer_text")
-  footerLink              String?  @map("footer_link")
-  ticketNameFormat        String?  @default("ticket-{number}") @map("ticket_name_format")
-  allowUserClose          Boolean  @default(true) @map("allow_user_close")
-  transcriptsChannel      String?  @map("transcripts_channel")
-  logChannel              String?  @map("log_channel")
-  defaultTicketMessage    String?  @map("default_ticket_message")
-  totalTickets            Int      @default(0) @map("total_tickets")
-  createdAt               DateTime @default(now()) @map("created_at")
-  updatedAt               DateTime @updatedAt @map("updated_at")
+  footerText              String?   @map("footer_text")
+  footerLink              String?   @map("footer_link")
+  ticketNameFormat        String?   @default("ticket-{number}") @map("ticket_name_format")
+  allowUserClose          Boolean   @default(true) @map("allow_user_close")
+  transcriptsChannel      String?   @map("transcripts_channel")
+  logChannel              String?   @map("log_channel")
+  defaultTicketMessage    String?   @map("default_ticket_message")
+  totalTickets            Int       @default(0) @map("total_tickets")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
   deletedAt               DateTime? @map("deleted_at")
 
-  tags                    Tag[]
-  panels                  Panel[]
-  forms                   Form[]
-  tickets                 Ticket[]
-  blacklist               Blacklist[]
-  guildRoles               GuildRole[] @relation("GuildTeamRoles")
-  guildMemberPermissions   GuildMemberPermission[] @relation("GuildTeamMemberPermissions")
-  categories              GuildCategory[]
-  supportRoles            GuildSupportRole[]
-  ticketAnalytics         TicketAnalyticsSnapshot[]
+  tags                   Tag[]
+  panels                 Panel[]
+  forms                  Form[]
+  tickets                Ticket[]
+  blacklist              Blacklist[]
+  guildRoles             GuildRole[]               @relation("GuildTeamRoles")
+  guildMemberPermissions GuildMemberPermission[]   @relation("GuildTeamMemberPermissions")
+  categories             GuildCategory[]
+  supportRoles           GuildSupportRole[]
+  ticketAnalytics        TicketAnalyticsSnapshot[]
 
   @@index([deletedAt])
   @@map("guilds")
@@ -254,40 +245,40 @@ model GuildSupportRole {
 }
 
 model Panel {
-  id                  Int       @id @default(autoincrement())
-  guildId             String    @map("guild_id")
-  type                PanelType @default(SINGLE)
-  title               String    @db.VarChar(255)
-  content             String?
-  channelId           String    @map("channel_id")
-  categoryId          String?   @map("category_id")
-  formId              Int?      @map("form_id")
-  emoji               String?   @db.VarChar(64)
-  buttonText          String    @default("Create Ticket") @db.VarChar(80) @map("button_text")
-  color               String?   @db.VarChar(7)
-  welcomeMessage      String?   @map("welcome_message")
-  introTitle          String?   @db.VarChar(255) @map("intro_title")
-  introDescription    String?   @map("intro_description")
-  channelPrefix       String?   @db.VarChar(50) @map("channel_prefix")
-  mentionRoles        String?   @map("mention_roles")
-  hideMentions        Boolean   @default(false) @map("hide_mentions")
-  parentPanelId       Int?      @map("parent_panel_id")
-  orderIndex          Int       @default(0) @map("order_index")
-  enabled             Boolean   @default(true)
-  permissions         String?
-  messageId           String?   @map("message_id")
-  deployedAt          DateTime? @map("deployed_at")
-  imageUrl            String?   @map("image_url")
-  thumbnailUrl        String?   @map("thumbnail_url")
-  textSections        Json?     @map("text_sections")
-  deletedAt           DateTime? @map("deleted_at")
+  id               Int       @id @default(autoincrement())
+  guildId          String    @map("guild_id")
+  type             PanelType @default(SINGLE)
+  title            String    @db.VarChar(255)
+  content          String?
+  channelId        String    @map("channel_id")
+  categoryId       String?   @map("category_id")
+  formId           Int?      @map("form_id")
+  emoji            String?   @db.VarChar(64)
+  buttonText       String    @default("Create Ticket") @db.VarChar(80) @map("button_text")
+  color            String?   @db.VarChar(7)
+  welcomeMessage   String?   @map("welcome_message")
+  introTitle       String?   @db.VarChar(255) @map("intro_title")
+  introDescription String?   @map("intro_description")
+  channelPrefix    String?   @db.VarChar(50) @map("channel_prefix")
+  mentionRoles     String?   @map("mention_roles")
+  hideMentions     Boolean   @default(false) @map("hide_mentions")
+  parentPanelId    Int?      @map("parent_panel_id")
+  orderIndex       Int       @default(0) @map("order_index")
+  enabled          Boolean   @default(true)
+  permissions      String?
+  messageId        String?   @map("message_id")
+  deployedAt       DateTime? @map("deployed_at")
+  imageUrl         String?   @map("image_url")
+  thumbnailUrl     String?   @map("thumbnail_url")
+  textSections     Json?     @map("text_sections")
+  deletedAt        DateTime? @map("deleted_at")
 
-  guild           Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  form            Form?         @relation(fields: [formId], references: [id])
-  parentPanel     Panel?        @relation("PanelHierarchy", fields: [parentPanelId], references: [id])
-  childPanels     Panel[]       @relation("PanelHierarchy")
+  guild           Guild            @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  form            Form?            @relation(fields: [formId], references: [id])
+  parentPanel     Panel?           @relation("PanelHierarchy", fields: [parentPanelId], references: [id])
+  childPanels     Panel[]          @relation("PanelHierarchy")
   panelOptions    PanelOption[]
-  panelGuildRoles  PanelGuildRole[]
+  panelGuildRoles PanelGuildRole[]
   tickets         Ticket[]
 
   @@index([deletedAt])
@@ -298,15 +289,15 @@ model Panel {
 }
 
 model PanelOption {
-  id           Int     @id @default(autoincrement())
-  panelId      Int     @map("panel_id")
-  name         String  @db.VarChar(100)
-  description  String?
-  emoji        String? @db.VarChar(64)
-  orderIndex   Int     @default(0) @map("order_index")
-  categoryId   String? @map("category_id")
-  formId       Int?    @map("form_id")
-  enabled      Boolean @default(true)
+  id          Int     @id @default(autoincrement())
+  panelId     Int     @map("panel_id")
+  name        String  @db.VarChar(100)
+  description String?
+  emoji       String? @db.VarChar(64)
+  orderIndex  Int     @default(0) @map("order_index")
+  categoryId  String? @map("category_id")
+  formId      Int?    @map("form_id")
+  enabled     Boolean @default(true)
 
   panel   Panel    @relation(fields: [panelId], references: [id], onDelete: Cascade)
   form    Form?    @relation(fields: [formId], references: [id])
@@ -316,13 +307,13 @@ model PanelOption {
 }
 
 model PanelGuildRole {
-  id            Int      @id @default(autoincrement())
-  panelId       Int      @map("panel_id")
-  guildRoleId    Int      @map("guild_role_id")
+  id          Int @id @default(autoincrement())
+  panelId     Int @map("panel_id")
+  guildRoleId Int @map("guild_role_id")
 
-  panel         Panel    @relation(fields: [panelId], references: [id], onDelete: Cascade)
-  guildRole      GuildRole @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
-  
+  panel     Panel     @relation(fields: [panelId], references: [id], onDelete: Cascade)
+  guildRole GuildRole @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
+
   @@unique([panelId, guildRoleId])
   @@index([panelId])
   @@index([guildRoleId])
@@ -330,10 +321,10 @@ model PanelGuildRole {
 }
 
 model Tag {
-  id       Int    @id @default(autoincrement())
-  guildId  String @map("guild_id")
-  name     String @db.VarChar(32)
-  content  String
+  id      Int    @id @default(autoincrement())
+  guildId String @map("guild_id")
+  name    String @db.VarChar(32)
+  content String
 
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
@@ -343,23 +334,22 @@ model Tag {
 }
 
 model GuildRole {
-  id                Int      @id @default(autoincrement())
-  guildId           String   @map("guild_id")
-  name              String   @db.VarChar(100)
-  discordRoleId     String?  @map("discord_role_id")
-  status            GuildRoleStatus @default(ACTIVE)
-  color             String?  @db.VarChar(7)
-  position          Int      @default(0)
-  isDefault         Boolean  @default(false) @map("is_default")
-  isManaged         Boolean  @default(true) @map("is_managed")
-  permissions       BigInt   @default(0)
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-  
-  guild             Guild               @relation("GuildTeamRoles", fields: [guildId], references: [id], onDelete: Cascade)
-  guildRoleMembers   GuildRoleMember[]
-  panelGuildRoles    PanelGuildRole[]
-  
+  id               Int               @id @default(autoincrement())
+  guildId          String            @map("guild_id")
+  name             String            @db.VarChar(100)
+  discordRoleId    String?           @map("discord_role_id")
+  status           GuildRoleStatus   @default(ACTIVE)
+  color            String?           @db.VarChar(7)
+  position         Int               @default(0)
+  isDefault        Boolean           @default(false) @map("is_default")
+  isManaged        Boolean           @default(true) @map("is_managed")
+  permissions      BigInt            @default(0)
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  guild            Guild             @relation("GuildTeamRoles", fields: [guildId], references: [id], onDelete: Cascade)
+  guildRoleMembers GuildRoleMember[]
+  panelGuildRoles  PanelGuildRole[]
+
   @@unique([guildId, discordRoleId])
   @@unique([guildId, name])
   @@index([guildId])
@@ -367,16 +357,17 @@ model GuildRole {
 }
 
 model GuildRoleMember {
-  id              Int      @id @default(autoincrement())
-  discordId       String   @map("discord_id")
-  guildRoleId      Int      @map("guild_role_id")
-  assignedAt      DateTime @default(now()) @map("assigned_at")
-  assignedById    String?  @map("assigned_by_id")
+  id           Int          @id @default(autoincrement())
+  discordId    String       @map("discord_id")
+  guildRoleId  Int          @map("guild_role_id")
+  assignedAt   DateTime     @default(now()) @map("assigned_at")
+  assignedById String?      @map("assigned_by_id")
+  role         String?      @db.VarChar(20)
   
-  discordUser     DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
-  guildRole        GuildRole     @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
-  assignedBy      DiscordUser? @relation("RoleAssignments", fields: [assignedById], references: [id])
-  
+  discordUser  DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
+  guildRole    GuildRole    @relation(fields: [guildRoleId], references: [id], onDelete: Cascade)
+  assignedBy   DiscordUser? @relation("RoleAssignments", fields: [assignedById], references: [id])
+
   @@unique([discordId, guildRoleId])
   @@index([discordId])
   @@index([guildRoleId])
@@ -384,65 +375,54 @@ model GuildRoleMember {
 }
 
 model GuildMemberPermission {
-  id                     Int      @id @default(autoincrement())
-  discordId              String   @map("discord_id")
-  guildId                String   @map("guild_id")
-  additionalPermissions  BigInt   @default(0) @map("additional_permissions")
-  grantedAt              DateTime @default(now()) @map("granted_at")
-  grantedById            String?  @map("granted_by_id")
-  
-  discordUser            DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
-  guild                  Guild        @relation("GuildTeamMemberPermissions", fields: [guildId], references: [id], onDelete: Cascade)
-  grantedBy              DiscordUser? @relation("PermissionGrants", fields: [grantedById], references: [id])
-  
+  id                    Int          @id @default(autoincrement())
+  discordId             String       @map("discord_id")
+  guildId               String       @map("guild_id")
+  additionalPermissions BigInt       @default(0) @map("additional_permissions")
+  grantedAt             DateTime     @default(now()) @map("granted_at")
+  grantedById           String?      @map("granted_by_id")
+  discordUser           DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
+  guild                 Guild        @relation("GuildTeamMemberPermissions", fields: [guildId], references: [id], onDelete: Cascade)
+  grantedBy             DiscordUser? @relation("PermissionGrants", fields: [grantedById], references: [id])
+
   @@unique([discordId, guildId])
   @@index([discordId])
   @@index([guildId])
   @@map("guild_member_permissions")
 }
 
-model Permission {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  category    String
-  description String?
-  bitValue    BigInt   @map("bit_value")
-  
-  @@map("permissions")
-}
 
 model Ticket {
-  id                      Int       @id @default(autoincrement())
-  guildId                 String    @map("guild_id")
-  number                  Int       @map("number")
-  panelId                 Int?      @map("panel_id")
-  panelOptionId           Int?      @map("panel_option_id")
-  openerId                String    @map("opener_id")
-  claimedById             String?   @map("claimed_by_id")
-  channelId               String    @map("channel_id")
-  categoryId              String?   @map("category_id")
-  subject                 String?   @db.VarChar(100)
-  status                  TicketStatus  @default(OPEN)
-  excludeFromAutoclose    Boolean   @default(false) @map("exclude_from_autoclose")
-  autoCloseAt             DateTime? @map("auto_close_at")
-  closeRequestId          String?   @map("close_request_id")
-  closeRequestBy          String?   @map("close_request_by")
-  closeRequestReason      String?   @map("close_request_reason")
-  closeRequestCreatedAt   DateTime? @map("close_request_created_at")
-  createdAt               DateTime  @default(now()) @map("created_at")
-  updatedAt               DateTime  @updatedAt @map("updated_at")
-  closedAt                DateTime? @map("closed_at")
-  deletedAt               DateTime? @map("deleted_at")
+  id                    Int          @id @default(autoincrement())
+  guildId               String       @map("guild_id")
+  number                Int          @map("number")
+  panelId               Int?         @map("panel_id")
+  panelOptionId         Int?         @map("panel_option_id")
+  openerId              String       @map("opener_id")
+  claimedById           String?      @map("claimed_by_id")
+  channelId             String       @map("channel_id")
+  categoryId            String?      @map("category_id")
+  subject               String?      @db.VarChar(100)
+  status                TicketStatus @default(OPEN)
+  excludeFromAutoclose  Boolean      @default(false) @map("exclude_from_autoclose")
+  autoCloseAt           DateTime?    @map("auto_close_at")
+  closeRequestId        String?      @map("close_request_id")
+  closeRequestBy        String?      @map("close_request_by")
+  closeRequestReason    String?      @map("close_request_reason")
+  closeRequestCreatedAt DateTime?    @map("close_request_created_at")
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
+  closedAt              DateTime?    @map("closed_at")
+  deletedAt             DateTime?    @map("deleted_at")
 
-  guild                   Guild                   @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  panel                   Panel?                  @relation(fields: [panelId], references: [id])
-  panelOption             PanelOption?            @relation(fields: [panelOptionId], references: [id])
-  opener                  DiscordUser             @relation("TicketOpener", fields: [openerId], references: [id])
-  claimedBy               DiscordUser?            @relation("TicketClaimer", fields: [claimedById], references: [id])
-  
-  lifecycleEvents         TicketLifecycleEvent[]
-  transcript              Transcript?
-  ticketParticipants      TicketParticipant[]
+  guild              Guild                  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  panel              Panel?                 @relation(fields: [panelId], references: [id])
+  panelOption        PanelOption?           @relation(fields: [panelOptionId], references: [id])
+  opener             DiscordUser            @relation("TicketOpener", fields: [openerId], references: [id])
+  claimedBy          DiscordUser?           @relation("TicketClaimer", fields: [claimedById], references: [id])
+  lifecycleEvents    TicketLifecycleEvent[]
+  transcript         Transcript?
+  ticketParticipants TicketParticipant[]
 
   @@unique([guildId, number])
   @@index([deletedAt])
@@ -453,32 +433,32 @@ model Ticket {
 }
 
 model TicketParticipant {
-  ticketId  Int    @map("ticket_id")
-  userId    String @map("user_id")
-  role      String @db.VarChar(10)
+  ticketId Int    @map("ticket_id")
+  userId   String @map("user_id")
+  role     String @db.VarChar(10)
 
-  ticket       Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  discordUser  DiscordUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket      Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  discordUser DiscordUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([ticketId, userId])
   @@map("ticket_participants")
 }
 
 model TicketLifecycleEvent {
-  id              Int      @id @default(autoincrement())
-  ticketId        Int      @map("ticket_id")
-  timestamp       DateTime @default(now())
-  action          String   @db.VarChar(50)
-  performedById   String   @map("performed_by_id")
-  details         Json?
-  claimedById     String?  @map("claimed_by_id")
-    closedById      String?  @map("closed_by_id")
-  closeReason     String?  @map("close_reason")
+  id            Int      @id @default(autoincrement())
+  ticketId      Int      @map("ticket_id")
+  timestamp     DateTime @default(now())
+  action        String   @db.VarChar(50)
+  performedById String   @map("performed_by_id")
+  details       Json?
+  claimedById   String?  @map("claimed_by_id")
+  closedById    String?  @map("closed_by_id")
+  closeReason   String?  @map("close_reason")
 
-  ticket          Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  performedBy     DiscordUser @relation("LifecyclePerformedBy", fields: [performedById], references: [id])
-  claimedBy       DiscordUser? @relation("LifecycleClaimer", fields: [claimedById], references: [id])
-  closedBy        DiscordUser? @relation("LifecycleCloser", fields: [closedById], references: [id])
+  ticket      Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  performedBy DiscordUser  @relation("LifecyclePerformedBy", fields: [performedById], references: [id])
+  claimedBy   DiscordUser? @relation("LifecycleClaimer", fields: [claimedById], references: [id])
+  closedBy    DiscordUser? @relation("LifecycleCloser", fields: [closedById], references: [id])
 
   @@index([ticketId])
   @@index([action])
@@ -486,51 +466,51 @@ model TicketLifecycleEvent {
 }
 
 model Transcript {
-  id              Int      @id @default(autoincrement())
-  ticketId        Int      @unique @map("ticket_id")
-  summary         String?
-  sentimentScore  Float?   @map("sentiment_score")
-  embedding       String?
-  formData        Json?    @map("form_data")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  ticketId       Int      @unique @map("ticket_id")
+  summary        String?
+  sentimentScore Float?   @map("sentiment_score")
+  embedding      String?
+  formData       Json?    @map("form_data")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   ticketMessages       TicketMessage[]
   ticketHistory        TicketHistory[]
   ticketFieldResponses TicketFieldResponse[]
   ticketFeedback       TicketFeedback?
 
-  ticket          Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@map("transcripts")
 }
 
 model TicketMessage {
-  id              Int       @id @default(autoincrement())
-  transcriptId    Int       @map("transcript_id")
-  messageId       String    @unique @map("message_id")
-  authorId        String    @map("author_id")
-  content         String?
-  embeds          String?
-  attachments     String?
-  messageType     String?   @db.VarChar(20) @map("message_type")
-  referenceId     String?   @map("reference_id")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  editedAt        DateTime? @map("edited_at")
-  deletedAt       DateTime? @map("deleted_at")
+  id           Int       @id @default(autoincrement())
+  transcriptId Int       @map("transcript_id")
+  messageId    String    @unique @map("message_id")
+  authorId     String    @map("author_id")
+  content      String?
+  embeds       String?
+  attachments  String?
+  messageType  String?   @db.VarChar(20) @map("message_type")
+  referenceId  String?   @map("reference_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  editedAt     DateTime? @map("edited_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-  transcript   Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
-  author       DiscordUser @relation(fields: [authorId], references: [id])
+  transcript Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  author     DiscordUser @relation(fields: [authorId], references: [id])
 
   @@index([transcriptId])
   @@map("ticket_messages")
 }
 
 model TicketFieldResponse {
-  id            Int    @id @default(autoincrement())
-  transcriptId  Int    @map("transcript_id")
-  fieldId       Int    @map("field_id")
-  value         String
+  id           Int    @id @default(autoincrement())
+  transcriptId Int    @map("transcript_id")
+  fieldId      Int    @map("field_id")
+  value        String
 
   transcript Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
   field      FormField  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
@@ -540,30 +520,30 @@ model TicketFieldResponse {
 }
 
 model TicketHistory {
-  id              Int      @id @default(autoincrement())
-  transcriptId    Int      @map("transcript_id")
-  timestamp       DateTime @default(now())
-  action          String   @db.VarChar(50)
-  performedById   String   @map("performed_by_id")
-  details         String?
+  id            Int      @id @default(autoincrement())
+  transcriptId  Int      @map("transcript_id")
+  timestamp     DateTime @default(now())
+  action        String   @db.VarChar(50)
+  performedById String   @map("performed_by_id")
+  details       String?
 
-  transcript   Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
-  performedBy  DiscordUser @relation(fields: [performedById], references: [id])
+  transcript  Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  performedBy DiscordUser @relation(fields: [performedById], references: [id])
 
   @@index([transcriptId])
   @@map("ticket_history")
 }
 
 model TicketFeedback {
-  id              Int      @id @default(autoincrement())
-  transcriptId    Int      @unique @map("transcript_id")
-  submittedById   String   @map("submitted_by_id")
-  rating          Int
-  comment         String?
-  submittedAt     DateTime @default(now()) @map("submitted_at")
+  id            Int      @id @default(autoincrement())
+  transcriptId  Int      @unique @map("transcript_id")
+  submittedById String   @map("submitted_by_id")
+  rating        Int
+  comment       String?
+  submittedAt   DateTime @default(now()) @map("submitted_at")
 
-  transcript   Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
-  submittedBy  DiscordUser @relation(fields: [submittedById], references: [id])
+  transcript  Transcript  @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  submittedBy DiscordUser @relation(fields: [submittedById], references: [id])
 
   @@map("ticket_feedback")
 }
@@ -582,7 +562,7 @@ model TicketAnalyticsSnapshot {
   byCategory        Json?    @map("by_category")
   createdAt         DateTime @default(now()) @map("created_at")
 
-  guild             Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@unique([guildId, date])
   @@index([guildId])

@@ -212,6 +212,10 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    // Note: We're NOT using the organization plugin because:
+    // 1. The CLI doesn't respect custom schema mappings
+    // 2. It creates duplicate/conflicting fields
+    // 3. We'll implement the role-based system using our existing tables
     customSession(async (sessionData: SessionData) => {
       const { user, session } = sessionData;
 

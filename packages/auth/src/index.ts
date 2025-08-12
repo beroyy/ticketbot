@@ -17,4 +17,19 @@ export {
   type PermissionValue
 } from "./services/permissions";
 
+export {
+  type OrganizationRole,
+  RolePermissions,
+  getUserRole,
+  hasRole,
+  getRolePermissions,
+  getUserPermissionsFromRole,
+  hasPermissionViaRole,
+  assignRole,
+  removeRole,
+  updateRole,
+  getGuildMembers,
+  initializeGuildRoles
+} from "./services/roles";
+
 export { createLogger } from "./utils/logger";

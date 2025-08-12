@@ -1,6 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import { db } from "@ticketsbot/db";
-import { PermissionUtils } from "@ticketsbot/auth";
+import { PermissionUtils, hasPermissionViaRole, hasRole, type OrganizationRole } from "@ticketsbot/auth";
 import { createLogger } from "../lib/utils/logger";
 import { getSessionFromContext, type AuthSession } from "@ticketsbot/auth";
 
@@ -79,13 +79,27 @@ export function requirePermission(
 
       const effectiveDiscordId = discordId;
 
-      const hasPermission = await db.role.hasPermission(
+      // Try role-based permission check first (new system)
+      const hasPermissionViaRoles = await hasPermissionViaRole(
         guildId,
         effectiveDiscordId ?? "dev-user",
         permission
       );
 
-      if (!hasPermission) {
+      if (hasPermissionViaRoles) {
+        c.set("guildId", guildId);
+        await next();
+        return;
+      }
+
+      // Fallback to legacy permission system
+      const hasLegacyPermission = await db.role.hasPermission(
+        guildId,
+        effectiveDiscordId ?? "dev-user",
+        permission
+      );
+
+      if (!hasLegacyPermission) {
         const message = errorMessage || "You don't have permission to perform this action";
         const permissionNames = PermissionUtils.getPermissionNames(permission);
         return c.json(
@@ -156,13 +170,27 @@ export function requirePanelPermission(
 
       const effectiveDiscordId = discordId;
 
-      const hasPermission = await db.role.hasPermission(
+      // Try role-based permission check first (new system)
+      const hasPermissionViaRoles = await hasPermissionViaRole(
         guildId,
         effectiveDiscordId ?? "dev-user",
         permission
       );
 
-      if (!hasPermission) {
+      if (hasPermissionViaRoles) {
+        c.set("guildId", guildId);
+        await next();
+        return;
+      }
+
+      // Fallback to legacy permission system
+      const hasLegacyPermission = await db.role.hasPermission(
+        guildId,
+        effectiveDiscordId ?? "dev-user",
+        permission
+      );
+
+      if (!hasLegacyPermission) {
         const message = errorMessage || "You don't have permission to perform this action";
         const permissionNames = PermissionUtils.getPermissionNames(permission);
         return c.json(
@@ -218,13 +246,29 @@ export function requireAnyPermission(
 
       const effectiveDiscordId = discordId;
 
-      const hasPermission = await db.role.hasAnyPermission(
+      // Try role-based permission check first (new system)
+      let hasPermissionViaRoles = false;
+      for (const perm of permissions) {
+        if (await hasPermissionViaRole(guildId, effectiveDiscordId ?? "dev-user", perm)) {
+          hasPermissionViaRoles = true;
+          break;
+        }
+      }
+
+      if (hasPermissionViaRoles) {
+        c.set("guildId", guildId);
+        await next();
+        return;
+      }
+
+      // Fallback to legacy permission system
+      const hasLegacyPermission = await db.role.hasAnyPermission(
         guildId,
         effectiveDiscordId ?? "dev-user",
         ...permissions
       );
 
-      if (!hasPermission) {
+      if (!hasLegacyPermission) {
         const message = errorMessage || "You don't have permission to perform this action";
         const requiredNames = permissions.flatMap((p) => PermissionUtils.getPermissionNames(p));
         return c.json(
@@ -243,6 +287,62 @@ export function requireAnyPermission(
     } catch (error) {
       logger.error("Permission check error:", error);
       return c.json({ error: "Failed to verify permissions" }, 500);
+    }
+  };
+}
+
+/**
+ * New role-based permission middleware
+ */
+export function requireRole(
+  roles: OrganizationRole[],
+  errorMessage?: string
+): MiddlewareHandler<{ Variables: Variables }> {
+  return async (c, next) => {
+    const user = c.get("user");
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    const guildId = extractGuildId(c);
+
+    if (!guildId) {
+      c.set("guildId", undefined);
+      await next();
+      return;
+    }
+
+    try {
+      const discordId = user.discordUserId;
+
+      if (!discordId) {
+        return c.json(
+          {
+            error: "Please link your Discord account to access guild settings",
+            code: "DISCORD_NOT_LINKED",
+          },
+          403
+        );
+      }
+
+      const hasRequiredRole = await hasRole(guildId, discordId, roles);
+
+      if (!hasRequiredRole) {
+        const message = errorMessage || `You need one of these roles: ${roles.join(", ")}`;
+        return c.json(
+          {
+            error: message,
+            requiredRoles: roles,
+          },
+          403
+        );
+      }
+
+      c.set("guildId", guildId);
+      await next();
+      return;
+    } catch (error) {
+      logger.error("Role check error:", error);
+      return c.json({ error: "Failed to verify role" }, 500);
     }
   };
 }

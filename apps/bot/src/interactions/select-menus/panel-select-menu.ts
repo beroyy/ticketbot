@@ -1,7 +1,7 @@
 import { createSelectHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { err, ok, createSelectErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { StringSelectMenuInteraction } from "discord.js";
-import { Panel } from "@ticketsbot/core/domains/panel";
+import { db } from "@ticketsbot/db";
 import { PanelOps, TicketOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
@@ -18,7 +18,7 @@ const panelSelectHandler = createSelectHandler({
     const panelId = parseInt(selectedValue.replace("panel_", ""));
 
     // Get the panel with its form
-    const panel = await Panel.getWithForm(panelId);
+    const panel = await db.panel.getWithForm(panelId);
     if (!panel) {
       await interaction.reply({
         content: "❌ Panel not found.",

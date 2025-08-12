@@ -1,7 +1,6 @@
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction } from "discord.js";
-import { Panel } from "@ticketsbot/core/domains/panel";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
@@ -25,7 +24,7 @@ const panelCreateHandler = createButtonHandler({
 
     container.logger.debug(`Handling panel button click: ${interaction.customId}`);
 
-    const panel = await Panel.getWithForm(panelId);
+    const panel = await db.panel.getWithForm(panelId);
     if (!panel) {
       await interaction.reply({
         content: "❌ Panel not found.",

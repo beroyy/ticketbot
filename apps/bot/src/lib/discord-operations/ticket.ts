@@ -1,6 +1,5 @@
 import type { Guild } from "discord.js";
 import { container } from "@sapphire/framework";
-import { Panel } from "@ticketsbot/core/domains/panel";
 import { Ticket } from "@ticketsbot/core/domains/ticket";
 import { TicketLifecycle } from "@ticketsbot/core/domains/ticket-lifecycle";
 import { db } from "@ticketsbot/db";
@@ -39,7 +38,7 @@ export const TicketOps = {
 
     let channelId: string | undefined;
 
-    const panel = await Panel.getWithForm(panelId);
+    const panel = await db.panel.getWithForm(panelId);
     if (!panel) {
       throw new Error("Panel not found");
     }

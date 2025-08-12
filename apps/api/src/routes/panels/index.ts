@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Panel } from "@ticketsbot/core/domains/panel";
+import { db } from "@ticketsbot/db";
 import { Discord } from "@ticketsbot/core/discord";
 import { PermissionFlags } from "@ticketsbot/core";
 import { createRoute } from "../../factory";
@@ -15,7 +15,11 @@ import {
 
 export const panelRoutes = createRoute()
   .get("/", ...compositions.guildScoped, async (c) => {
-    const panels = await Panel.list();
+    const guildId = c.get("guildId");
+    if (!guildId) {
+      throw ApiErrors.badRequest("Guild ID is required");
+    }
+    const panels = await db.panel.list(guildId);
     return c.json(panels);
   })
 
@@ -32,7 +36,7 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        const panel = await Panel.getById(id);
+        const panel = await db.panel.getById(id);
         return c.json(panel);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -59,7 +63,7 @@ export const panelRoutes = createRoute()
       const domainInput = transformApiPanelToDomain(input);
 
       try {
-        const panel = await Panel.create(domainInput);
+        const panel = await db.panel.create(domainInput);
         return c.json(panel, 201);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -91,7 +95,7 @@ export const panelRoutes = createRoute()
       const input = c.req.valid("json");
 
       try {
-        await Panel.getById(id);
+        await db.panel.getById(id);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error && error.code === "not_found") {
           throw ApiErrors.notFound("Panel");
@@ -102,7 +106,7 @@ export const panelRoutes = createRoute()
       const updateData = transformUpdateData(input);
 
       try {
-        const panel = await Panel.update(id, updateData);
+        const panel = await db.panel.update(id, updateData);
         return c.json(panel);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -132,7 +136,7 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        const result = await Panel.remove(id);
+        const result = await db.panel.remove(id);
         return c.json(result);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error) {
@@ -162,7 +166,7 @@ export const panelRoutes = createRoute()
       const { id } = c.req.valid("param");
 
       try {
-        const panelData = await Panel.deploy(id);
+        const panelData = await db.panel.deploy(id);
 
         const result = await Discord.deployPanel(panelData);
 
@@ -206,7 +210,7 @@ export const panelRoutes = createRoute()
       const { messageId } = c.req.valid("json");
 
       try {
-        const panelData = await Panel.deploy(id);
+        const panelData = await db.panel.deploy(id);
 
         const result = await Discord.updatePanel(panelData, messageId);
 

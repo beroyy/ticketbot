@@ -12,7 +12,6 @@ import {
 } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
 import { Role } from "@ticketsbot/core/domains/role";
-import { Panel } from "@ticketsbot/core/domains/panel";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { RoleOps } from "@bot/lib/discord-operations/roles";
@@ -460,8 +459,8 @@ const handlePanelsSetup = async (
   interaction: ChatInputCommandInteraction
 ): Promise<Result<void>> => {
   try {
-    // Panel.listAll() uses context to get the guild ID automatically
-    const panels = await Panel.listAll({ orderBy: "title", order: "asc" });
+    // Get panels for the guild
+    const panels = await db.panel.listByGuildId(interaction.guildId!, "title", "asc");
 
     if (panels.length === 0) {
       await InteractionResponse.warning(
@@ -478,7 +477,7 @@ const handlePanelsSetup = async (
       .setMinValues(1)
       .setMaxValues(Math.min(panels.length, 25));
 
-    panels.slice(0, 25).forEach((panel) => {
+    panels.slice(0, 25).forEach((panel: any) => {
       selectMenu.addOptions(
         new StringSelectMenuOptionBuilder()
           .setLabel(panel.title)

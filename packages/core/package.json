@@ -38,7 +38,6 @@
     "./domains/*/client": "./src/domains/*/client.ts",
     "./discord": "./src/discord/index.ts",
     "./domains/analytics": "./src/domains/analytics/index.ts",
-    "./domains/panel": "./src/domains/panel/index.ts",
     "./domains/role": "./src/domains/role/index.ts",
     "./domains/ticket": "./src/domains/ticket/index.ts",
     "./domains/ticket/user": "./src/domains/ticket/user.ts",

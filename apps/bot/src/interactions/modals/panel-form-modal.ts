@@ -1,7 +1,7 @@
 import { err, ok, createModalErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
 import type { ModalSubmitInteraction } from "discord.js";
-import { Panel } from "@ticketsbot/core/domains/panel";
+import { db } from "@ticketsbot/db";
 import { TicketOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
 
@@ -25,7 +25,7 @@ const panelFormModalHandler = createModalHandler({
     container.logger.debug(`Handling form submission for panel ${panelId}`);
 
     // Get panel with form
-    const panel = await Panel.getWithForm(panelId);
+    const panel = await db.panel.getWithForm(panelId);
     if (!panel) {
       container.logger.error(`Panel not found with ID: ${panelId}`);
       await interaction.editReply({

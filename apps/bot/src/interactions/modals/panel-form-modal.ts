@@ -1,5 +1,5 @@
 import { err, ok, createModalErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
-import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
+import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import type { ModalSubmitInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { bot } from "@bot/lib/bot";

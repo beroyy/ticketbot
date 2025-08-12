@@ -1,4 +1,4 @@
-import { createCommand } from "@bot/lib/sapphire-extensions";
+import { createCommand } from "@bot/lib/sapphire";
 import { InteractionResponse, err, ok } from "@bot/lib/discord-utils";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";

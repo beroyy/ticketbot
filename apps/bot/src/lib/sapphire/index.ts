@@ -8,15 +8,15 @@ export {
   createCommandGroup,
   createSimpleCommand,
   createConfirmCommand,
-} from "@bot/lib/sapphire-extensions/command-factory";
+} from "@bot/lib/sapphire/command-factory";
 
 // Base command exports
 export {
   type PermissionProvider,
   configurePermissionProvider,
   BaseCommand,
-} from "@bot/lib/sapphire-extensions/base-command";
-export { TicketCommandBase } from "@bot/lib/sapphire-extensions/base-ticket-command";
+} from "@bot/lib/sapphire/base-command";
+export { TicketCommandBase } from "@bot/lib/sapphire/base-ticket-command";
 
 // Listener factory exports
 export {
@@ -25,7 +25,7 @@ export {
   createListener,
   createSapphireListener,
   ListenerFactory,
-} from "@bot/lib/sapphire-extensions/listener-factory";
+} from "@bot/lib/sapphire/listener-factory";
 
 // Base bot client exports
 export {
@@ -33,7 +33,7 @@ export {
   type BaseBotClientOptions,
   BaseBotClient,
   createBotClient,
-} from "@bot/lib/sapphire-extensions/base-bot-client";
+} from "@bot/lib/sapphire/base-bot-client";
 
 // Interaction handler exports
 export {
@@ -46,7 +46,7 @@ export {
   createSelectHandler,
   withIdExtraction,
   createInteractionHandler,
-} from "@bot/lib/sapphire-extensions/interaction-factory";
+} from "@bot/lib/sapphire/interaction-factory";
 
 // Precondition factory exports
 export {
@@ -58,4 +58,4 @@ export {
   createGuildPrecondition,
   createPermissionPrecondition,
   createTicketPrecondition,
-} from "@bot/lib/sapphire-extensions/precondition-factory";
+} from "@bot/lib/sapphire/precondition-factory";

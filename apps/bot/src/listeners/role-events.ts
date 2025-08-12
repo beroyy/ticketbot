@@ -1,4 +1,4 @@
-import { ListenerFactory } from "@bot/lib/sapphire-extensions";
+import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 import type { Role } from "discord.js";
 
@@ -31,7 +31,7 @@ export const RoleUpdateListener = ListenerFactory.on(
 
     // Event logging removed - TCN will handle this automatically
     // Database changes to guild_roles will trigger notifications
-    
+
     // Log significant changes for debugging
     if (!wasTicketRole && isTicketRole) {
       container.logger.info(`Role entered ticket system: ${newRole.name}`);

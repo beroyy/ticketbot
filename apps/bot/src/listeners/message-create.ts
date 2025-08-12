@@ -1,9 +1,8 @@
-import { ListenerFactory } from "@bot/lib/sapphire-extensions";
+import { ListenerFactory } from "@bot/lib/sapphire";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 import type { Message } from "discord.js";
 import { parseDiscordId } from "@ticketsbot/core";
-
 
 export const MessageCreateListener = ListenerFactory.on(
   "messageCreate",

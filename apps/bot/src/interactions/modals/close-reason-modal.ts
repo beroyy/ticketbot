@@ -1,4 +1,4 @@
-import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
+import { createModalHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import type { ModalSubmitInteraction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";

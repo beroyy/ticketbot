@@ -1,4 +1,4 @@
-import { createGuildPrecondition } from "@bot/lib/sapphire-extensions";
+import { createGuildPrecondition } from "@bot/lib/sapphire";
 
 export const GuildOnlyPrecondition = createGuildPrecondition({
   name: "guild-only",

@@ -1,4 +1,4 @@
-import { createCommand } from "@bot/lib/sapphire-extensions";
+import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 
 const aboutEmbed = Embed.info(

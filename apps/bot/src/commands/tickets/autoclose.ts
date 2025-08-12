@@ -1,4 +1,4 @@
-import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
+import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import {
   Embed,
@@ -60,11 +60,7 @@ export class AutoCloseCommand extends TicketCommandBase {
 
       try {
         // Update auto-close exclusion using domain method
-        await db.ticket.updateAutoClose(
-          ticket.id,
-          newExclusionStatus,
-          performerDiscordId
-        );
+        await db.ticket.updateAutoClose(ticket.id, newExclusionStatus, performerDiscordId);
 
         // Send response
         await InteractionResponse.reply(interaction, {

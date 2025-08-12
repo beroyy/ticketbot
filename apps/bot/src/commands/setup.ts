@@ -1,4 +1,4 @@
-import { createCommandGroup } from "@bot/lib/sapphire-extensions";
+import { createCommandGroup } from "@bot/lib/sapphire";
 import {
   InteractionResponse,
   InteractionEdit,

@@ -1,5 +1,5 @@
 import type { ChatInputCommandInteraction, User as DiscordUser } from "discord.js";
-import { createCommand } from "@bot/lib/sapphire-extensions";
+import { createCommand } from "@bot/lib/sapphire";
 import {
   InteractionResponse,
   InteractionEdit,

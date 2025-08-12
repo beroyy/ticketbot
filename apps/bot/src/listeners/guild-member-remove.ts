@@ -1,4 +1,4 @@
-import { ListenerFactory } from "@bot/lib/sapphire-extensions";
+import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 import { db } from "@ticketsbot/db";
 
@@ -11,12 +11,12 @@ export const GuildMemberRemoveListener = ListenerFactory.on("guildMemberRemove",
 
     // Use high-level guild cleanup operation
     const result = await db.guild.cleanupMember(guildId, userId);
-    
+
     if (result.rolesRemoved > 0 || result.ticketsAffected > 0 || result.ticketsUnclaimed > 0) {
       container.logger.info(
         `Member ${member.user.username} removed from guild ${member.guild.name}: ` +
-        `${result.rolesRemoved} roles removed, ${result.ticketsAffected} tickets affected, ` +
-        `${result.ticketsUnclaimed} tickets unclaimed`
+          `${result.rolesRemoved} roles removed, ${result.ticketsAffected} tickets affected, ` +
+          `${result.ticketsUnclaimed} tickets unclaimed`
       );
     }
   } catch (error) {

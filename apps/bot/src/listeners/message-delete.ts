@@ -1,4 +1,4 @@
-import { ListenerFactory } from "@bot/lib/sapphire-extensions";
+import { ListenerFactory } from "@bot/lib/sapphire";
 import type { Message, PartialMessage } from "discord.js";
 import { bot } from "@bot/lib/bot";
 import { db } from "@ticketsbot/db";

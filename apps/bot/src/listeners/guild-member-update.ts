@@ -1,4 +1,4 @@
-import { ListenerFactory } from "@bot/lib/sapphire-extensions";
+import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 
 const ROLE_PREFIX = "Tickets ";
@@ -23,7 +23,7 @@ export const GuildMemberUpdateListener = ListenerFactory.on(
 
       // Event logging removed - TCN will handle this automatically
       // The database changes to guild_role_members will trigger notifications
-      
+
       // Just log for debugging if needed
       if (addedRoles.size > 0) {
         container.logger.info(

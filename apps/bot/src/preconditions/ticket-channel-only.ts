@@ -1,4 +1,4 @@
-import { createTicketPrecondition } from "@bot/lib/sapphire-extensions";
+import { createTicketPrecondition } from "@bot/lib/sapphire";
 
 export const TicketChannelOnlyPrecondition = createTicketPrecondition({
   name: "ticket-channel-only",

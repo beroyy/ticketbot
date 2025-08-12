@@ -1,4 +1,4 @@
-import { createPermissionPrecondition } from "@bot/lib/sapphire-extensions";
+import { createPermissionPrecondition } from "@bot/lib/sapphire";
 import { PermissionFlags } from "@ticketsbot/core";
 
 export const TeamOnlyPrecondition = createPermissionPrecondition({

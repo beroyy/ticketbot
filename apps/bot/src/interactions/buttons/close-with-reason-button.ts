@@ -1,4 +1,4 @@
-import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
+import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import {
   ModalBuilder,
   TextInputBuilder,

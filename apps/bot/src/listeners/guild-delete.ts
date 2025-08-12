@@ -1,4 +1,4 @@
-import { ListenerFactory } from "@bot/lib/sapphire-extensions";
+import { ListenerFactory } from "@bot/lib/sapphire";
 import { container } from "@sapphire/framework";
 import type { Guild } from "discord.js";
 import { parseDiscordId } from "@ticketsbot/core";

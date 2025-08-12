@@ -1,4 +1,4 @@
-import { TicketCommandBase } from "@bot/lib/sapphire-extensions";
+import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import {
   Embed,

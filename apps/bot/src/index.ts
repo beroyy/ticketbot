@@ -2,7 +2,7 @@ import "@sapphire/plugin-logger/register";
 import "@sapphire/plugin-subcommands/register";
 import { createServer } from "http";
 import { botConfig, env } from "@bot/config";
-import { BaseBotClient, configurePermissionProvider } from "@bot/lib/sapphire-extensions";
+import { BaseBotClient, configurePermissionProvider } from "@bot/lib/sapphire";
 import { GatewayIntentBits } from "discord.js";
 import { container } from "@sapphire/framework";
 import { join as _join } from "path";

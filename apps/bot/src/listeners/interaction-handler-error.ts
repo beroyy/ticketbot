@@ -1,4 +1,4 @@
-import { createSapphireListener } from "@bot/lib/sapphire-extensions";
+import { createSapphireListener } from "@bot/lib/sapphire";
 import { Events, container } from "@sapphire/framework";
 import { InteractionResponse } from "@bot/lib/discord-utils/responses";
 import { canReply, isChannelDeletedError } from "@bot/lib/discord-utils/error-handlers";

@@ -6,7 +6,7 @@ import type {
   SlashCommandSubcommandsOnlyBuilder,
   SlashCommandSubcommandBuilder,
 } from "discord.js";
-import { BaseCommand } from "@bot/lib/sapphire-extensions/base-command";
+import { BaseCommand } from "@bot/lib/sapphire/base-command";
 import { type Result, match } from "@bot/lib/discord-utils/result";
 import { InteractionResponse } from "@bot/lib/discord-utils/responses";
 

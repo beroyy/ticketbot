@@ -1,4 +1,4 @@
-import { createCommand } from "@bot/lib/sapphire-extensions";
+import { createCommand } from "@bot/lib/sapphire";
 import { Embed, InteractionResponse, type Result, err, ok, match } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";

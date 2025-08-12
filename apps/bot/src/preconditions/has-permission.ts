@@ -1,4 +1,4 @@
-import { createPermissionPrecondition } from "@bot/lib/sapphire-extensions";
+import { createPermissionPrecondition } from "@bot/lib/sapphire";
 import type { PreconditionContext } from "@sapphire/framework";
 
 export interface HasPermissionContext extends PreconditionContext {

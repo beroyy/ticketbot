@@ -1,4 +1,4 @@
-import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire-extensions";
+import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import { bot } from "@bot/lib/bot";
 import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";

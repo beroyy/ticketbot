@@ -1,4 +1,4 @@
-import { createCommand } from "@bot/lib/sapphire-extensions";
+import { createCommand } from "@bot/lib/sapphire";
 import { Embed, COLORS, InteractionResponse, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
 import { botConfig } from "@bot/config";
 

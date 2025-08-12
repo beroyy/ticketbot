@@ -7,33 +7,6 @@ import {
 } from "@ticketsbot/db";
 import { PermissionUtils, DefaultRolePermissions, ALL_PERMISSIONS } from "../../permissions/utils";
 
-// Export specific schemas
-export {
-  RoleStatusSchema,
-  CreateRoleSchema,
-  UpdateRoleSchema,
-  AssignRoleSchema,
-  RemoveRoleSchema,
-  SetAdditionalPermissionsSchema,
-  PermissionCheckSchema,
-  BatchPermissionCheckSchema,
-  RoleQuerySchema,
-  RoleMemberQuerySchema,
-  RoleWithMembersSchema,
-  UserPermissionsResponseSchema,
-  type CreateRoleInput,
-  type UpdateRoleInput,
-  type AssignRoleInput,
-  type RemoveRoleInput,
-  type SetAdditionalPermissionsInput,
-  type PermissionCheckInput,
-  type BatchPermissionCheckInput,
-  type RoleQuery,
-  type RoleMemberQuery,
-  type RoleWithMembers,
-  type UserPermissionsResponse,
-} from "./schemas";
-
 export namespace Role {
   // Re-export Prisma types for domain consumers
   export type Role = GuildRole;
@@ -159,7 +132,10 @@ export namespace Role {
   /**
    * Ensure default roles exist for a guild
    */
-  export const ensureDefaultRoles = async (guildId: string, options?: { tx?: any }): Promise<void> => {
+  export const ensureDefaultRoles = async (
+    guildId: string,
+    options?: { tx?: any }
+  ): Promise<void> => {
     const operation = async (client: any) => {
       // Use upsert to handle race conditions and ensure idempotency
       await client.guildRole.upsert({
@@ -340,7 +316,11 @@ export namespace Role {
   /**
    * Get a specific role by name
    */
-  export const getRoleByName = async (guildId: string, name: string, options?: { tx?: any }): Promise<GuildRole | null> => {
+  export const getRoleByName = async (
+    guildId: string,
+    name: string,
+    options?: { tx?: any }
+  ): Promise<GuildRole | null> => {
     const db = options?.tx || prisma;
     return db.guildRole.findFirst({
       where: {

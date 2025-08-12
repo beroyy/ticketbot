@@ -4,33 +4,6 @@ import { logger } from "../../utils/logger";
 import { Actor } from "../../context";
 import { PermissionFlags } from "../../permissions/constants";
 
-// Export schemas
-export {
-  RoleStatusSchema,
-  CreateRoleSchema,
-  UpdateRoleSchema,
-  AssignRoleSchema,
-  RemoveRoleSchema,
-  SetAdditionalPermissionsSchema,
-  PermissionCheckSchema,
-  BatchPermissionCheckSchema,
-  RoleQuerySchema,
-  RoleMemberQuerySchema,
-  RoleWithMembersSchema,
-  UserPermissionsResponseSchema,
-  type CreateRoleInput,
-  type UpdateRoleInput,
-  type AssignRoleInput,
-  type RemoveRoleInput,
-  type SetAdditionalPermissionsInput,
-  type PermissionCheckInput,
-  type BatchPermissionCheckInput,
-  type RoleQuery,
-  type RoleMemberQuery,
-  type RoleWithMembers,
-  type UserPermissionsResponse,
-} from "./schemas";
-
 /**
  * Context-aware Role domain methods
  * These methods automatically use actor context for permissions and guild context
@@ -351,7 +324,9 @@ export namespace Role {
    * Requires ROLE_CREATE permission
    * Returns created or existing role IDs
    */
-  export const ensureDefaultRoles = async (options?: { tx?: any }): Promise<{
+  export const ensureDefaultRoles = async (options?: {
+    tx?: any;
+  }): Promise<{
     adminRoleId: number;
     supportRoleId: number;
     viewerRoleId: number;

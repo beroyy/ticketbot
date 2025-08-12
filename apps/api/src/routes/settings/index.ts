@@ -1,13 +1,12 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, PermissionFlags } from "@ticketsbot/core";
-import { UpdateSettingsSchema } from "@ticketsbot/core/domains/guild";
 import { Guild } from "@ticketsbot/core/domains/guild";
 import { Role } from "@ticketsbot/core/domains/role";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
 import { compositions, requirePermission } from "../../middleware/context";
-import { defaultSettings } from "./schemas";
+import { defaultSettings, UpdateSettingsSchema } from "./schemas";
 
 export const settingsRoutes = createRoute()
   .get(

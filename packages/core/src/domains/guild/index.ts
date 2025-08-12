@@ -1,7 +1,3 @@
-// Export schemas
-export * from "./schemas";
-export * from "./api-schemas";
-
 // Export user-facing namespace
 export { Guild } from "./operations";
 

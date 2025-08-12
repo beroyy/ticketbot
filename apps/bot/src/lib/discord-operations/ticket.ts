@@ -1,7 +1,6 @@
 import type { Guild } from "discord.js";
 import { container } from "@sapphire/framework";
 import { db } from "@ticketsbot/db";
-import { prisma } from "@ticketsbot/db";
 import { ChannelOps } from "./channel";
 import { MessageOps } from "./message";
 import { TranscriptOps } from "./transcript";
@@ -46,19 +45,17 @@ export const TicketOps = {
       throw new Error("Guild not properly configured");
     }
 
-    const ticket = await prisma.$transaction(async (_tx) => {
-      return await db.ticketLifecycle.create({
-        guildId: guild.id,
-        channelId: "", // updated after channel creation
-        openerId: userId,
-        subject: panel.title,
-        panelId,
-        metadata: {
-          createdVia: "discord",
-          username,
-          formResponses,
-        },
-      });
+    const ticket = await db.ticket.create({
+      guildId: guild.id,
+      channelId: "", // updated after channel creation
+      openerId: userId,
+      subject: panel.title,
+      panelId,
+      metadata: {
+        createdVia: "discord",
+        username,
+        formResponses,
+      },
     });
 
     try {

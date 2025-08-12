@@ -1,5 +1,191 @@
 import { prisma } from "../../client";
-import { Prisma } from "../..";
+import { Prisma, GuildRoleStatus } from "../..";
+
+/**
+ * Initialize a guild when the bot joins
+ * Sets up guild, owner, and default roles in a single transaction
+ * Used by guild-create listener
+ */
+export async function initialize(data: {
+  guildId: string;
+  guildName: string;
+  ownerId: string;
+  ownerData: {
+    username: string;
+    discriminator: string;
+    avatarUrl: string;
+  };
+}): Promise<void> {
+  const { guildId, guildName, ownerId, ownerData } = data;
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Ensure guild exists and is marked as installed
+    await tx.guild.upsert({
+      where: { id: guildId },
+      update: {
+        name: guildName,
+        botInstalled: true,
+      },
+      create: {
+        id: guildId,
+        name: guildName,
+        botInstalled: true,
+      },
+    });
+
+    // 2. Ensure owner exists in user database
+    await tx.discordUser.upsert({
+      where: { id: ownerId },
+      update: {
+        username: ownerData.username,
+        discriminator: ownerData.discriminator,
+        avatarUrl: ownerData.avatarUrl,
+      },
+      create: {
+        id: ownerId,
+        username: ownerData.username,
+        discriminator: ownerData.discriminator,
+        avatarUrl: ownerData.avatarUrl,
+      },
+    });
+
+    // 3. Create default team roles (admin, support, viewer)
+    const adminRole = await tx.guildRole.upsert({
+      where: {
+        guildId_name: {
+          guildId: guildId,
+          name: "admin",
+        },
+      },
+      update: {
+        isDefault: true,
+        permissions: BigInt("0xfffffff"), // All permissions
+      },
+      create: {
+        guildId: guildId,
+        name: "admin",
+        color: "#5865F2",
+        position: 100,
+        isDefault: true,
+        permissions: BigInt("0xfffffff"),
+      },
+    });
+
+    await tx.guildRole.upsert({
+      where: {
+        guildId_name: {
+          guildId: guildId,
+          name: "support",
+        },
+      },
+      update: {
+        isDefault: true,
+        permissions: BigInt("0x400446"), // Support permissions
+      },
+      create: {
+        guildId: guildId,
+        name: "support",
+        color: "#57F287",
+        position: 50,
+        isDefault: true,
+        permissions: BigInt("0x400446"),
+      },
+    });
+
+    await tx.guildRole.upsert({
+      where: {
+        guildId_name: {
+          guildId: guildId,
+          name: "viewer",
+        },
+      },
+      update: {
+        isDefault: true,
+        permissions: BigInt("0x800011"), // Viewer permissions
+      },
+      create: {
+        guildId: guildId,
+        name: "viewer",
+        color: "#99AAB5",
+        position: 10,
+        isDefault: true,
+        permissions: BigInt("0x800011"),
+      },
+    });
+
+    // 4. Assign owner to admin role
+    await tx.guildRoleMember.upsert({
+      where: {
+        discordId_guildRoleId: {
+          discordId: ownerId,
+          guildRoleId: adminRole.id,
+        },
+      },
+      update: {
+        assignedAt: new Date(),
+      },
+      create: {
+        discordId: ownerId,
+        guildRoleId: adminRole.id,
+        assignedById: null, // System assignment
+      },
+    });
+  });
+}
+
+/**
+ * Cleanup when a member leaves a guild
+ * Removes roles, ticket participation, and unclaims tickets
+ * Used by guild-member-remove listener
+ */
+export async function cleanupMember(
+  guildId: string,
+  userId: string
+): Promise<{ rolesRemoved: number; ticketsAffected: number; ticketsUnclaimed: number }> {
+  return prisma.$transaction(async (tx) => {
+    // 1. Remove all roles from member
+    const removedRoles = await tx.guildRoleMember.deleteMany({
+      where: {
+        discordId: userId,
+        guildRole: {
+          guildId: guildId,
+        },
+      },
+    });
+
+    // 2. Remove from all ticket participants
+    const removedFromTickets = await tx.ticketParticipant.deleteMany({
+      where: {
+        userId: userId,
+        ticket: {
+          guildId: guildId,
+          status: {
+            in: ["OPEN", "CLAIMED"],
+          },
+        },
+      },
+    });
+
+    // 3. Unclaim any tickets they had claimed
+    const unclaimedTickets = await tx.ticket.updateMany({
+      where: {
+        guildId: guildId,
+        claimedById: userId,
+        status: "CLAIMED",
+      },
+      data: {
+        status: "OPEN",
+        claimedById: null,
+      },
+    });
+
+    return {
+      rolesRemoved: removedRoles.count,
+      ticketsAffected: removedFromTickets.count,
+      ticketsUnclaimed: unclaimedTickets.count,
+    };
+  });
+}
 
 export async function ensureGuild(guildId: string, name?: string, ownerId?: string) {
   return prisma.guild.upsert({

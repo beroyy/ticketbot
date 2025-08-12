@@ -57,18 +57,18 @@ export class TransferCommand extends TicketCommandBase {
     }
 
     // Check if ticket is currently claimed
-    const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
+    const currentClaim = await db.ticket.getCurrentClaim(ticket.id);
 
     // If currently claimed, unclaim it first
     if (currentClaim) {
-      await db.ticketLifecycle.unclaim({
+      await db.ticket.unclaim({
         ticketId: ticket.id,
         performedById: interaction.user.id,
       });
     }
 
     // Then claim it for the target user
-    await db.ticketLifecycle.claim({
+    await db.ticket.claim({
       ticketId: ticket.id,
       claimerId: targetUser.id,
       force: true, // Force claim for transfer

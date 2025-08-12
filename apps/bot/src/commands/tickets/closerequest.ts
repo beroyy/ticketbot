@@ -73,7 +73,7 @@ export class CloseRequestCommand extends TicketCommandBase {
 
     try {
       // Request close with optional auto-close scheduling
-      const { closeRequestId } = await db.ticketLifecycle.requestClose({
+      const { closeRequestId } = await db.ticket.requestClose({
         ticketId: ticket.id,
         requestedById: discordId,
         reason: reason || undefined,

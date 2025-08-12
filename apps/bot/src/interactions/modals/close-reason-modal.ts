@@ -5,7 +5,6 @@ import { parseDiscordId } from "@ticketsbot/core";
 import { err, ok, createModalErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
-import { prisma } from "@ticketsbot/db";
 
 const closeReasonModalHandler = createModalHandler({
   pattern: "close_reason_modal",
@@ -34,14 +33,12 @@ const closeReasonModalHandler = createModalHandler({
     const userId = interaction.user.id;
 
     try {
-      await prisma.$transaction(async (_tx) => {
-        await db.ticketLifecycle.close({
-          ticketId: ticket.id,
-          closedById: userId,
-          reason,
-          deleteChannel: false,
-          notifyOpener: true,
-        });
+      await db.ticket.close({
+        ticketId: ticket.id,
+        closedById: userId,
+        reason,
+        deleteChannel: false,
+        notifyOpener: true,
       });
 
       const settings = await db.guild.getSettings(guild.id);

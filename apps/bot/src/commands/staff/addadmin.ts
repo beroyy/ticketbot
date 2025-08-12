@@ -3,7 +3,6 @@ import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/disc
 import { RoleOps } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
-import { prisma } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const AddAdminCommand = createCommand({
@@ -22,11 +21,20 @@ export const AddAdminCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      await db.role.ensureDefaultRoles(guildId);
+      // Use high-level role assignment operation
+      const result = await db.role.assignUserToRole(
+        guildId,
+        userId,
+        "admin",
+        undefined,
+        {
+          username: targetUser.username,
+          discriminator: targetUser.discriminator,
+          avatarUrl: targetUser.displayAvatarURL(),
+        }
+      );
 
-      const userRoles = await db.role.getUserRoles(guildId, userId);
-
-      if (StaffHelpers.hasRole(userRoles, "admin")) {
+      if (result.alreadyHasRole) {
         await InteractionResponse.error(
           interaction,
           StaffHelpers.getExistingRoleError(targetUser.tag, "admin")
@@ -34,25 +42,9 @@ export const AddAdminCommand = createCommand({
         return err("User already admin");
       }
 
-      const adminRole = await db.role.getRoleByName(guildId, "admin");
-      if (!adminRole) {
-        await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("admin"));
-        return err("Admin role not found");
-      }
+      const adminRole = result.role;
 
-      await prisma.$transaction(async (tx) => {
-        await db.discordUser.ensure(
-          userId,
-          targetUser.username,
-          targetUser.discriminator,
-          targetUser.displayAvatarURL(),
-          undefined,
-          { tx }
-        );
-
-        await db.role.assignRole(adminRole.id, userId, undefined, { tx });
-      });
-
+      // Sync Discord role
       try {
         const success = await RoleOps.syncTeamRoleToDiscord(
           adminRole,

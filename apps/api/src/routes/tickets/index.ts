@@ -108,7 +108,7 @@ export const ticketRoutes = createRoute()
     const input = c.req.valid("json");
 
     try {
-      const ticket = await db.ticketLifecycle.create({
+      const ticket = await db.ticket.create({
         guildId: input.guildId,
         channelId: "",
         openerId: input.openerId,
@@ -183,7 +183,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        await db.ticketLifecycle.close({
+        await db.ticket.close({
           ticketId,
           closedById: user.discordUserId || user.id,
           reason: body?.reason,
@@ -218,7 +218,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        await db.ticketLifecycle.claim({
+        await db.ticket.claim({
           ticketId,
           claimerId: user.discordUserId || user.id,
           force: false,
@@ -250,7 +250,7 @@ export const ticketRoutes = createRoute()
       const user = c.get("user");
 
       try {
-        await db.ticketLifecycle.unclaim({
+        await db.ticket.unclaim({
           ticketId,
           performedById: user.discordUserId || user.id,
         });
@@ -282,7 +282,7 @@ export const ticketRoutes = createRoute()
 
       try {
         const [lifecycleHistory, transcriptHistory] = await Promise.all([
-          db.ticketLifecycle.getHistory(ticketId),
+          db.ticket.getLifecycleHistory(ticketId),
           db.transcript.getHistory(ticketId),
         ]);
 

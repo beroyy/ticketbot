@@ -28,6 +28,16 @@ import {
   updateChannelId,
   list as listTickets,
   update as updateTicket,
+  // Lifecycle operations now in ticket.ts
+  create as createTicket,
+  close as closeTicket,
+  claim as claimTicket,
+  unclaim as unclaimTicket,
+  requestClose as requestCloseTicket,
+  cancelCloseRequest as cancelCloseRequestTicket,
+  updateAutoClose as updateAutoCloseTicket,
+  getCurrentClaim as getCurrentClaimTicket,
+  getLifecycleHistory as getTicketLifecycleHistory,
   storeMessage,
   updateMessage,
   deleteMessage,
@@ -35,8 +45,8 @@ import {
   addHistoryEntry,
   getHistory,
   submitFeedback,
+  recordMessage,
 } from "./operations";
-import * as ticketLifecycle from "./operations/ticket-lifecycle";
 import {
   getGuildById,
   updateGuild,
@@ -50,6 +60,8 @@ import {
   checkGuildBlacklistEntry,
   toggleGuildBlacklistEntry,
   updateGuildSettings,
+  initialize as initializeGuild,
+  cleanupMember as cleanupGuildMember,
 } from "./operations/guild/mutations";
 
 import * as roleOps from "./operations/role";
@@ -71,6 +83,9 @@ export const db = {
     toggleBlacklistEntry: toggleGuildBlacklistEntry,
     checkBlacklistEntry: checkGuildBlacklistEntry,
     getTeamRoles: getTeamRoles,
+    // New high-level operations
+    initialize: initializeGuild,
+    cleanupMember: cleanupGuildMember,
   },
   panel: {
     get: getPanelById,
@@ -93,6 +108,7 @@ export const db = {
     update: updateTag,
   },
   ticket: {
+    // CRUD operations
     get: getTicketByChannelId,
     getById: getTicketById,
     getByIdUnchecked: getByIdUnchecked,
@@ -107,6 +123,16 @@ export const db = {
     removeParticipantFromAll: removeParticipantFromAll,
     updateChannelId: updateChannelId,
     isTicketChannel: isTicketChannel,
+    // Lifecycle operations (consolidated from ticketLifecycle)
+    create: createTicket,
+    close: closeTicket,
+    claim: claimTicket,
+    unclaim: unclaimTicket,
+    requestClose: requestCloseTicket,
+    cancelCloseRequest: cancelCloseRequestTicket,
+    updateAutoClose: updateAutoCloseTicket,
+    getCurrentClaim: getCurrentClaimTicket,
+    getLifecycleHistory: getTicketLifecycleHistory,
   },
   transcript: {
     storeMessage: storeMessage,
@@ -116,7 +142,7 @@ export const db = {
     addHistoryEntry: addHistoryEntry,
     getHistory: getHistory,
     submitFeedback: submitFeedback,
+    recordMessage: recordMessage,
   },
-  ticketLifecycle: ticketLifecycle,
   analytics: analyticsOps,
 };

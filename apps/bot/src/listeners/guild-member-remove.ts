@@ -1,6 +1,6 @@
 import { ListenerFactory } from "@bot/lib/sapphire-extensions";
 import { container } from "@sapphire/framework";
-import { prisma } from "@ticketsbot/db";
+import { db } from "@ticketsbot/db";
 
 export const GuildMemberRemoveListener = ListenerFactory.on("guildMemberRemove", async (member) => {
   try {
@@ -9,54 +9,16 @@ export const GuildMemberRemoveListener = ListenerFactory.on("guildMemberRemove",
     const guildId = member.guild.id;
     const userId = member.id;
 
-    // Wrap all operations in a transaction for consistency
-    await prisma.$transaction(async (tx) => {
-      // 1. Remove all roles from member
-      const removedRoles = await tx.guildRoleMember.deleteMany({
-        where: {
-          discordId: userId,
-          guildRole: {
-            guildId: guildId,
-          },
-        },
-      });
-
-      // 2. Remove from all ticket participants
-      const removedFromTickets = await tx.ticketParticipant.deleteMany({
-        where: {
-          userId: userId,
-          ticket: {
-            guildId: guildId,
-            status: {
-              in: ["OPEN", "CLAIMED"],
-            },
-          },
-        },
-      });
-
-      // 3. Unclaim any tickets they had claimed
-      const unclaimedTickets = await tx.ticket.updateMany({
-        where: {
-          guildId: guildId,
-          claimedById: userId,
-          status: "CLAIMED",
-        },
-        data: {
-          status: "OPEN",
-          claimedById: null,
-        },
-      });
-
-      // Event logging removed - TCN will handle this automatically
-      
-      if (removedRoles.count > 0 || removedFromTickets.count > 0 || unclaimedTickets.count > 0) {
-        container.logger.info(
-          `Member ${member.user.username} removed from guild ${member.guild.name}: ` +
-          `${removedRoles.count} roles removed, ${removedFromTickets.count} tickets affected, ` +
-          `${unclaimedTickets.count} tickets unclaimed`
-        );
-      }
-    });
+    // Use high-level guild cleanup operation
+    const result = await db.guild.cleanupMember(guildId, userId);
+    
+    if (result.rolesRemoved > 0 || result.ticketsAffected > 0 || result.ticketsUnclaimed > 0) {
+      container.logger.info(
+        `Member ${member.user.username} removed from guild ${member.guild.name}: ` +
+        `${result.rolesRemoved} roles removed, ${result.ticketsAffected} tickets affected, ` +
+        `${result.ticketsUnclaimed} tickets unclaimed`
+      );
+    }
   } catch (error) {
     container.logger.error(`Failed to handle member removal:`, error);
   }

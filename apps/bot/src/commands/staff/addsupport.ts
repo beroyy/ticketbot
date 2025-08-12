@@ -3,7 +3,6 @@ import { Embed, InteractionResponse, err, ok, StaffHelpers } from "@bot/lib/disc
 import { RoleOps } from "@bot/lib/discord-operations";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
-import { prisma } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
 export const AddSupportCommand = createCommand({
@@ -22,18 +21,8 @@ export const AddSupportCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      await db.role.ensureDefaultRoles(guildId);
-
+      // Check if user already has admin role
       const userRoles = await db.role.getUserRoles(guildId, userId);
-
-      if (StaffHelpers.hasRole(userRoles, "support")) {
-        await InteractionResponse.error(
-          interaction,
-          StaffHelpers.getExistingRoleError(targetUser.tag, "support")
-        );
-        return err("User already support");
-      }
-
       if (StaffHelpers.hasRole(userRoles, "admin")) {
         await InteractionResponse.error(
           interaction,
@@ -42,23 +31,30 @@ export const AddSupportCommand = createCommand({
         return err("User is admin");
       }
 
-      const supportRole = await db.role.getRoleByName(guildId, "support");
-      if (!supportRole) {
-        await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("support"));
-        return err("Support role not found");
+      // Use high-level role assignment operation
+      const result = await db.role.assignUserToRole(
+        guildId,
+        userId,
+        "support",
+        parseDiscordId(interaction.user.id),
+        {
+          username: targetUser.username,
+          discriminator: targetUser.discriminator,
+          avatarUrl: targetUser.displayAvatarURL(),
+        }
+      );
+
+      if (result.alreadyHasRole) {
+        await InteractionResponse.error(
+          interaction,
+          StaffHelpers.getExistingRoleError(targetUser.tag, "support")
+        );
+        return err("User already support");
       }
 
-      await prisma.$transaction(async (_tx) => {
-        await db.discordUser.ensure(
-          userId,
-          targetUser.username,
-          targetUser.discriminator,
-          targetUser.displayAvatarURL()
-        );
+      const supportRole = result.role;
 
-        await db.role.assignRole(supportRole.id, userId, parseDiscordId(interaction.user.id));
-      });
-
+      // Sync Discord role
       try {
         const success = await RoleOps.syncTeamRoleToDiscord(
           supportRole,

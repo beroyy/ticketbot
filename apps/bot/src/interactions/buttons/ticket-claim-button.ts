@@ -18,7 +18,7 @@ const ticketClaimHandler = createButtonHandler({
     }
 
     // Check if already claimed
-    const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
+    const currentClaim = await db.ticket.getCurrentClaim(ticket.id);
     if (currentClaim) {
       await interaction.reply(ErrorResponses.ticketAlreadyClaimed(currentClaim.claimedById));
       return err("Ticket already claimed");
@@ -32,7 +32,7 @@ const ticketClaimHandler = createButtonHandler({
     );
 
     // Claim ticket using lifecycle domain
-    await db.ticketLifecycle.claim({
+    await db.ticket.claim({
       ticketId: ticket.id,
       claimerId: interaction.user.id,
       force: false,

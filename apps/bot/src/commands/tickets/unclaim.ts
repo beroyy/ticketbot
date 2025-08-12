@@ -26,7 +26,7 @@ export class UnclaimCommand extends TicketCommandBase {
   ): Promise<Result<void>> {
     // Check if ticket is claimed and user owns it
     try {
-      const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
+      const currentClaim = await db.ticket.getCurrentClaim(ticket.id);
       if (!currentClaim) {
         return err("This ticket is not currently claimed.");
       }
@@ -38,7 +38,7 @@ export class UnclaimCommand extends TicketCommandBase {
     }
 
     // Unclaim the ticket - context is already provided by BaseCommand
-    await db.ticketLifecycle.unclaim({
+    await db.ticket.unclaim({
       ticketId: ticket.id,
       performedById: interaction.user.id,
     });

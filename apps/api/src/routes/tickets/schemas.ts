@@ -113,7 +113,7 @@ export const formatTicketForDashboard = async (
       progress = 100;
     } else {
       try {
-        const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
+        const currentClaim = await db.ticket.getCurrentClaim(ticket.id);
         progress = currentClaim ? 75 : 25;
       } catch {
         progress = 25;

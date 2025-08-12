@@ -3,7 +3,6 @@ import type { Command } from "@sapphire/framework";
 import { ChannelOps, MessageOps } from "@bot/lib/discord-operations";
 import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
-import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 
 export class CloseCommand extends TicketCommandBase {
@@ -56,16 +55,13 @@ export class CloseCommand extends TicketCommandBase {
 
     let _channelDeleted = false;
 
-    // Close ticket in transaction
-    const closedTicket = await prisma.$transaction(async (_tx) => {
-      // Close ticket using lifecycle domain
-      return await db.ticketLifecycle.close({
-        ticketId: ticket.id,
-        closedById: userId,
-        reason: reasonResult.value ?? undefined,
-        deleteChannel: false, // We'll handle channel deletion separately
-        notifyOpener: true,
-      });
+    // Close ticket using domain method
+    const closedTicket = await db.ticket.close({
+      ticketId: ticket.id,
+      closedById: userId,
+      reason: reasonResult.value ?? undefined,
+      deleteChannel: false, // We'll handle channel deletion separately
+      notifyOpener: true,
     });
 
     const settings = await db.guild.getSettings(guild.id);

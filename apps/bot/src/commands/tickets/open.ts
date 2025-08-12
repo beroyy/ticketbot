@@ -10,7 +10,6 @@ import {
   TicketValidation,
 } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
-import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 
 export class OpenCommand extends TicketCommandBase {
@@ -85,21 +84,16 @@ export class OpenCommand extends TicketCommandBase {
     }
 
     try {
-      // Create ticket in transaction
-      ticket = await prisma.$transaction(async (_tx) => {
-        // Create ticket using lifecycle domain with actual channel ID
-        const createdTicket = await db.ticketLifecycle.create({
-          guildId: guild.id,
-          channelId: channel.id,
-          openerId: userId,
-          subject: subjectResult.value ?? undefined,
-          metadata: {
-            createdVia: "discord",
-            username,
-          },
-        });
-
-        return createdTicket;
+      // Create ticket using domain method with actual channel ID
+      ticket = await db.ticket.create({
+        guildId: guild.id,
+        channelId: channel.id,
+        openerId: userId,
+        subject: subjectResult.value ?? undefined,
+        metadata: {
+          createdVia: "discord",
+          username,
+        },
       });
 
       // Update channel name with actual ticket number

@@ -33,7 +33,7 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
     await BotContext.provideAsync(context, async () => {
       try {
         // Close the ticket (this updates the ticket record and logs to Event table)
-        await db.ticketLifecycle.close({
+        await db.ticket.close({
           ticketId: ticket.id,
           closedById: channel.client.user.id,
           reason: "Channel was deleted",

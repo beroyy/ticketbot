@@ -10,7 +10,6 @@ import {
 } from "@bot/lib/discord-utils";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
-import { prisma } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { container } from "@sapphire/framework";
 
@@ -60,30 +59,12 @@ export class AutoCloseCommand extends TicketCommandBase {
       );
 
       try {
-        await prisma.$transaction(async (tx) => {
-          // Update the exclusion status directly with transaction client
-          await tx.ticket.update({
-            where: { id: ticket.id },
-            data: {
-              excludeFromAutoclose: newExclusionStatus,
-            },
-          });
-
-          // Log the change directly with transaction client
-          await tx.ticketLifecycleEvent.create({
-            data: {
-              ticketId: ticket.id,
-              action: newExclusionStatus ? "auto_close_excluded" : "auto_close_included",
-              performedById: performerDiscordId,
-              details: {
-                message: `Auto-close ${newExclusionStatus ? "disabled" : "enabled"} by support staff`,
-              },
-              timestamp: new Date(),
-            },
-          });
-
-          // With pg_cron, auto-close is automatically skipped when excludeFromAutoclose is true
-        });
+        // Update auto-close exclusion using domain method
+        await db.ticket.updateAutoClose(
+          ticket.id,
+          newExclusionStatus,
+          performerDiscordId
+        );
 
         // Send response
         await InteractionResponse.reply(interaction, {

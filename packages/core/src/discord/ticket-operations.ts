@@ -22,7 +22,7 @@ export const createTicketFromPanel = async (data: {
     parentChannelId: data.parentChannelId,
   });
 
-  const ticket = await db.ticketLifecycle.create({
+  const ticket = await db.ticket.create({
     guildId: data.guildId,
     channelId,
     openerId: data.userId,
@@ -46,7 +46,7 @@ export const closeTicket = async (data: {
   const ticket = await db.ticket.getByIdUnchecked(data.ticketId);
   if (!ticket) throw new Error("Ticket not found");
 
-  await db.ticketLifecycle.close({
+  await db.ticket.close({
     ticketId: data.ticketId,
     closedById: data.closedById,
     reason: data.reason,

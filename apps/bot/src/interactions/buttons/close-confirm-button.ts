@@ -5,7 +5,6 @@ import type { ButtonInteraction, Interaction, TextChannel } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
-import { prisma } from "@ticketsbot/db";
 
 const closeConfirmHandler = createButtonHandler({
   pattern: "ticket_close_confirm",
@@ -40,15 +39,12 @@ const closeConfirmHandler = createButtonHandler({
     const userId = interaction.user.id;
 
     try {
-      // Close ticket in transaction
-      await prisma.$transaction(async (_tx) => {
-        // Close ticket using lifecycle domain
-        await db.ticketLifecycle.close({
-          ticketId: ticket.id,
-          closedById: userId,
-          deleteChannel: false,
-          notifyOpener: true,
-        });
+      // Close ticket using domain method
+      await db.ticket.close({
+        ticketId: ticket.id,
+        closedById: userId,
+        deleteChannel: false,
+        notifyOpener: true,
       });
 
       const settings = await db.guild.getSettings(guild.id);

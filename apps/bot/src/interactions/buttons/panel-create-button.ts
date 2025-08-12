@@ -4,7 +4,6 @@ import type { ButtonInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { PanelOps, ChannelOps, MessageOps, TranscriptOps } from "@bot/lib/discord-operations";
 import { container } from "@sapphire/framework";
-import { prisma } from "@ticketsbot/db";
 
 const PANEL_CREATE_PATTERN = /^create_ticket_(\d+)$/;
 
@@ -46,18 +45,16 @@ const panelCreateHandler = createButtonHandler({
     try {
       let channel: any;
 
-      const ticket = await prisma.$transaction(async (_tx) => {
-        return await db.ticketLifecycle.create({
-          guildId: guild.id,
-          channelId: "", // is updated after channel creation
-          openerId: userId,
-          subject: panel.title,
-          panelId,
-          metadata: {
-            createdVia: "discord",
-            username,
-          },
-        });
+      const ticket = await db.ticket.create({
+        guildId: guild.id,
+        channelId: "", // is updated after channel creation
+        openerId: userId,
+        subject: panel.title,
+        panelId,
+        metadata: {
+          createdVia: "discord",
+          username,
+        },
       });
 
       const settings = await db.guild.getSettings(guild.id);

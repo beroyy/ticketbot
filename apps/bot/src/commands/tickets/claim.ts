@@ -26,7 +26,7 @@ export class ClaimCommand extends TicketCommandBase {
   ): Promise<Result<void>> {
     // Check if already claimed
     try {
-      const currentClaim = await db.ticketLifecycle.getCurrentClaim(ticket.id);
+      const currentClaim = await db.ticket.getCurrentClaim(ticket.id);
       if (currentClaim) {
         return err(`This ticket is already claimed by <@${currentClaim.claimedById}>.`);
       }
@@ -35,7 +35,7 @@ export class ClaimCommand extends TicketCommandBase {
     }
 
     // Claim the ticket - context is already provided by BaseCommand
-    await db.ticketLifecycle.claim({
+    await db.ticket.claim({
       ticketId: ticket.id,
       claimerId: interaction.user.id,
       force: false,

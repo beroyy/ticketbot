@@ -1,5 +1,5 @@
 import { createSelectHandler, createInteractionHandler } from "@bot/lib/sapphire";
-import { err, ok, createSelectErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
+import { err, ok, createSelectErrorHandler, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import type { StringSelectMenuInteraction } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { bot } from "@bot/lib/bot";

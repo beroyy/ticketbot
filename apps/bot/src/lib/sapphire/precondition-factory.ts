@@ -8,7 +8,7 @@ import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { parseDiscordId, PermissionUtils } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
-import { PreconditionErrors } from "@bot/lib/discord-utils/error-handlers";
+import { PreconditionErrors } from "@bot/lib/utils/error-handlers";
 
 /**
  * Base precondition configuration

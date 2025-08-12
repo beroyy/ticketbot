@@ -1,5 +1,5 @@
 import { EmbedBuilder } from "discord.js";
-import { COLORS } from "@bot/lib/discord-utils/colors";
+import { COLORS } from "@bot/lib/utils/colors";
 
 // Configuration interface for custom colors
 export interface EmbedColors {

@@ -1,11 +1,11 @@
 import { BaseCommand } from "./base-command";
 import type { ChatInputCommandInteraction, User as DiscordUser } from "discord.js";
-import { type Result, ok, err, match, flatMap } from "@bot/lib/discord-utils/result";
-import { InteractionResponse, InteractionEdit } from "@bot/lib/discord-utils/responses";
+import { type Result, ok, err, match, flatMap } from "@bot/lib/utils/result";
+import { InteractionResponse, InteractionEdit } from "@bot/lib/utils/responses";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
-import { EPHEMERAL_FLAG } from "../discord-utils/constants";
+import { EPHEMERAL_FLAG } from "../utils/constants";
 
 /**
  * Base class for ticket-related commands with common functionality

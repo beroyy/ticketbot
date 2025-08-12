@@ -1,7 +1,7 @@
 import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import { bot } from "@bot/lib/bot";
-import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/discord-utils";
+import { InteractionResponse, type Result, ok, TicketValidation } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 

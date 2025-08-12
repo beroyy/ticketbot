@@ -1,5 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire";
-import { Embed, COLORS, InteractionResponse, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
+import { Embed, COLORS, InteractionResponse, ok, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { botConfig } from "@bot/config";
 
 export const InviteCommand = createCommand({

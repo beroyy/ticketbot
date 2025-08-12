@@ -1,4 +1,4 @@
-import { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
+import { EPHEMERAL_FLAG } from "@bot/lib/utils/constants";
 
 /**
  * Standard success responses for common scenarios

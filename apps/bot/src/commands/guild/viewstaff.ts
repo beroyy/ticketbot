@@ -1,12 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire";
-import {
-  Embed,
-  InteractionResponse,
-  err,
-  ok,
-  StaffHelpers,
-  EPHEMERAL_FLAG,
-} from "@bot/lib/discord-utils";
+import { Embed, InteractionResponse, err, ok, StaffHelpers, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";
 import { db } from "@ticketsbot/db";

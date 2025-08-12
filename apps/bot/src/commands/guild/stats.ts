@@ -9,7 +9,7 @@ import {
   StatsHelpers,
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
-} from "@bot/lib/discord-utils";
+} from "@bot/lib/utils";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";

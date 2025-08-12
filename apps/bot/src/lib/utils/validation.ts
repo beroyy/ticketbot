@@ -1,4 +1,4 @@
-import { type Result, ok, err } from "@bot/lib/discord-utils/result";
+import { type Result, ok, err } from "@bot/lib/utils/result";
 
 /**
  * Ticket-specific validation utilities

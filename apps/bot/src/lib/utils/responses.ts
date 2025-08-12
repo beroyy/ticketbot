@@ -6,8 +6,8 @@ import type {
   InteractionReplyOptions,
   InteractionEditReplyOptions,
 } from "discord.js";
-import { Embed } from "@bot/lib/discord-utils/embed-helpers";
-import { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
+import { Embed } from "@bot/lib/utils/embed-helpers";
+import { EPHEMERAL_FLAG } from "@bot/lib/utils/constants";
 
 type Interaction =
   | ChatInputCommandInteraction

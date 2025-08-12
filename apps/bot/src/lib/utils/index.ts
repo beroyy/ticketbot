@@ -21,20 +21,20 @@ export {
   toOptional,
   fromNullable,
   retry,
-} from "@bot/lib/discord-utils/result";
+} from "@bot/lib/utils/result";
 
-export { InteractionResponse, InteractionEdit } from "@bot/lib/discord-utils/responses";
+export { InteractionResponse, InteractionEdit } from "@bot/lib/utils/responses";
 
 export {
   type EmbedColors,
   DEFAULT_COLORS,
   createEmbedHelpers,
   Embed,
-} from "@bot/lib/discord-utils/embed-helpers";
+} from "@bot/lib/utils/embed-helpers";
 
-export { COLORS } from "@bot/lib/discord-utils/colors";
+export { COLORS } from "@bot/lib/utils/colors";
 
-export { TicketValidation } from "@bot/lib/discord-utils/validation";
+export { TicketValidation } from "@bot/lib/utils/validation";
 
 export {
   type EmbedOptions,
@@ -54,11 +54,11 @@ export {
   withWarningColor,
   withErrorColor,
   withInfoColor,
-} from "@bot/lib/discord-utils/embed-builder";
+} from "@bot/lib/utils/embed-builder";
 
-export { StaffHelpers } from "@bot/lib/discord-utils/staff-helpers";
+export { StaffHelpers } from "@bot/lib/utils/staff-helpers";
 
-export { StatsHelpers, STATS_CONSTANTS } from "@bot/lib/discord-utils/stats-helpers";
+export { StatsHelpers, STATS_CONSTANTS } from "@bot/lib/utils/stats-helpers";
 
 export {
   isChannelDeletedError,
@@ -67,8 +67,8 @@ export {
   createModalErrorHandler,
   createSelectErrorHandler,
   ErrorResponses,
-} from "@bot/lib/discord-utils/error-handlers";
+} from "@bot/lib/utils/error-handlers";
 
-export { SuccessResponses, InfoResponses } from "@bot/lib/discord-utils/success-responses";
+export { SuccessResponses, InfoResponses } from "@bot/lib/utils/success-responses";
 
-export { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
+export { EPHEMERAL_FLAG } from "@bot/lib/utils/constants";

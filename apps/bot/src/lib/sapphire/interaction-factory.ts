@@ -5,7 +5,7 @@ import type {
   StringSelectMenuInteraction,
   Interaction,
 } from "discord.js";
-import type { Result } from "@bot/lib/discord-utils/result";
+import type { Result } from "@bot/lib/utils/result";
 import { BotContext } from "@bot/lib/context";
 import { parseDiscordId } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";

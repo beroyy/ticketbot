@@ -1,13 +1,6 @@
 import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
-import {
-  Embed,
-  InteractionResponse,
-  type Result,
-  ok,
-  err,
-  EPHEMERAL_FLAG,
-} from "@bot/lib/discord-utils";
+import { Embed, InteractionResponse, type Result, ok, err, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import type { ChatInputCommandInteraction } from "discord.js";

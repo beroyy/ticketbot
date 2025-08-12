@@ -3,8 +3,8 @@ import { container } from "@sapphire/framework";
 import type { Interaction } from "discord.js";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
-import { InteractionResponse } from "@bot/lib/discord-utils/responses";
-import { canReply } from "@bot/lib/discord-utils/error-handlers";
+import { InteractionResponse } from "@bot/lib/utils/responses";
+import { canReply } from "@bot/lib/utils/error-handlers";
 
 export const InteractionCreateListener = ListenerFactory.on(
   "interactionCreate",

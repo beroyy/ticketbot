@@ -1,4 +1,4 @@
-import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/discord-utils";
+import { err, ok, createButtonErrorHandler, ErrorResponses } from "@bot/lib/utils";
 import { createButtonHandler, createInteractionHandler } from "@bot/lib/sapphire";
 import { bot } from "@bot/lib/bot";
 import type { ButtonInteraction } from "discord.js";

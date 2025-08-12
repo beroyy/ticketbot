@@ -9,7 +9,7 @@ import {
   match,
   type Result,
   EPHEMERAL_FLAG,
-} from "@bot/lib/discord-utils";
+} from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";

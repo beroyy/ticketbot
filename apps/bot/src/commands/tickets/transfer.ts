@@ -1,6 +1,6 @@
 import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
-import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/discord-utils";
+import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { PermissionFlags } from "@ticketsbot/core";

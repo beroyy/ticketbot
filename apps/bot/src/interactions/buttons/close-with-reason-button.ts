@@ -8,7 +8,7 @@ import {
   type Interaction,
 } from "discord.js";
 import { parseDiscordId } from "@ticketsbot/core";
-import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/discord-utils";
+import { err, ok, EPHEMERAL_FLAG } from "@bot/lib/utils";
 import { container } from "@sapphire/framework";
 import { db } from "@ticketsbot/db";
 

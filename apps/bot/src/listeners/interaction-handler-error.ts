@@ -1,7 +1,7 @@
 import { createSapphireListener } from "@bot/lib/sapphire";
 import { Events, container } from "@sapphire/framework";
-import { InteractionResponse } from "@bot/lib/discord-utils/responses";
-import { canReply, isChannelDeletedError } from "@bot/lib/discord-utils/error-handlers";
+import { InteractionResponse } from "@bot/lib/utils/responses";
+import { canReply, isChannelDeletedError } from "@bot/lib/utils/error-handlers";
 import type { InteractionHandlerError } from "@sapphire/framework";
 
 export const InteractionHandlerErrorListener = createSapphireListener(

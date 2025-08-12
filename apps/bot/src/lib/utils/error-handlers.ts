@@ -1,6 +1,6 @@
 import type { Interaction } from "discord.js";
 import { container } from "@sapphire/framework";
-import { EPHEMERAL_FLAG } from "@bot/lib/discord-utils/constants";
+import { EPHEMERAL_FLAG } from "@bot/lib/utils/constants";
 
 /**
  * Checks if an error is due to a Discord channel being deleted

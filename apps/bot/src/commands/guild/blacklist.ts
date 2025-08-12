@@ -1,5 +1,5 @@
 import { createCommand } from "@bot/lib/sapphire";
-import { Embed, InteractionResponse, type Result, err, ok, match } from "@bot/lib/discord-utils";
+import { Embed, InteractionResponse, type Result, err, ok, match } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
 import { parseDiscordId } from "@ticketsbot/core";
 import { container } from "@sapphire/framework";

@@ -25,7 +25,6 @@ export const RemoveStaffCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      // Get user's current roles
       const userRoles = await Role.getUserRoles(guildId, userId);
 
       if (userRoles.length === 0) {
@@ -39,17 +38,13 @@ export const RemoveStaffCommand = createCommand({
       const removedRoles: string[] = [];
       const rolesToSync = userRoles.filter((role) => role.discordRoleId);
 
-      // Remove all roles within transaction
       await prisma.$transaction(async (_tx) => {
         for (const role of userRoles) {
           await Role.removeRole(role.id, userId);
           removedRoles.push(role.name);
-          
-          // Event logging removed - TCN will handle this automatically
         }
       });
 
-      // Discord role sync after transaction
       if (rolesToSync.length > 0) {
         try {
           const { failed } = await RoleOps.syncMultipleRolesToDiscord(

@@ -24,6 +24,7 @@ import {
   getByIdUnchecked,
   getByIds,
 } from "./operations";
+import { getActiveMembersForRole } from "./operations/role";
 
 export const db = {
   discordUser: {
@@ -43,6 +44,9 @@ export const db = {
   panel: {
     get: getPanelById,
     getGuildId: getPanelGuildId,
+  },
+  role: {
+    getActiveMembers: getActiveMembersForRole,
   },
   tag: {
     create: createTag,

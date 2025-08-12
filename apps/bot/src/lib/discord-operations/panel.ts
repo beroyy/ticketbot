@@ -8,27 +8,25 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-
 import { createEmbed, COLORS } from "@bot/lib/discord-utils";
 
-interface PanelData {
+type PanelData = {
   id: number;
   title: string;
   message: string;
   buttonLabel?: string | null;
   buttonEmoji?: string | null;
   buttonColor?: string | null;
-}
+};
 
-interface FormField {
+type FormField = {
   id: number;
   label: string;
   type: string;
   required: boolean;
   placeholder?: string | null;
-}
+};
 
-// Get button style from color string
 const getButtonStyle = (color?: string | null): ButtonStyle => {
   const colorMap: Record<string, ButtonStyle> = {
     primary: ButtonStyle.Primary,
@@ -45,7 +43,6 @@ const getButtonStyle = (color?: string | null): ButtonStyle => {
   return colorMap[color?.toLowerCase() ?? ""] ?? ButtonStyle.Primary;
 };
 
-// Panel operations namespace
 export const PanelOps = {
   embed: {
     create: (panel: PanelData) =>
@@ -76,7 +73,6 @@ export const PanelOps = {
     create: (panelId: number, panelTitle: string, formFields: FormField[]) => {
       const modal = new ModalBuilder().setCustomId(`panel_form_${panelId}`).setTitle(panelTitle);
 
-      // Discord modals support up to 5 text inputs
       const fieldsToShow = formFields.slice(0, 5);
 
       fieldsToShow.forEach((field) => {
@@ -104,7 +100,7 @@ export const PanelOps = {
             const value = interaction.fields.getTextInputValue(`field_${field.id}`);
             return value ? { fieldId: field.id, value } : null;
           } catch {
-            return null; // Field might not be present if optional
+            return null;
           }
         })
         .filter((response): response is { fieldId: number; value: string } => response !== null),

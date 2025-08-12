@@ -171,15 +171,15 @@ export const settingsRoutes = createRoute()
         throw error;
       }
     }
-  )
-
-  .get(
-    "/:guildId/statistics",
-    ...compositions.authenticated,
-    zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
-    requirePermission(PermissionFlags.ANALYTICS_VIEW),
-    async (c) => {
-      const stats = await Guild.getStatistics();
-      return c.json(stats);
-    }
   );
+
+// .get(
+//   "/:guildId/statistics",
+//   ...compositions.authenticated,
+//   zValidator("param", z.object({ guildId: DiscordGuildIdSchema })),
+//   requirePermission(PermissionFlags.ANALYTICS_VIEW),
+//   async (c) => {
+//     const stats = await Guild.getStatistics();
+//     return c.json(stats);
+//   }
+// );

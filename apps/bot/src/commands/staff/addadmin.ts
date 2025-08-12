@@ -23,10 +23,8 @@ export const AddAdminCommand = createCommand({
     const userId = parseDiscordId(targetUser.id);
 
     try {
-      // Ensure default roles exist
       await Role.ensureDefaultRoles(guildId);
 
-      // Check if already admin
       const userRoles = await Role.getUserRoles(guildId, userId);
 
       if (StaffHelpers.hasRole(userRoles, "admin")) {
@@ -37,16 +35,13 @@ export const AddAdminCommand = createCommand({
         return err("User already admin");
       }
 
-      // Get admin role first
       const adminRole = await Role.getRoleByName(guildId, "admin");
       if (!adminRole) {
         await InteractionResponse.error(interaction, StaffHelpers.getRoleNotFoundError("admin"));
         return err("Admin role not found");
       }
 
-      // Run database operations in transaction
       await prisma.$transaction(async (tx) => {
-        // Ensure user exists
         await db.discordUser.ensure(
           userId,
           targetUser.username,
@@ -56,13 +51,9 @@ export const AddAdminCommand = createCommand({
           { tx }
         );
 
-        // Assign role
         await Role.assignRole(adminRole.id, userId, undefined, { tx });
-
-        // Event logging removed - TCN will handle this automatically
       });
 
-      // Discord role sync after transaction
       try {
         const success = await RoleOps.syncTeamRoleToDiscord(
           adminRole,

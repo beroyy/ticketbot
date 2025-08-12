@@ -20,7 +20,6 @@ export const ViewStaffCommand = createCommand({
     const guildId = parseDiscordId(interaction.guild!.id);
 
     try {
-      // Get all team roles
       const roles = await Role.getRoles(guildId);
 
       if (roles.length === 0) {
@@ -34,7 +33,6 @@ export const ViewStaffCommand = createCommand({
 
       const embed = Embed.info("Role Members", "Role members and their roles:");
 
-      // Add members by role
       for (const role of roles) {
         const members = await Role.getRoleMembers(role.id);
 
@@ -51,7 +49,6 @@ export const ViewStaffCommand = createCommand({
         }
       }
 
-      // Add footer
       embed.setFooter({
         text: "Use /roleinfo <role> to see permissions • /addadmin, /addsupport, /removestaff to manage",
       });

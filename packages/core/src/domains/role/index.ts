@@ -376,40 +376,6 @@ export namespace Role {
   };
 
   /**
-   * Remove all roles from a user in a guild
-   */
-  export const removeAllRoles = async (guildId: string, userId: string): Promise<number> => {
-    // Get all role IDs for this user in this guild
-    const roleMembers = await prisma.guildRoleMember.findMany({
-      where: {
-        discordId: userId,
-        guildRole: {
-          guildId,
-        },
-      },
-      select: {
-        guildRoleId: true,
-      },
-    });
-
-    if (roleMembers.length === 0) {
-      return 0;
-    }
-
-    // Delete all role memberships
-    const result = await prisma.guildRoleMember.deleteMany({
-      where: {
-        discordId: userId,
-        guildRoleId: {
-          in: roleMembers.map((rm) => rm.guildRoleId),
-        },
-      },
-    });
-
-    return result.count;
-  };
-
-  /**
    * Get all active team members in a guild
    * Returns unique team members across all active roles
    */

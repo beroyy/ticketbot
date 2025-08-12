@@ -14,7 +14,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "dotenvx run -- turbo build",
+    "build": "NODE_ENV=production dotenvx run -- turbo build",
     "clean": "rm -rf .turbo node_modules/.cache apps/*/.next apps/*/.turbo packages/*/.turbo",
     "db:generate": "dotenvx run -- pnpm --filter @ticketsbot/db db:generate",
     "db:migrate": "dotenvx run -- pnpm --filter @ticketsbot/db db:migrate",

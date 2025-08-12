@@ -1,5 +1,5 @@
 import { prisma } from "../client";
-import { TicketStatus } from "@prisma/client";
+import { TicketStatus } from "../../generated/prisma";
 
 interface DateRange {
   start: Date;

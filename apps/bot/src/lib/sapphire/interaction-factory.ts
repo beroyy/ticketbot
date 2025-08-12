@@ -7,28 +7,16 @@ import type {
 } from "discord.js";
 import type { Result } from "@bot/lib/utils/result";
 import { BotContext } from "@bot/lib/context";
-import { db } from "@ticketsbot/db";
 
 async function withContext<T extends Interaction, R>(
   interaction: T,
   handler: (interaction: T) => Promise<R>
 ): Promise<R> {
-  let permissions = 0n;
-
-  if (interaction.guild) {
-    try {
-      permissions = await db.role.getUserPermissions(interaction.user.id, interaction.guild.id);
-    } catch (error) {
-      console.error("Error getting user permissions:", error);
-    }
-  }
-
   const context: BotContext = {
     userId: interaction.user.id,
     username: interaction.user.username,
     guildId: interaction.guild ? interaction.guild.id : "",
     channelId: interaction.channelId ? interaction.channelId : undefined,
-    permissions,
     locale: interaction.locale,
   };
 

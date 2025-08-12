@@ -44,8 +44,6 @@ export async function getTeamRoles(guildId: string) {
     id: role.id,
     discordRoleId: role.discordRoleId,
     name: role.name,
-    permissions: role.permissions.toString(),
-    // permissionNames: PermissionUtils.getPermissionNames(role.permissions),
     createdAt: role.createdAt.toISOString(),
   }));
 }

@@ -2,7 +2,7 @@ import type { ErrorHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z, ZodError } from "zod";
 import { createLogger } from "../lib/utils/logger";
-import { ApiContext, PermissionDeniedError } from "../lib/context";
+import { ApiContext, RoleDeniedError } from "../lib/context";
 import { env } from "../env";
 
 // Custom error classes
@@ -52,7 +52,7 @@ type ErrorResponse = {
 const getStatusCode = (error: unknown) => {
   if (error instanceof HTTPException) return error.status as any;
   if (error instanceof ZodError) return 400 as const;
-  if (error instanceof PermissionDeniedError) return 403 as const;
+  if (error instanceof RoleDeniedError) return 403 as const;
   if (error instanceof ContextNotFoundError) return 500 as const;
   if (error instanceof TransactionError) return 500 as const;
   if (error instanceof VisibleError) {

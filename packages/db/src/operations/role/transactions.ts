@@ -22,7 +22,6 @@ export const ensureDefaultRoles = async (guildId: string): Promise<void> => {
           guildId,
           name: "admin",
           position: 1,
-          permissions: 0xFFFFFFFn, // All permissions for admin
           status: GuildRoleStatus.ACTIVE,
         },
       });
@@ -44,7 +43,6 @@ export const ensureDefaultRoles = async (guildId: string): Promise<void> => {
           guildId,
           name: "support",
           position: 2,
-          permissions: 0x400446n, // Support permissions
           status: GuildRoleStatus.ACTIVE,
         },
       });
@@ -60,13 +58,12 @@ export const ensureDefaultRoles = async (guildId: string): Promise<void> => {
     });
 
     if (!memberRole) {
-      // Create member role with basic permissions
+      // Create member role
       await tx.guildRole.create({
         data: {
           guildId,
           name: "member",
           position: 3,
-          permissions: 0x800011n, // Basic member permissions
           status: GuildRoleStatus.ACTIVE,
         },
       });

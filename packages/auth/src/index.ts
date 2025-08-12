@@ -6,25 +6,10 @@ export { linkDiscordAccount, ensureDiscordLinked, getDiscordAccount } from "./se
 
 export { getSession, getSessionFromContext, requireSession } from "./services/session";
 
-export { 
-  AuthPermissionUtils,
-  PermissionUtils,
-  PermissionFlags,
-  ALL_PERMISSIONS,
-  DefaultRolePermissions,
-  PermissionCategories,
-  type PermissionFlag,
-  type PermissionValue
-} from "./services/permissions";
-
 export {
   type OrganizationRole,
-  RolePermissions,
   getUserRole,
   hasRole,
-  getRolePermissions,
-  getUserPermissionsFromRole,
-  hasPermissionViaRole,
   assignRole,
   removeRole,
   updateRole,

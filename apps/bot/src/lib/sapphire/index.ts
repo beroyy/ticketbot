@@ -11,11 +11,7 @@ export {
 } from "@bot/lib/sapphire/command-factory";
 
 // Base command exports
-export {
-  type PermissionProvider,
-  configurePermissionProvider,
-  BaseCommand,
-} from "@bot/lib/sapphire/base-command";
+export { BaseCommand } from "@bot/lib/sapphire/base-command";
 export { TicketCommandBase } from "@bot/lib/sapphire/base-ticket-command";
 
 // Listener factory exports

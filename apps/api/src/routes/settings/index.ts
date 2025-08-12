@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { PermissionFlags } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
-import { compositions, requirePermission } from "../../middleware/context";
+import { compositions } from "../../middleware/context";
+import { requireRole } from "../../middleware/permissions";
 import { defaultSettings, UpdateSettingsSchema } from "./schemas";
 
 export const settingsRoutes = createRoute()
@@ -12,7 +12,8 @@ export const settingsRoutes = createRoute()
     "/:guildId",
     ...compositions.authenticated,
     zValidator("param", z.object({ guildId: z.string() })),
-    requirePermission(PermissionFlags.GUILD_SETTINGS_VIEW),
+    requireRole(["owner", "admin", "support"]),
+
     async (c) => {
       const { guildId } = c.req.valid("param");
 
@@ -33,7 +34,7 @@ export const settingsRoutes = createRoute()
     ...compositions.authenticated,
     zValidator("param", z.object({ guildId: z.string() })),
     zValidator("json", UpdateSettingsSchema),
-    requirePermission(PermissionFlags.GUILD_SETTINGS_EDIT),
+    requireRole(["owner", "admin"]),
     async (c) => {
       const { guildId } = c.req.valid("param");
       const input = c.req.valid("json");
@@ -85,17 +86,12 @@ export const settingsRoutes = createRoute()
         );
       }
 
-      const [permissions, roles] = await Promise.all([
-        db.role.getUserPermissions(guildId, user.discordUserId),
-        db.role.getUserRoles(guildId, user.discordUserId),
-      ]);
+      const roles = await db.role.getUserRoles(guildId, user.discordUserId);
 
       return c.json({
-        permissions: permissions.toString(),
-        roles: roles.map((role) => ({
+        roles: roles.map((role: any) => ({
           id: role.id,
           name: role.name,
-          permissions: role.permissions.toString(),
           discordRoleId: role.discordRoleId,
         })),
       });

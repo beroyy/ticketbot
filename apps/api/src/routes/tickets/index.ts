@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { db, TicketStatusSchema } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/auth";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
-import { compositions, requirePermission } from "../../middleware/context";
+import { compositions } from "../../middleware/context";
+import { requireRole } from "../../middleware/permissions";
 import {
   CreateTicketSchema,
   UpdateTicketSchema,
@@ -30,7 +30,7 @@ export const ticketRoutes = createRoute()
         pageSize: z.coerce.number().int().positive().max(100).default(50),
       })
     ),
-    requirePermission(PermissionFlags.TICKET_VIEW_ALL),
+    requireRole(["owner", "admin", "support"]),
     async (c) => {
       const { guildId, status, page, pageSize } = c.req.valid("query");
 
@@ -59,7 +59,7 @@ export const ticketRoutes = createRoute()
         limit: z.coerce.number().int().positive().max(50).default(10),
       })
     ),
-    requirePermission(PermissionFlags.TICKET_VIEW_ALL),
+    requireRole(["owner", "admin", "support"]),
     async (c) => {
       // Guild ID is available from query through context
       // TODO: Implement event listing in Event domain or Analytics
@@ -211,7 +211,7 @@ export const ticketRoutes = createRoute()
     "/:id/claim",
     ...compositions.authenticated,
     zValidator("param", z.object({ id: z.string() })),
-    requirePermission(PermissionFlags.TICKET_CLAIM),
+    requireRole(["owner", "admin", "support"]),
     async (c) => {
       const { id } = c.req.valid("param");
       const ticketId = parseTicketId(id);
@@ -442,7 +442,7 @@ export const ticketRoutes = createRoute()
     "/statistics/:guildId",
     ...compositions.authenticated,
     zValidator("param", z.object({ guildId: z.string() })),
-    requirePermission(PermissionFlags.ANALYTICS_VIEW),
+    requireRole(["owner", "admin", "support"]),
     async (c) => {
       const { guildId } = c.req.valid("param");
 

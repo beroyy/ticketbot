@@ -13,7 +13,7 @@ import {
 import { MdOutlineArrowDropDown } from "react-icons/md";
 import { useAuth } from "@/features/auth";
 import { usePermissions } from "@/features/permissions/hooks/use-permissions";
-import { PermissionFlags } from "@ticketsbot/auth";
+import type { OrganizationRole } from "@ticketsbot/auth";
 import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StableAvatar } from "@/components/stable-avatar";
@@ -23,8 +23,7 @@ import { env } from "@/env";
 type NavItem = {
   href: string;
   label: string;
-  permission?: bigint;
-  permissions?: bigint[];
+  requiredRoles?: OrganizationRole[];
   requiresGuild?: boolean;
 };
 
@@ -33,7 +32,7 @@ const navItems: NavItem[] = [
   {
     href: "/tickets",
     label: "Tickets",
-    permission: PermissionFlags.TICKET_VIEW_ALL,
+    requiredRoles: ["owner", "admin", "support"],
     requiresGuild: true,
   },
 ];
@@ -42,25 +41,21 @@ export function Navbar() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const { selectedGuildId, setSelectedGuildId } = useAuth();
-  const { hasPermission, hasAnyPermission } = usePermissions();
+  const { hasRole } = usePermissions();
 
   const visibleNavItems = useMemo(() => {
     return navItems.filter((item) => {
-      if (!item.permission && !item.permissions) return true;
+      if (!item.requiredRoles) return true;
 
       if (item.requiresGuild && !selectedGuildId) return false;
 
-      if (item.permission) {
-        return hasPermission(item.permission);
-      }
-
-      if (item.permissions) {
-        return hasAnyPermission(...item.permissions);
+      if (item.requiredRoles) {
+        return hasRole(item.requiredRoles);
       }
 
       return true;
     });
-  }, [selectedGuildId, hasPermission, hasAnyPermission]);
+  }, [selectedGuildId, hasRole]);
 
   if (["/setup", "/setup-v2", "/login"].includes(router.pathname)) return null;
 

@@ -23,7 +23,6 @@ export const MessageDeleteListener = ListenerFactory.on(
         userId: message.client.user.id,
         username: message.client.user.username,
         guildId: message.guildId!,
-        permissions: 0n,
       };
 
       await BotContext.provideAsync(context, async () => {

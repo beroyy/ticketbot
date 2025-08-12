@@ -2,13 +2,12 @@ import "@sapphire/plugin-logger/register";
 import "@sapphire/plugin-subcommands/register";
 import { createServer } from "http";
 import { botConfig, env } from "@bot/config";
-import { BaseBotClient, configurePermissionProvider } from "@bot/lib/sapphire";
+import { BaseBotClient } from "@bot/lib/sapphire";
 import { GatewayIntentBits } from "discord.js";
 import { container } from "@sapphire/framework";
 import { join as _join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { db } from "@ticketsbot/db";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,11 +18,6 @@ class TicketsBotClient extends BaseBotClient {
     return super.login(token);
   }
 }
-
-// Simple adapter for Role domain to implement PermissionProvider interface
-configurePermissionProvider({
-  getUserPermissions: db.role.getUserPermissions,
-});
 
 const client = new TicketsBotClient({
   intents: [

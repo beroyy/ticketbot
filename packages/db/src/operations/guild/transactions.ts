@@ -59,7 +59,6 @@ export async function initialize(data: {
       },
       update: {
         isDefault: true,
-        permissions: BigInt("0xfffffff"), // All permissions
       },
       create: {
         guildId: guildId,
@@ -67,7 +66,6 @@ export async function initialize(data: {
         color: "#5865F2",
         position: 100,
         isDefault: true,
-        permissions: BigInt("0xfffffff"),
       },
     });
 
@@ -80,7 +78,6 @@ export async function initialize(data: {
       },
       update: {
         isDefault: true,
-        permissions: BigInt("0x400446"), // Support permissions
       },
       create: {
         guildId: guildId,
@@ -88,7 +85,6 @@ export async function initialize(data: {
         color: "#57F287",
         position: 50,
         isDefault: true,
-        permissions: BigInt("0x400446"),
       },
     });
 
@@ -101,7 +97,6 @@ export async function initialize(data: {
       },
       update: {
         isDefault: true,
-        permissions: BigInt("0x800011"), // Viewer permissions
       },
       create: {
         guildId: guildId,
@@ -109,7 +104,6 @@ export async function initialize(data: {
         color: "#99AAB5",
         position: 10,
         isDefault: true,
-        permissions: BigInt("0x800011"),
       },
     });
 
@@ -232,7 +226,6 @@ export async function ensureGuildWithDefaults(data: {
         data: {
           guildId: guild.id,
           name: "Support",
-          permissions: BigInt("0x1ffffff"), // Default support permissions
         },
       });
     }

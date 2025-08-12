@@ -5,7 +5,7 @@ export type BotContext = {
   username: string;
   guildId: string;
   channelId?: string;
-  permissions: bigint;
+  role?: string;
   locale?: string;
 };
 
@@ -42,14 +42,17 @@ export const BotContext = {
     return this.get().guildId;
   },
 
-  hasPermission(flag: bigint): boolean {
+  hasRole(roles: string | string[]): boolean {
     const ctx = this.get();
-    return (ctx.permissions & flag) === flag;
+    if (!ctx.role) return false;
+    const roleArray = Array.isArray(roles) ? roles : [roles];
+    return roleArray.includes(ctx.role);
   },
 
-  requirePermission(flag: bigint): void {
-    if (!this.hasPermission(flag)) {
-      throw new Error(`Missing required permission: 0x${flag.toString(16)}`);
+  requireRole(roles: string | string[]): void {
+    if (!this.hasRole(roles)) {
+      const roleArray = Array.isArray(roles) ? roles : [roles];
+      throw new Error(`Missing required role: ${roleArray.join(", ")}`);
     }
   },
 };

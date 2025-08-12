@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { PermissionFlags } from "@ticketsbot/auth";
 // import { db } from "@ticketsbot/db";
 import { createRoute } from "../factory";
-import { compositions, requirePermission } from "../middleware/context";
+import { compositions } from "../middleware/context";
+import { requireRole } from "../middleware/permissions";
 
 export const guildRoutes = createRoute().get(
   "/:guildId/tickets/stats",
@@ -14,7 +14,7 @@ export const guildRoutes = createRoute().get(
       guildId: z.string(),
     })
   ),
-  requirePermission(PermissionFlags.ANALYTICS_VIEW),
+  requireRole(["owner", "admin", "support"]),
   async (_c) => {
     // Guild ID is extracted from params by context middleware
     // Get statistics from the Guild domain - returns all timeframes

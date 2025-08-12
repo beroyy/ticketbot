@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/auth";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
-import { compositions, requirePermission } from "../../middleware/context";
+import { compositions } from "../../middleware/context";
+import { requireRole } from "../../middleware/permissions";
 import {
   CreatePanelSchema,
   UpdatePanelApiSchema,
@@ -55,7 +55,7 @@ export const panelRoutes = createRoute()
   .post(
     "/",
     ...compositions.guildScoped,
-    requirePermission(PermissionFlags.PANEL_CREATE),
+    requireRole(["owner", "admin"]),
     zValidator("json", CreatePanelSchema),
     async (c) => {
       const input = c.req.valid("json");
@@ -89,7 +89,7 @@ export const panelRoutes = createRoute()
       })
     ),
     zValidator("json", UpdatePanelApiSchema),
-    requirePermission(PermissionFlags.PANEL_EDIT),
+    requireRole(["owner", "admin"]),
     async (c) => {
       const { id } = c.req.valid("param");
       const input = c.req.valid("json");
@@ -131,7 +131,7 @@ export const panelRoutes = createRoute()
         id: z.string().transform((val) => parseInt(val, 10)),
       })
     ),
-    requirePermission(PermissionFlags.PANEL_DELETE),
+    requireRole(["owner", "admin"]),
     async (c) => {
       const { id } = c.req.valid("param");
 
@@ -161,7 +161,7 @@ export const panelRoutes = createRoute()
         id: z.string().transform((val) => parseInt(val, 10)),
       })
     ),
-    requirePermission(PermissionFlags.PANEL_DEPLOY),
+    requireRole(["owner", "admin"]),
     async (c) => {
       const { id } = c.req.valid("param");
 
@@ -204,7 +204,7 @@ export const panelRoutes = createRoute()
         messageId: z.string(),
       })
     ),
-    requirePermission(PermissionFlags.PANEL_DEPLOY),
+    requireRole(["owner", "admin"]),
     async (c) => {
       const { id } = c.req.valid("param");
       const { messageId } = c.req.valid("json");

@@ -9,7 +9,7 @@ export interface ApiContext {
   email: string;
   discordId?: string;
   selectedGuildId?: string;
-  permissions: bigint;
+  role?: string;
   session: any;
 }
 
@@ -78,29 +78,32 @@ export const ApiContext = {
   },
 
   /**
-   * Check if the current context has a specific permission
+   * Check if the current context has a specific role
    */
-  hasPermission(flag: bigint): boolean {
+  hasRole(roles: string | string[]): boolean {
     const ctx = this.get();
-    return (ctx.permissions & flag) === flag;
+    if (!ctx.role) return false;
+    const roleArray = Array.isArray(roles) ? roles : [roles];
+    return roleArray.includes(ctx.role);
   },
 
   /**
-   * Require a specific permission (throws if not present)
+   * Require a specific role (throws if not present)
    */
-  requirePermission(flag: bigint): void {
-    if (!this.hasPermission(flag)) {
-      throw new PermissionDeniedError(flag);
+  requireRole(roles: string | string[]): void {
+    if (!this.hasRole(roles)) {
+      throw new RoleDeniedError(roles);
     }
   },
 };
 
 /**
- * Custom error for permission denied scenarios
+ * Custom error for role denied scenarios
  */
-export class PermissionDeniedError extends Error {
-  constructor(public readonly requiredPermission: bigint) {
-    super(`Permission denied: missing permission 0x${requiredPermission.toString(16)}`);
-    this.name = "PermissionDeniedError";
+export class RoleDeniedError extends Error {
+  constructor(public readonly requiredRoles: string | string[]) {
+    const roleArray = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+    super(`Role denied: requires one of ${roleArray.join(", ")}`);
+    this.name = "RoleDeniedError";
   }
 }

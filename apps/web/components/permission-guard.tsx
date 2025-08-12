@@ -1,24 +1,23 @@
 import type { ReactNode } from "react";
+import type { OrganizationRole } from "@ticketsbot/auth";
 import { useAuth } from "@/features/auth";
 import { usePermissions } from "@/features/permissions/hooks/use-permissions";
 
 interface PermissionGuardProps {
   children: ReactNode;
-  permission?: bigint;
-  permissions?: bigint[]; // For OR condition
+  requiredRoles?: OrganizationRole[];
   fallback?: ReactNode;
   requireGuild?: boolean;
 }
 
 export function PermissionGuard({
   children,
-  permission,
-  permissions,
+  requiredRoles,
   fallback,
   requireGuild = true,
 }: PermissionGuardProps) {
   const { selectedGuildId } = useAuth();
-  const { hasPermission, hasAnyPermission, isLoading } = usePermissions();
+  const { hasRole, isLoading } = usePermissions();
 
   // If guild is required but none selected
   if (requireGuild && !selectedGuildId) {
@@ -45,18 +44,10 @@ export function PermissionGuard({
     );
   }
 
-  // Check permissions
-  let hasRequiredPermission = true;
+  // Check roles
+  const hasRequiredRole = !requiredRoles || hasRole(requiredRoles);
 
-  if (permission) {
-    hasRequiredPermission = hasPermission(permission);
-  }
-
-  if (permissions) {
-    hasRequiredPermission = hasAnyPermission(...permissions);
-  }
-
-  if (!hasRequiredPermission) {
+  if (!hasRequiredRole) {
     if (fallback) {
       return <>{fallback}</>;
     }

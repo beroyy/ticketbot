@@ -121,9 +121,7 @@ model DiscordUser {
   claimedLifecycleEvents   TicketLifecycleEvent[]  @relation("LifecycleClaimer")
   closedLifecycleEvents    TicketLifecycleEvent[]  @relation("LifecycleCloser")
   guildRoleMembers         GuildRoleMember[]
-  guildMemberPermissions   GuildMemberPermission[]
   assignedRoles            GuildRoleMember[]       @relation("RoleAssignments")
-  grantedPermissions       GuildMemberPermission[] @relation("PermissionGrants")
 
   @@map("discord_users")
 }
@@ -215,7 +213,6 @@ model Guild {
   tickets                Ticket[]
   blacklist              Blacklist[]
   guildRoles             GuildRole[]               @relation("GuildTeamRoles")
-  guildMemberPermissions GuildMemberPermission[]   @relation("GuildTeamMemberPermissions")
   categories             GuildCategory[]
   supportRoles           GuildSupportRole[]
   ticketAnalytics        TicketAnalyticsSnapshot[]
@@ -343,7 +340,6 @@ model GuildRole {
   position         Int               @default(0)
   isDefault        Boolean           @default(false) @map("is_default")
   isManaged        Boolean           @default(true) @map("is_managed")
-  permissions      BigInt            @default(0)
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
   guild            Guild             @relation("GuildTeamRoles", fields: [guildId], references: [id], onDelete: Cascade)
@@ -373,24 +369,6 @@ model GuildRoleMember {
   @@index([guildRoleId])
   @@map("guild_role_members")
 }
-
-model GuildMemberPermission {
-  id                    Int          @id @default(autoincrement())
-  discordId             String       @map("discord_id")
-  guildId               String       @map("guild_id")
-  additionalPermissions BigInt       @default(0) @map("additional_permissions")
-  grantedAt             DateTime     @default(now()) @map("granted_at")
-  grantedById           String?      @map("granted_by_id")
-  discordUser           DiscordUser  @relation(fields: [discordId], references: [id], onDelete: Cascade)
-  guild                 Guild        @relation("GuildTeamMemberPermissions", fields: [guildId], references: [id], onDelete: Cascade)
-  grantedBy             DiscordUser? @relation("PermissionGrants", fields: [grantedById], references: [id])
-
-  @@unique([discordId, guildId])
-  @@index([discordId])
-  @@index([guildId])
-  @@map("guild_member_permissions")
-}
-
 
 model Ticket {
   id                    Int          @id @default(autoincrement())

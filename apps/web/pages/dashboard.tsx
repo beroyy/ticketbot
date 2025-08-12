@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
-import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/auth";
+import { getUserRole } from "@ticketsbot/auth";
 
 export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
   const api = await createServerApiClient(context.req, guildId);
@@ -17,11 +16,10 @@ export const getServerSideProps = withGuildRoute(async (context, session, guildI
   let initialRecentActivity: any[] = [];
 
   try {
-    // Check permissions first
+    // Check role first
     if (session.user.discordUserId) {
-      const permissions = await db.role.getUserPermissions(guildId, session.user.discordUserId);
-      hasAnalyticsPermission =
-        (permissions & PermissionFlags.ANALYTICS_VIEW) === PermissionFlags.ANALYTICS_VIEW;
+      const role = await getUserRole(guildId, session.user.discordUserId);
+      hasAnalyticsPermission = role !== null; // All roles can view analytics
     }
 
     if (hasAnalyticsPermission) {

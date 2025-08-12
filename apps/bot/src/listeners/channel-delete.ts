@@ -27,7 +27,6 @@ export const ChannelDeleteListener = ListenerFactory.on("channelDelete", async (
       userId: channel.client.user.id,
       username: channel.client.user.username,
       guildId: channel.guild.id,
-      permissions: 0n,
     };
 
     await BotContext.provideAsync(context, async () => {

@@ -1,7 +1,7 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
 import type { AuthSession } from "@ticketsbot/auth";
 import { z } from "zod";
-import { ApiContext, PermissionDeniedError } from "../lib/context";
+import { ApiContext, RoleDeniedError } from "../lib/context";
 import { createLogger } from "../lib/utils/logger";
 import { env } from "../env";
 import { nanoid } from "nanoid";
@@ -45,7 +45,6 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
           email: sessionData.user.email,
           discordId: sessionData.user.discordUserId || undefined,
           selectedGuildId: guildId,
-          permissions: BigInt(sessionData.permissions || 0),
           session: sessionData,
         },
         () => next()
@@ -98,7 +97,6 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
     logger.debug("Session validated successfully", {
       userId: sessionData.user.id,
       email: sessionData.user.email,
-      hasPermissions: !!sessionData.permissions,
     });
 
     c.set("user", sessionData.user);
@@ -114,7 +112,6 @@ const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, n
         email: sessionData.user.email,
         discordId: sessionData.user.discordUserId || undefined,
         selectedGuildId: guildId,
-        permissions: BigInt(sessionData.permissions || 0),
         session: sessionData.session,
       },
       () => next()
@@ -149,31 +146,31 @@ const extractGuildId = (c: Context): string | undefined => {
   return undefined;
 };
 
-export const requirePermission = (permission: bigint) => {
+export const requireRole = (role: string | string[]) => {
   return async (c: Context<{ Variables: Variables }>, next: Next) => {
-    const checkPermissionAndProceed = async () => {
+    const checkRoleAndProceed = async () => {
       try {
-        ApiContext.requirePermission(permission);
+        ApiContext.requireRole(role);
 
         if (env.isDev()) {
           const ctx = ApiContext.get();
-          logger.debug("Permission check passed", {
-            required: permission.toString(16),
+          logger.debug("Role check passed", {
+            required: role,
             user: ctx.email,
-            hasPermission: ApiContext.hasPermission(permission),
+            hasRole: ApiContext.hasRole(role),
           });
         }
 
         await next();
       } catch (error) {
-        if (error instanceof PermissionDeniedError) {
+        if (error instanceof RoleDeniedError) {
           const response = env.isDev()
             ? {
                 error: error.message,
-                required: permission.toString(16),
-                details: "Missing required permission flag",
+                required: role,
+                details: "Missing required role",
               }
-            : { error: "Permission denied" };
+            : { error: "Access denied" };
 
           c.status(403);
           c.json(response);
@@ -183,7 +180,7 @@ export const requirePermission = (permission: bigint) => {
       }
     };
 
-    await checkPermissionAndProceed();
+    await checkRoleAndProceed();
   };
 };
 

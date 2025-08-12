@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { auth } from "@ticketsbot/auth";
-import { db } from "@ticketsbot/db";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow POST requests
@@ -22,18 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const session = sessionData as any;
 
-    // Calculate permissions if guildId is provided
-    let permissions = "0";
-    const guildId = req.body?.guildId;
-
-    if (guildId && session.user?.discordUserId) {
-      try {
-        const perms = await db.role.getUserPermissions(guildId, session.user.discordUserId);
-        permissions = perms.toString();
-      } catch {
-        // Ignore permission errors
-      }
-    }
+    // Permissions are no longer used - role-based system in place
+    const permissions = "0";
 
     // Return session data with permissions
     res.setHeader("Cache-Control", "private, max-age=60"); // Cache for 1 minute

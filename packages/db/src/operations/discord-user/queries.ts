@@ -11,7 +11,7 @@ export const getAccessibleGuilds = async (discordUserId: string) => {
     where: {
       OR: [
         { ownerDiscordId: discordUserId },
-        { guildMemberPermissions: { some: { discordId: discordUserId } } },
+        { guildRoles: { some: { guildRoleMembers: { some: { discordId: discordUserId } } } } },
       ],
     },
     select: { id: true },

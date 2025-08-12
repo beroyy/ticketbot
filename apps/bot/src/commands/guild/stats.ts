@@ -10,7 +10,7 @@ import {
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
 } from "@bot/lib/utils";
-import { PermissionFlags } from "@ticketsbot/auth";
+import { hasRole } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
 
@@ -70,13 +70,13 @@ const handleUserStats = async (interaction: ChatInputCommandInteraction) => {
       return err("User not found");
     }
 
-    const hasTeamPermissions = await db.role.hasPermission(
+    const isTeamMember = await hasRole(
       guildId,
       discordUserId,
-      PermissionFlags.TICKET_VIEW_ALL
+      ["owner", "admin", "support"]
     );
 
-    if (hasTeamPermissions) {
+    if (isTeamMember) {
       return displayTeamMemberStats(interaction, targetUser, guildId, discordUserId);
     } else {
       return displayRegularUserStats(interaction, targetUser, discordUserId);

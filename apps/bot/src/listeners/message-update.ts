@@ -32,7 +32,6 @@ export const MessageUpdateListener = ListenerFactory.on(
         userId: newMessage.client.user.id,
         username: newMessage.client.user.username,
         guildId: newMessage.guildId!,
-        permissions: 0n,
       };
 
       await BotContext.provideAsync(context, async () => {

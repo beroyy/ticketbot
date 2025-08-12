@@ -1,48 +1,8 @@
-import { PermissionFlags } from "./permissions";
 import { db, prisma } from "@ticketsbot/db";
 import { logger } from "../utils/logger";
 
 export type OrganizationRole = "owner" | "admin" | "support";
 
-/**
- * Role-based permission mapping for compatibility with existing bitfield system
- * Maps the 3 simple roles to permission bitfields
- */
-export const RolePermissions: Record<OrganizationRole, bigint> = {
-  owner: 
-    // Owner has all permissions
-    Object.values(PermissionFlags).reduce((acc, flag) => acc | flag, 0n),
-  
-  admin:
-    // Admin can manage panels, tickets, tags, forms, and view settings
-    PermissionFlags.PANEL_CREATE |
-    PermissionFlags.PANEL_EDIT |
-    PermissionFlags.PANEL_DELETE |
-    PermissionFlags.PANEL_DEPLOY |
-    PermissionFlags.TICKET_VIEW_ALL |
-    PermissionFlags.TICKET_CLOSE_ANY |
-    PermissionFlags.TICKET_ASSIGN |
-    PermissionFlags.TICKET_EXPORT |
-    PermissionFlags.TAG_CREATE |
-    PermissionFlags.TAG_EDIT |
-    PermissionFlags.TAG_DELETE |
-    PermissionFlags.TAG_USE |
-    PermissionFlags.FORM_CREATE |
-    PermissionFlags.FORM_EDIT |
-    PermissionFlags.FORM_DELETE |
-    PermissionFlags.ANALYTICS_VIEW |
-    PermissionFlags.GUILD_SETTINGS_VIEW |
-    PermissionFlags.MEMBER_VIEW |
-    PermissionFlags.FEEDBACK_VIEW,
-  
-  support:
-    // Support can view/claim tickets and use tags
-    PermissionFlags.TICKET_VIEW_ALL |
-    PermissionFlags.TICKET_CLAIM |
-    PermissionFlags.TAG_USE |
-    PermissionFlags.MEMBER_VIEW |
-    PermissionFlags.ANALYTICS_VIEW,
-};
 
 /**
  * Get user's role in an organization (guild)
@@ -105,39 +65,6 @@ export async function hasRole(
 }
 
 /**
- * Get permissions for a role (for compatibility)
- */
-export function getRolePermissions(role: OrganizationRole): bigint {
-  return RolePermissions[role] || 0n;
-}
-
-/**
- * Get user's permissions based on their role
- */
-export async function getUserPermissionsFromRole(
-  guildId: string,
-  userId: string
-): Promise<bigint> {
-  const role = await getUserRole(guildId, userId);
-  if (!role) return 0n;
-  
-  return getRolePermissions(role);
-}
-
-/**
- * Compatibility layer: Check if user has specific permission flags
- * This maintains compatibility with existing permission checks while using roles
- */
-export async function hasPermissionViaRole(
-  guildId: string,
-  userId: string,
-  permission: bigint
-): Promise<boolean> {
-  const userPermissions = await getUserPermissionsFromRole(guildId, userId);
-  return (userPermissions & permission) === permission;
-}
-
-/**
  * Assign a role to a user in a guild
  */
 export async function assignRole(
@@ -165,7 +92,6 @@ export async function assignRole(
         data: {
           guildId,
           name: role,
-          permissions: getRolePermissions(role),
           position: role === "admin" ? 1 : 2,  // Owner role check is handled earlier
         },
       });

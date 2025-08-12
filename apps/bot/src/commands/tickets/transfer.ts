@@ -2,7 +2,7 @@ import { TicketCommandBase } from "@bot/lib/sapphire";
 import type { Command } from "@sapphire/framework";
 import { Embed, InteractionEdit, type Result, ok, err } from "@bot/lib/utils";
 import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/auth";
+import { hasRole } from "@ticketsbot/auth";
 import type { ChatInputCommandInteraction } from "discord.js";
 
 export class TransferCommand extends TicketCommandBase {
@@ -39,14 +39,14 @@ export class TransferCommand extends TicketCommandBase {
   ): Promise<Result<void>> {
     const targetUser = interaction.options.getUser("user", true);
 
-    // Check if target user has permission
-    const targetHasPermission = await db.role.hasPermission(
+    // Check if target user is staff
+    const targetIsStaff = await hasRole(
       interaction.guild!.id,
       targetUser.id,
-      PermissionFlags.TICKET_VIEW_ALL
+      ["owner", "admin", "support"]
     );
 
-    if (!targetHasPermission) {
+    if (!targetIsStaff) {
       return err(`<@${targetUser.id}> is not a staff member.`);
     }
 

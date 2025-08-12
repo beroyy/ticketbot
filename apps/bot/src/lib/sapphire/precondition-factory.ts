@@ -6,8 +6,8 @@ import {
 } from "@sapphire/framework";
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
-import { PermissionUtils } from "@ticketsbot/auth";
 import { db } from "@ticketsbot/db";
+import { hasRole, type OrganizationRole } from "@ticketsbot/auth";
 import { PreconditionErrors } from "@bot/lib/utils/error-handlers";
 
 export type PreconditionConfig = {
@@ -33,8 +33,7 @@ export type GuildPreconditionConfig = {
 
 export type PermissionPreconditionConfig = {
   name: string;
-  permission?: bigint;
-  getPermission?: (context: PreconditionContext) => bigint;
+  roles?: OrganizationRole[];
   allowGuildOwner?: boolean;
   allowDiscordAdmin?: boolean;
   customCheck?: (
@@ -106,8 +105,8 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
 
     public override async chatInputRun(
       interaction: ChatInputCommandInteraction,
-      command: ChatInputCommand,
-      context: PreconditionContext
+      _command: ChatInputCommand,
+      _context: PreconditionContext
     ): AsyncPreconditionResult {
       if (!interaction.guild || !interaction.member) {
         return this.error({
@@ -131,11 +130,10 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
         }
       }
 
-      if (config.permission !== undefined || config.getPermission) {
-        const permission = config.getPermission?.(context) ?? config.permission!;
-        const hasPermission = await db.role.hasPermission(guildId, userId, permission);
+      if (config.roles && config.roles.length > 0) {
+        const hasRequiredRole = await hasRole(guildId, userId, config.roles);
 
-        if (hasPermission) {
+        if (hasRequiredRole) {
           return this.ok();
         }
       }
@@ -147,11 +145,9 @@ export const createPermissionPrecondition = (config: PermissionPreconditionConfi
         return this.ok();
       }
 
-      const permission = config.getPermission?.(context) ?? config.permission;
-      if (permission) {
-        const permissionNames = PermissionUtils.getPermissionNames(permission);
+      if (config.roles && config.roles.length > 0) {
         return this.error({
-          message: PreconditionErrors.missingPermission(permissionNames),
+          message: `You need one of these roles: ${config.roles.join(", ")}`,
           context: { silent: true },
         });
       }
@@ -209,6 +205,6 @@ declare module "@sapphire/framework" {
     "team-only": never;
     "ticket-channel-only": never;
     "can-close-ticket": never;
-    "has-permission": PreconditionContext & { permission: bigint };
+    "has-role": PreconditionContext & { roles: OrganizationRole[] };
   }
 }

@@ -1,20 +1,20 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { createLogger } from "../lib/utils/logger";
-import { db } from "@ticketsbot/db";
+import { getUserRole } from "@ticketsbot/auth";
 import { createRoute } from "../factory";
 import { compositions } from "../middleware/context";
 
 const logger = createLogger("api:permissions");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const PermissionsResponseSchema = z.object({
-  permissions: z.string(),
+const RoleResponseSchema = z.object({
+  role: z.string().nullable(),
   guildId: z.string(),
   userId: z.string().nullable(),
 });
 
-type PermissionsResponse = z.infer<typeof PermissionsResponseSchema>;
+type RoleResponse = z.infer<typeof RoleResponseSchema>;
 
 export const permissionRoutes = createRoute().get(
   "/:guildId",
@@ -24,7 +24,7 @@ export const permissionRoutes = createRoute().get(
     const { guildId } = c.req.valid("param");
     const user = c.get("user");
 
-    logger.debug("Fetching permissions", {
+    logger.debug("Fetching user role", {
       guildId,
       userId: user.id,
       discordUserId: user.discordUserId,
@@ -33,24 +33,24 @@ export const permissionRoutes = createRoute().get(
     const discordUserId = user.discordUserId;
     if (!discordUserId) {
       return c.json({
-        permissions: "0",
+        role: null,
         guildId,
         userId: null,
-      } satisfies PermissionsResponse);
+      } satisfies RoleResponse);
     }
 
-    const permissions = await db.role.getUserPermissions(guildId, discordUserId);
+    const role = await getUserRole(guildId, discordUserId);
 
-    logger.debug("Calculated permissions", {
+    logger.debug("User role", {
       guildId,
       discordUserId,
-      permissions: permissions.toString(),
+      role,
     });
 
     return c.json({
-      permissions: permissions.toString(),
+      role,
       guildId,
       userId: discordUserId,
-    } satisfies PermissionsResponse);
+    } satisfies RoleResponse);
   }
 );

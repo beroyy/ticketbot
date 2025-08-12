@@ -33,17 +33,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./domains": "./src/domains/index.ts",
-    "./domains/*": "./src/domains/*/index.ts",
-    "./domains/*/client": "./src/domains/*/client.ts",
     "./discord": "./src/discord/index.ts",
-    "./domains/analytics": "./src/domains/analytics/index.ts",
-    "./domains/role": "./src/domains/role/index.ts",
-    "./domains/ticket": "./src/domains/ticket/index.ts",
-    "./domains/ticket/user": "./src/domains/ticket/user.ts",
-    "./domains/ticket/system": "./src/domains/ticket/system.ts",
-    "./domains/ticket-lifecycle": "./src/domains/ticket-lifecycle/index.ts",
-    "./domains/transcripts": "./src/domains/transcripts/index.ts",
     "./context": "./src/context/index.ts",
     "./auth": "./src/auth/index.ts",
     "./auth/services/user-linking": "./src/auth/services/user-linking.ts"

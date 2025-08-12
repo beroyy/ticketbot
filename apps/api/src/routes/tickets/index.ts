@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema, TicketStatusSchema, PermissionFlags } from "@ticketsbot/core";
-import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { db } from "@ticketsbot/db";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
@@ -447,7 +446,7 @@ export const ticketRoutes = createRoute()
     async (c) => {
       const { guildId } = c.req.valid("param");
 
-      const _stats = await Analytics.getTicketStatistics({
+      const _stats = await db.analytics.getTicketStatistics({
         guildId,
         includeDeleted: false,
       });

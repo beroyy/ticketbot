@@ -10,7 +10,6 @@ import {
   STATS_CONSTANTS,
   EPHEMERAL_FLAG,
 } from "@bot/lib/discord-utils";
-import { Analytics } from "@ticketsbot/core/domains/analytics";
 import { parseDiscordId, PermissionFlags } from "@ticketsbot/core";
 import { db } from "@ticketsbot/db";
 import { container } from "@sapphire/framework";
@@ -99,7 +98,7 @@ const displayTeamMemberStats = async (
   discordUserId: string
 ) => {
   const [stats, userRoles] = await Promise.all([
-    Analytics.getStaffPerformance({
+    db.analytics.getStaffPerformance({
       guildId,
       staffId: discordUserId,
     }),
@@ -117,7 +116,7 @@ const displayTeamMemberStats = async (
     { name: "⚡ Total Actions", value: stats.totalActions.toString(), inline: true },
     {
       name: "👨‍💼 Roles",
-      value: userRoles.length > 0 ? userRoles.map((r) => r.name).join(", ") : "None",
+      value: userRoles.length > 0 ? userRoles.map((r: any) => r.name).join(", ") : "None",
       inline: true,
     }
   );
@@ -168,7 +167,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
 
   try {
     const [monthStats, weekStats, activeTeamMembers] = await Promise.all([
-      Analytics.getTicketStatistics({
+      db.analytics.getTicketStatistics({
         guildId,
         dateRange: {
           start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -176,7 +175,7 @@ const handleServerStats = async (interaction: ChatInputCommandInteraction) => {
         },
         includeDeleted: false,
       }),
-      Analytics.getTicketStatistics({
+      db.analytics.getTicketStatistics({
         guildId,
         dateRange: {
           start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
@@ -270,7 +269,7 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
     const staffStats = await Promise.all(
       teamMembers.map(async (member: any) => {
         const [performanceStats, memberRoles] = await Promise.all([
-          Analytics.getStaffPerformance({
+          db.analytics.getStaffPerformance({
             guildId,
             staffId: member.discordId,
           }),
@@ -282,7 +281,7 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
 
         return {
           id: member.discordId,
-          roles: memberRoles.map((r) => r.name).join(", "),
+          roles: memberRoles.map((r: any) => r.name).join(", "),
           closed: stats?.ticketsClosed || 0,
           claimed: stats?.ticketsClaimed || 0,
           actions: (stats?.ticketsClosed || 0) + (stats?.ticketsClaimed || 0),

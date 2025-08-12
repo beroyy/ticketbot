@@ -53,6 +53,7 @@ import {
 } from "./operations/guild/mutations";
 
 import * as roleOps from "./operations/role";
+import * as analyticsOps from "./operations/analytics";
 
 export const db = {
   discordUser: {
@@ -117,4 +118,5 @@ export const db = {
     submitFeedback: submitFeedback,
   },
   ticketLifecycle: ticketLifecycle,
+  analytics: analyticsOps,
 };

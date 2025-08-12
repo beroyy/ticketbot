@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { db } from "@ticketsbot/db";
-import { Discord } from "@ticketsbot/core/discord";
 import { PermissionFlags } from "@ticketsbot/core";
 import { createRoute } from "../../factory";
 import { ApiErrors } from "../../utils/error-handler";
@@ -12,6 +11,7 @@ import {
   transformApiPanelToDomain,
   transformUpdateData,
 } from "./schemas";
+import { deployPanel, updatePanel } from "../../services/discord-client";
 
 export const panelRoutes = createRoute()
   .get("/", ...compositions.guildScoped, async (c) => {
@@ -168,7 +168,7 @@ export const panelRoutes = createRoute()
       try {
         const panelData = await db.panel.deployPanel(id);
 
-        const result = await Discord.deployPanel(panelData);
+        const result = await deployPanel(panelData);
 
         return c.json({
           success: true,
@@ -212,7 +212,7 @@ export const panelRoutes = createRoute()
       try {
         const panelData = await db.panel.deployPanel(id);
 
-        const result = await Discord.updatePanel(panelData, messageId);
+        const result = await updatePanel(panelData, messageId);
 
         return c.json({
           success: true,

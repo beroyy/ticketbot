@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { DiscordGuildIdSchema } from "@ticketsbot/core";
-import { Discord } from "@ticketsbot/core/discord";
 import { db } from "@ticketsbot/db";
 import { createLogger } from "@ticketsbot/core";
 import { createRoute } from "../../factory";
@@ -14,6 +13,7 @@ import {
   MANAGE_GUILD_PERMISSION,
   updateUserGuildsCache,
 } from "./helpers";
+import { getGuildRoles, getGuildChannels, getGuildCategories, getBotPermissions } from "../../services/discord-client";
 
 const logger = createLogger("api:discord");
 
@@ -366,7 +366,7 @@ export const discordRoutes = createRoute()
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
 
-      const roles = await Discord.getGuildRoles(guildId);
+      const roles = await getGuildRoles(guildId);
       return c.json(roles);
     }
   )
@@ -394,7 +394,7 @@ export const discordRoutes = createRoute()
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
 
-      const channels = await Discord.getGuildChannels(guildId);
+      const channels = await getGuildChannels(guildId);
 
       if (includeNone) {
         return c.json([
@@ -424,7 +424,7 @@ export const discordRoutes = createRoute()
         throw ApiErrors.notFound("Bot is not installed in this guild");
       }
 
-      const categories = await Discord.getGuildCategories(guildId);
+      const categories = await getGuildCategories(guildId);
       return c.json(categories);
     }
   )
@@ -437,7 +437,7 @@ export const discordRoutes = createRoute()
       const { id: guildId } = c.req.valid("param");
 
       try {
-        const permissions = await Discord.getBotPermissions(guildId);
+        const permissions = await getBotPermissions(guildId);
         return c.json(permissions);
       } catch (error) {
         if (error && typeof error === "object" && "code" in error && error.code === "not_found") {

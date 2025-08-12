@@ -57,8 +57,5 @@ export { DiscordIdSchemaV4, parseDiscordIdV4, validateDiscordIdV4 } from "./util
 
 export { logger, createLogger } from "./utils/logger";
 
-// Discord integration is server-only and must be imported directly:
-// import { Discord } from "@ticketsbot/core/discord";
-
 // Context system is server-only and must be imported directly:
 // import { Actor } from "@ticketsbot/core/context";

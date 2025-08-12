@@ -1,7 +1,3 @@
-/**
- * Context-specific error types for better error handling and debugging
- */
-
 export class ContextError extends Error {
   constructor(
     message: string,
@@ -47,9 +43,6 @@ export class ActorValidationError extends ContextError {
   }
 }
 
-/**
- * User-visible error that can be safely shown in API responses
- */
 export class VisibleError extends Error {
   constructor(
     public readonly code: string,

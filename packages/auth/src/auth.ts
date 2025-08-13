@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { customSession } from "better-auth/plugins";
+import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@ticketsbot/db";
 import { db } from "@ticketsbot/db";
 import { getDiscordAvatarUrl } from "./services/discord-api";
@@ -246,6 +247,7 @@ export const auth = betterAuth({
         user: enhancedUser,
       };
     }),
+    nextCookies(),
   ],
   hooks: {
     after: createAuthMiddleware(async (ctx) => {

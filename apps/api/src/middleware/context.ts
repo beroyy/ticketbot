@@ -1,5 +1,5 @@
 import type { Context, Next, MiddlewareHandler } from "hono";
-import type { AuthSession } from "@ticketsbot/auth";
+import { auth } from "@ticketsbot/auth";
 import { z } from "zod";
 import { ApiContext, RoleDeniedError } from "../lib/context";
 import { createLogger } from "../lib/utils/logger";
@@ -9,110 +9,53 @@ import { nanoid } from "nanoid";
 const logger = createLogger("api:context");
 
 type Variables = {
-  user: AuthSession["user"];
-  session: AuthSession;
+  user: any;
+  session: any;
   guildId?: string;
   requestId: string;
   startTime: number;
 };
 
-const sessionCache = new Map<string, { data: any; expires: number }>();
-
 const withAuthContext: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
-  const cookieHeader = c.req.header("cookie");
-  if (!cookieHeader) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  const cacheKey = cookieHeader;
-  const cached = sessionCache.get(cacheKey);
-  if (cached && cached.expires > Date.now()) {
-    logger.debug("Using cached session validation");
-    const sessionData = cached.data;
-
-    if (sessionData) {
-      c.set("user", sessionData.user);
-      c.set("session", sessionData);
-
-      const guildId = extractGuildId(c);
-      if (guildId) {
-        c.set("guildId", guildId);
-      }
-
-      return ApiContext.provide(
-        {
-          userId: sessionData.user.id,
-          email: sessionData.user.email,
-          discordId: sessionData.user.discordUserId || undefined,
-          selectedGuildId: guildId,
-          session: sessionData,
-        },
-        () => next()
-      );
-    }
-  }
-
   try {
-    const guildId = extractGuildId(c);
-    const webUrl = env.WEB_URL || "http://localhost:3000";
-
-    const response = await fetch(`${webUrl}/api/auth/validate-session`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookieHeader,
-      },
-      body: JSON.stringify({ guildId }),
+    // Use Better Auth's getSession directly with Hono request headers
+    const sessionData = await auth.api.getSession({ 
+      headers: c.req.raw.headers 
     });
 
-    if (!response.ok) {
-      logger.debug("Session validation failed", { status: response.status });
+    if (!sessionData) {
+      logger.debug("No session found");
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const result = (await response.json()) as {
-      valid: boolean;
-      session?: AuthSession & { permissions: string };
-    };
-    if (!result.valid || !result.session) {
+    // Type guard to ensure we have a valid session
+    if (!sessionData || typeof sessionData !== "object" || !("user" in sessionData)) {
+      logger.debug("Invalid session data");
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const sessionData = result.session;
-
-    sessionCache.set(cacheKey, {
-      data: sessionData,
-      expires: Date.now() + 60 * 1000,
-    });
-
-    if (sessionCache.size > 100) {
-      const now = Date.now();
-      for (const [key, value] of sessionCache.entries()) {
-        if (value.expires < now) {
-          sessionCache.delete(key);
-        }
-      }
-    }
+    const session = sessionData as any;
 
     logger.debug("Session validated successfully", {
-      userId: sessionData.user.id,
-      email: sessionData.user.email,
+      userId: session.user.id,
+      email: session.user.email,
     });
 
-    c.set("user", sessionData.user);
-    c.set("session", sessionData);
+    c.set("user", session.user);
+    c.set("session", session);
 
+    const guildId = extractGuildId(c);
     if (guildId) {
       c.set("guildId", guildId);
     }
 
     return ApiContext.provide(
       {
-        userId: sessionData.user.id,
-        email: sessionData.user.email,
-        discordId: sessionData.user.discordUserId || undefined,
+        userId: session.user.id,
+        email: session.user.email,
+        discordId: session.user.discordUserId || undefined,
         selectedGuildId: guildId,
-        session: sessionData.session,
+        session: session.session,
       },
       () => next()
     );

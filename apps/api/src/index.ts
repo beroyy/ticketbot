@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import type { AppEnv } from "./factory";
 import { errorHandler } from "./utils/error-handler";
+import { auth } from "@ticketsbot/auth";
 import { healthRoutes } from "./routes/health";
 import { userRoutes } from "./routes/user";
 import { discordRoutes } from "./routes/discord";
@@ -58,6 +59,11 @@ app.use(
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
+
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
+  logger.debug(`[AUTH] ${c.req.method} ${c.req.path}`);
+  return auth.handler(c.req.raw);
+});
 
 const _routes = app
   .route("/health", healthRoutes)

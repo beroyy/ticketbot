@@ -17,23 +17,23 @@
     "lint": "eslint --config eslint.config.js src/"
   },
   "dependencies": {
-    "@hono/node-server": "^1.17.1",
+    "@hono/node-server": "^1.19.0",
     "@hono/zod-validator": "^0.7.2",
-    "@prisma/client": "^6.12.0",
+    "@prisma/client": "^6.14.0",
     "@sapphire/bitfield": "^1.2.4",
     "@ticketsbot/auth": "workspace:*",
     "@ticketsbot/db": "workspace:*",
     "discord.js": "^14.21.0",
-    "dotenv": "^17.2.0",
-    "hono": "^4.8.5",
-    "nanoid": "^5.0.9"
+    "dotenv": "^17.2.1",
+    "hono": "^4.9.2",
+    "nanoid": "^5.1.5"
   },
   "devDependencies": {
     "@ticketsbot/eslint-config": "workspace:*",
     "@ticketsbot/tsconfig": "workspace:*",
-    "@types/node": "^24.0.15",
-    "eslint": "^9.31.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.3.0",
+    "eslint": "^9.33.0",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
   }
 }

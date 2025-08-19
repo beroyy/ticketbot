@@ -17,15 +17,15 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
-    "@prisma/adapter-neon": "^6.12.0",
-    "@prisma/client": "^6.12.0",
+    "@prisma/adapter-neon": "^6.14.0",
+    "@prisma/client": "^6.14.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
     "@ticketsbot/tsconfig": "workspace:*",
     "@types/ws": "^8.18.1",
-    "prisma": "^6.12.0",
-    "typescript": "^5.8.3"
+    "prisma": "^6.14.0",
+    "typescript": "^5.9.2"
   },
   "exports": {
     ".": "./src/index.ts"

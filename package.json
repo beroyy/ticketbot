@@ -4,7 +4,7 @@
   "description": "Discord ticket bot with web dashboard",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
@@ -29,27 +29,27 @@
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
-    "zod": "^4.0.5"
+    "zod": "^4.0.17"
   },
   "overrides": {
     "zod": "^4.0.5",
     "@sapphire/framework": "^5.3.6",
     "discord.js": "^14.21.0",
-    "prisma": "^6.12.0",
-    "@prisma/client": "^6.12.0",
-    "@prisma/adapter-neon": "^6.12.0"
+    "prisma": "^6.14.0",
+    "@prisma/client": "^6.14.0",
+    "@prisma/adapter-neon": "^6.14.0"
   },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.48.4",
-    "@tailwindcss/postcss": "^4.1.11",
-    "@types/node": "^24.0.14",
+    "@dotenvx/dotenvx": "^1.49.0",
+    "@tailwindcss/postcss": "^4.1.12",
+    "@types/node": "^24.3.0",
     "concurrently": "^9.2.0",
-    "eslint": "^9.31.0",
-    "neonctl": "^2.12.0",
+    "eslint": "^9.33.0",
+    "neonctl": "^2.15.0",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "tsx": "^4.20.3",
-    "turbo": "^2.5.5",
-    "typescript": "^5.8.3"
+    "tsx": "^4.20.4",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
   }
 }

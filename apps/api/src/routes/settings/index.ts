@@ -86,8 +86,8 @@ export const settingsRoutes = createRoute()
       }
 
       const [permissions, roles] = await Promise.all([
-        db.role.getUserPermissions(guildId, user.discordUserId),
-        db.role.getUserRoles(guildId, user.discordUserId),
+        db.role.getUserPermissions({ userId: user.discordUserId, guildId }),
+        db.role.getUserRoles({ userId: user.discordUserId, guildId }),
       ]);
 
       return c.json({

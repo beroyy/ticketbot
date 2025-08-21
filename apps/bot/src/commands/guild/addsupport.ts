@@ -21,7 +21,7 @@ export const AddSupportCommand = createCommand({
 
     try {
       // Check if user already has admin role
-      const userRoles = await db.role.getUserRoles(guildId, userId);
+      const userRoles = await db.role.getUserRoles({ userId, guildId });
       if (StaffHelpers.hasRole(userRoles, "admin")) {
         await InteractionResponse.error(
           interaction,

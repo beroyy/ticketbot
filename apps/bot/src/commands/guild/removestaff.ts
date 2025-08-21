@@ -23,7 +23,7 @@ export const RemoveStaffCommand = createCommand({
     const userId = targetUser.id;
 
     try {
-      const userRoles = await db.role.getUserRoles(guildId, userId);
+      const userRoles = await db.role.getUserRoles({ userId, guildId });
 
       if (userRoles.length === 0) {
         await InteractionResponse.error(

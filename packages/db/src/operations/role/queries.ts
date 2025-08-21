@@ -35,10 +35,13 @@ export const getRoleByName = async (
 /**
  * Get all roles for a user in a guild
  */
-export const getUserRoles = async (
-  guildId: string,
-  userId: string
-): Promise<any[]> => {
+export const getUserRoles = async ({
+  userId,
+  guildId
+}: {
+  userId: string;
+  guildId: string;
+}): Promise<any[]> => {
   const memberships = await prisma.guildRoleMember.findMany({
     where: {
       discordId: userId,
@@ -74,10 +77,13 @@ export const getRoleMembers = async (roleId: number): Promise<any[]> => {
 /**
  * Get user's permissions in a guild
  */
-export const getUserPermissions = async (
-  userId: string,
-  guildId: string
-): Promise<bigint> => {
+export const getUserPermissions = async ({
+  userId,
+  guildId
+}: {
+  userId: string;
+  guildId: string;
+}): Promise<bigint> => {
   const memberships = await prisma.guildRoleMember.findMany({
     where: {
       discordId: userId,
@@ -110,7 +116,7 @@ export const hasPermission = async (
   userId: string,
   permission: bigint
 ): Promise<boolean> => {
-  const userPermissions = await getUserPermissions(userId, guildId);
+  const userPermissions = await getUserPermissions({ userId, guildId });
   return (userPermissions & permission) === permission;
 };
 
@@ -124,7 +130,7 @@ export const hasAnyPermission = async (
 ): Promise<boolean> => {
   if (permissions.length === 0) return false;
   
-  const userPermissions = await getUserPermissions(userId, guildId);
+  const userPermissions = await getUserPermissions({ userId, guildId });
   
   for (const permission of permissions) {
     if ((userPermissions & permission) === permission) {

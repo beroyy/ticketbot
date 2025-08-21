@@ -102,7 +102,7 @@ const displayTeamMemberStats = async (
       guildId,
       staffId: discordUserId,
     }),
-    db.role.getUserRoles(guildId, discordUserId),
+    db.role.getUserRoles({ userId: discordUserId, guildId }),
   ]);
 
   const embed = Embed.info(
@@ -273,7 +273,7 @@ const handleTeamStats = async (interaction: ChatInputCommandInteraction) => {
             guildId,
             staffId: member.discordId,
           }),
-          db.role.getUserRoles(guildId, member.discordId),
+          db.role.getUserRoles({ userId: member.discordId, guildId }),
         ]);
 
         // Extract first staff member stats (since we're querying by specific ID)

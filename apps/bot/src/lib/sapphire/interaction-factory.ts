@@ -17,7 +17,7 @@ async function withContext<T extends Interaction, R>(
 
   if (interaction.guild) {
     try {
-      permissions = await db.role.getUserPermissions(interaction.user.id, interaction.guild.id);
+      permissions = await db.role.getUserPermissions({ userId: interaction.user.id, guildId: interaction.guild.id });
     } catch (error) {
       console.error("Error getting user permissions:", error);
     }

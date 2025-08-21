@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (guildId && session.user?.discordUserId) {
       try {
-        const perms = await db.role.getUserPermissions(guildId, session.user.discordUserId);
+        const perms = await db.role.getUserPermissions({ userId: session.user.discordUserId, guildId });
         permissions = perms.toString();
       } catch {
         // Ignore permission errors

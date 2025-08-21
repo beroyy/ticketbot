@@ -7,20 +7,29 @@ import { Button } from "@/components/ui/button";
 import { withGuildRoute } from "@/lib/with-auth";
 import { createServerApiClient } from "@/lib/api-server";
 import type { InferGetServerSidePropsType } from "next";
-import { db } from "@ticketsbot/db";
-import { PermissionFlags } from "@ticketsbot/auth";
+import { PermissionFlags } from "@ticketsbot/auth/client";
 
-export const getServerSideProps = withGuildRoute(async (context, session, guildId, _guilds) => {
+export const getServerSideProps = withGuildRoute(async (context, session, guildId, guilds) => {
+  // Import db only on server side
+  const { db } = await import("@ticketsbot/db");
+  
   const api = await createServerApiClient(context.req, guildId);
   let hasAnalyticsPermission = false;
+  let isGuildOwner = false;
   let initialTicketStats: any = null;
   let initialRecentActivity: any[] = [];
 
   try {
+    // Check if user is guild owner
+    const currentGuild = guilds.find(g => g.id === guildId);
+    isGuildOwner = currentGuild?.owner || false;
+
     // Check permissions first
     if (session.user.discordUserId) {
-      const permissions = await db.role.getUserPermissions(guildId, session.user.discordUserId);
-      hasAnalyticsPermission =
+      const permissions = await db.role.getUserPermissions({ userId: session.user.discordUserId, guildId });
+      
+      // Guild owners always have analytics permission
+      hasAnalyticsPermission = isGuildOwner || 
         (permissions & PermissionFlags.ANALYTICS_VIEW) === PermissionFlags.ANALYTICS_VIEW;
     }
 
@@ -56,6 +65,7 @@ export const getServerSideProps = withGuildRoute(async (context, session, guildI
   return {
     props: {
       hasAnalyticsPermission,
+      isGuildOwner,
       initialTicketStats,
       initialRecentActivity,
     },
@@ -67,6 +77,7 @@ type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
 export default function Dashboard({
   selectedGuildId,
   hasAnalyticsPermission,
+  isGuildOwner,
   initialTicketStats,
   initialRecentActivity,
 }: PageProps) {
@@ -106,14 +117,30 @@ export default function Dashboard({
     return (
       <div className="w-2xl mx-auto flex min-h-screen items-center justify-center">
         <div className="w-full text-center">
-          <h2 className="mb-4 text-2xl font-semibold text-gray-900">Limited Access</h2>
-          <p className="mb-6 text-gray-600">
-            You don't have permission to view analytics for this server. Please contact a server
-            administrator to grant you the necessary permissions.
-          </p>
-          <Button onClick={() => (window.location.href = "/tickets")} variant="default">
-            View Tickets Instead
-          </Button>
+          {isGuildOwner ? (
+            <>
+              <h2 className="mb-4 text-2xl font-semibold text-gray-900">Setup Required</h2>
+              <p className="mb-6 text-gray-600">
+                As the server owner, you need to complete the bot setup to access the dashboard.
+                <br />
+                Run <code className="rounded bg-gray-100 px-2 py-1 text-sm">/setup auto</code> in your Discord server to get started.
+              </p>
+              <Button onClick={() => (window.location.href = "/tickets")} variant="default">
+                View Tickets Instead
+              </Button>
+            </>
+          ) : (
+            <>
+              <h2 className="mb-4 text-2xl font-semibold text-gray-900">Limited Access</h2>
+              <p className="mb-6 text-gray-600">
+                You don't have permission to view analytics for this server. Please contact a server
+                administrator to grant you the necessary permissions.
+              </p>
+              <Button onClick={() => (window.location.href = "/tickets")} variant="default">
+                View Tickets Instead
+              </Button>
+            </>
+          )}
         </div>
       </div>
     );

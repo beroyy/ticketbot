@@ -11,17 +11,10 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthErrorBoundary } from "@/components/auth-error-boundary";
 import { useState } from "react";
 import { Inter } from "next/font/google";
-import { NavbarSkeleton } from "@/components/navbar-skeleton";
 import { reportWebVitals as reportWebVitalsToAnalytics } from "@/lib/web-vitals";
 
-// Dynamically import Navbar with SSR disabled to avoid router issues during build
-const Navbar = dynamic(
-  () => import("@/components/navbar").then((mod) => ({ default: mod.Navbar })),
-  {
-    ssr: false,
-    loading: () => <NavbarSkeleton />,
-  }
-);
+// Import Navbar normally to enable SSR and avoid skeleton flash
+import { Navbar } from "@/components/navbar";
 
 const ReactQueryDevtools =
   process.env.NODE_ENV === "development"

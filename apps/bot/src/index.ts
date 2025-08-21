@@ -22,7 +22,8 @@ class TicketsBotClient extends BaseBotClient {
 
 // Simple adapter for Role domain to implement PermissionProvider interface
 configurePermissionProvider({
-  getUserPermissions: db.role.getUserPermissions,
+  getUserPermissions: (guildId: string, userId: string) => 
+    db.role.getUserPermissions({ userId, guildId }),
 });
 
 const client = new TicketsBotClient({

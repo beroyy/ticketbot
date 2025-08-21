@@ -39,7 +39,7 @@ export const permissionRoutes = createRoute().get(
       } satisfies PermissionsResponse);
     }
 
-    const permissions = await db.role.getUserPermissions(guildId, discordUserId);
+    const permissions = await db.role.getUserPermissions({ userId: discordUserId, guildId });
 
     logger.debug("Calculated permissions", {
       guildId,

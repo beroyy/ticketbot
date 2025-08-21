@@ -13,7 +13,7 @@ import {
 import { MdOutlineArrowDropDown } from "react-icons/md";
 import { useAuth } from "@/features/auth";
 import { usePermissions } from "@/features/permissions/hooks/use-permissions";
-import { PermissionFlags } from "@ticketsbot/auth";
+import { PermissionFlags } from "@ticketsbot/auth/client";
 import { ServerSelectDropdown } from "@/features/user/ui/server-select-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StableAvatar } from "@/components/stable-avatar";
@@ -40,8 +40,10 @@ const navItems: NavItem[] = [
 
 export function Navbar() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
-  const { selectedGuildId, setSelectedGuildId } = useAuth();
+  const { session: authSession, selectedGuildId, setSelectedGuildId } = useAuth();
+  const { data: clientSession, isPending } = authClient.useSession();
+  // Use authSession from context (has initial SSR data) as fallback to avoid skeleton
+  const session = clientSession || authSession;
   const { hasPermission, hasAnyPermission } = usePermissions();
 
   const visibleNavItems = useMemo(() => {
@@ -117,7 +119,7 @@ export function Navbar() {
         </div>
 
         <div className="flex h-10 min-w-[200px] items-center gap-4">
-          {isPending ? (
+          {isPending && !session ? (
             <div className="flex w-full items-center justify-end gap-4">
               <Skeleton className="h-10 w-40 rounded-full bg-white/10" />
             </div>

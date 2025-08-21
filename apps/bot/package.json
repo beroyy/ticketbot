@@ -25,6 +25,7 @@
     "@sapphire/plugin-subcommands": "^7.0.1",
     "@ticketsbot/auth": "workspace:*",
     "@ticketsbot/db": "workspace:*",
+    "discord-api-types": "^0.38.21",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.1",
     "zod": "^4.0.17"

@@ -27,5 +27,5 @@
     ".next/types/**/*.ts",
     "../../.artifacts/WEB_STASH/hooks/use-panel-query.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "components/stash/**/*"]
 }

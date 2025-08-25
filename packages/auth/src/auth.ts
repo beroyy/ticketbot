@@ -87,7 +87,7 @@ type AuthInstance = {
 
 const { webOrigin } = getOrigins();
 
-const cookieDomain = process.env.NODE_ENV === "production" ? ".ticketsbot.co" : "localhost";
+const cookieDomain = process.env.NODE_ENV === "production" ? ".ticketsbot.ai" : "localhost";
 
 if (process.env.NODE_ENV !== "development") {
   logger.info("[Auth] Creating Better Auth instance", {
